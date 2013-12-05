@@ -24,11 +24,20 @@
 # *
 # **************************************************************************
 """
-This sub-package will contains Xmipp3.0 specific protocols
+This modules contains constants related to Spider protocols
 """
 
-from eman2 import *
-from data import *
-from protocol_boxing import EmanProtBoxing
-from protocol_initialmodel import EmanProtInitModel
-from viewer import EmanViewerGeneric
+#------------------ Constants values --------------------------------------
+
+# Filter types
+FILTER_TOPHAT = 0
+FILTER_GAUSSIAN = 1
+FILTER_FERMI = 2
+FILTER_BUTTERWORTH = 3
+FILTER_RAISEDCOS = 4
+
+# CA-PCA protocol
+CA = 0
+PCA = 1
+IPCA = 2
+

@@ -24,11 +24,8 @@
 # *
 # **************************************************************************
 """
-This sub-package will contains Xmipp3.0 specific protocols
+This sub-package contains protocol for ResMap
 """
 
-from eman2 import *
-from data import *
-from protocol_boxing import EmanProtBoxing
-from protocol_initialmodel import EmanProtInitModel
-from viewer import EmanViewerGeneric
+from protocol_resmap import ProtResMap
+

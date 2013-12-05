@@ -24,11 +24,32 @@
 # *
 # **************************************************************************
 """
-This sub-package will contains Xmipp3.0 specific protocols
+This module contains templates files from Spider scripts that will 
+generated a file that can be executed from Spider, replacing specific
+variables.
 """
 
-from eman2 import *
-from data import *
-from protocol_boxing import EmanProtBoxing
-from protocol_initialmodel import EmanProtInitModel
-from viewer import EmanViewerGeneric
+from os.path import join, dirname, abspath, exists
+
+TEMPLATE_DIR = abspath(dirname(__file__))
+
+def createSpiderScript(templateFile, scriptFile, paramsDict):
+    """ This function will read a template, substitute the params with values
+    and write the resulting script. """
+    f = open(templateFile, 'r')
+    
+    for line in f:
+        line = line.strip()
+        if not line.startswith(';'):
+            line = line % paramsDict
+        print line
+        
+        
+def getTemplate(templateName):
+    """ Return the path to the template file given its name. """
+    templateFile = join(TEMPLATE_DIR, templateName)
+    if not exists(templateFile):
+        raise Exception("getTemplate: template '%s' was not found in templates directory" % templateName)
+    
+    return templateFile
+    

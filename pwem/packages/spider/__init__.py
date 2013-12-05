@@ -24,11 +24,21 @@
 # *
 # **************************************************************************
 """
-This sub-package will contains Xmipp3.0 specific protocols
+This sub-package will contains Spider protocols
 """
 
-from eman2 import *
-from data import *
-from protocol_boxing import EmanProtBoxing
-from protocol_initialmodel import EmanProtInitModel
-from viewer import EmanViewerGeneric
+from spider import *
+
+from protocol_filters import SpiderProtFilter
+from protocol_align_apsr import SpiderProtAlignAPSR
+from protocol_custommask import SpiderProtCustomMask
+from protocol_ca_pca import SpiderProtCAPCA
+from protocol_ward import SpiderProtClassifyWard
+from protocol_mda import SpiderWfMDA
+from protocol_align_pairwise import SpiderProtAlignPairwise
+
+from wizard import SpiderProtMaskWizard, SpiderProtMaskRadiiWizard, SpiderFilterWizard
+
+from viewer import SpiderViewer
+from viewer_capca import SpiderViewerCAPCA
+from viewer_ward import SpiderViewerWard
