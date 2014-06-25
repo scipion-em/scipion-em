@@ -1,23 +1,29 @@
-; RUNS CORRESPONDENCE ANALYSIS OR PRINCIPLE COMPONENT ANALYSIS
+; RUNS CORRESPONDENCE ANALYSIS OR PRINCIPAL COMPONENT ANALYSIS
 
 ; NOTES: 
 ;   uses Python script eigendoc.py (jsl & trs)
 
 ; ---------------- Parameters ----------------
 
-[idim]          = %(dim)d              ; image dimension (square)
-[radius]        = %(radius)d           ; particle radius (pixels, used if no custom mask, <0==IDIM/2)
-[cas-option]    = %(analysisType)d     ; correspondence analysis (1), PCA (2), IPCA (3)
-[add-constant]  = %(addConstant)d      ; additive constant if using correspondence analysis (0==automatic)
-[num-factors]   = %(numberOfFactors)d  ; number of eigenfactors to calculate
+[idim]          = 100   ; image dimension (before downsampling)
+[reduce-factor] = 1     ; downsampling factor applied to input images
+[radius]        = -1    ; particle radius (pixels, used if no custom mask, <0==IDIM/2)
+[cas-option]    = 1     ; correspondence analysis (1), PCA (2), IPCA (3)
+[add-constant]  = 0     ; additive constant if using correspondence analysis (0==automatic)
+[num-factors]   = 25    ; number of eigenfactors to calculate
+[num-sd]        = 3.0   ; number of standard deviations to plot in factor map
+                        ; (range will be {-NUMSD,+NUMSD}
+                        ; (SPIDER sometimes crashes if this number is too small)
 
 ; ------------------ Inputs ------------------
+;;fr l
+;;[parameter_doc]params                    ; parameter doc file
 fr l
-[selection_doc]%(spiderSel)s   ; selection doc file
+[selection_doc]listparticles             ; selection doc file
 fr l
-[particles]%(spiderParticles)s@******  ; particle file-pattern
+[particles]stkaligned@*****              ; particle file-pattern
 fr l
-[custom_mask]%(spiderMask)s@1          ; (optional) custom mask
+[custom_mask]stkmask@4                   ; (optional) custom mask
 
 ; ------------------ Outputs ------------------
 
@@ -28,15 +34,15 @@ fr l
 fr l
 [ps_eigenvalue_hist][ca_dir]/ps_eigenvalues    ; eigenvalue histogram, encapsulated PostScript
 fr l
-[eigen_img][ca_dir]/eigenimg@***                ; eigenimage template
+[eigen_img][ca_dir]/stkeigenimg                ; eigenimage stack (w/o "@")
 fr l
-[reconstituted_img][ca_dir]/reconstituted@***   ; reconstituted image template
+[reconstituted_img][ca_dir]/stkreconst         ; reconstituted image stack (w/o "@")
 fr l
 [ps_factor_map][ca_dir]/factormap              ; eigenvalue factor map, PostScript format
 fr l
 [sdc_doc][ca_dir]/doccorrmap                   ; eigenvalue (1-9) document file (for WEB->CorrMap)
 
-; ------------- END BATCH HEADER -------------
+; -------------- END BATCH HEADER --------------
 
 ; Temporary files
 fr l
@@ -57,9 +63,9 @@ set mp
 ;ud 17, [idim]
 ;[parameter_doc]
 ;ud e
-;
-;; divide by decimation-factor
-;[idim] = [idim]/[reduce-factor]
+
+; divide by decimation-factor
+[idim] = [idim]/[reduce-factor]
 
 ; check if custom mask present
 iq fi [mask-exists]
@@ -70,6 +76,32 @@ if([mask-exists].eq.1) then
     cp
     [custom_mask]  ; INPUT
     [temp_mask]    ; OUTPUT
+
+    ; check dimensions
+    fi [mask-ydim]
+    [temp_mask]
+    (2)  ; header position for NROW
+
+    ; compare dimensions
+    if([mask-ydim].ne.[idim]) then
+        [ydim-quotient] = [mask-ydim]/[idim]
+
+        ; check if integer downsampling factor
+        if([ydim-quotient].eq.int([ydim-quotient])) then
+            vm
+            echo "Mask [custom_mask] is {*[ydim-quotient]} times bigger than images.  Shrinking mask..."
+
+            dc s
+            [custom_mask]
+            [temp_mask]
+            [ydim-quotient],[ydim-quotient]
+        else
+            vm
+            echo "ERROR: Mask dimension {***[mask-ydim]} different from image dimension {***[idim]}.  Exiting..."
+
+            en
+        endif
+    endif
 ; if custom mask not present, make circular mask
 else
     ; check if radius undefined
@@ -183,6 +215,13 @@ gnuplot [temp_gnuplot] ;
 rm -f [temp_gnuplot] [temp_eigenvalues_text]
 .
 
+; delete pre-existing stacks
+de
+[eigen_img]@
+de
+[reconstituted_img]@
+
+
 ; RECONSTITUTE EIGENIMAGES
 
 vm
@@ -199,7 +238,7 @@ do lb9 [factor-num] = 1,[num-factors]
         ca sre
         [cas_prefix]
         [factor-num]
-        [eigen_img][factor-num]
+        [eigen_img]@{***[factor-num]}
 
         ; generate positive reconstituted image
         ca sra
@@ -221,7 +260,7 @@ do lb9 [factor-num] = 1,[num-factors]
         (1,3)   ; image #s
         (1,1)   ; images/row, margin-width
         (0)     ; margin value
-        [reconstituted_img][factor-num]
+        [reconstituted_img]@{***[factor-num]}
         
     ; syntax for PCA/IPCA ([cas-option]={2,3})
     else
@@ -230,7 +269,7 @@ do lb9 [factor-num] = 1,[num-factors]
         [cas_prefix]
         Y             ; subtract average?
         [factor-num]  ; eigenvector
-        [eigen_img][factor-num]
+        [eigen_img]@{***[factor-num]}
 
         ; generate positive reconstituted image
         ca sra
@@ -254,7 +293,7 @@ do lb9 [factor-num] = 1,[num-factors]
         (1,3)   ; image #s
         (1,1)   ; images/row, margin-width
         (0)     ; margin value
-        [reconstituted_img][factor-num]
+        [reconstituted_img]@{***[factor-num]}
     endif
 lb9
 
@@ -279,7 +318,7 @@ do lb2 [factor1] = 1,[num-pairs]
     S        ; plot _S_ymbol
     +        ; symbol to plot
     Y        ; output to PostScript?
-    (2.3)    ; #standard devations to plot
+    [num-sd] ; #standard devations to plot
     (0)      ; no axis-flip
     [ps_factor_map]{**[factor1]}{**[factor2]}  ; OUTPUT
              ; TEXT SIZE FOR AXIS AND DATA
@@ -304,15 +343,18 @@ sd c
 vm
 echo "Done"; date
 
-en
+en d
 
-; Modified 2012-09-07
-;   TO DO: use whole image if radius not specified
-;   2012-09-07 (trs) -- better scales reconstituted images
-;   2012-09-07 (trs) -- generates Gnuplot script from scratch, ploteigen.gnu no longer needed
-;   2012-04-18 (trs) -- reads optional custom mask
-;   2010-02-09 (trs) -- CA SR* asks extra question if using PCA/IPCA
-;   2008-11-26 (trs) -- now a parameter to specify CA, PCA, or IPCA
-;   2007-11-02 (trs) -- added reconstituted images
-;   2006-05-11 (trs) -- bug fix if more than nine eigenfactors
-;   2005-08-23 (trs) -- factor maps adapted from jsl's casm.bat
+; Modified 2014-05-20
+;    2014-03-06 (trs) -- writing images in stacks
+;    2014-02-06 (trs) -- changed default range for factormap to +/- 3 s.d. -- SPIDER dumps core if too small
+;    2014-02-04 (trs) -- number of standard deviations to plot in factor maps is now user-specified
+;    2013-03-20 (trs & cjh) -- downsamples custom mask if necessary
+;    2012-09-07 (trs) -- better scales reconstituted images
+;    2012-09-07 (trs) -- generates Gnuplot script from scratch, ploteigen.gnu no longer needed
+;    2012-04-18 (trs) -- reads optional custom mask
+;    2010-02-09 (trs) -- CA SR* asks extra question if using PCA/IPCA
+;    2008-11-26 (trs) -- now a parameter to specify CA, PCA, or IPCA
+;    2007-11-02 (trs) -- added reconstituted images
+;    2006-05-11 (trs) -- bug fix if more than nine eigenfactors
+;    2005-08-23 (trs) -- factor maps adapted from jsl's casm.bat

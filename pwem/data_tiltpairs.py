@@ -1,6 +1,7 @@
 # **************************************************************************
 # *
 # * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
+# *              Laura del Cano         (ldelcano@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -24,32 +25,6 @@
 # *
 # **************************************************************************
 """
-This module contains templates files from Spider scripts that will 
-generated a file that can be executed from Spider, replacing specific
-variables.
+This modules contains data classes related to Random Connical Tilt workflow.
 """
 
-from os.path import join, dirname, abspath, exists
-
-TEMPLATE_DIR = abspath(dirname(__file__))
-
-def createSpiderScript(templateFile, scriptFile, paramsDict):
-    """ This function will read a template, substitute the params with values
-    and write the resulting script. """
-    f = open(templateFile, 'r')
-    
-    for line in f:
-        line = line.strip()
-        if not line.startswith(';'):
-            line = line % paramsDict
-        print line
-        
-        
-def getTemplate(templateName):
-    """ Return the path to the template file given its name. """
-    templateFile = join(TEMPLATE_DIR, templateName)
-    if not exists(templateFile):
-        raise Exception("getTemplate: template '%s' was not found in templates directory" % templateName)
-    
-    return templateFile
-    

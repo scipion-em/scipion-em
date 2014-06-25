@@ -1,6 +1,6 @@
 # **************************************************************************
 # *
-# * Authors:     J.M. de la Rosa Trevin (jmdelarosa@cnb.csic.es)
+# * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -20,16 +20,22 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'scipion@cnb.csic.es'
+# *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
 """
-This sub-module contains all code related to EMX. 
-Basically two files:
-
-emx.py : which is the EMX library provided at: 
-convert.py : which provides conversions between EMObjects and EMX objects.
+Import of all protocols included in spider.
 """
-from convert import *
-from protocol import *
-from viewer import *
+from protocol_base import SpiderProtocol
+from protocol_classify_base import SpiderProtClassify
+from protocol_filters import SpiderProtFilter
+from protocol_align_apsr import SpiderProtAlignAPSR
+from protocol_custommask import SpiderProtCustomMask
+from protocol_ca_pca import SpiderProtCAPCA
+from protocol_classify_diday import SpiderProtClassifyDiday
+from protocol_classify_ward import SpiderProtClassifyWard
+from protocol_classify_kmeans import SpiderProtClassifyKmeans
+from protocol_mda import SpiderWfMDA
+from protocol_align_pairwise import SpiderProtAlignPairwise
+
+

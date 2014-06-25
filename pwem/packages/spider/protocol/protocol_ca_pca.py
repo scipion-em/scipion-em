@@ -23,18 +23,19 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-from pyworkflow.em.packages.spider.spider import PcaFile
 """
 This sub-package contains protocol for 
 Correspondence Analysis or Principal Component Analysis
 """
 
-from pyworkflow.em import *  
-from pyworkflow.utils import removeExt, removeBaseExt, makePath, moveFile
-from constants import *
-from spider import SpiderShell, SpiderDocFile, SpiderProtocol, copyTemplate, runSpiderTemplate
-from convert import locationToSpider
-from glob import glob
+from os.path import join
+
+from pyworkflow.protocol.params import IntParam, PointerParam, EnumParam, FloatParam
+from pyworkflow.em.convert import ImageHandler
+
+from ..constants import CA
+from ..spider import PcaFile
+from protocol_base import SpiderProtocol
 
 
 
@@ -47,24 +48,33 @@ class SpiderProtCAPCA(SpiderProtocol):
     CA is superior here because it ignores differences in exposure 
     between images, eliminating the need to rescale between images.
     
-    See [[http://spider.wadsworth.org/spider_doc/spider/docs/techs/classification/tutorial.html#CAPCA][Spider documentation]] for more info. 
+    For more info see:
+    [[http://spider.wadsworth.org/spider_doc/spider/docs/techs/classification/tutorial.html#CAPCA][Spider documentation]] 
     """
-    _label = 'CAPCA'
+    _label = 'capca'
     
-    def __init__(self):
-        SpiderProtocol.__init__(self)
+    def __init__(self, **kwargs):
+        SpiderProtocol.__init__(self, **kwargs)
+        self._caDir = 'CA'
+        self._caPrefix = 'cas' 
+        
+        caFilePrefix = join(self._caDir, self._caPrefix + '_')
+        
         self._params = {'ext': 'stk',
-                        'spiderParticles': 'particles_spider',
-                        'spiderSel': 'particles_selfile',
-                        'outputParticles': 'particles_output',
-                        'spiderMask': 'mask',
-                        'imcFile': join('CA', 'cas_IMC'),
-                        'seqFile': join('CA', 'cas_SEQ'),
-                        'eigFile': join('CA', 'cas_EIG'),
-                        'eigenimages': join('CA', 'eigenimg'),
-                        'reconstituted': join('CA', 'reconstituted')
+                        'particles': 'input_particles',
+                        'particlesSel': 'input_particles_sel',
+                        'outputParticles': 'output_particles',
+                        'mask': 'mask',
+                        # TO DO: read tags in case filenames change in SPIDER procedure
+                        'imcFile': caFilePrefix + 'IMC',
+                        'seqFile': caFilePrefix + 'SEQ',
+                        'eigFile': caFilePrefix + 'EIG',
+                        'eigenimages': join(self._caDir, 'stkeigenimg'),
+                        'reconstituted': join(self._caDir, 'stkreconstituted')
                         }
     
+    #--------------------------- DEFINE param functions --------------------------------------------  
+     
     def _defineParams(self, form):
         form.addSection(label='Input')
         
@@ -82,68 +92,74 @@ class SpiderProtCAPCA(SpiderProtocol):
                       label='Number of eigenfactors',
                       help='Number of eigenfactors to calculate.')
         form.addParam('maskType', EnumParam, choices=['circular', 'file'], default=0,
-                      label='Mask type', help='Select which type of mask do you want to apply.')
+                      label='Mask type', 
+                      help='Select which type of mask do you want to apply.')
         form.addParam('radius', IntParam, default=-1,
                       label='Mask radius (px)', condition='maskType==0',
                       help='If -1, the entire radius (in pixels) will be considered.')
         form.addParam('maskImage', PointerParam, label="Mask image", condition='maskType==1',
-                      pointerClass='Mask', help="Select a mask file")       
+                      pointerClass='Mask', 
+                      help="Select a mask file")       
         
+    #--------------------------- INSERT steps functions --------------------------------------------  
+    
     def _insertAllSteps(self):
         # Insert processing steps
         self._insertFunctionStep('convertInput', 'inputParticles',
-                                 self._getFileName('spiderParticles'), self._getFileName('spiderSel'))
-        self._insertFunctionStep('convertMask')
-        self._insertFunctionStep('runCAPCA', self.analysisType.get(), 
+                                 self._getFileName('particles'), self._getFileName('particlesSel'))
+        self._insertFunctionStep('convertMaskStep', self.maskType.get())
+        self._insertFunctionStep('capcaStep', self.analysisType.get(), 
                                  self.numberOfFactors.get(), self.maskType.get())
+        self._insertFunctionStep('createOutputStep')
         
-    def convertMask(self):
+    #--------------------------- STEPS functions --------------------------------------------    
+       
+    def convertMaskStep(self, maskType):
         """ Convert the input mask if needed and
         copy some spider needed scripts. 
         """
         # Copy mask if selected
-        if self.maskType > 0: # mask from file
-            maskFn = self._getFileName('spiderMask')
+        if maskType > 0: # mask from file
+            maskFn = self._getFileName('mask')
             ImageHandler().convert(self.maskImage.get().getLocation(), 
                        (1, maskFn))
-        # Copy template scripts
-        copyTemplate('ploteigen.gnu', self._getPath())
-        copyTemplate('eigendoc.py', self._getPath())
         
-    def runCAPCA(self, analysisType, numberOfFactors, maskType):
+    def capcaStep(self, analysisType, numberOfFactors, maskType):
         """ Apply the selected filter to particles. 
         Create the set of particles.
         """
         dim = self.inputParticles.get().getDimensions()[0]
         
-        self._params.update({'dim': dim,
-                             'radius': self.radius.get(),
-                             'analysisType': analysisType + 1, # Index starts at 0
-                             'addConstant': self.addConstant.get(),
-                             'numberOfFactors': numberOfFactors
+        self._params.update({'[idim]': dim,
+                             '[radius]': self.radius.get(),
+                             '[cas-option]': analysisType + 1, # Index starts at 0
+                             '[add-constant]': self.addConstant.get(),
+                             '[num-factors]': numberOfFactors,
+                             '[selection_doc]': self._params['particlesSel'],
+                             '[particles]': self._params['particles'] + '@******',
+                             '[custom_mask]': self._params['mask'] + '@1',
+                             '[ca_dir]': self._caDir,
+                             '[eigen_img]': self._params['eigenimages'], 
+                             '[reconstituted_img]': self._params['reconstituted']
                              })
-                                
-        self._enterWorkingDir() # Do operations inside the run working dir
+                   
+        self.runScript('mda/ca-pca.msa', self.getExt(), self._params)
         
-#        spi = SpiderShell(ext=self._params['ext'], log='script.stk') # Create the Spider process to send commands 
-#        
-#        spi.runScript('ca_pca.txt', self._params)
-#        
-#        spi.close(end=False)   
-
-        runSpiderTemplate('ca_pca.txt', self._params['ext'], self._params)
-        
-        self._leaveWorkingDir() # Go back to project dir
-        
+    def createOutputStep(self):
         # Generate outputs
         imc = PcaFile()
         imc.filename.set(self._getFileName('imcFile'))
+        
         seq = PcaFile()
         seq.filename.set(self._getFileName('seqFile'))
         
-        self._defineOutputs(imcFile=imc, seqFile=seq)
+        self._defineOutputs(imcFile=imc, seqFile=seq)        
+        self._defineSourceRelation(self.inputParticles.get(), imc)
+        self._defineSourceRelation(self.inputParticles.get(), seq)
         
             
+    #--------------------------- INFO functions -------------------------------------------- 
+    
     def _summary(self):
         summary = []
         return summary
