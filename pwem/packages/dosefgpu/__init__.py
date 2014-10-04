@@ -24,29 +24,15 @@
 # *
 # **************************************************************************
 """
-This modules contains constants related to EM
+This sub-package contains protocol for ResMap
 """
-#------------------ Constants values --------------------------------------
+from bibtex import _bibtex # Load bibtex dict with references
+#_logo = "resmap_logo.png"
+_references = ['lix2013']
 
-NO_INDEX = 0  # This is the index value for single images
-    
+from protocol_dosefgpu import ProtDosefGpu
+from protocol_import import ProtDosefGpuImport
 
-# Sampling rate input modes
-SAMPLING_FROM_IMAGE = 0
-SAMPLING_FROM_SCANNER = 1
+from convert import getEnviron
 
-# This is the name for track which data is the source of others
-RELATION_SOURCE = 'relation_datasource'
-RELATION_TRANSFORM = 'relation_transform'
-RELATION_CTF = 'relation_ctf'
-
-UNIT_PIXEL = 'px'
-UNIT_PIXEL_FOURIER = '1/px'
-UNIT_ANGSTROM = 'A'
-UNIT_ANGSTROM_FOURIER = '1/A'
-
-# Fourier Filter options
-FILTER_LOW_PASS = 0
-FILTER_HIGH_PASS = 1
-FILTER_BAND_PASS = 2
-FILTER_GAUSSIAN = 3
+_environ = getEnviron()

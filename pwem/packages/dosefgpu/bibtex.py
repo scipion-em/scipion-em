@@ -1,3 +1,4 @@
+# coding: latin-1
 # **************************************************************************
 # *
 # * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
@@ -24,29 +25,28 @@
 # *
 # **************************************************************************
 """
-This modules contains constants related to EM
+List of related references in Bibtex format for dosefgpu programs
+developed by Xueming Li at Yifan Cheng lab.
 """
-#------------------ Constants values --------------------------------------
 
-NO_INDEX = 0  # This is the index value for single images
-    
+_bibtexStr = """
 
-# Sampling rate input modes
-SAMPLING_FROM_IMAGE = 0
-SAMPLING_FROM_SCANNER = 1
+@article{lix2013,
+  title={Electron counting and beam-induced motion correction enables near atomic resolution single particle cryoEM.},
+  author={Li, Xueming and Mooney, Paul and Zheng, Shawn and Booth, Chris Michael B. Braunfeld, Sander Gubbens, David A. Agard and Yifan Cheng},
+  journal={Nature Methods},
+  volume={10},
+  number={1},
+  pages={584--590},
+  year={2013},
+  publisher={Nature Publishing Group},
+  doi = {http://dx.doi.org/10.1038/nmeth.2727}
+}
 
-# This is the name for track which data is the source of others
-RELATION_SOURCE = 'relation_datasource'
-RELATION_TRANSFORM = 'relation_transform'
-RELATION_CTF = 'relation_ctf'
+"""
 
-UNIT_PIXEL = 'px'
-UNIT_PIXEL_FOURIER = '1/px'
-UNIT_ANGSTROM = 'A'
-UNIT_ANGSTROM_FOURIER = '1/A'
 
-# Fourier Filter options
-FILTER_LOW_PASS = 0
-FILTER_HIGH_PASS = 1
-FILTER_BAND_PASS = 2
-FILTER_GAUSSIAN = 3
+
+from pyworkflow.utils import parseBibTex
+
+_bibtex = parseBibTex(_bibtexStr)  
