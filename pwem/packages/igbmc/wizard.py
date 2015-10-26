@@ -24,20 +24,40 @@
 # *
 # **************************************************************************
 """
-This sub-package contains data and protocol classes
-wrapping Grigrorieff Lab programs at Brandeis
+This module implement some wizards
 """
-from bibtex import _bibtex # Load bibtex dict with references
 
-_logo = "brandeis_logo.png"
+from pyworkflow.em.wizard import ParticleMaskRadiusWizard, UNIT_PIXEL
 
-from grigoriefflab import *
+from protocol_gempicker import ProtGemPicker
 
-from protocol_ctffind import ProtCTFFind
-from protocol_refinement import ProtFrealign
-from protocol_ml_classification import ProtFrealignClassify
-from protocol_unblur import ProtUnblur
-from protocol_summovie import ProtSummovie
-from viewer import ProtCTFFindViewer, FrealignViewer
-# Wizards
-from wizard import *
+
+
+#===============================================================================
+# MASKS
+#===============================================================================
+
+class GemPickerMaskWizard(ParticleMaskRadiusWizard):
+    _targets = [(ProtGemPicker, ['maskRadius'])]
+    
+    def _getParameters(self, protocol):
+        
+        label, value = self._getInputProtocol(self._targets, protocol)
+        
+        protParams = {}
+        protParams['input']= protocol.inputReferences
+        protParams['label']= label
+        protParams['value']= value
+        return protParams
+    
+    def _getProvider(self, protocol):
+        _objs = self._getParameters(protocol)['input'] 
+        return ParticleMaskRadiusWizard._getListProvider(self, _objs)
+    
+    def show(self, form):
+        params = self._getParameters(form.protocol)
+        _value = params['value']
+        _label = params['label']
+        ParticleMaskRadiusWizard.show(self, form, _value, _label, UNIT_PIXEL)
+        
+    

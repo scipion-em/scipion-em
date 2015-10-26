@@ -24,20 +24,13 @@
 # *
 # **************************************************************************
 """
-This sub-package contains data and protocol classes
-wrapping Grigrorieff Lab programs at Brandeis
+This EM module contains protocol developed at IGBMC, Strasbourg.
 """
+
 from bibtex import _bibtex # Load bibtex dict with references
 
-_logo = "brandeis_logo.png"
+_logo = "igbmc_logo.png"
 
-from grigoriefflab import *
+from protocol_gempicker import ProtGemPicker
+from wizard import GemPickerMaskWizard
 
-from protocol_ctffind import ProtCTFFind
-from protocol_refinement import ProtFrealign
-from protocol_ml_classification import ProtFrealignClassify
-from protocol_unblur import ProtUnblur
-from protocol_summovie import ProtSummovie
-from viewer import ProtCTFFindViewer, FrealignViewer
-# Wizards
-from wizard import *
