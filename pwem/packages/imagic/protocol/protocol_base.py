@@ -1,6 +1,7 @@
 # **************************************************************************
 # *
-# * Authors:     Airen Zaldivar Peraza (azaldivar@cnb.csic.es)
+# * Authors:     Grigory Sharov (sharov@igbmc.fr)
+# *              J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -24,25 +25,32 @@
 # *
 # **************************************************************************
 """
-In this module are protocol base classes related to EM.
-There should be sub-classes in the different packages from
-each EM-software package.
+Some Imagic protocol base classes.
 """
-from protocol import *
-from protocol_import import *
-from protocol_micrographs import *
-from protocol_movies import *
-from protocol_particles import *
-from protocol_2d import *
-from protocol_3d import *
-from protocol_sets import *
-from protocol_pdf_report import *
-from protocol_tiltpairs import *
-from protocol_ctf_assign import ProtCTFAssign
-from protocol_alignment_assign import ProtAlignmentAssign
-from protocol_batch import *
-from protocol_classes_consensus import ProtClassesConsensus, ViewerClassesConsensus
-from protocol_extract_coordinates import ProtExtractCoords
 
-from parallel import ProtTestParallel
+from pyworkflow.em import EMProtocol
+from ..imagic import runTemplate
 
+
+class ImagicProtocol(EMProtocol):
+    """ Sub-class of EMProtocol to group some common Imagic utils. """
+
+    def _getFileName(self, key):
+        """ Give a key, append the img extension
+        and prefix the protocol working dir.
+        """
+        template = '%(' + key + ')s' + '.img'
+
+        return self._getPath(template % self._params)
+
+    def runTemplate(self, inputScript, paramsDict):
+        """ This function will create a valid Imagic script
+        by copying the template and replacing the values in dictionary.
+        After the new file is read, the Imagic interpreter is invoked.
+        """
+        self._enterWorkingDir()
+
+        log = getattr(self, '_log', None)
+        runTemplate(inputScript, paramsDict, log)
+
+        self._leaveWorkingDir()

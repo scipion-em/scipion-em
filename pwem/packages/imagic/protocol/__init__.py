@@ -1,6 +1,7 @@
 # **************************************************************************
 # *
-# * Authors:     Airen Zaldivar Peraza (azaldivar@cnb.csic.es)
+# * Authors:     Grigory Sharov (sharov@igbmc.fr)
+# *              J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -24,25 +25,8 @@
 # *
 # **************************************************************************
 """
-In this module are protocol base classes related to EM.
-There should be sub-classes in the different packages from
-each EM-software package.
+Import of all protocols included in imagic.
 """
-from protocol import *
-from protocol_import import *
-from protocol_micrographs import *
-from protocol_movies import *
-from protocol_particles import *
-from protocol_2d import *
-from protocol_3d import *
-from protocol_sets import *
-from protocol_pdf_report import *
-from protocol_tiltpairs import *
-from protocol_ctf_assign import ProtCTFAssign
-from protocol_alignment_assign import ProtAlignmentAssign
-from protocol_batch import *
-from protocol_classes_consensus import ProtClassesConsensus, ViewerClassesConsensus
-from protocol_extract_coordinates import ProtExtractCoords
-
-from parallel import ProtTestParallel
-
+from protocol_base import ImagicProtocol
+from protocol_msa import ImagicProtMSA
+from protocol_msa_classify import ImagicProtMSAClassify
