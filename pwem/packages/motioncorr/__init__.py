@@ -23,23 +23,13 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-This package contains the protocols and data for BSOFT
-"""
 
 from bibtex import _bibtex # Load bibtex dict with references
- 
-_logo = "bsoft_logo.png"
-_references = ['Heymann2007']
+#_logo = "resmap_logo.png"
+_references = ['lix2013']
 
+from protocol_motioncorr import ProtMotionCorr
 
-from protocol_particle_pick import BsoftProtParticlePicking
-from protocol_bfilter import BsoftProtBfilter
+from convert import getEnviron
 
-from wizard import BsoftFilterParticlesWizard
-
-
-from convert import getEnviron, getVersion
 _environ = getEnviron()
-
-from viewer import BsoftViewer
