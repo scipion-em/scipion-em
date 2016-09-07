@@ -1,6 +1,7 @@
+# coding: latin-1
 # **************************************************************************
 # *
-# * Authors:     Carlos Oscar Sorzano (coss@cnb.csic.es)
+# * Authors:     Josue Gomez Blanco (jgomez@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -20,14 +21,25 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 
-import os
+_bibtexStr = """
 
-import pyworkflow as pw
+@Article{Serban2015,
+  Title                    = {Localized reconstruction of subunits from electron cryomicroscopy images.},
+  Author                   = {Ilca, Serban L. and Kotecha, A. Sun, Xiaoyu and Poranen, Minna M. and Stuart, David I. and Huiskonen, Juha T.},
+  Journal                  = {Nat Commun},
+  Year                     = {2015},
+  Month                    = {November},
+  Volume                   = {6},
+  Doi                      = {http://dx.doi.org/10.1038/ncomms9843},
+  Url                      = {http://www.nature.com/ncomms/2015/151104/ncomms9843/full/ncomms9843.html}
+}
 
+"""
 
-CRYOEM_HOME = pw.getScipionPath('software/lib/python2.7/site-packages/cryoem')
-CRYOEM_BIN = os.path.join(CRYOEM_HOME, 'program')
+from pyworkflow.utils import parseBibTex
+
+_bibtex = parseBibTex(_bibtexStr)  

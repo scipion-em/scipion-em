@@ -1,3 +1,4 @@
+# coding: latin-1
 # **************************************************************************
 # *
 # * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
@@ -24,22 +25,37 @@
 # *
 # **************************************************************************
 """
-This sub-package contains data and protocol classes
-wrapping Grigorieff Lab programs at Brandeis
+List of related references in Bibtex format for dosefgpu program
+developed by Xueming Li at Yifan Cheng lab and
+motioncor2 program developed by Shawn Zheng at David Agard lab.
 """
-from bibtex import _bibtex # Load bibtex dict with references
 
-_logo = "brandeis_logo.png"
+_bibtexStr = """
 
-from grigoriefflab import *
+@article{Li2013,
+  title="Electron counting and beam-induced motion correction enable near-atomic-resolution single-particle cryo-EM",
+  author="Li, Xueming and Mooney, Paul and Zheng, Shawn and Booth, Christopher R and Braunfeld, Michael B and Gubbens, Sander and Agard, David A and Cheng, Yifan",
+  journal="Nature methods",
+  volume="10",
+  number="6",
+  pages="584-590",
+  year="2013",
+  publisher="Nature Publishing Group",
+  doi = "http://dx.doi.org/10.1038/nmeth.2727"
+}
 
-from protocol_ctffind import ProtCTFFind
-from protocol_refinement import ProtFrealign
-from protocol_magdist_estimate import ProtMagDistEst
-from protocol_magdist_correct import ProtMagDistCorr
-from protocol_ml_classification import ProtFrealignClassify
-from protocol_unblur import ProtUnblur
-from protocol_summovie import ProtSummovie
-from viewer import ProtCTFFindViewer, FrealignViewer, MagDistEstViewer
-# Wizards
-from wizard import *
+@article{Zheng2016,
+  title="Anisotropic Correction of Beam-induced Motion for Improved Single-particle Electron Cryo-microscopy",
+  author="Zheng, Shawn and Palovcak, Eugene and Armache, Jean-Paule and Cheng, Yifan and Agard, David",
+  year="2016",
+  journal="submitted",
+  doi = "http://dx.doi.org/10.1101/061960"
+}
+
+"""
+
+
+
+from pyworkflow.utils import parseBibTex
+
+_bibtex = parseBibTex(_bibtexStr)  

@@ -1,6 +1,6 @@
 # **************************************************************************
 # *
-# * Authors:     Carlos Oscar Sorzano (coss@cnb.csic.es)
+# * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -20,14 +20,16 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 
-import os
+from bibtex import _bibtex # Load bibtex dict with references
+#_logo = "motioncorr_logo.png"
+_references = ['Li2013', 'Zheng2016']
 
-import pyworkflow as pw
+from protocol_motioncorr import ProtMotionCorr
 
+from convert import *
 
-CRYOEM_HOME = pw.getScipionPath('software/lib/python2.7/site-packages/cryoem')
-CRYOEM_BIN = os.path.join(CRYOEM_HOME, 'program')
+_environ = getEnviron()

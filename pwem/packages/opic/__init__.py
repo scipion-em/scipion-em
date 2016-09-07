@@ -1,6 +1,6 @@
 # **************************************************************************
 # *
-# * Authors:     Carlos Oscar Sorzano (coss@cnb.csic.es)
+# * Authors:     Josue Gomez Blanco (jgomez@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -20,14 +20,17 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'coss@cnb.csic.es'
 # *
 # **************************************************************************
+"""
+This sub-package contains data and protocol classes
+wrapping Localized recontruction of subunits.
+"""
+from bibtex import _bibtex # Load bibtex dict with references
 
-import os
+_logo = "opic_logo.png"
 
-import pyworkflow as pw
-
-
-CRYOEM_HOME = pw.getScipionPath('software/lib/python2.7/site-packages/cryoem')
-CRYOEM_BIN = os.path.join(CRYOEM_HOME, 'program')
+from convert import *
+from protocol_localized import ProtLocalizedRecons
+from protocol_localized_extraction import ProtLocalizedExtraction
