@@ -1,8 +1,10 @@
 # **************************************************************************
 # *
-# * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
+# * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es) [1]
+# *              Kevin Savage (kevin.savage@diamond.ac.uk) [2]
 # *
-# * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
+# * [1] Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
+# * [2] Diamond Light Source, Ltd
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
@@ -20,34 +22,13 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-This sub-package contains Relion protocols and tools.
-"""
 
 from bibtex import _bibtex # Load bibtex dict with references
-_logo = "relion_logo.png"
-_references = ['Scheres2012a', 'Scheres2012b', 'Chen2012']
 
-from convert import *
-from protocol_classify2d import ProtRelionClassify2D
-from protocol_classify3d import ProtRelionClassify3D
-from protocol_refine3d import ProtRelionRefine3D
-from protocol_reconstruct import ProtRelionReconstruct
-from protocol_postprocess import ProtRelionPostprocess
-from protocol_preprocess import ProtRelionPreprocessParticles
-from protocol_polish import ProtRelionPolish
-from protocol_sort import ProtRelionSortParticles
-from protocol_autopick import ProtRelionAutopickFom, ProtRelionAutopick
-from protocol_subtract import ProtRelionSubtract
+_logo = None
+_references = ['Delageniere2011']
 
-from protocol_export_ctf import ProtRelionExportCtf
-
-# Wizards
-from wizard import *
-
-from viewer import *
-
-_environ = getEnviron()
+from protocol_monitor_ispyb import ProtMonitorISPyB
