@@ -1,6 +1,6 @@
 # **************************************************************************
 # *
-# * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
+# * Authors:     Amaya Jimenez (ajimenez@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -24,17 +24,4 @@
 # *
 # **************************************************************************
 
-"""
-Sub-packages containing different sub-modules to import different type
-of objects.
-"""
-
-from base import ProtImport, ProtImportFiles
-from coordinates import ProtImportCoordinates
-from ctfs import ProtImportCTF
-from images import ProtImportImages
-from masks import ProtImportMask
-from micrographs import ProtImportMicrographs, ProtImportMovies
-from particles import ProtImportParticles, ProtImportAverages
-from volumes import ProtImportVolumes, ProtImportPdb
-from viewer import viewerProtImportVolumes
+from protocol_export_emdb import ProtExportEMDB
