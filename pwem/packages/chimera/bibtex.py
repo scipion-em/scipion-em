@@ -1,8 +1,9 @@
+# coding: latin-1
 # **************************************************************************
 # *
-# * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
+# * Authors:     Roberto Marabini (roberto@cnb.csic.es)
 # *
-# * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
+# * L'Institut de genetique et de biologie moleculaire et cellulaire (IGBMC)
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
@@ -23,19 +24,24 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-
 """
-Sub-packages containing different sub-modules to import different type
-of objects.
+Bibtex string file for Gautomatch package.
 """
 
-from base import ProtImport, ProtImportFiles
-from coordinates import ProtImportCoordinates
-from ctfs import ProtImportCTF
-from images import ProtImportImages
-from masks import ProtImportMask
-from micrographs import ProtImportMicrographs, ProtImportMovies
-from particles import ProtImportParticles, ProtImportAverages
-from volumes import ProtImportVolumes, ProtImportPdb
-#from viewer import viewerProtImportVolumes, viewerProtImportStructure
-from viewer import viewerProtImportVolumes
+_bibtexStr = """
+@Article{Pettersen2004,
+   Author="Pettersen, E. F.  and Goddard, T. D.  and Huang, C. C.  and Couch, G. S.  and Greenblatt, D. M.  and Meng, E. C.  and Ferrin, T. E. ",
+   Title="{{U}{C}{S}{F} {C}himera--a visualization system for exploratory research and analysis}",
+   Journal="J Comput Chem",
+   Year="2004",
+   Volume="25",
+   Number="13",
+   Pages="1605--1612",
+   Month="Oct",
+   doi="https://doi.org/10.1002/jcc.20084"
+}
+"""
+
+from pyworkflow.utils import parseBibTex
+
+_bibtex = parseBibTex(_bibtexStr)  
