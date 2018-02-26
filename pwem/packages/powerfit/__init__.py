@@ -1,6 +1,6 @@
 # **************************************************************************
 # *
-# * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
+# * Authors:     Carlos Oscar Sorzano (coss@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -23,19 +23,16 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-
 """
-Sub-packages containing different sub-modules to import different type
-of objects.
+This sub-package contains data and protocol classes
+wrapping Powerfit programs https://github.com/haddocking/powerfit
 """
 
-from base import ProtImport, ProtImportFiles
-from coordinates import ProtImportCoordinates
-from ctfs import ProtImportCTF
-from images import ProtImportImages
-from masks import ProtImportMask
-from micrographs import ProtImportMicrographs, ProtImportMovies
-from particles import ProtImportParticles, ProtImportAverages
-from volumes import ProtImportVolumes, ProtImportPdb
-#from viewer import viewerProtImportVolumes, viewerProtImportStructure
-from viewer import viewerProtImportVolumes
+_logo = "powerfit_logo.gif"
+
+from bibtex import _bibtex # Load bibtex dict with references
+##from powerfit import *
+from protocol_powerfit import PowerfitProtRigidFit
+from viewer_powerfit import PowerfitProtRigidFitViewer
+
+from wizard import PowerFitPDBVolumeWizard

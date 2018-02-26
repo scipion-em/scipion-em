@@ -1,6 +1,7 @@
+# coding: latin-1
 # **************************************************************************
 # *
-# * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
+# * Authors:    Carlos Oscar Sorzano (coss@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -23,19 +24,26 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-
 """
-Sub-packages containing different sub-modules to import different type
-of objects.
+Bibtex string file for Powerfit package.
 """
 
-from base import ProtImport, ProtImportFiles
-from coordinates import ProtImportCoordinates
-from ctfs import ProtImportCTF
-from images import ProtImportImages
-from masks import ProtImportMask
-from micrographs import ProtImportMicrographs, ProtImportMovies
-from particles import ProtImportParticles, ProtImportAverages
-from volumes import ProtImportVolumes, ProtImportPdb
-#from viewer import viewerProtImportVolumes, viewerProtImportStructure
-from viewer import viewerProtImportVolumes
+_bibtexStr = """
+
+
+@article{vanZundert2015,
+title = "Fast and sensitive rigid-body fitting into cryo-EM density maps with PowerFit",
+journal = "AIMS Biophysics",
+volume = "2",
+pages = "73 - 87",
+year = "2015",
+doi = "http://dx.doi.org/10.3934/biophy.2015.2.73",
+url = "http://www.aimspress.com/article/10.3934/biophy.2015.2.73/pdf",
+author = "van Zundert, G. C. P.  and Bonvin, A. M. J. J.",
+keywords = "Rigid fitting"
+}
+"""
+
+from pyworkflow.utils import parseBibTex
+
+_bibtex = parseBibTex(_bibtexStr)  
