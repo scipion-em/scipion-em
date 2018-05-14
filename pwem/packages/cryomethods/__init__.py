@@ -1,8 +1,9 @@
 # **************************************************************************
 # *
 # * Authors:     Josue Gomez Blanco (josue.gomez-blanco@mcgill.ca)
+# *              Javier Vargas Balbuena (javier.vargasbalbuena@mcgill.ca)
 # *
-# * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
+# * Department of Anatomy and Cell Biology, McGill University
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
@@ -20,31 +21,32 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'coss@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 """
-This sub-package contains data and protocol classes
-wrapping Localized recontruction of subunits.
+This sub-package contains cryoMethods protocols and tools.
 """
-from bibtex import _bibtex # Load bibtex dict with references
 
-_logo = "opic_logo.png"
-LOCALREC_HOME = 'LOCALREC_HOME'
-RELION_HOME = 'RELION_HOME'
-TMP_RELION_HOME = 'TMP_RELION_HOME'
-LOCALREC_RELION_HOME = 'LOCALREC_RELION_HOME'
-
-from convert import *
-from protocol_localized import ProtLocalizedRecons
-from protocol_localized_extraction import ProtLocalizedExtraction
+# from bibtex import _bibtex # Load bibtex dict with references
+_logo = "cryomethods_logo.png"
+_references = []
+import os
+from convert import getSupportedVersions, getVersion, getEnviron
+from initial_volume_selector import ProtInitialVolumeSelector
+#
+# # Wizards
+# from wizard import *
+from viewer import *
+#
+_environ = getEnviron()
 
 
 def validateInstallation():
-    """ This function will be used to check if package is properly installed."""
-    missingPaths = ["%s: %s" % (var, os.environ[var])
-                    for var in [LOCALREC_HOME, LOCALREC_RELION_HOME]
-                    if not os.path.exists(os.environ[var])]
+    """ This function will be used to check if RELION is properly installed. """
+    missingPaths = ["%s: %s" % (var, _environ[var])
+                    for var in ['RELION_HOME']
+                    if not os.path.exists(_environ[var])]
 
     if missingPaths:
         return ["Missing variables:"] + missingPaths
