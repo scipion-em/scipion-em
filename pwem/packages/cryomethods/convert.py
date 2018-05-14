@@ -1,10 +1,9 @@
 # **************************************************************************
 # *
-# * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
-# *              Laura del Cano (ldelcano@cnb.csic.es)
-# *              Grigory Sharov (sharov@igbmc.fr)
+# * Authors:     Josue Gomez Blanco (josue.gomez-blanco@mcgill.ca)
+# *              Javier Vargas Balbuena (javier.vargasbalbuena@mcgill.ca)
 # *
-# * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
+# * Department of Anatomy and Cell Biology, McGill University
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
@@ -38,12 +37,11 @@ from pyworkflow.utils.path import (createLink, cleanPath, copyFile,
                                    replaceBaseExt, getExt, removeExt)
 import pyworkflow.em as em
 import pyworkflow.em.metadata as md
-from pyworkflow.em.packages.relion.constants import V1_3, V1_4, V2_0, V2_1
+from pyworkflow.em.packages.relion.constants import V2_0, V2_1
 
 # This dictionary will be used to map
 # between CTFModel properties and Xmipp labels
 RELION_HOME = 'RELION_HOME'
-
 ACQUISITION_DICT = OrderedDict([ 
        ("_amplitudeContrast", md.RLN_CTF_Q0),
        ("_sphericalAberration", md.RLN_CTF_CS),
@@ -291,12 +289,6 @@ def setPsdFiles(ctfModel, ctfRow):
         
 def ctfModelToRow(ctfModel, ctfRow):
     """ Set labels values from ctfModel to md row. """
-    # Refresh phase shift!
-    phaseShift = ctfModel.getPhaseShift()
-
-    if phaseShift is not None:
-        ctfRow.setValue(md.RLN_CTF_PHASESHIFT, phaseShift)
-
     objectToRow(ctfModel, ctfRow, CTF_DICT, extraLabels=CTF_EXTRA_LABELS)
     
 
@@ -304,10 +296,7 @@ def rowToCtfModel(ctfRow):
     """ Create a CTFModel from a row of a meta """
     if ctfRow.containsAll(CTF_DICT):
         ctfModel = em.CTFModel()
-
         rowToObject(ctfRow, ctfModel, CTF_DICT, extraLabels=CTF_EXTRA_LABELS)
-        if ctfRow.hasLabel(md.RLN_CTF_PHASESHIFT):
-            ctfModel.setPhaseShift(ctfRow.getValue(md.RLN_CTF_PHASESHIFT, 0))
         ctfModel.standardize()
         setPsdFiles(ctfModel, ctfRow)
     else:
@@ -362,11 +351,13 @@ def alignmentToRow(alignment, alignmentRow, alignType):
 
     alignmentRow.setValue(md.RLN_ORIENT_ORIGIN_X, shifts[0])
     alignmentRow.setValue(md.RLN_ORIENT_ORIGIN_Y, shifts[1])
+    # Also set the priors
+    alignmentRow.setValue(md.RLN_ORIENT_ORIGIN_X_PRIOR, shifts[0])
+    alignmentRow.setValue(md.RLN_ORIENT_ORIGIN_Y_PRIOR, shifts[1])
     
     if is2D:
         angle = angles[0] + angles[2]
         alignmentRow.setValue(md.RLN_ORIENT_PSI, -angle)
-
         flip = bool(numpy.linalg.det(matrix[0:2,0:2]) < 0)
         if flip:
             print "FLIP in 2D not implemented"
@@ -382,6 +373,10 @@ def alignmentToRow(alignment, alignmentRow, alignType):
         alignmentRow.setValue(md.RLN_ORIENT_ROT,  angles[0])
         alignmentRow.setValue(md.RLN_ORIENT_TILT, angles[1])
         alignmentRow.setValue(md.RLN_ORIENT_PSI,  angles[2])
+        # Also set the priors
+        alignmentRow.setValue(md.RLN_ORIENT_ROT_PRIOR, angles[0])
+        alignmentRow.setValue(md.RLN_ORIENT_TILT_PRIOR, angles[1])
+        alignmentRow.setValue(md.RLN_ORIENT_PSI_PRIOR, angles[2])
         
 
 def rowToAlignment(alignmentRow, alignType):
@@ -422,8 +417,7 @@ def coordinateToRow(coord, coordRow, copyId=True):
         setRowId(coordRow, coord)
     objectToRow(coord, coordRow, COOR_DICT, extraLabels=COOR_EXTRA_LABELS)
     if coord.getMicName():
-        micName = coord.getMicName()
-        coordRow.setValue(md.RLN_MICROGRAPH_NAME, str(micName.replace(" ", "")))
+        coordRow.setValue(md.RLN_MICROGRAPH_NAME, str(coord.getMicName()))
     else:
         if coord.getMicId():
             coordRow.setValue(md.RLN_MICROGRAPH_NAME, str(coord.getMicId()))
@@ -482,8 +476,8 @@ def imageToRow(img, imgRow, imgLabel=md.RLN_IMAGE_NAME, **kwargs):
                 
     if kwargs.get('writeAcquisition', True) and img.hasAcquisition():
         acquisitionToRow(img.getAcquisition(), imgRow)
-    
-    # Write all extra labels to the row    
+
+    # Write all extra labels to the row
     objectToRow(img, imgRow, {},
                 extraLabels=IMAGE_EXTRA_LABELS + kwargs.get('extraLabels', []))
 
@@ -505,14 +499,9 @@ def particleToRow(part, partRow, **kwargs):
         # use a fake micrograph name using id to relion
         # could at least group for CTF using that
         if not partRow.hasLabel(md.RLN_MICROGRAPH_NAME):
-            partRow.setValue(md.RLN_MICROGRAPH_NAME,
-                             'fake_micrograph_%06d.mrc' % part.getMicId())
+            partRow.setValue(md.RLN_MICROGRAPH_NAME, 'fake_micrograph_%06d.mrc' % part.getMicId())
     if part.hasAttribute('_rlnParticleId'):
         partRow.setValue(md.RLN_PARTICLE_ID, long(part._rlnParticleId.get()))
-
-    if kwargs.get('fillRandomSubset') and part.hasAttribute('_rlnRandomSubset'):
-        partRow.setValue(md.RLN_PARTICLE_RANDOM_SUBSET, int(part._rlnRandomSubset.get()))
-
     imageToRow(part, partRow, md.RLN_IMAGE_NAME, **kwargs)
 
 
@@ -536,7 +525,7 @@ def rowToParticle(partRow, **kwargs):
     if kwargs.get('readCtf', True):
         img.setCTF(rowToCtfModel(partRow))
         
-    # alignment is mandatory at this point, it should be check
+    # alignment is mandatory at this point, it shoud be check
     # and detected defaults if not passed at readSetOf.. level
     alignType = kwargs.get('alignType') 
     
@@ -604,7 +593,6 @@ def setOfImagesToMd(imgSet, imgMd, imgToFunc, **kwargs):
         rowFunc: this function can be used to setup the row before 
             adding to meta
     """
-    
     if 'alignType' not in kwargs:
         kwargs['alignType'] = imgSet.getAlignment()
 
@@ -628,18 +616,10 @@ def writeSetOfParticles(imgSet, starFile,
     partMd = md.MetaData()
     setOfImagesToMd(imgSet, partMd, particleToRow, **kwargs)
     
-    if kwargs.get('fillMagnification', False):
-        pixelSize = imgSet.getSamplingRate()
-        mag = imgSet.getAcquisition().getMagnification()
-        detectorPxSize = mag * pixelSize / 10000
-        
-        partMd.fillConstant(md.RLN_CTF_MAGNIFICATION, mag)
-        partMd.fillConstant(md.RLN_CTF_DETECTOR_PIXEL_SIZE, detectorPxSize)
-    else:
-        # Remove Magnification from metadata to avoid wrong values of pixel size.
-        # In Relion if Magnification and DetectorPixelSize are in metadata,
-        # pixel size is ignored in the command line.
-        partMd.removeLabel(md.RLN_CTF_MAGNIFICATION)
+    # Remove Magnification from metadata to avoid wrong values of pixel size.
+    # In Relion if Magnification and DetectorPixelSize are in metadata,
+    # pixel size is ignored in the command line.
+    partMd.removeLabel(md.RLN_CTF_MAGNIFICATION)
 
     blockName = kwargs.get('blockName', 'Particles')
     partMd.write('%s@%s' % (blockName, starFile))
@@ -689,37 +669,6 @@ def writeReferences(inputSet, outputRoot, useBasename=False, **kwargs):
     refsMd.write(starFile)
 
 
-def micrographToRow(mic, micRow, **kwargs):
-    """ Set labels values from Micrograph mic to md row. """
-    imageToRow(mic, micRow, imgLabel=md.RLN_MICROGRAPH_NAME, **kwargs)
-
-    
-def writeSetOfMicrographs(micSet, starFile, **kwargs):
-    """ If 'outputDir' is in kwargs, the micrographs are\
-    converted or linked in the outputDir.
-    """
-    micMd = md.MetaData()
-    setOfImagesToMd(micSet, micMd, micrographToRow, **kwargs)
-    blockName = kwargs.get('blockName', 'Particles')
-    micMd.write('%s@%s' % (blockName, starFile))
-
-
-def writeSqliteIterData(imgStar, imgSqlite, **kwargs):
-    """ Given a Relion images star file (from some iteration)
-    create the corresponding SetOfParticles (sqlite file)
-    for this iteration. This file can be visualized sorted
-    by the LogLikelihood.
-    """
-    cleanPath(imgSqlite)
-    imgSet = em.SetOfParticles(filename=imgSqlite)
-    readSetOfParticles(imgStar, imgSet, **kwargs)
-    imgSet.write()
-    
-    
-def writeSqliteIterClasses(imgStar):
-    pass
-    
-    
 def splitInCTFGroups(imgStar, defocusRange=1000, numParticles=10):
     """ Add a new colunm in the image star to separate the particles into ctf groups """
     mdAll = md.MetaData(imgStar)
@@ -1046,7 +995,7 @@ def writeMicCoordinates(mic, coordList, outputFn, getPosFunc=None):
             it can be useful for scaling the coordinates if needed.
     """
     if getPosFunc is None:
-        getPosFunc = lambda coord: coord.getPosition()
+        getPosFunc = lambda coord: coord.getPostion()
    
     extraLabels = coordList[0].hasAttribute('_rlnClassNumber')
     f = openStar(outputFn, extraLabels)
