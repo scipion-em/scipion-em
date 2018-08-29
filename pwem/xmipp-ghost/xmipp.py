@@ -1,6 +1,6 @@
 # **************************************************************************
 # *
-# * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
+# * Authors:     David Maluenda Niubo (dmaluenda@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -23,45 +23,20 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-Add functions related to metadata
-"""
-import xmippLib
 
-getBlocksInMetaDataFile = xmippLib.getBlocksInMetaDataFile
+import traceback
 
-label2Str = xmippLib.label2Str
+# FIXME: This is a bypass until xmipp is replaced to xmippLib
+# FIXME:   in all imports related to the C++ binding
 
-colorStr = xmippLib.colorStr
+print("\n >>> WARNING: 'import xmipp' is deprecated for the xmipp binding.")
+stackList = traceback.extract_stack()
+for stackLine in stackList:
+    if 'import xmipp' in stackLine[3]:
+        print("  > Please change 'import xmipp' to 'import xmippLib' in\n"
+              "    File: '%s', line %d.\n" % (stackLine[0], stackLine[1]))
+    if 'from xmipp import' in stackLine[3]:
+        print("  > Please change 'from xmipp import ...' to 'from xmippLib import ...' in\n"
+              "    File: '%s', line %d.\n" % (stackLine[0], stackLine[1]))
 
-labelType = xmippLib.labelType
-
-labelHasTag = xmippLib.labelHasTag
-
-labelIsImage = xmippLib.labelIsImage
-
-str2Label = xmippLib.str2Label
-
-isValidLabel = xmippLib.isValidLabel
-
-MDValueRelational = xmippLib.MDValueRelational
-
-MDValueEQ = xmippLib.MDValueEQ
-
-MDValueNE = xmippLib.MDValueNE
-
-MDValueLT = xmippLib.MDValueLT
-
-MDValueLE = xmippLib.MDValueLE
-
-MDValueGT = xmippLib.MDValueGT
-
-MDValueGE = xmippLib.MDValueGE
-
-MDValueRange = xmippLib.MDValueRange
-
-addLabelAlias = xmippLib.addLabelAlias
-
-activateMathExtensions = xmippLib.activateMathExtensions
-
-getSymmetryMatrices = xmippLib.SymList().getSymmetryMatrices
+from xmippLib import *
