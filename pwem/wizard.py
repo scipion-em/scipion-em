@@ -140,30 +140,31 @@ class EmWizard(Wizard):
 #    Provider class (for objects used in the wizards)
 # ===============================================================================
 
-class ListTreeProvider(TreeProvider):
-    """ Simple list tree provider. """
-
-    def __init__(self, objList=None):
-        TreeProvider.__init__(self)
-        self.objList = objList
-        self.getColumns = lambda: [('Object', 150)]
-        self.getObjects = lambda: self.objList
-
-    def getObjectInfo(self, obj):
-        info = {'key': obj.getObjId(), 'text': self.getText(obj), 'values': ()}
-        return info
-
-    def getText(self, obj):
-        """ Get the text to display for an object. """
-        index, fn = obj.getLocation()
-        name = os.path.basename(fn)
-        if index:
-            name = "%03d@%s" % (index, name)
-        return name
-
-    def getObjs(self):
-        """ Get the objects. """
-        return self.objList
+# Candidate to be moved to pyworkflow? Nothing em related and generic enough to be there.
+# class ListTreeProvider(TreeProvider):
+#     """ Simple list tree provider. """
+#
+#     def __init__(self, objList=None):
+#         TreeProvider.__init__(self)
+#         self.objList = objList
+#         self.getColumns = lambda: [('Object', 150)]
+#         self.getObjects = lambda: self.objList
+#
+#     def getObjectInfo(self, obj):
+#         info = {'key': obj.getObjId(), 'text': self.getText(obj), 'values': ()}
+#         return info
+#
+#     def getText(self, obj):
+#         """ Get the text to display for an object. """
+#         index, fn = obj.getLocation()
+#         name = os.path.basename(fn)
+#         if index:
+#             name = "%03d@%s" % (index, name)
+#         return name
+#
+#     def getObjs(self):
+#         """ Get the objects. """
+#         return self.objList
 
 
 # ===============================================================================
@@ -820,8 +821,8 @@ class MaskRadiiPreviewDialog(MaskPreviewDialog):
     def getRadius(self, radiusSlider):
         return int(radiusSlider.get())
 
-
-class ListTreeProviderString(ListTreeProvider):
-    def getText(self, obj):
-        return obj.get()
+# Moved to pyworkflow.gui.tree
+# class ListTreeProviderString(ListTreeProvider):
+#     def getText(self, obj):
+#         return obj.get()
 
