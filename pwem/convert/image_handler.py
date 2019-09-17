@@ -25,6 +25,7 @@
 # **************************************************************************
 
 import os
+import sys
 from itertools import izip
 import PIL
 
@@ -38,7 +39,7 @@ except Exception as e:
   sys.exit(-1)
 
 import pyworkflow.utils as pwutils
-from pyworkflow.em.constants import *
+from pwem.constants import *
 
 
 class ImageHandler(object):
@@ -78,7 +79,7 @@ class ImageHandler(object):
         """
         # We can not import Volume from top level since
         # data depends on this module
-        from pyworkflow.em.data import Volume, Movie
+        from pwem.data import Volume, Movie
         fn = image.getFileName()
         if isinstance(image, Volume):
             if fn.endswith('.mrc') or fn.endswith('.map'):

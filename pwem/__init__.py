@@ -33,11 +33,4 @@ from data_tiltpairs import *
 from protocol import *
 from convert import *
 from wizards import *
-import pyworkflow.plugin
-
-
-class Plugin(pyworkflow.plugin.Plugin):
-    pass
-
-
-
+from filehandlers import *
