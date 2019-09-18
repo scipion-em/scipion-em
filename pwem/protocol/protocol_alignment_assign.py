@@ -25,7 +25,7 @@
 # **************************************************************************
 
 
-from pyworkflow.em import ALIGN_2D
+from pwem import ALIGN_2D
 from pyworkflow.protocol.params import PointerParam
 from protocol_2d import ProtAlign2D
 

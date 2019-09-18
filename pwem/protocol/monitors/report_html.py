@@ -37,7 +37,7 @@ from pyworkflow.protocol import getUpdatedProtocol
 from pyworkflow import getTemplatePath, getConfigPath
 import pyworkflow.utils as pwutils
 from summary_provider import SummaryProvider
-from pyworkflow.em.convert import ImageHandler
+from pwem.convert import ImageHandler
 
 ####################### CONSTANTS ##########################
 # These constants are the keys used in the ctfMonitor function

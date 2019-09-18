@@ -25,8 +25,8 @@
 # **************************************************************************
 
 
-from pyworkflow.em.data import SetOfMicrographs
-from pyworkflow.utils import importFromPlugin
+from pwem.data import SetOfMicrographs
+from pyworkflow.plugin import Domain
 from pyworkflow.utils.path import removeBaseExt
 from pyworkflow.protocol.params import PointerParam
 
@@ -90,19 +90,21 @@ class ProtImportCTF(ProtImportFiles):
             importFrom = self.getFormat()
 
         if importFrom == self.IMPORT_FROM_XMIPP3:
-            XmippImport = importFromPlugin('xmipp3.convert', 'XmippImport',
+            XmippImport = Domain.importFromPlugin('xmipp3.convert', 'XmippImport',
                                            doRaise=True)
             return XmippImport(self, filesPath)
         elif importFrom == self.IMPORT_FROM_GRIGORIEFF:
-            GrigorieffLabImportCTF = importFromPlugin('grigoriefflab.convert',
+            GrigorieffLabImportCTF = Domain.importFromPlugin('grigoriefflab.convert',
                                                       'GrigorieffLabImportCTF',
                                                       doRaise=True)
             return GrigorieffLabImportCTF(self)
         elif importFrom == self.IMPORT_FROM_GCTF:
-            GctfImportCTF = importFromPlugin('gctf.convert', 'GctfImportCTF', doRaise=True)
+            GctfImportCTF = Domain.importFromPlugin('gctf.convert',
+                                                    'GctfImportCTF', doRaise=True)
             return GctfImportCTF(self)
         elif importFrom == self.IMPORT_FROM_EMAN2:
-            EmanImport = importFromPlugin('eman2.convert', 'EmanImport', doRaise=True)
+            EmanImport = Domain.importFromPlugin('eman2.convert', 'EmanImport',
+                                                 doRaise=True)
             return EmanImport(self, None)
         elif importFrom == self.IMPORT_FROM_SCIPION:
             from dataimport import ScipionImport

@@ -31,12 +31,12 @@ from os.path import exists, basename, abspath, relpath
 import pyworkflow.protocol.params as params
 from base import ProtImportFiles
 from images import ProtImportImages
-from pyworkflow.em import Volume, ImageHandler, AtomStruct
-from pyworkflow.em.data import Transform
-from pyworkflow.em.convert import Ccp4Header
+from pwem import Volume, ImageHandler, AtomStruct
+from pwem.data import Transform
+from pwem.convert import Ccp4Header
 from pyworkflow.utils.path import createAbsLink, copyFile
 from pyworkflow.utils.properties import Message
-from pyworkflow.em.convert.atom_struct import AtomicStructHandler
+from pwem.convert.atom_struct import AtomicStructHandler
 
 class ProtImportVolumes(ProtImportImages):
     """Protocol to import a set of volumes to the project"""

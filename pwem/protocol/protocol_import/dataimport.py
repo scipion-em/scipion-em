@@ -28,9 +28,8 @@ from os.path import join, basename, exists
 from collections import OrderedDict
 
 from pyworkflow.utils.path import findRootFrom
-from pyworkflow.em.data import SetOfParticles, SetOfMicrographs, SetOfCTF
-from pyworkflow.em.constants import ALIGN_NONE
-
+from pwem.data import SetOfParticles, SetOfMicrographs, SetOfCTF
+from pwem.constants import ALIGN_NONE
 
 
 class ScipionImport():

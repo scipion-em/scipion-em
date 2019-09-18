@@ -34,9 +34,9 @@ from collections import OrderedDict
 from pyworkflow.object import Set, String, Pointer
 import pyworkflow.protocol.params as params
 from pyworkflow.protocol import STATUS_NEW
-from pyworkflow.em.protocol import EMProtocol
-from pyworkflow.em.constants import RELATION_CTF
-from pyworkflow.em.data import (EMObject, SetOfCoordinates, Micrograph,
+from pwem.protocol import EMProtocol
+from pwem.constants import RELATION_CTF
+from pwem.data import (EMObject, SetOfCoordinates, Micrograph,
                                 SetOfMicrographs, SetOfCTF)
 
 import pyworkflow.utils as pwutils

@@ -27,7 +27,7 @@
 In this module are protocol base classes related to 2D processing
 
 """
-from pyworkflow.em.protocol import *
+from pwem.protocol import *
 
 
 class Prot3D(EMProtocol):

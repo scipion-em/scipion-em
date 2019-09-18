@@ -33,4 +33,16 @@ from data_tiltpairs import *
 from protocol import *
 from convert import *
 from wizards import *
+from pyworkflow.viewer import Viewer
+from pyworkflow.wizard import Wizard
 from filehandlers import *
+import pyworkflow.plugin
+
+
+class Domain(pyworkflow.plugin.Domain):
+    _name = __name__
+    _objectClass = EMObject
+    _protocolClass = Protocol
+    _viewerClass = Viewer
+    _wizardClass = Wizard
+    _baseClasses = globals()

@@ -32,8 +32,8 @@ from protocol_monitor_ctf import MonitorCTF
 from protocol_monitor_movie_gain import MonitorMovieGain
 from protocol_monitor_system import MonitorSystem
 from pyworkflow import VERSION_1_1
-from pyworkflow.em.protocol import ProtCTFMicrographs, ProtProcessMovies, ProtAlignMovies
-from pyworkflow.em.protocol.monitors.report_html import ReportHtml
+from pwem.protocol import ProtCTFMicrographs, ProtProcessMovies, ProtAlignMovies
+from pwem.protocol.monitors.report_html import ReportHtml
 import getnifs
 
 

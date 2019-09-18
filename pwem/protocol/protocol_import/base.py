@@ -33,7 +33,7 @@ from datetime import datetime
 import pyworkflow.utils as pwutils
 import pyworkflow.protocol.params as params
 from pyworkflow.utils.path import expandPattern, copyFile, createAbsLink
-from pyworkflow.em.protocol import EMProtocol
+from pwem.protocol import EMProtocol
 
 
 

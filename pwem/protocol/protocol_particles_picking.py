@@ -33,7 +33,7 @@ from collections import OrderedDict
 from pyworkflow.object import Set, Pointer
 import pyworkflow.protocol.params as params
 from pyworkflow.protocol import STATUS_NEW
-from pyworkflow.em.data import (EMObject, SetOfCoordinates, SetOfMicrographs,
+from pwem.data import (EMObject, SetOfCoordinates, SetOfMicrographs,
                                 SetOfCTF)
 import pyworkflow.utils as pwutils
 from pyworkflow.utils.properties import Message
@@ -112,7 +112,7 @@ class ProtParticlePicking(ProtParticles):
         return self._getCoords(SetOfCoordinates)
 
     def getCoordsTiltPair(self):
-        from pyworkflow.em.data_tiltpairs import CoordinatesTiltPair
+        from pwem.data_tiltpairs import CoordinatesTiltPair
         return self._getCoords(CoordinatesTiltPair)
 
     def _createOutput(self, outputDir):

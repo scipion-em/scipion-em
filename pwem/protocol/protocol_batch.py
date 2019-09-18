@@ -29,14 +29,14 @@ from itertools import izip
 
 from pyworkflow.protocol.params import PointerParam, \
     FileParam, StringParam, IntParam
-from pyworkflow.em.protocol import EMProtocol
-from pyworkflow.em.data import (SetOfImages, SetOfCTF, SetOfClasses,
+from pwem.protocol import EMProtocol
+from pwem.data import (SetOfImages, SetOfCTF, SetOfClasses,
                                 SetOfClasses3D, SetOfVolumes, EMObject, EMSet,
                                 SetOfNormalModes, SetOfParticles, SetOfPDBs, FSC,
                                 Class2D, Class3D, SetOfMicrographs, ALIGN_NONE)
-from pyworkflow.em.data_tiltpairs import (TiltPair, MicrographsTiltPair,
+from pwem.data_tiltpairs import (TiltPair, MicrographsTiltPair,
                                           ParticlesTiltPair)
-from pyworkflow.em.data import Mask
+from pwem.data import Mask
 from pyworkflow.utils import moveFile
 
 from cPickle import dumps, loads
@@ -428,7 +428,7 @@ class ProtUserSubSet(BatchProtocol):
         if self._dbPrefix.endswith('_'):
             self._dbPrefix = self._dbPrefix[:-1]
 
-        from pyworkflow.em import loadSetFromDb
+        from pwem.utils import loadSetFromDb
 
         # Ignoring self._dbPrefix here, since we want to load
         # the top-level set in the sqlite file

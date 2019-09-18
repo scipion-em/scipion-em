@@ -36,8 +36,8 @@ from datetime import timedelta, datetime
 import pyworkflow.utils as pwutils
 from pyworkflow.utils.properties import Message
 import pyworkflow.protocol.params as params
-from pyworkflow.em.convert import ImageHandler
-from pyworkflow.em.data import Acquisition
+from pwem.convert import ImageHandler
+from pwem.data import Acquisition
 
 from base import ProtImportFiles
 
@@ -489,13 +489,13 @@ class ProtImportImages(ProtImportFiles):
                 yield fileName, uniqueFn, fileId
 
     def _fillImportedFiles(self, imgSet):
-        from pyworkflow.em import SetOfMicrographsBase
+        from pwem import SetOfMicrographsBase
         if isinstance(imgSet, SetOfMicrographsBase):
             for img in imgSet:
                 self.importedFiles.add(img.getMicName())
 
     def _fillMicName(self, img, uniqueFn):
-        from pyworkflow.em import Micrograph
+        from pwem import Micrograph
         if isinstance(img, Micrograph):
             img.setMicName(uniqueFn)
             

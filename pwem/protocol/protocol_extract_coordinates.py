@@ -32,10 +32,10 @@ from datetime import datetime
 
 from pyworkflow.protocol.params import PointerParam, BooleanParam
 from pyworkflow.protocol.constants import STATUS_NEW
-from pyworkflow.em.constants import ALIGN_2D, ALIGN_3D, ALIGN_PROJ, ALIGN_NONE
-from pyworkflow.em.data import (Coordinate, SetOfParticles, SetOfMicrographs,
+from pwem.constants import ALIGN_2D, ALIGN_3D, ALIGN_PROJ, ALIGN_NONE
+from pwem.data import (Coordinate, SetOfParticles, SetOfMicrographs,
                                 SetOfCoordinates, Set)
-from pyworkflow.em.protocol import ProtParticlePickingAuto
+from pwem.protocol import ProtParticlePickingAuto
 import pyworkflow.utils as pwutils
 
 import time
@@ -343,7 +343,7 @@ class ProtExtractCoords(ProtParticlePickingAuto):
         return shifts
 
     def geometryFromMatrix(self, matrix, inverseTransform):
-        from pyworkflow.em.convert.transformations import translation_from_matrix
+        from pwem.convert.transformations import translation_from_matrix
         if inverseTransform:
             matrix = numpy.linalg.inv(matrix)
             shifts = -translation_from_matrix(matrix)

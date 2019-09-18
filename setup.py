@@ -30,7 +30,8 @@ setup(
     author_email='scipion@cnb.csic.es',  # Optional
     keywords='scipion cryoem imageprocessing scipion-2.0',  # Optional
     packages=find_packages(),
-    install_requires=[],
+    install_requires=['numpy', 'bibtexparser', 'matplotlib', 'requests', 'Pillow',
+                      'biopython'],
     # package_data={  # Optional
     # #    '': [''],
     # }

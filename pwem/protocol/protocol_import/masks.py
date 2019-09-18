@@ -34,8 +34,8 @@ from pyworkflow.protocol.params import PathParam, FloatParam
 import pyworkflow.utils as pwutils
 
 from base import ProtImport
-from pyworkflow.em.data import Mask, VolumeMask
-from pyworkflow.em.convert import ImageHandler
+from pwem.data import Mask, VolumeMask
+from pwem.convert import ImageHandler
 
 
 

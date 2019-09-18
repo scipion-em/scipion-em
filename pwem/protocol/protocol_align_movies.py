@@ -27,18 +27,20 @@
 # **************************************************************************
 
 import os
+import warnings
 from itertools import izip
 from math import ceil
 
 from pyworkflow.object import Set
 import pyworkflow.utils.path as pwutils
-from pyworkflow.utils import yellowStr, redStr, importFromPlugin
+from pyworkflow.utils import yellowStr, redStr
+from pyworkflow.plugin import Domain
 import pyworkflow.protocol.params as params
 import pyworkflow.protocol.constants as cons
-from pyworkflow.em.convert import ImageHandler
-from pyworkflow.em.data import (MovieAlignment, SetOfMovies, SetOfMicrographs,
+from pwem.convert import ImageHandler
+from pwem.data import (MovieAlignment, SetOfMovies, SetOfMicrographs,
                                 Image)
-from pyworkflow.em.protocol import ProtProcessMovies
+from pwem.protocol import ProtProcessMovies
 from pyworkflow.gui.plotter import Plotter
 
 class ProtAlignMovies(ProtProcessMovies):
@@ -502,12 +504,12 @@ class ProtAlignMovies(ProtProcessMovies):
         
     def __runXmippProgram(self, program, args):
         """ Internal shortcut function to launch a Xmipp program. """
-        xmipp3 = importFromPlugin('xmipp3')
+        xmipp3 = Domain.importFromPlugin('xmipp3')
         xmipp3.Plugin.runXmippProgram(program, args)
 
     def __runEman2Program(self, program, args):
         """ Internal workaround to launch an EMAN2 program. """
-        eman2 = importFromPlugin('eman2')
+        eman2 = Domain.importFromPlugin('eman2')
         from pyworkflow.utils.process import runJob
         runJob(self._log, eman2.Plugin.getProgram(program), args,
                env=eman2.Plugin.getEnviron())
@@ -600,7 +602,8 @@ class ProtAlignMovies(ProtProcessMovies):
          right-part from psd2 (corrected PSD)
         """
         ih = ImageHandler()
-        composePSDImages(self, ih.read(psd1), ih.read(psd2), outputFn, outputFnUncorrected, outputFnCorrected)
+        self.composePSDImages(self, ih.read(psd1), ih.read(psd2), outputFn,
+                              outputFnUncorrected, outputFnCorrected)
 
     def computePSDImages(self, movie, fnUncorrected, fnCorrected,
                     outputFnUncorrected=None, outputFnCorrected=None):
@@ -615,7 +618,8 @@ class ProtAlignMovies(ProtProcessMovies):
                     outputFnUncorrected=None, outputFnCorrected=None):
         import warnings
         warnings.warn("Use computePSDImages() instead", DeprecationWarning)
-        computePSDImages(self, movie, fnUncorrected, fnCorrected, outputFnUncorrected, outputFnCorrected)
+        self.computePSDImages(self, movie, fnUncorrected, fnCorrected,
+                              outputFnUncorrected, outputFnCorrected)
 
     def computeThumbnail(self, inputFn, scaleFactor=6, outputFn=None):
         """ Generates a thumbnail of the input file"""

@@ -35,8 +35,8 @@ from datetime import timedelta, datetime
 import pyworkflow.utils as pwutils
 import pyworkflow.protocol.params as params
 from pyworkflow.utils.properties import Message
-from pyworkflow.em import ImageHandler
-from pyworkflow.em.constants import SAMPLING_FROM_IMAGE, SAMPLING_FROM_SCANNER
+from pwem import ImageHandler
+from pwem.constants import SAMPLING_FROM_IMAGE, SAMPLING_FROM_SCANNER
 
 from images import ProtImportImages
 
@@ -379,7 +379,7 @@ class ProtImportMicrographs(ProtImportMicBase):
     
     #--------------------------- INFO functions --------------------------------
     def _validate(self):
-        from pyworkflow.em.convert import ImageHandler
+        from pwem.convert import ImageHandler
         ci = self.getImportClass()
         if ci is None:
             errors = ProtImportMicBase._validate(self)

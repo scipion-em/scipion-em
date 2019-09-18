@@ -26,8 +26,8 @@
 
 
 import pyworkflow.protocol.params as params
-from pyworkflow.em.data import SetOfParticles
-from pyworkflow.em.protocol import ProtCTFMicrographs
+from pwem.data import SetOfParticles
+from pwem.protocol import ProtCTFMicrographs
 
 
 class ProtCTFAssign(ProtCTFMicrographs):

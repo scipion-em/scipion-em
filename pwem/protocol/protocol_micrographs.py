@@ -42,8 +42,8 @@ from pyworkflow.utils import redStr, yellowStr
 from pyworkflow.utils.path import copyTree, removeBaseExt, makePath, makeFilePath, cleanPath
 from pyworkflow.utils.properties import Message
 from pyworkflow.utils.utils import prettyTime
-from pyworkflow.em.protocol import EMProtocol
-from pyworkflow.em.data import SetOfMicrographs, SetOfCTF
+from pwem.protocol import EMProtocol
+from pwem.data import SetOfMicrographs, SetOfCTF
 
 
 class ProtMicrographs(EMProtocol):

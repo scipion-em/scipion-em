@@ -35,7 +35,7 @@ import random
 from protocol import EMProtocol
 import pyworkflow.protocol as pwprot
 from pyworkflow.object import Boolean
-from pyworkflow.em.data import SetOfClasses
+from pwem.data import SetOfClasses
 
 class ProtSets(EMProtocol):
     """ Base class for all protocols related to subsets. """
