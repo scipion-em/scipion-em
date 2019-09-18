@@ -35,15 +35,15 @@ from pyworkflow.tests import BaseTest, setupTestProject, DataSet
 
 from pyworkflow.utils import greenStr, magentaStr
 
-from pyworkflow.em.protocol.protocol_import import (
+from pwem.protocol.protocol_import import (
     ProtImportMicrographs, ProtImportVolumes, ProtImportMovies,
     ProtImportParticles)
 
-from pyworkflow.em.protocol.protocol_sets import (
+from pwem.protocol.protocol_sets import (
     ProtSplitSet, ProtSubSet, ProtUnionSet, ProtSubSetByMic)
 
 # Used by Roberto's test, where he creates the particles "by hand"
-from pyworkflow.em.data import Particle, SetOfParticles, Acquisition, CTFModel
+from pwem.data import Particle, SetOfParticles, Acquisition, CTFModel
 from pyworkflow.utils.utils import prettyDict
 from pyworkflow.object import Float
 

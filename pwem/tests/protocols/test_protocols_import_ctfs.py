@@ -26,7 +26,7 @@ from itertools import izip
 
 import pyworkflow.utils as pwutils
 from pyworkflow.tests import BaseTest, setupTestProject, DataSet
-from pyworkflow.em.protocol import ProtImportCTF, ProtImportMicrographs
+from pwem.protocol import ProtImportCTF, ProtImportMicrographs
 
 
 

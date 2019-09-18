@@ -23,14 +23,17 @@
 # ***************************************************************************/
 
 from pyworkflow.tests import BaseTest, DataSet, setupTestProject
-from pyworkflow.em.protocol import ProtImportMicrographs, ProtCreateStreamData
-from pyworkflow.utils import importFromPlugin
+from pwem.protocol import ProtImportMicrographs, ProtCreateStreamData
+from pwem import Domain
 
-ProtCTFFind = importFromPlugin('grigoriefflab.protocols', 'ProtCTFFind', doRaise=True)
-XmippProtCTFMicrographs = importFromPlugin('xmipp3.protocols',
-                                           'XmippProtCTFMicrographs', doRaise=True)
-XmippProtCTFConsensus = importFromPlugin('xmipp3.protocols',
-                                         'XmippProtCTFConsensus', doRaise=True)
+ProtCTFFind = Domain.importFromPlugin('grigoriefflab.protocols',
+                                      'ProtCTFFind', doRaise=True)
+XmippProtCTFMicrographs = Domain.importFromPlugin('xmipp3.protocols',
+                                                  'XmippProtCTFMicrographs',
+                                                  doRaise=True)
+XmippProtCTFConsensus = Domain.importFromPlugin('xmipp3.protocols',
+                                                'XmippProtCTFConsensus',
+                                                doRaise=True)
 
 
 class TestCtfConsensus(BaseTest):

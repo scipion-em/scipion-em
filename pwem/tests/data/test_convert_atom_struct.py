@@ -30,10 +30,11 @@ from collections import Counter
 
 import numpy
 
-from pyworkflow.em.convert.atom_struct import AtomicStructHandler
-from pyworkflow.em.convert.transformations import (
+from pwem.convert.atom_struct import AtomicStructHandler
+from pwem.convert.transformations import (
     euler_matrix, translation_matrix, concatenate_matrices)
 from pyworkflow.tests import *
+from pwem import Domain
 
 
 class TestAtomicStructHandler(unittest.TestCase):
@@ -268,18 +269,18 @@ class TestAtomicStructHandler(unittest.TestCase):
             pdbFileName = 'pdb%s.ent' % PDBID.lower()
 
         # get 3D map sampling
-        from pyworkflow.em.headers import Ccp4Header
+        from pwem.convert.headers import Ccp4Header
         header = Ccp4Header("emd_%s.map" % EMDBID, readHeader=True)
         sampling, y, z = header.getSampling()
 
         def __runXmippProgram(program, args):
             """ Internal function to launch a Xmipp program. """
-            xmipp3 = pwutils.importFromPlugin('xmipp3')
+            xmipp3 = Domain.importFromPlugin('xmipp3')
             xmipp3.runXmippProgram(program, args)
 
         def __getXmippEulerAngles(matrix):
             """ Internal fuction to convert scipion to xmipp angles"""
-            geometryFromMatrix = importFromPlugin('xmipp3.convert',
+            geometryFromMatrix = Domain.importFromPlugin('xmipp3.convert',
                                                   'geometryFromMatrix')
 
             return geometryFromMatrix(matrix, False)
@@ -344,7 +345,7 @@ class TestAtomicStructHandler(unittest.TestCase):
             header.writeHeader()
 
             # view the results with chimera
-            from pyworkflow.em.viewers import Chimera
+            from pwem.viewers import Chimera
             args = "%s %s %s %s" % (
                    pdbFileName,
                    "emd_%s.map" % EMDBID,

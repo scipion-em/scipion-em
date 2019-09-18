@@ -9,10 +9,16 @@ from pyworkflow.tests import *
 import pyworkflow.utils as pwutils
 import sqlite3
 from pyworkflow.utils import Timer
-try:
-    from xmipp3.convert import *
-except:
-    pwutils.pluginNotFound('xmipp', doRaise=True)
+from pwem.data import *
+from pwem.metadata import *
+from pwem import Domain
+
+# try:
+#     from xmipp3.convert import *
+# except:
+#     Domain._pluginNotFound('xmipp', doRaise=True)
+
+xmippConvert = Domain.importFromPlugin('xmipp3.convert', doRaise=True)
 
 # set to true if you want to check how fast is the access to
 # the database
@@ -44,7 +50,7 @@ def createDummyProtocol(projName):
     proj = Manager().createProject(projName)
     os.chdir(proj.path)
 
-    from pyworkflow.em.protocol import EMProtocol
+    from pwem.protocol import EMProtocol
 
     prot = proj.newProtocol(EMProtocol)
     prot.setObjLabel('dummy protocol')

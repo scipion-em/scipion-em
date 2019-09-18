@@ -24,20 +24,29 @@
 
 import unittest, sys
 
-from pyworkflow.em import ProtImportMovies, ProtImportCoordinates
+from pwem.protocol import ProtImportMovies, ProtImportCoordinates
 from pyworkflow.tests import DataSet, setupTestProject
 from test_workflow import TestWorkflow
-from pyworkflow.utils import importFromPlugin
+from pwem import Domain
 
-XmippProtOFAlignment = importFromPlugin('xmipp3.protocols', 'XmippProtOFAlignment', doRaise=True)
-XmippProtPreprocessMicrographs = importFromPlugin('xmipp3.protocols','XmippProtPreprocessMicrographs')
-XmippProtCTFMicrographs = importFromPlugin('xmipp3.protocols', 'XmippProtCTFMicrographs')
-XmippProtExtractParticles = importFromPlugin('xmipp3.protocols', 'XmippProtExtractParticles')
-XmippProtCL2DAlign = importFromPlugin('xmipp3.protocols', 'XmippProtCL2DAlign')
-OTHER = importFromPlugin('xmipp3.constants', 'OTHER')
-SpiderProtFilter = importFromPlugin('spider.protocols', 'SpiderProtFilter', doRaise=True)
-SpiderProtCAPCA = importFromPlugin('spider.protocols', 'SpiderProtCAPCA')
-SpiderProtClassifyWard = importFromPlugin('spider.protocols', 'SpiderProtClassifyWard')
+XmippProtOFAlignment = Domain.importFromPlugin('xmipp3.protocols',
+                                               'XmippProtOFAlignment',
+                                               doRaise=True)
+XmippProtPreprocessMicrographs = Domain.importFromPlugin('xmipp3.protocols',
+                                                         'XmippProtPreprocessMicrographs')
+XmippProtCTFMicrographs = Domain.importFromPlugin('xmipp3.protocols',
+                                                  'XmippProtCTFMicrographs')
+XmippProtExtractParticles = Domain.importFromPlugin('xmipp3.protocols',
+                                                    'XmippProtExtractParticles')
+XmippProtCL2DAlign = Domain.importFromPlugin('xmipp3.protocols',
+                                             'XmippProtCL2DAlign')
+OTHER = Domain.importFromPlugin('xmipp3.constants', 'OTHER')
+SpiderProtFilter = Domain.importFromPlugin('spider.protocols',
+                                           'SpiderProtFilter', doRaise=True)
+SpiderProtCAPCA = Domain.importFromPlugin('spider.protocols',
+                                          'SpiderProtCAPCA')
+SpiderProtClassifyWard = Domain.importFromPlugin('spider.protocols',
+                                                 'SpiderProtClassifyWard')
 
 
 class HighThroughputTest(TestWorkflow):

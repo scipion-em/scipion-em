@@ -28,13 +28,18 @@
 
 import os
 from pyworkflow.tests import BaseTest, DataSet, setupTestProject
-from pyworkflow.em.protocol import ProtImportVolumes, ProtImportPdb
-from pyworkflow.em.protocol.protocol_export import ProtExportEMDB
-from chimera.protocols import ChimeraProtRigidFit
-from pyworkflow.utils import importFromPlugin
+from pwem.protocol import ProtImportVolumes, ProtImportPdb
+from pwem.protocol.protocol_export import ProtExportEMDB
+from pwem import Domain
 
-XmippProtMultipleFSCs = importFromPlugin('xmipp3.protocols', 'XmippProtMultipleFSCs', doRaise=True)
-XmippProtResolution3D = importFromPlugin('xmipp3.protocols', 'XmippProtResolution3D')
+ChimeraProtRigidFit = Domain.importFromPlugin('chimera.protocols',
+                                                'ChimeraProtRigidFit',
+                                                doRaise=True)
+XmippProtMultipleFSCs = Domain.importFromPlugin('xmipp3.protocols',
+                                                'XmippProtMultipleFSCs',
+                                                doRaise=True)
+XmippProtResolution3D = Domain.importFromPlugin('xmipp3.protocols',
+                                                'XmippProtResolution3D')
 
 class TestExport2EMDB(BaseTest):
     @classmethod

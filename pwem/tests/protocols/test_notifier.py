@@ -25,7 +25,7 @@ import urllib2
 import json
 
 from pyworkflow.tests import BaseTest, setupTestProject
-from pyworkflow.em.protocol import ProtStress
+from pwem.protocol import ProtStress
 
 import pyworkflow.webservices as pws
 

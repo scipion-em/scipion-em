@@ -25,10 +25,10 @@
 # **************************************************************************
 #
 from pyworkflow.tests import *
-from pyworkflow.em.constants import (
+from pwem.constants import (
     SYM_CYCLIC, SYM_DIHEDRAL, SYM_OCTAHEDRAL, SYM_TETRAHEDRAL, SYM_I222)
-from pyworkflow.em.convert.symmetry import getSymmetryMatrices
-from pyworkflow.em.convert.transformations import identity_matrix
+from pwem.convert.symmetry import getSymmetryMatrices
+from pwem.convert.transformations import identity_matrix
 import numpy
 
 

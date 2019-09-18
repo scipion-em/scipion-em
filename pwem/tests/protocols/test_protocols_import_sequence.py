@@ -27,10 +27,10 @@
 # **************************************************************************
 
 from pyworkflow.tests import BaseTest, setupTestProject, DataSet
-from pyworkflow.em.protocol import ProtImportSequence
-from pyworkflow.em.convert.sequence import (
-    SEQ_TYPE_NUCLEOTIDES, PROTEIN_ALPHABET, AMBIGOUS_RNA_ALPHABET,
-    EXTENDED_DNA_ALPHABET, indexToAlphabet)
+from pwem.protocol import ProtImportSequence
+from pwem.convert.sequence import (SEQ_TYPE_NUCLEOTIDES, PROTEIN_ALPHABET,
+                                   AMBIGOUS_RNA_ALPHABET, EXTENDED_DNA_ALPHABET,
+                                   indexToAlphabet)
 
 
 class TestImportBase(BaseTest):

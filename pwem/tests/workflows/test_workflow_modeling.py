@@ -33,23 +33,24 @@
 import os.path
 from pyworkflow.tests import *
 import json
-from pyworkflow.tests import *
-from pyworkflow.utils import importFromPlugin
-from pyworkflow.em.protocol.protocol_import import ProtImportPdb, \
-    ProtImportVolumes
+from pwem import Domain
+from pwem.protocol.protocol_import import ProtImportPdb, ProtImportVolumes
 from pyworkflow.tests import *
 import os.path
 import json
 
 
-ChimeraProtRigidFit = importFromPlugin('chimera.protocols',
+ChimeraProtRigidFit = Domain.importFromPlugin('chimera.protocols',
                                        'ChimeraProtRigidFit', doRaise=True)
-CootRefine = importFromPlugin('ccp4.protocols', 'CootRefine', doRaise=True)
-CCP4ProtRunRefmac = importFromPlugin('ccp4.protocols', 'CCP4ProtRunRefmac')
-PhenixProtRunEMRinger = importFromPlugin('phenix.protocols',
-                                         'PhenixProtRunEMRinger', doRaise=True)
-PhenixProtRunMolprobity = importFromPlugin('phenix.protocols',
-                                           'PhenixProtRunMolprobity')
+CootRefine = Domain.importFromPlugin('ccp4.protocols', 'CootRefine',
+                                     doRaise=True)
+CCP4ProtRunRefmac = Domain.importFromPlugin('ccp4.protocols',
+                                            'CCP4ProtRunRefmac')
+PhenixProtRunEMRinger = Domain.importFromPlugin('phenix.protocols',
+                                                'PhenixProtRunEMRinger',
+                                                doRaise=True)
+PhenixProtRunMolprobity = Domain.importFromPlugin('phenix.protocols',
+                                                  'PhenixProtRunMolprobity')
 
 class TestImportBase(BaseTest):
     @classmethod

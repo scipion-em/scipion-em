@@ -22,17 +22,21 @@
 # *
 # **************************************************************************
 
-from pyworkflow.em import ProtImportMicrographsTiltPairs, ProtUserSubSet
+from pwem.protocol import ProtImportMicrographsTiltPairs, ProtUserSubSet
 from pyworkflow.tests import *
 from test_workflow import TestWorkflow
-from pyworkflow.utils import importFromPlugin
+from pwem import Domain
 
-XmippProtParticlePickingPairs = importFromPlugin('xmipp3.protocols', 'XmippProtParticlePickingPairs', doRaise=True)
-XmippProtExtractParticlesPairs = importFromPlugin('xmipp3.protocols', 'XmippProtExtractParticlesPairs')
-XmippProtCL2D = importFromPlugin('xmipp3.protocols', 'XmippProtCL2D')
-XmippProtRCT = importFromPlugin('xmipp3.protocols', 'XmippProtRCT')
-SAME_AS_PICKING = importFromPlugin('xmipp3.constants', 'SAME_AS_PICKING')
-OTHER = importFromPlugin('xmipp3.constants', 'OTHER')
+XmippProtParticlePickingPairs = Domain.importFromPlugin('xmipp3.protocols',
+                                                        'XmippProtParticlePickingPairs',
+                                                        doRaise=True)
+XmippProtExtractParticlesPairs = Domain.importFromPlugin('xmipp3.protocols',
+                                                         'XmippProtExtractParticlesPairs')
+XmippProtCL2D = Domain.importFromPlugin('xmipp3.protocols',
+                                        'XmippProtCL2D')
+XmippProtRCT = Domain.importFromPlugin('xmipp3.protocols', 'XmippProtRCT')
+SAME_AS_PICKING = Domain.importFromPlugin('xmipp3.constants', 'SAME_AS_PICKING')
+OTHER = Domain.importFromPlugin('xmipp3.constants', 'OTHER')
 
 
 # update this test when RCT workflow are implemented

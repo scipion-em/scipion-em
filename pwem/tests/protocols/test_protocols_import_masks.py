@@ -23,7 +23,7 @@
 
 
 from pyworkflow.tests import BaseTest, setupTestProject, DataSet
-from pyworkflow.em.protocol import ProtImportMask
+from pwem.protocol import ProtImportMask
 
 
 class TestImportBase(BaseTest):

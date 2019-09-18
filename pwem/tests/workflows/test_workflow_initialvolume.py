@@ -41,11 +41,10 @@ import os
 from os.path import exists
 
 import pyworkflow.tests as tests
-import pyworkflow.em as em
-import pyworkflow.utils as pwutils
+import pwem as em
 
-xmipp3 = pwutils.importFromPlugin('xmipp3.protocols', doRaise=True)
-eman2 = pwutils.importFromPlugin('eman2.protocols', doRaise=True)
+xmipp3 = em.Domain.importFromPlugin('xmipp3.protocols', doRaise=True)
+eman2 = em.Domain.importFromPlugin('eman2.protocols', doRaise=True)
 
 
 class TestGroel(tests.BaseTest):

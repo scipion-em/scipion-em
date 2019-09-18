@@ -25,7 +25,7 @@
 #from itertools import izip
 
 from pyworkflow.tests import BaseTest, setupTestProject, DataSet
-from pyworkflow.em.protocol import ProtImportParticles
+from pwem.protocol import ProtImportParticles
 
 
 class TestImportBase(BaseTest):

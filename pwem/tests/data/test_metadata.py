@@ -26,7 +26,7 @@
 # **************************************************************************
 
 from pyworkflow.tests import *
-import pyworkflow.em.metadata as md
+import pwem.metadata as md
 
 
 

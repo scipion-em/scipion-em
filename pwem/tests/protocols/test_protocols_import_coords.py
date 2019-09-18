@@ -22,8 +22,9 @@
 # ***************************************************************************/
 
 from pyworkflow.tests import BaseTest, setupTestProject, DataSet
-from pyworkflow.em.protocol import (ProtImportCoordinates, ProtImportMicrographs,
-                                    ProtImportMicrographsTiltPairs, ProtImportCoordinatesPairs)
+from pwem.protocol import (ProtImportCoordinates, ProtImportMicrographs,
+                           ProtImportMicrographsTiltPairs,
+                           ProtImportCoordinatesPairs)
 
 
 

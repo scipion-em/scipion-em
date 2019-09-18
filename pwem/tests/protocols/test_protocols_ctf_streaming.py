@@ -23,19 +23,18 @@
 
 import time
 import os
-from pyworkflow.em.data import SetOfCTF
+from pwem.data import SetOfCTF
 from pyworkflow.tests import BaseTest, setupTestProject
-from pyworkflow.em.protocol import ProtCreateStreamData, ProtMonitorSystem
-from pyworkflow.em.protocol.monitors.pynvml import nvmlInit, NVMLError
+from pwem.protocol import ProtCreateStreamData, ProtMonitorSystem
+from pwem.protocol.monitors.pynvml import nvmlInit, NVMLError
 from pyworkflow.protocol import getProtocolFromDb
-from pyworkflow.em.protocol.protocol_create_stream_data import \
-    SET_OF_RANDOM_MICROGRAPHS
-from pyworkflow.utils import importFromPlugin
+from pwem.protocol.protocol_create_stream_data import SET_OF_RANDOM_MICROGRAPHS
+from pwem import Domain
 
-XmippProtCTFMicrographs = importFromPlugin('xmipp3.protocols.protocol_ctf_micrographs',
+XmippProtCTFMicrographs = Domain.importFromPlugin('xmipp3.protocols.protocol_ctf_micrographs',
                                            'XmippProtCTFMicrographs', doRaise=True)
-ProtCTFFind = importFromPlugin('grigoriefflab.protocols', 'ProtCTFFind', doRaise=True)
-ProtGctf = importFromPlugin('gctf.protocols', 'ProtGctf', doRaise=True)
+ProtCTFFind = Domain.importFromPlugin('grigoriefflab.protocols', 'ProtCTFFind', doRaise=True)
+ProtGctf = Domain.importFromPlugin('gctf.protocols', 'ProtGctf', doRaise=True)
 
 
 # Load the number of movies for the simulation, by default equal 5, but

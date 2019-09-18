@@ -23,27 +23,37 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-
+import json
 from os.path import exists
 import subprocess
 
 from pyworkflow.tests import *
-from pyworkflow.em.protocol import *
+from pwem.protocol import *
 from pyworkflow.protocol.launch import schedule
 import pyworkflow.utils as pwutils
 from pyworkflow.utils.path import *
+from pwem import Domain
 
-try:
-    from relion.protocols import *
-    from relion.convert import *
-except:
-    pwutils.pluginNotFound('relion')
+relionProtocols = Domain.importFromPlugin('relion.protocols', doRaise=True)
+relionConvert = Domain.importFromPlugin('relion.convert', doRaise=True)
 
-try:
-    from xmipp3.protocols import *
-    from xmipp3.convert import *
-except:
-    pwutils.pluginNotFound('xmipp')
+xmipp3Protocols = Domain.importFromPlugin('xmipp3.protocols', doRaise=True)
+xmipp3Convert = Domain.importFromPlugin('xmipp3.convert', doRaise=True)
+
+
+
+
+# try:
+#     from relion.protocols import *
+#     from relion.convert import *
+# except:
+#     pwutils.pluginNotFound('relion')
+#
+# try:
+#     from xmipp3.protocols import *
+#     from xmipp3.convert import *
+# except:
+#     pwutils.pluginNotFound('xmipp')
 
 # --- Set this to match with your queue system ---
 #  json params to fill the queue form, see SCIPION_HOME/config/host.conf
@@ -78,7 +88,7 @@ class TestQueueBase(BaseTest):
     @classmethod
     def runNormalizeParticles(cls, particles):
         """ Run normalize particles protocol """
-        protPreproc = cls.newProtocol(ProtRelionPreprocessParticles,
+        protPreproc = cls.newProtocol(relionProtocols.ProtRelionPreprocessParticles,
                                       doNormalize=True)
         protPreproc.inputParticles.set(particles)
         cls.launchProtocol(protPreproc)
@@ -173,7 +183,7 @@ class TestQueueBase(BaseTest):
             :param useQueue: Use the queue system or not
             :return: the launched protocol
         """
-        prot2D = self.newProtocol(ProtRelionClassify2D,
+        prot2D = self.newProtocol(relionProtocols.ProtRelionClassify2D,
                                   doCTF=False, maskDiameterA=340,
                                   numberOfMpi=MPI, numberOfThreads=threads)
         prot2D.numberOfClasses.set(4)
@@ -359,7 +369,7 @@ class TestQueueSteps(TestQueueBase):
 
     def testStepsNoGPU(self):
 
-        protXmippPreproc = self.newProtocol(XmippProtPreprocessParticles,
+        protXmippPreproc = self.newProtocol(xmipp3Protocols.XmippProtPreprocessParticles,
                                     doNormalize=True, doRemoveDust=True)
 
         protXmippPreproc.inputParticles.set(self.protImport.outputParticles)

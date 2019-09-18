@@ -23,21 +23,30 @@
 # **************************************************************************
 
 from pyworkflow.tests import DataSet, setupTestProject
-from pyworkflow.utils import importFromPlugin
+from pwem import Domain
 from test_workflow import TestWorkflow
-from pyworkflow.em.protocol.protocol_import import ProtImportCoordinates, \
-                                                   ProtImportMicrographs, \
-                                                   ProtImportVolumes
+from pwem.protocol.protocol_import import (ProtImportCoordinates,
+                                           ProtImportMicrographs,
+                                           ProtImportVolumes)
 
-XmippProtPreprocessMicrographs = importFromPlugin('xmipp3.protocols', 'XmippProtPreprocessMicrographs', doRaise=True)
-XmippProtExtractParticles = importFromPlugin('xmipp3.protocols', 'XmippProtExtractParticles')
-XmippProtCropResizeParticles = importFromPlugin('xmipp3.protocols', 'XmippProtCropResizeParticles')
-XmippProtML2D = importFromPlugin('xmipp3.protocols', 'XmippProtML2D')
-SAME_AS_PICKING = importFromPlugin('xmipp3.constants', 'SAME_AS_PICKING')
-OTHER = importFromPlugin('xmipp3.constants', 'OTHER')
-ProtCTFFind = importFromPlugin('grigoriefflab.protocols', 'ProtCTFFind', doRaise=True)
-ProtFrealign = importFromPlugin('grigoriefflab.protocols', 'ProtFrealign')
-EmanProtInitModel = importFromPlugin('eman2.protocols', 'EmanProtInitModel', doRaise=True)
+XmippProtPreprocessMicrographs = Domain.importFromPlugin('xmipp3.protocols',
+                                                         'XmippProtPreprocessMicrographs',
+                                                         doRaise=True)
+XmippProtExtractParticles = Domain.importFromPlugin('xmipp3.protocols',
+                                                    'XmippProtExtractParticles')
+XmippProtCropResizeParticles = Domain.importFromPlugin('xmipp3.protocols',
+                                                       'XmippProtCropResizeParticles')
+XmippProtML2D = Domain.importFromPlugin('xmipp3.protocols',
+                                        'XmippProtML2D')
+SAME_AS_PICKING = Domain.importFromPlugin('xmipp3.constants',
+                                          'SAME_AS_PICKING')
+OTHER = Domain.importFromPlugin('xmipp3.constants', 'OTHER')
+ProtCTFFind = Domain.importFromPlugin('grigoriefflab.protocols',
+                                      'ProtCTFFind', doRaise=True)
+ProtFrealign = Domain.importFromPlugin('grigoriefflab.protocols',
+                                       'ProtFrealign')
+EmanProtInitModel = Domain.importFromPlugin('eman2.protocols',
+                                            'EmanProtInitModel', doRaise=True)
 
 
 class TestMixedBPV(TestWorkflow):

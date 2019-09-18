@@ -25,19 +25,23 @@
 # **************************************************************************
 
 import unittest, sys
-from pyworkflow.em import *
 from pyworkflow.tests import *
-import pyworkflow.utils as pwutils
 from test_workflow import TestWorkflow
-from pyworkflow.em.protocol import ProtImportCoordinates
+from pwem.protocol import *
+from pwem import Domain
 
-try:
-    from xmipp3 import *
-    from xmipp3.protocols import *
-except:
-    pwutils.pluginNotFound('xmipp', doRaise=True)
+xmippProtcols = Domain.importFromPlugin('xmipp3.protocols',
+                                        doRaise=True)
+xmippConstants = Domain.importFromPlugin('xmipp3.constants',
+                                         doRaise=True)
 
-OTHER = pwutils.importFromPlugin('xmipp3.constants', 'OTHER', doRaise=True)
+# try:
+#     from xmipp3 import *
+#     from xmipp3.protocols import *
+# except:
+#     pwutils.pluginNotFound('xmipp', doRaise=True)
+#
+# OTHER = pwutils.importFromPlugin('xmipp3.constants', 'OTHER', doRaise=True)
 
        
 class TestXmippWorkflow(TestWorkflow):
@@ -73,7 +77,7 @@ class TestXmippWorkflow(TestWorkflow):
 
         # Perform a downsampling on the micrographs
         print "Downsampling..."
-        protDownsampling = self.newProtocol(XmippProtPreprocessMicrographs,
+        protDownsampling = self.newProtocol(xmippProtcols.XmippProtPreprocessMicrographs,
                                             doDownsample=True,
                                             downFactor=5,
                                             doCrop=False,
@@ -99,7 +103,7 @@ class TestXmippWorkflow(TestWorkflow):
 
         # Now estimate CTF on the downsampled micrographs
         print "Performing CTF..."
-        protCTF = self.newProtocol(XmippProtCTFMicrographs,
+        protCTF = self.newProtocol(xmippProtcols.XmippProtCTFMicrographs,
                                    numberOfThreads=4,
                                    minDefocus=2.2,
                                    maxDefocus=2.5)
@@ -114,7 +118,7 @@ class TestXmippWorkflow(TestWorkflow):
 
 
         print "Run extract particles with other downsampling factor"
-        protExtract = self.newProtocol(XmippProtExtractParticles,
+        protExtract = self.newProtocol(xmippProtcols.XmippProtExtractParticles,
                                        boxSize=64, downsampleType=OTHER,
                                        doFlip=True, downFactor=8,
                                        runMode=1, doInvert=True)
@@ -127,15 +131,16 @@ class TestXmippWorkflow(TestWorkflow):
         self.validateFiles('protExtract', protExtract)
         
         print "Run Screen Particles"
-        protScreen = self.newProtocol(XmippProtScreenParticles,
-                                      autoParRejection=XmippProtScreenParticles.REJ_MAXZSCORE, maxZscore=3.0)
+        protScreen = self.newProtocol(xmippProtcols.XmippProtScreenParticles,
+                                      autoParRejection=xmippProtcols.XmippProtScreenParticles.REJ_MAXZSCORE,
+                                      maxZscore=3.0)
         protScreen.inputParticles.set(protExtract.outputParticles)
         self.launchProtocol(protScreen)
         self.assertSetSize(protScreen.outputParticles,
                            msg="There was a problem with Screen Particles")
         
         print "Run ML2D"
-        protML2D = self.newProtocol(XmippProtML2D,
+        protML2D = self.newProtocol(xmippProtcols.XmippProtML2D,
                                     numberOfClasses=1,
                                     maxIters=4,
                                     doMlf=True,
@@ -148,7 +153,7 @@ class TestXmippWorkflow(TestWorkflow):
         self.validateFiles('protML2D', protML2D)
         
         print "Run CL2D"
-        protCL2D = self.newProtocol(XmippProtCL2D,
+        protCL2D = self.newProtocol(xmippProtcols.XmippProtCL2D,
                                     numberOfClasses=2,
                                     numberOfInitialClasses=1,
                                     numberOfIterations=4, numberOfMpi=2)
@@ -158,7 +163,7 @@ class TestXmippWorkflow(TestWorkflow):
         self.validateFiles('protCL2D', protCL2D) 
 
         print "Run Only Align2d"
-        protOnlyAlign = self.newProtocol(XmippProtCL2DAlign,
+        protOnlyAlign = self.newProtocol(xmippProtcols.XmippProtCL2DAlign,
                                          maximumShift=5, numberOfIterations=2,
                                          numberOfMpi=2, numberOfThreads=1, useReferenceImage=False)
         protOnlyAlign.inputParticles.set(protExtract.outputParticles)
@@ -167,7 +172,8 @@ class TestXmippWorkflow(TestWorkflow):
         self.validateFiles('protOnlyAlign', protOnlyAlign)
         
         print "Run kerdensom"
-        ProtKerdensom = self.newProtocol(XmippProtKerdensom, useMask=False, SomXdim=2, SomYdim=2,
+        ProtKerdensom = self.newProtocol(xmippProtcols.XmippProtKerdensom,
+                                         useMask=False, SomXdim=2, SomYdim=2,
                                  SomReg0=800, SomReg1=400, SomSteps=2)
         ProtKerdensom.inputParticles.set(protOnlyAlign.outputParticles)
         self.launchProtocol(ProtKerdensom)        
@@ -175,7 +181,7 @@ class TestXmippWorkflow(TestWorkflow):
         #self.validateFiles('ProtKerdensom', ProtKerdensom)
         
         print "Run Rotational Spectra"
-        xmippProtRotSpectra = self.newProtocol(XmippProtRotSpectra, 
+        xmippProtRotSpectra = self.newProtocol(xmippProtcols.XmippProtRotSpectra,
                                                SomXdim=2, SomYdim=2,
                                                spectraInnerRadius=4,
                                                spectraOuterRadius=24)

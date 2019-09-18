@@ -29,16 +29,22 @@ from glob import glob
 import threading
 
 import pyworkflow.utils as pwutils
-from pyworkflow.utils import importFromPlugin
-from pyworkflow.tests import BaseTest, setupTestProject, DataSet, getProtocolFromDb
-from pyworkflow.em import ImageHandler
-from pyworkflow.em.protocol import (ProtImportMovies, ProtMonitorSummary,
-                                    ProtImportMicrographs, ProtImportAverages)
+from pwem import Domain
+from pyworkflow.tests import (BaseTest, setupTestProject, DataSet,
+                              getProtocolFromDb)
+from pwem.convert import ImageHandler
+from pwem.protocol import (ProtImportMovies, ProtMonitorSummary,
+                           ProtImportMicrographs, ProtImportAverages)
 
-XmippProtMovieCorr = importFromPlugin('xmipp3.protocols', 'XmippProtMovieCorr', doRaise=True)
-ProtCTFFind = importFromPlugin('grigoriefflab.protocols', 'ProtCTFFind', doRaise=True)
-ProtRelionExtractParticles = importFromPlugin('relion.protocols', 'ProtRelionExtractParticles', doRaise=True)
-ProtRelion2Autopick = importFromPlugin('relion.protocols', 'ProtRelion2Autopick')
+XmippProtMovieCorr = Domain.importFromPlugin('xmipp3.protocols',
+                                             'XmippProtMovieCorr', doRaise=True)
+ProtCTFFind = Domain.importFromPlugin('grigoriefflab.protocols',
+                                      'ProtCTFFind', doRaise=True)
+ProtRelionExtractParticles = Domain.importFromPlugin('relion.protocols',
+                                                     'ProtRelionExtractParticles',
+                                                     doRaise=True)
+ProtRelion2Autopick = Domain.importFromPlugin('relion.protocols',
+                                              'ProtRelion2Autopick')
 
 
 # Load the number of movies for the simulation, by default equal 5, but

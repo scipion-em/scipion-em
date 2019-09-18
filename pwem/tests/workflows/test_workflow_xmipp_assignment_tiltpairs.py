@@ -24,12 +24,14 @@
 
 from pyworkflow.tests import *
 from test_workflow import TestWorkflow
-from pyworkflow.utils import importFromPlugin
-from pyworkflow.em import ProtImportMicrographsTiltPairs, ProtImportMicrographs, \
-    ProtImportCoordinates
+from pwem import Domain
+from pwem.protocol import (ProtImportMicrographsTiltPairs,
+                           ProtImportMicrographs,
+                           ProtImportCoordinates)
 
-XmippProtAssignmentTiltPair = importFromPlugin('xmipp3.protocols',
-                                               'XmippProtAssignmentTiltPair', doRaise=True)
+XmippProtAssignmentTiltPair = Domain.importFromPlugin('xmipp3.protocols',
+                                                      'XmippProtAssignmentTiltPair',
+                                                      doRaise=True)
 
 
 # update this test when RCT workflow are implemented

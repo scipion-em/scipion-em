@@ -25,17 +25,21 @@
 # **************************************************************************
 
 
-from pyworkflow.em.protocol import ProtImportPdb, ProtImportVolumes, ProtImportParticles
+from pwem.protocol import ProtImportPdb, ProtImportVolumes, ProtImportParticles
 from pyworkflow.tests import setupTestProject, DataSet
-from pyworkflow.utils import importFromPlugin
+from pwem import Domain
 from test_workflow import TestWorkflow
 
-XmippProtNMA = importFromPlugin('xmipp3.protocols', 'XmippProtNMA', doRaise=True)
-XmippProtAlignmentNMA = importFromPlugin('xmipp3.protocols', 'XmippProtAlignmentNMA')
-XmippProtDimredNMA = importFromPlugin('xmipp3.protocols', 'XmippProtDimredNMA')
-NMA_CUTOFF_ABS = importFromPlugin('xmipp3.protocols', 'NMA_CUTOFF_ABS')
-XmippProtConvertToPseudoAtoms = importFromPlugin('xmipp3.protocols',
-                                                 'XmippProtConvertToPseudoAtoms')
+XmippProtNMA = Domain.importFromPlugin('xmipp3.protocols', 'XmippProtNMA',
+                                       doRaise=True)
+XmippProtAlignmentNMA = Domain.importFromPlugin('xmipp3.protocols',
+                                                'XmippProtAlignmentNMA')
+XmippProtDimredNMA = Domain.importFromPlugin('xmipp3.protocols',
+                                             'XmippProtDimredNMA')
+NMA_CUTOFF_ABS = Domain.importFromPlugin('xmipp3.protocols',
+                                         'NMA_CUTOFF_ABS')
+XmippProtConvertToPseudoAtoms = Domain.importFromPlugin('xmipp3.protocols',
+                                                        'XmippProtConvertToPseudoAtoms')
    
    
    
@@ -106,8 +110,8 @@ class TestNMA(TestWorkflow):
         self.launchProtocol(protImportVol)
         
         # Convert the Volume to Pdb
-        NMA_MASK_THRE = importFromPlugin('xmipp3.protocols.pdb.protocol_pseudoatoms_base',
-                                         'NMA_MASK_THRE')
+        NMA_MASK_THRE = Domain.importFromPlugin('xmipp3.protocols.pdb.protocol_pseudoatoms_base',
+                                                'NMA_MASK_THRE')
         protConvertVol = self.newProtocol(XmippProtConvertToPseudoAtoms)
         protConvertVol.inputStructure.set(protImportVol.outputVolume)
         protConvertVol.maskMode.set(NMA_MASK_THRE)
