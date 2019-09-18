@@ -140,53 +140,53 @@ class ProtStress(ProtTests):
         return []
 
 
-class ProtOutputTest(ProtTests):
-    """ Protocol to test scalar output and input linking"""
-    _label = 'test output'
-
-    def __init__(self, **args):
-        Protocol.__init__(self, **args)
-        self.name = params.String(args.get('name', None))
-
-    def _defineParams(self, form):
-
-        section = form.addSection("Input")
-        section.addParam('iBoxSize', params.IntParam, allowsPointers=True,
-                         default=10,
-                         label='Input box size as Integer',
-                         validators=[params.Positive])
-
-        section.addParam('nullableInteger', params.IntParam, allowsPointers=True,
-                         label='Nullable Integer', allowsNull=True)
-
-    def _createOutputStep(self):
-        # New Output would be an Integer
-        boxSize = Integer(10)
-
-        if self.iBoxSize.hasValue():
-            boxSize.set(2*int(self.iBoxSize.get()))
-
-        self._defineOutputs(oBoxSize=boxSize)
-
-    def _insertAllSteps(self):
-        self._insertFunctionStep('_createOutputStep')
-
-
-class ProtMultiPointerTest(ProtTests):
-    """ Class to test how multipointer params are exported to json"""
-    def _defineParams(self, form):
-
-        # This should cover Multipointer params that points to attributes...
-        # therefore extended attribute of pointers should be used
-        form.addParam('mpToAttr', params.MultiPointerParam,
-                      label="Multipointer to attribute",
-                      pointerClass='String',
-                      help="Should point to String inside another protocol")
-
-        # This should cover Multipointer params that points to protocols...
-        # therefore extended attribute of pointers should NOT be used
-        form.addParam('mpToProts', params.MultiPointerParam,
-                      label="Multipointer to sets",
-                      pointerClass='Protocol',
-                      help="Should point to another protocol")
+# class ProtOutputTest(ProtTests):
+#     """ Protocol to test scalar output and input linking"""
+#     _label = 'test output'
+#
+#     def __init__(self, **args):
+#         Protocol.__init__(self, **args)
+#         self.name = params.String(args.get('name', None))
+#
+#     def _defineParams(self, form):
+#
+#         section = form.addSection("Input")
+#         section.addParam('iBoxSize', params.IntParam, allowsPointers=True,
+#                          default=10,
+#                          label='Input box size as Integer',
+#                          validators=[params.Positive])
+#
+#         section.addParam('nullableInteger', params.IntParam, allowsPointers=True,
+#                          label='Nullable Integer', allowsNull=True)
+#
+#     def _createOutputStep(self):
+#         # New Output would be an Integer
+#         boxSize = Integer(10)
+#
+#         if self.iBoxSize.hasValue():
+#             boxSize.set(2*int(self.iBoxSize.get()))
+#
+#         self._defineOutputs(oBoxSize=boxSize)
+#
+#     def _insertAllSteps(self):
+#         self._insertFunctionStep('_createOutputStep')
+#
+#
+# class ProtMultiPointerTest(ProtTests):
+#     """ Class to test how multipointer params are exported to json"""
+#     def _defineParams(self, form):
+#
+#         # This should cover Multipointer params that points to attributes...
+#         # therefore extended attribute of pointers should be used
+#         form.addParam('mpToAttr', params.MultiPointerParam,
+#                       label="Multipointer to attribute",
+#                       pointerClass='String',
+#                       help="Should point to String inside another protocol")
+#
+#         # This should cover Multipointer params that points to protocols...
+#         # therefore extended attribute of pointers should NOT be used
+#         form.addParam('mpToProts', params.MultiPointerParam,
+#                       label="Multipointer to sets",
+#                       pointerClass='Protocol',
+#                       help="Should point to another protocol")
 

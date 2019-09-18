@@ -26,8 +26,9 @@
 
 # Expose many basic views
 from .views import (DataView, ObjectView, MicrographsView, CtfView,
-                           ClassesView, Classes3DView, CoordinatesObjectView,
-                           ImageView, TableView)
+                    ClassesView, Classes3DView, CoordinatesObjectView,
+                    ImageView, TableView)
+from .viewer_base import EmProtocolViewer
 from .plotter import EmPlotter
 from .viewers_data import DataViewer
 
