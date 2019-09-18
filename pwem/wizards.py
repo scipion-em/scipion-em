@@ -28,14 +28,16 @@
 Domain. wizard.py is left for wizard models and base classes."""
 import os, sys
 
-from pyworkflow.em.convert.atom_struct import AtomicStructHandler
+from pwem.convert import Ccp4Header, AtomicStructHandler
 from pyworkflow.object import String
-from pyworkflow.wizard import Wizard
-from pyworkflow.em.wizard import EmWizard, ListTreeProviderString
+from pwem.wizard import Wizard
+from pwem.wizard import EmWizard
 from pyworkflow.gui import dialog
-from pyworkflow.em import ProtImportImages, ProtImportCoordinates, \
-    ProtImportCoordinatesPairs, ProtImportVolumes, Volume, Ccp4Header, \
-    ProtImportSequence
+from pyworkflow.gui.tree import ListTreeProviderString
+from pwem.protocol import (ProtImportImages, ProtImportCoordinates,
+    ProtImportCoordinatesPairs, ProtImportVolumes,
+    ProtImportSequence)
+from pwem.data import Volume
 import requests
 
 class ImportAcquisitionWizard(EmWizard):

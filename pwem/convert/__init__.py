@@ -26,6 +26,7 @@
 
 from .utils import getSubsetByDefocus, downloadPdb
 from .image_handler import ImageHandler, DT_FLOAT
+from .atom_struct import AtomicStructHandler
 
 from .headers import Ccp4Header
 

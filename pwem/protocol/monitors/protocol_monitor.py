@@ -28,7 +28,7 @@ import sys
 import time
 
 import pyworkflow.protocol.params as params
-from pyworkflow.em.protocol.protocol import EMProtocol
+from pwem.protocol import EMProtocol
 
 
 class ProtMonitor(EMProtocol):

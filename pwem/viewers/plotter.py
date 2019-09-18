@@ -185,7 +185,7 @@ class PlotData:
             setClassName = db.getProperty('self') # get the set class name
 
         # FIXME: Check why the import is here
-        from pyworkflow.em import Domain
+        from pyworkflow import Domain
         setObj = Domain.getObjects()[setClassName](filename=dbName, prefix=dbPreffix)
         return setObj
     

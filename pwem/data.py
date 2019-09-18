@@ -32,6 +32,7 @@ for EM data objects like: Image, SetOfImage and others
 import os
 import json
 from pyworkflow.object import *
+from pyworkflow.plugin import Domain
 from constants import *
 from convert import ImageHandler
 import numpy as np
@@ -898,8 +899,7 @@ class PdbFile(AtomStruct):
 class EMSet(Set, EMObject):
 
     def _loadClassesDict(self):
-        import pyworkflow.em as em
-        classDict = em.Domain.getObjects()
+        classDict = Domain.getObjects()
         classDict.update(globals())
 
         return classDict
