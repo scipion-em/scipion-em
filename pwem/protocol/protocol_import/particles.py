@@ -24,7 +24,6 @@
 # *
 # **************************************************************************
 
-from os.path import exists
 from os.path import abspath
 
 from pwem import Domain

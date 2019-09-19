@@ -26,19 +26,18 @@
 
 
 import os
-import time
 from datetime import datetime
 from collections import OrderedDict
 
 from pyworkflow.object import Set, Pointer
 import pyworkflow.protocol.params as params
 from pyworkflow.protocol import STATUS_NEW
-from pwem.data import (EMObject, SetOfCoordinates, SetOfMicrographs,
-                                SetOfCTF)
+from pwem.objects.data import (SetOfCoordinates, SetOfMicrographs,
+                               SetOfCTF)
 import pyworkflow.utils as pwutils
 from pyworkflow.utils.properties import Message
-
-from protocol_particles import ProtParticles
+from pwem import Domain
+from pwem.protocol import ProtParticles
 
 
 class ProtParticlePicking(ProtParticles):
@@ -112,7 +111,7 @@ class ProtParticlePicking(ProtParticles):
         return self._getCoords(SetOfCoordinates)
 
     def getCoordsTiltPair(self):
-        from pwem.data_tiltpairs import CoordinatesTiltPair
+        from pwem.objects.data_tiltpairs import CoordinatesTiltPair
         return self._getCoords(CoordinatesTiltPair)
 
     def _createOutput(self, outputDir):
@@ -160,7 +159,7 @@ class ProtParticlePicking(ProtParticles):
         suffix = self.__getOutputSuffix()
         outputName = self.OUTPUT_PREFIX + suffix
 
-        readSetOfCoordinates = pwutils.importFromPlugin('xmipp3.convert',
+        readSetOfCoordinates = Domain.importFromPlugin('xmipp3.convert',
                                                 'readSetOfCoordinates')
         inputset = self.getInputMicrographs()
         # micrographs are the input set if protocol is not finished

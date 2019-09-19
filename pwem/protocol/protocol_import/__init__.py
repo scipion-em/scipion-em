@@ -29,12 +29,12 @@ Sub-packages containing different sub-modules to import different type
 of objects.
 """
 
-from base import ProtImport, ProtImportFiles
-from coordinates import ProtImportCoordinates, ProtImportCoordinatesPairs
-from ctfs import ProtImportCTF
-from images import ProtImportImages
-from masks import ProtImportMask
-from micrographs import ProtImportMicrographs, ProtImportMovies
-from particles import ProtImportParticles, ProtImportAverages
-from volumes import ProtImportVolumes, ProtImportPdb
+from .base import ProtImport, ProtImportFiles
+from .coordinates import ProtImportCoordinates, ProtImportCoordinatesPairs
+from .ctfs import ProtImportCTF
+from .images import ProtImportImages
+from .masks import ProtImportMask
+from .micrographs import ProtImportMicrographs, ProtImportMovies
+from .particles import ProtImportParticles, ProtImportAverages
+from .volumes import ProtImportVolumes, ProtImportPdb
 from .sequence import ProtImportSequence

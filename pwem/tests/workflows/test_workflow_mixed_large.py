@@ -24,12 +24,11 @@
 # *
 # **************************************************************************
 
-import unittest, sys
-
-from pwem import Domain
 from pyworkflow.tests import *
 from test_workflow import TestWorkflow
-from pwem.protocol import *
+from pwem import Domain
+from pwem.protocol import (ProtImportMicrographs, ProtImportVolumes,
+                           ProtImportCoordinates, SAME_AS_PICKING)
 
 
 xmipp3Constants = Domain.importFromPlugin('xmipp3.constants', doRaise=True)

@@ -32,9 +32,9 @@ import pyworkflow.protocol.params as params
 from base import ProtImportFiles
 from images import ProtImportImages
 from pwem import Volume, ImageHandler, AtomStruct
-from pwem.data import Transform
+from pwem.objects.data import Transform
 from pwem.convert import Ccp4Header
-from pyworkflow.utils.path import createAbsLink, copyFile
+from pyworkflow.utils.path import createAbsLink
 from pyworkflow.utils.properties import Message
 from pwem.convert.atom_struct import AtomicStructHandler
 

@@ -29,7 +29,7 @@ import pyworkflow.utils as pwutils
 import pyworkflow.object as pwobj
 
 # FIXME: rename data by objects
-from pwem.data import SetOfVolumes, Volume
+from pwem.objects.data import SetOfVolumes, Volume
 from pwem.viewers import ObjectView
 import pwem.metadata as md
 

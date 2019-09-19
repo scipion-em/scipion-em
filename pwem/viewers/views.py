@@ -34,8 +34,7 @@ except ImportError:  # Python 3
     import tkinter.ttk as ttk
 
 from pwem.convert import ImageHandler
-from pyworkflow.viewer import View, Viewer, CommandView, DESKTOP_TKINTER, ProtocolViewer
-from pyworkflow.utils import Environ, runJob, getFreePort
+from pyworkflow.viewer import View
 from pwem import Domain
 
 import showj

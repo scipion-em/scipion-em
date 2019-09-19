@@ -32,13 +32,12 @@ from os.path import join, basename, exists
 from datetime import datetime
 
 import pyworkflow.object as pwobj
-from pyworkflow import VERSION_1_1
 from pyworkflow.protocol.params import PointerParam
 
-from pyworkflow.protocol.constants import STEPS_PARALLEL, MODE_RESUME
+from pyworkflow.protocol.constants import STEPS_PARALLEL
 import pyworkflow.utils as pwutils
 from pyworkflow.utils.properties import Message
-from pwem.data import SetOfMovies, Movie, MovieAlignment, Acquisition
+from pwem.objects.data import SetOfMovies, Movie, MovieAlignment, Acquisition
 from pwem import ImageHandler
 
 from protocol_micrographs import ProtPreprocessMicrographs

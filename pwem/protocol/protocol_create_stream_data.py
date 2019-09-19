@@ -34,7 +34,8 @@ import time
 import random
 
 from pyworkflow import VERSION_1_1
-from pwem.data import SetOfMicrographs, Micrograph, Acquisition, Movie, SetOfMovies, SetOfParticles, Particle
+from pwem.objects.data import (SetOfMicrographs, Micrograph, Acquisition, Movie,
+                               SetOfMovies, SetOfParticles, Particle)
 from pyworkflow.protocol.constants import STEPS_PARALLEL
 from os.path import basename
 from pwem.convert import ImageHandler

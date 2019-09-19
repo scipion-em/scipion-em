@@ -26,7 +26,7 @@
 # *
 # **************************************************************************
 
-from os.path import join, exists
+from os.path import exists
 from glob import glob
 from itertools import izip
 
@@ -36,10 +36,9 @@ from pyworkflow.protocol.params import (IntParam, PointerParam, FloatParam,
                                         LEVEL_ADVANCED)
 from pyworkflow.utils.path import removeBaseExt, expandPattern
 from pyworkflow.utils.properties import Message
-from pwem.data_tiltpairs import CoordinatesTiltPair
+from pwem.objects.data_tiltpairs import CoordinatesTiltPair
 from pwem.protocol import ProtParticlePicking
 from pwem import Domain
-import xmippLib
 from base import ProtImportFiles
 
 

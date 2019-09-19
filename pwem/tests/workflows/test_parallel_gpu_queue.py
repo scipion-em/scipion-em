@@ -24,12 +24,10 @@
 # *
 # **************************************************************************
 import json
-from os.path import exists
 import subprocess
 
 from pyworkflow.tests import *
 from pwem.protocol import *
-from pyworkflow.protocol.launch import schedule
 import pyworkflow.utils as pwutils
 from pyworkflow.utils.path import *
 from pwem import Domain
@@ -40,20 +38,6 @@ relionConvert = Domain.importFromPlugin('relion.convert', doRaise=True)
 xmipp3Protocols = Domain.importFromPlugin('xmipp3.protocols', doRaise=True)
 xmipp3Convert = Domain.importFromPlugin('xmipp3.convert', doRaise=True)
 
-
-
-
-# try:
-#     from relion.protocols import *
-#     from relion.convert import *
-# except:
-#     pwutils.pluginNotFound('relion')
-#
-# try:
-#     from xmipp3.protocols import *
-#     from xmipp3.convert import *
-# except:
-#     pwutils.pluginNotFound('xmipp')
 
 # --- Set this to match with your queue system ---
 #  json params to fill the queue form, see SCIPION_HOME/config/host.conf

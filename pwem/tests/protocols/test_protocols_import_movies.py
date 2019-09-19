@@ -48,7 +48,8 @@ class TestImportMovies(TestImportBase):
                 'samplingRate': 3.54
                 }
 
-    def _checkOutput(self, prot, args, moviesId=[], size=None, dim=None, movieNames=[]):
+    def _checkOutput(self, prot, args, moviesId=[], size=None, dim=None,
+                     movieNames=[]):
         movies = getattr(prot, 'outputMovies', None)
         self.assertIsNotNone(movies)
         self.assertEqual(movies.getSize(), size)
@@ -58,7 +59,8 @@ class TestImportMovies(TestImportBase):
                 self.assertEqual(m.getObjId(), moviesId[i])
 
             if movieNames:
-                self.assertEqual(os.path.basename(m.getFileName()), movieNames[i])
+                self.assertEqual(os.path.basename(m.getFileName()),
+                                 movieNames[i])
             self.assertAlmostEqual(m.getSamplingRate(),
                                    args['samplingRate'])
             a = m.getAcquisition()

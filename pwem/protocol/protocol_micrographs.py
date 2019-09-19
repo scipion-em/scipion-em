@@ -28,7 +28,7 @@
 # *
 # **************************************************************************
 
-from os.path import exists, dirname, join, getmtime
+from os.path import exists, getmtime
 from datetime import datetime
 from collections import OrderedDict
 
@@ -39,11 +39,11 @@ from pyworkflow.protocol.constants import (STEPS_PARALLEL, LEVEL_ADVANCED,
 from pyworkflow.protocol.params import (PointerParam, FloatParam, IntParam,
                                         BooleanParam, FileParam)
 from pyworkflow.utils import redStr, yellowStr
-from pyworkflow.utils.path import copyTree, removeBaseExt, makePath, makeFilePath, cleanPath
+from pyworkflow.utils.path import makePath, makeFilePath, cleanPath
 from pyworkflow.utils.properties import Message
 from pyworkflow.utils.utils import prettyTime
 from pwem.protocol import EMProtocol
-from pwem.data import SetOfMicrographs, SetOfCTF
+from pwem.objects import SetOfMicrographs, SetOfCTF
 
 
 class ProtMicrographs(EMProtocol):

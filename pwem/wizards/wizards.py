@@ -26,18 +26,18 @@
 # **************************************************************************
 """ This module is for Actual wizards to be able to be discovered from the
 Domain. wizard.py is left for wizard models and base classes."""
-import os, sys
+import os
 
 from pwem.convert import Ccp4Header, AtomicStructHandler
 from pyworkflow.object import String
-from pwem.wizard import Wizard
-from pwem.wizard import EmWizard
+from pwem.wizards.wizard import Wizard
+from pwem.wizards.wizard import EmWizard
 from pyworkflow.gui import dialog
 from pyworkflow.gui.tree import ListTreeProviderString
 from pwem.protocol import (ProtImportImages, ProtImportCoordinates,
     ProtImportCoordinatesPairs, ProtImportVolumes,
     ProtImportSequence)
-from pwem.data import Volume
+from pwem.objects.data import Volume
 import requests
 
 class ImportAcquisitionWizard(EmWizard):

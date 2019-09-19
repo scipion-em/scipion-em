@@ -26,7 +26,6 @@ from pyworkflow.tests import *
 from test_workflow import TestWorkflow
 from pwem import Domain
 from pwem.protocol import (ProtImportMicrographsTiltPairs,
-                           ProtImportMicrographs,
                            ProtImportCoordinates)
 
 XmippProtAssignmentTiltPair = Domain.importFromPlugin('xmipp3.protocols',

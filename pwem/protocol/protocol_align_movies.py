@@ -38,8 +38,8 @@ from pwem import Domain
 import pyworkflow.protocol.params as params
 import pyworkflow.protocol.constants as cons
 from pwem.convert import ImageHandler
-from pwem.data import (MovieAlignment, SetOfMovies, SetOfMicrographs,
-                                Image)
+from pwem.objects.data import (MovieAlignment, SetOfMovies, SetOfMicrographs,
+                               Image)
 from pwem.protocol import ProtProcessMovies
 from pyworkflow.gui.plotter import Plotter
 

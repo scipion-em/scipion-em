@@ -30,12 +30,13 @@ from os.path import exists
 import os
 import pyworkflow.protocol.params as params
 from base import ProtImportFiles
-from pwem.data import Sequence
-from pwem.convert.sequence import (
-    SEQ_TYPE_AMINOACIDS, SEQ_TYPE_NUCLEOTIDES, IUPAC_PROTEIN_ALPHABET,
-    SEQ_TYPE, EXTENDED_PROTEIN_ALPHABET, IUPAC_NUCLEOTIDE_ALPHABET,
-    EXTENDED_DNA_ALPHABET, SequenceHandler, cleanSequenceScipion,
-    alphabetToIndex)
+from pwem.objects.data import Sequence
+from pwem.convert.sequence import (SEQ_TYPE_AMINOACIDS, SEQ_TYPE_NUCLEOTIDES,
+                                   IUPAC_PROTEIN_ALPHABET, SEQ_TYPE,
+                                   EXTENDED_PROTEIN_ALPHABET,
+                                   IUPAC_NUCLEOTIDE_ALPHABET,
+                                   EXTENDED_DNA_ALPHABET, SequenceHandler,
+                                   cleanSequenceScipion,  alphabetToIndex)
 from pwem.convert.atom_struct import AtomicStructHandler
 
 

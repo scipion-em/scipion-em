@@ -26,7 +26,6 @@ from pyworkflow.tests import BaseTest, setupTestProject, DataSet
 from pwem.protocol import ProtImportVolumes
 from pwem.constants import SYM_I222r, SCIPION_SYM_NAME
 from pwem.convert.symmetry import Icosahedron
-#import pyworkflow.utils as pwutils
 from pwem import Domain
 
 

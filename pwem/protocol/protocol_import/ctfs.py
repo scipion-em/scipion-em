@@ -25,13 +25,12 @@
 # **************************************************************************
 
 
-from pwem.data import SetOfMicrographs
+from pwem.objects.data import SetOfMicrographs
 from pwem import Domain
 from pyworkflow.utils.path import removeBaseExt
 from pyworkflow.protocol.params import PointerParam
 
 from base import ProtImportFiles
-
 
 
 class ProtImportCTF(ProtImportFiles):

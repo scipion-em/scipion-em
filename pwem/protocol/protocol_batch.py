@@ -27,16 +27,15 @@
 import os
 from itertools import izip
 
-from pyworkflow.protocol.params import PointerParam, \
-    FileParam, StringParam, IntParam
+from pyworkflow.protocol.params import (PointerParam, FileParam, StringParam)
 from pwem.protocol import EMProtocol
-from pwem.data import (SetOfImages, SetOfCTF, SetOfClasses,
-                                SetOfClasses3D, SetOfVolumes, EMObject, EMSet,
-                                SetOfNormalModes, SetOfParticles, SetOfPDBs, FSC,
-                                Class2D, Class3D, SetOfMicrographs, ALIGN_NONE)
-from pwem.data_tiltpairs import (TiltPair, MicrographsTiltPair,
-                                          ParticlesTiltPair)
-from pwem.data import Mask
+from pwem.objects.data import (SetOfImages, SetOfCTF, SetOfClasses,
+                               SetOfClasses3D, SetOfVolumes, EMSet,
+                               SetOfNormalModes, SetOfParticles, SetOfPDBs,
+                               SetOfMicrographs, ALIGN_NONE)
+from pwem.objects.data_tiltpairs import (MicrographsTiltPair,
+                                         ParticlesTiltPair)
+from pwem.objects.data import Mask
 from pyworkflow.utils import moveFile
 
 from cPickle import dumps, loads

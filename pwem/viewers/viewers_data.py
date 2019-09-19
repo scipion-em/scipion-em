@@ -28,7 +28,8 @@ import os
 
 import pyworkflow.viewer as pwviewer
 import pyworkflow.utils as pwutils
-import pyworkflow.em as em
+import pwem as em
+import pwem.protocol as pwemprot
 from pwem.convert import ImageHandler
 
 import views
@@ -50,8 +51,8 @@ class DataViewer(pwviewer.Viewer):
         em.SetOfMovies,
         em.SetOfNormalModes,
         em.SetOfPDBs,
-        em.ProtParticlePicking,
-        em.ProtImportMovies,
+        pwemprot.ProtParticlePicking,
+        pwemprot.ProtImportMovies,
         # TiltPairs related data
         em.CoordinatesTiltPair,
         em.MicrographsTiltPair,
@@ -122,7 +123,7 @@ class DataViewer(pwviewer.Viewer):
 
         elif issubclass(cls, em.SetOfCoordinates):
             # FIXME: Remove dependency on xmipp3 plugin to visualize coordinates
-            xmipp3 = pwutils.importFromPlugin('xmipp3',
+            xmipp3 = em.Domain.importFromPlugin('xmipp3',
                                               errorMsg="xmipp3 plugin is required "
                                                        "now to visualize coordinates.")
             micSet = obj.getMicrographs()  # accessing mics to provide metadata file
@@ -186,7 +187,7 @@ class DataViewer(pwviewer.Viewer):
 
         elif issubclass(cls, em.CoordinatesTiltPair):
             # FIXME: Remove dependency on xmipp3 plugin to visualize coordinates
-            xmipp3 = pwutils.importFromPlugin('xmipp3',
+            xmipp3 = em.Domain.importFromPlugin('xmipp3',
                                               errorMsg="xmipp3 plugin is required "
                                                        "now to visualize coordinates.")
             tmpDir = self._getTmpPath(obj.getName())
@@ -206,11 +207,11 @@ class DataViewer(pwviewer.Viewer):
             xmipp3.convert.writeSetOfCoordinates(tmpDir, obj.getTilted())
             showj.launchTiltPairPickerGUI(mdFn, tmpDir, self.protocol)
 
-        elif issubclass(cls, em.ProtParticlePicking):
+        elif issubclass(cls, pwemprot.ProtParticlePicking):
             if obj.getOutputsSize() >= 1:
                 self._visualize(obj.getCoords())
 
-        elif issubclass(cls, em.ProtImportMovies):
+        elif issubclass(cls, pwemprot.ProtImportMovies):
             movs = obj.outputMovies
             self._visualize(movs)
             gainFn = movs.getGain()

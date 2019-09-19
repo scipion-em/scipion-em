@@ -24,7 +24,7 @@ import os.path
 
 from pwem.protocol.monitors.protocol_monitor_system import SYSTEM_LOG_SQLITE
 from pwem.protocol.protocol_tests import STRESS_NG
-from pyworkflow.tests import BaseTest, setupTestProject, DataSet
+from pyworkflow.tests import BaseTest, setupTestProject
 from pwem.protocol import ProtStress, ProtMonitorSystem
 from pyworkflow.utils import commandExists
 

@@ -35,15 +35,15 @@ from os.path import basename
 from glob import glob
 
 from pyworkflow.utils.properties import Message
-from pyworkflow.utils.path import copyFile, createLink, expandPattern, cleanPath, commonPath
-from pyworkflow.protocol.params import PathParam, FloatParam, BooleanParam, EnumParam, IntParam
+from pyworkflow.utils.path import (copyFile, createLink, expandPattern,
+                                   cleanPath, commonPath)
+from pyworkflow.protocol.params import (PathParam, FloatParam, BooleanParam,
+                                        EnumParam, IntParam)
 from pwem.constants import SAMPLING_FROM_IMAGE, SAMPLING_FROM_SCANNER
 from pwem.convert import ImageHandler
-from pwem.data import SetOfMicrographs
-from pwem.data_tiltpairs import MicrographsTiltPair, TiltPair
+from pwem.objects import MicrographsTiltPair, TiltPair
 
 from protocol_import import ProtImportFiles
-
 
 
 class ProtImportMicrographsTiltPairs(ProtImportFiles):

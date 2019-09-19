@@ -24,8 +24,6 @@
 # *
 # **************************************************************************
 
-import os
-
 from protocol import Protocol
 from pyworkflow.protocol.params import IntParam, STEPS_PARALLEL
 from pwem import Domain

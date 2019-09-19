@@ -24,7 +24,6 @@
 # *
 # **************************************************************************
 
-import unittest, sys
 from pyworkflow.tests import *
 from test_workflow import TestWorkflow
 from pwem.protocol import *
@@ -35,15 +34,7 @@ xmippProtcols = Domain.importFromPlugin('xmipp3.protocols',
 xmippConstants = Domain.importFromPlugin('xmipp3.constants',
                                          doRaise=True)
 
-# try:
-#     from xmipp3 import *
-#     from xmipp3.protocols import *
-# except:
-#     pwutils.pluginNotFound('xmipp', doRaise=True)
-#
-# OTHER = pwutils.importFromPlugin('xmipp3.constants', 'OTHER', doRaise=True)
 
-       
 class TestXmippWorkflow(TestWorkflow):
 
     @classmethod

@@ -33,12 +33,14 @@ from datetime import datetime
 from pyworkflow.protocol.params import PointerParam, BooleanParam
 from pyworkflow.protocol.constants import STATUS_NEW
 from pwem.constants import ALIGN_2D, ALIGN_3D, ALIGN_PROJ, ALIGN_NONE
-from pwem.data import (Coordinate, SetOfParticles, SetOfMicrographs,
-                                SetOfCoordinates, Set)
+from pwem.objects import (Coordinate, SetOfParticles, SetOfMicrographs,
+                          SetOfCoordinates, Set)
 from pwem.protocol import ProtParticlePickingAuto
 import pyworkflow.utils as pwutils
 
 import time
+
+
 class ProtExtractCoords(ProtParticlePickingAuto):
     """ 
     Extract the coordinates information from a set of particles.

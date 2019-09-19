@@ -29,7 +29,7 @@ from pyworkflow.utils.path import cleanPath
 from pyworkflow.protocol.params import PointerParam
 
 from pwem import EMSet
-from protocol_2d import ProtAlign2D
+from .protocol_2d import ProtAlign2D
 
 
 class ProtClassesConsensus(ProtAlign2D):

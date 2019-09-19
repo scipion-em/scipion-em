@@ -1,6 +1,7 @@
 # **************************************************************************
 # *
-# * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
+# * Authors: Yunior C. Fonseca Reyna    (cfonseca@cnb.csic.es)
+# *
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -23,25 +24,6 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-This modules contains classes related with EM
-"""
 
-from pyworkflow.protocol import Protocol
-from pyworkflow.viewer import Viewer
-from pyworkflow.wizard import Wizard
-import pyworkflow.plugin
-
-from constants import *
-from pwem.objects import *
-from .filehandlers import *
-
-
-class Domain(pyworkflow.plugin.Domain):
-    _name = __name__
-    _objectClass = EMObject
-    _protocolClass = Protocol
-    _viewerClass = Viewer
-    _wizardClass = Wizard
-    _baseClasses = globals()
-
+from .wizard import *
+from .wizards import *

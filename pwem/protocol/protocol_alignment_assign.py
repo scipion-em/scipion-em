@@ -25,9 +25,8 @@
 # **************************************************************************
 
 
-from pwem import ALIGN_2D
-from pyworkflow.protocol.params import PointerParam
-from protocol_2d import ProtAlign2D
+import pyworkflow.protocol.params as params
+from .protocol_2d import ProtAlign2D
 
 
 class ProtAlignmentAssign(ProtAlign2D):
@@ -41,10 +40,10 @@ class ProtAlignmentAssign(ProtAlign2D):
     def _defineParams(self, form):
         form.addSection(label='Input')
 
-        form.addParam('inputParticles', PointerParam, pointerClass='SetOfParticles',
+        form.addParam('inputParticles', params.PointerParam, pointerClass='SetOfParticles',
                       label='Input particles',
                       help='Select the particles that you want to update the new alignment.')
-        form.addParam('inputAlignment', PointerParam, pointerClass='SetOfParticles',
+        form.addParam('inputAlignment', params.PointerParam, pointerClass='SetOfParticles',
                       label="Input alignments",
                       help='Select the particles with alignment to be apply to the other particles.')
 

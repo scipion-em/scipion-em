@@ -23,9 +23,9 @@
 
 import time
 import os
-from pwem.data import SetOfCTF
+from pwem.objects.data import SetOfCTF
 from pyworkflow.tests import BaseTest, setupTestProject
-from pwem.protocol import ProtCreateStreamData, ProtMonitorSystem
+from pwem.protocol import ProtCreateStreamData
 from pwem.protocol.monitors.pynvml import nvmlInit, NVMLError
 from pyworkflow.protocol import getProtocolFromDb
 from pwem.protocol.protocol_create_stream_data import SET_OF_RANDOM_MICROGRAPHS

@@ -26,7 +26,7 @@
 
 
 import pyworkflow.protocol.params as params
-from pwem.data import SetOfParticles
+from pwem.objects.data import SetOfParticles
 from pwem.protocol import ProtCTFMicrographs
 
 

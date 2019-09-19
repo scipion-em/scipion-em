@@ -24,7 +24,7 @@
 import os
 from pwem import Domain
 from pyworkflow.tests import BaseTest, setupTestProject, DataSet
-from pwem.data import SetOfParticles
+from pwem.objects.data import SetOfParticles
 from pwem.protocol import ProtImportParticles, ProtImportVolumes, ProtSubSet
 
 XmippProtVolumeHomogenizer = Domain.importFromPlugin('xmipp3.protocols',

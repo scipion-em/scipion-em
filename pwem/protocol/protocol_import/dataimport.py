@@ -28,7 +28,7 @@ from os.path import join, basename, exists
 from collections import OrderedDict
 
 from pyworkflow.utils.path import findRootFrom
-from pwem.data import SetOfParticles, SetOfMicrographs, SetOfCTF
+from pwem.objects.data import SetOfParticles, SetOfMicrographs, SetOfCTF
 from pwem.constants import ALIGN_NONE
 
 

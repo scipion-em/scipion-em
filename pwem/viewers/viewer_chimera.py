@@ -39,11 +39,11 @@ import pyworkflow as pw
 import pyworkflow.utils as pwutils
 from pyworkflow.viewer import CommandView, Viewer, DESKTOP_TKINTER
 from pyworkflow.gui.matplotlib_image import ImageWindow
-from pwem.constants import (
-    SYM_CYCLIC, SYM_DIHEDRAL, SYM_TETRAHEDRAL, SYM_OCTAHEDRAL, SYM_I222,
-    SYM_I222r, SYM_In25, SYM_In25r, SYM_I2n3, SYM_I2n3r, SYM_I2n5, SYM_I2n5r)
+from pwem.constants import (SYM_CYCLIC, SYM_DIHEDRAL, SYM_TETRAHEDRAL,
+                            SYM_OCTAHEDRAL, SYM_I222, SYM_I222r, SYM_In25,
+                            SYM_In25r, SYM_I2n3, SYM_I2n3r, SYM_I2n5, SYM_I2n5r)
 import pyworkflow.em.metadata as md
-from pwem.data import AtomStruct, PdbFile
+from pwem.objects.data import AtomStruct, PdbFile
 from pwem.convert import ImageHandler
 
 

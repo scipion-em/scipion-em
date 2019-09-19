@@ -45,7 +45,8 @@ class TestImportMasks(TestImportBase):
         prot = self.newProtocol(ProtImportMask, **args)
         prot.setObjLabel('import mask 2d')
         self.launchProtocol(prot)
-        self.assertIsNotNone(prot.outputMask, "There was a problem when importing a 2d mask.")
+        self.assertIsNotNone(prot.outputMask,
+                             "There was a problem when importing a 2d mask.")
 
     def test_import_mask3d(self):
         """ Import a mask 3d.
@@ -57,5 +58,6 @@ class TestImportMasks(TestImportBase):
         prot = self.newProtocol(ProtImportMask, **args)
         prot.setObjLabel('import mask 3d')
         self.launchProtocol(prot)
-        self.assertIsNotNone(prot.outputMask, "There was a problem when importing a 3d mask.")
+        self.assertIsNotNone(prot.outputMask,
+                             "There was a problem when importing a 3d mask.")
 

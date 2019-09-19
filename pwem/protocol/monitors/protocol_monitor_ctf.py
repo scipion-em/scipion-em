@@ -27,11 +27,10 @@
 import os
 import sys
 from math import isinf
+import sqlite3 as lite
 
 import pyworkflow.protocol.params as params
 from protocol_monitor import ProtMonitor, Monitor
-import sqlite3 as lite
-
 from pyworkflow import VERSION_1_1
 
 from pyworkflow.protocol.constants import STATUS_RUNNING

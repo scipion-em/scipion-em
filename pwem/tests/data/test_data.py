@@ -9,8 +9,8 @@ from pyworkflow.tests import *
 import pyworkflow.utils as pwutils
 import sqlite3
 from pyworkflow.utils import Timer
-from pwem.data import *
-from pwem.metadata import *
+from pwem.objects.data import *
+import pwem.metadata as md
 from pwem import Domain
 
 # try:

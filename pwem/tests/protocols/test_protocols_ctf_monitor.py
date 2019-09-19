@@ -26,7 +26,7 @@ import os
 
 from pwem.protocol.monitors.protocol_monitor_ctf import CTF_LOG_SQLITE
 from pyworkflow.tests import BaseTest, setupTestProject
-from pwem.protocol import ProtCreateStreamData, ProtMonitorSystem
+from pwem.protocol import ProtCreateStreamData
 from pyworkflow.protocol import getProtocolFromDb
 from pwem.protocol import ProtMonitorCTF
 from pwem.protocol.protocol_create_stream_data import SET_OF_RANDOM_MICROGRAPHS

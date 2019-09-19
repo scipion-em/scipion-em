@@ -27,7 +27,9 @@
 In this module are protocol base classes related to 2D processing
 
 """
-from pwem.protocol import *
+from pwem.protocol import EMProtocol
+import pyworkflow.protocol.params as params
+from pyworkflow.utils import Message
 
 
 class Prot3D(EMProtocol):
@@ -41,7 +43,7 @@ class ProtPreprocessVolumes(Prot3D):
     def _defineParams(self, form):
         form.addSection(label=Message.LABEL_INPUT)
         
-        form.addParam('inputVolumes', PointerParam, important=True,
+        form.addParam('inputVolumes', params.PointerParam, important=True,
                       label=Message.LABEL_INPUT_VOLS, pointerClass='Volume, SetOfVolumes',
                       help='Can be a density volume or a SetOfVolumes.')
         # Hook that should be implemented in subclasses

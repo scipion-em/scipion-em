@@ -27,14 +27,13 @@
 This module returns the matrices related with the different
 point symmetries. Code based on chiomera file sym.py
 """
-from pwem.constants import (SYM_CYCLIC, SYM_DIHEDRAL, SYM_OCTAHEDRAL,
-                            SYM_TETRAHEDRAL, SYM_TETRAHEDRAL_Z3, SYM_I222,
-                            SYM_I222r, SYM_In25, SYM_In25r)
+
 from math import sin, cos, pi, acos, sqrt, asin
 from numpy import array, zeros, float, transpose, add
 from numpy.linalg import inv as matrix_inverse
 from numpy import dot as matrix_multiply
 import operator
+import pwem.constants as cts
 
 def _applyMatrix(tf, points):
     """
@@ -140,22 +139,22 @@ def _transposeMatrix(tf):
           (tf[0][1], tf[1][1], tf[2][1], tf[1][3]),
           (tf[0][2], tf[1][2], tf[2][2], tf[2][3]))
 
-def getSymmetryMatrices(sym=SYM_CYCLIC, n=1, center = (0,0,0)):
+def getSymmetryMatrices(sym=cts.SYM_CYCLIC, n=1, center = (0,0,0)):
     """ interface between scipion and chimera code
         chimera code uses tuples of tuples as matrices
         but scipion uses np.arrays (lists of lists)
         so let us convert them here
     """
-    if sym == SYM_CYCLIC:
+    if sym == cts.SYM_CYCLIC:
         matrices = __cyclicSymmetrySatrices(n, center)
-    elif sym == SYM_DIHEDRAL:
+    elif sym == cts.SYM_DIHEDRAL:
         matrices = __dihedralSymmetryMatrices(n, center)
-    elif sym == SYM_OCTAHEDRAL:
+    elif sym == cts.SYM_OCTAHEDRAL:
         matrices = __octahedralSymmetryMatrices(center)
-    elif sym == SYM_TETRAHEDRAL or sym == SYM_TETRAHEDRAL_Z3:
+    elif sym == cts.SYM_TETRAHEDRAL or sym == cts.SYM_TETRAHEDRAL_Z3:
         matrices = __tetrahedralSymmetryMatrices(sym, center)
-    elif sym == SYM_I222 or sym == SYM_I222r or \
-        sym == SYM_In25 or sym == SYM_In25r:
+    elif sym == cts.SYM_I222 or sym == cts.SYM_I222r or \
+        sym == cts.SYM_In25 or sym == cts.SYM_In25r:
         matrices = __icosahedralSymmetryMatrices(sym, center)
 
     # convert from 4x 3 to 4x4 matrix, Scipion standard
@@ -201,7 +200,7 @@ def __dihedralSymmetryMatrices(n, center = (0, 0, 0)):
     return tflist
 
 
-def __tetrahedralSymmetryMatrices(orientation = SYM_TETRAHEDRAL,
+def __tetrahedralSymmetryMatrices(orientation = cts.SYM_TETRAHEDRAL,
                                   center = (0,0,0)):
     """
     identity
@@ -216,7 +215,7 @@ def __tetrahedralSymmetryMatrices(orientation = SYM_TETRAHEDRAL,
           ((1,-1,-1),240))
     syms = [_rotationTransform(axis, angle) for axis, angle in aa]
 
-    if orientation == SYM_TETRAHEDRAL_Z3:
+    if orientation == cts.SYM_TETRAHEDRAL_Z3:
         # EMAN convention, 3-fold on z, 3-fold in yz plane along neg y.
         tf = _multiplyMatrices(
             _rotationTransform((0, 0, 1), -45.0),
@@ -227,14 +226,14 @@ def __tetrahedralSymmetryMatrices(orientation = SYM_TETRAHEDRAL,
     return syms
 
 
-def __icosahedralSymmetryMatrices(orientation = SYM_I222, center = (0,0,0)):
-    if orientation == SYM_I222:
+def __icosahedralSymmetryMatrices(orientation = cts.SYM_I222, center = (0,0,0)):
+    if orientation == cts.SYM_I222:
         sym = '222'
-    elif orientation == SYM_I222r:
+    elif orientation == cts.SYM_I222r:
         sym = '222r'
-    elif orientation == SYM_In25:
+    elif orientation == cts.SYM_In25:
         sym = 'n25'
-    elif orientation == SYM_In25r:
+    elif orientation == cts.SYM_In25r:
         sym = 'n25r'
 
     i = Icosahedron(orientation=sym, center=center)

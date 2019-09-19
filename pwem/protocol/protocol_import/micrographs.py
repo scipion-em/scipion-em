@@ -37,6 +37,7 @@ import pyworkflow.protocol.params as params
 from pyworkflow.utils.properties import Message
 from pwem import ImageHandler
 from pwem.constants import SAMPLING_FROM_IMAGE, SAMPLING_FROM_SCANNER
+from pwem import Domain
 
 from images import ProtImportImages
 
@@ -413,11 +414,11 @@ class ProtImportMicrographs(ProtImportMicBase):
     def getImportClass(self):
         """ Return the class in charge of importing the files. """
         if self.importFrom == self.IMPORT_FROM_EMX:
-            EmxImport = pwutils.importFromPlugin('emxlib.convert', 'EmxImport')
+            EmxImport = Domain.importFromPlugin('emxlib.convert', 'EmxImport')
             self.importFilePath = self.emxFile.get('').strip()
             return EmxImport(self, self.importFilePath)
         elif self.importFrom == self.IMPORT_FROM_XMIPP3:
-            XmippImport = pwutils.importFromPlugin('xmipp3.convert', 'XmippImport')
+            XmippImport = Domain.importFromPlugin('xmipp3.convert', 'XmippImport')
             self.importFilePath = self.mdFile.get('').strip()
             return XmippImport(self, self.mdFile.get())
         elif self.importFrom == self.IMPORT_FROM_SCIPION:

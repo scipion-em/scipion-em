@@ -22,7 +22,6 @@
 # ***************************************************************************/
 
 import os
-from itertools import izip
 
 import pyworkflow.utils as pwutils
 from pyworkflow.tests import BaseTest, setupTestProject, DataSet

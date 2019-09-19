@@ -28,14 +28,13 @@
 This module implement some wizards
 """
 
-import os
 import Tkinter as tk
 import ttk
 
 from pyworkflow import findResource
 from pyworkflow.object import PointerList, Pointer
 from pyworkflow.wizard import Wizard
-from pwem.convert import ImageHandler, Ccp4Header
+from pwem.convert import ImageHandler
 from pwem.constants import (UNIT_PIXEL,
                                      UNIT_ANGSTROM,
                                      UNIT_PIXEL_FOURIER,
@@ -43,18 +42,11 @@ from pwem.constants import (UNIT_PIXEL,
                                      FILTER_BAND_PASS,
                                      FILTER_HIGH_PASS
                                      )
-from pwem.data import (Volume, SetOfMicrographs, SetOfParticles,
-                                SetOfVolumes)
-from pwem.protocol import (ProtImportImages,
-                                    ProtImportCoordinates,
-                                    ProtImportCoordinatesPairs,
-                                    ProtImportVolumes)
+from pwem.objects.data import (Volume, SetOfMicrographs, SetOfParticles,
+                               SetOfVolumes)
 import pyworkflow.gui.dialog as dialog
-from pyworkflow.gui.tree import BoundTree, TreeProvider, ListTreeProvider
+from pyworkflow.gui.tree import BoundTree, ListTreeProvider
 from pyworkflow.gui.widgets import LabelSlider
-from pwem.convert.atom_struct import AtomicStructHandler
-from pwem.protocol.protocol_import import ProtImportSequence
-from pwem.data import String
 import xmippLib
 
 

@@ -27,7 +27,6 @@ from pwem.protocol import (ProtImportCoordinates, ProtImportMicrographs,
                            ProtImportCoordinatesPairs)
 
 
-
 class TestImportBase(BaseTest):
     @classmethod
     def setUpClass(cls):
@@ -51,10 +50,13 @@ class TestImportCoordinates(TestImportBase):
 
     def testImportCoordinates(self):
         #First, import a set of micrographs
-        protImport = self.newProtocol(ProtImportMicrographs, filesPath=self.dsXmipp.getFile('allMics'), samplingRate=1.237, voltage=300)
+        protImport = self.newProtocol(ProtImportMicrographs,
+                                      filesPath=self.dsXmipp.getFile('allMics'),
+                                      samplingRate=1.237, voltage=300)
         protImport.setObjLabel('import micrographs from xmipp tutorial ')
         self.launchProtocol(protImport)
-        self.assertIsNotNone(protImport.outputMicrographs.getFileName(), "There was a problem with the import")
+        self.assertIsNotNone(protImport.outputMicrographs.getFileName(),
+                             "There was a problem with the import")
 
         prot1 = self.newProtocol(ProtImportCoordinates,
                                  importFrom=ProtImportCoordinates.IMPORT_FROM_XMIPP,
@@ -96,10 +98,13 @@ class TestImportCoordinates(TestImportBase):
         self.launchProtocol(prot3)
 
         #First, import a set of micrographs
-        protImportGroel = self.newProtocol(ProtImportMicrographs, filesPath=self.dsGroel.getFile('mic1'), samplingRate=1)
+        protImportGroel = self.newProtocol(ProtImportMicrographs,
+                                           filesPath=self.dsGroel.getFile('mic1'),
+                                           samplingRate=1)
         protImportGroel.setObjLabel('import micrographs from groel')
         self.launchProtocol(protImportGroel)
-        self.assertIsNotNone(protImportGroel.outputMicrographs.getFileName(), "There was a problem with the import")
+        self.assertIsNotNone(protImportGroel.outputMicrographs.getFileName(),
+                             "There was a problem with the import")
 
         protPickGroel = self.newProtocol(ProtImportCoordinates,
                                  importFrom=ProtImportCoordinates.IMPORT_FROM_DOGPICKER,

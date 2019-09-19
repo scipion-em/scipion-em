@@ -22,7 +22,7 @@
 # *
 # **************************************************************************
 
-from pwem.protocol import ProtImportMicrographsTiltPairs, ProtUserSubSet
+from pwem.protocol import ProtImportMicrographsTiltPairs
 from pyworkflow.tests import *
 from test_workflow import TestWorkflow
 from pwem import Domain

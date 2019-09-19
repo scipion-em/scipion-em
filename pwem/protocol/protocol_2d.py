@@ -26,9 +26,10 @@
 """
 Protocol base classes related to 2D processing.
 """
-from pwem.data import Class2D
-from pwem.protocol import *
-
+from pwem import Class2D
+from pwem.protocol import EMProtocol
+import pyworkflow.protocol.params as params
+from pyworkflow.utils import Message
 
 
 class Prot2D(EMProtocol):
@@ -45,7 +46,7 @@ class ProtAlign2D(Prot2D):
     def _defineParams(self, form):
         form.addSection(label='Input')
         
-        form.addParam('inputParticles', PointerParam, important=True,
+        form.addParam('inputParticles', params.PointerParam, important=True,
                       label=Message.LABEL_INPUT_PART, pointerClass='SetOfParticles')
         # Hook that should be implemented in subclasses
         self._defineAlignParams(form)
@@ -78,9 +79,9 @@ class ProtEvenClassify2D():#ProtClassify2D):
     def _defineParams(self, form):
         form.addSection(label='Input')
         
-        form.addParam('inputParticles', PointerParam, important=True,
+        form.addParam('inputParticles', params.PointerParam, important=True,
                       label=Message.LABEL_INPUT_PART, pointerClass='SetOfParticles')
-        form.addParam('numberOfClasses', IntParam, default=8,
+        form.addParam('numberOfClasses', params.IntParam, default=8,
                       label="Number of classes", 
                       help="Select into how many classes do you want to classify your images.")
 

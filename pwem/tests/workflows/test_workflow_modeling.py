@@ -28,13 +28,9 @@
 # flexible fitting (coot and refmac), as well as validation programs such as
 # emringer and molprobity
 
-
-
 import os.path
-from pyworkflow.tests import *
-import json
 from pwem import Domain
-from pwem.protocol.protocol_import import ProtImportPdb, ProtImportVolumes
+from pwem.protocol import ProtImportPdb, ProtImportVolumes
 from pyworkflow.tests import *
 import os.path
 import json
