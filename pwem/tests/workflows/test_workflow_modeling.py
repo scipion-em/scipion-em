@@ -241,7 +241,7 @@ class TestChimeraFit(TestImportData):
     def testChimeraFitFromVolAndPDBWithSavingVol(self):
         """ This test checks that chimera runs with a volume provided
         directly as inputVol, input PDB """
-        print "Run Chimera fit from imported volume and pdb file"
+        print("Run Chimera fit from imported volume and pdb file")
 
         # Import Volume
         volume = self._importVolume()
@@ -276,7 +276,7 @@ class TestChimeraFit(TestImportData):
     def testChimeraFitFromVolAndmmCIFWithSavingVol(self):
         """ This test checks that chimera runs with a volume provided
         directly as inputVol, input CIF file """
-        print "Run Chimera fit from imported volume and cif file"
+        print("Run Chimera fit from imported volume and cif file")
 
         volume = self._importVolume()
         structure1_mmCIF = self._importStructuremmCIFWoVol()
@@ -304,7 +304,7 @@ class TestChimeraFit(TestImportData):
     def testChimeraFitFromVolAssocToPDBWithSavingVol(self):
         # This test checks that chimera runs when a volume is provided
         # associated to the input PDB and not directly as inputVol
-        print "Run Chimera fit from imported pdb file and volume associated"
+        print("Run Chimera fit from imported pdb file and volume associated")
 
         structure2_PDB = self._importStructurePDBWithVol()
         extraCommands = ""
@@ -330,7 +330,7 @@ class TestChimeraFit(TestImportData):
     def testChimeraFitFromVolAssocTommCIFWithSavingVol(self):
         # This test checks that chimera runs when a volume is provided
         # associated to the imput mmCIF file and not directly as inputVol
-        print "Run Chimera fit from imported mmCIF file and volume associated"
+        print("Run Chimera fit from imported mmCIF file and volume associated")
 
         structure2_mmCIF = self._importStructuremmCIFWithVol()
         extraCommands = ""
@@ -357,8 +357,8 @@ class TestChimeraFit(TestImportData):
         # This test corroborates that chimera does not run unless a volume
         # is provided (directly as inputVol or associated to the imputPDB)
         # protocol should raise an exception
-        print "Run Chimera from imported pdb file without imported or " \
-              "pdb-associated volume"
+        print("Run Chimera from imported pdb file without imported or "
+              "pdb-associated volume")
 
         structure1_PDB = self._importStructurePDBWoVol()
         self.assertTrue(structure1_PDB.getFileName())
@@ -372,8 +372,8 @@ class TestChimeraFit(TestImportData):
             self.launchProtocol(protChimera)
         except Exception as e:
             self.assertTrue(True)
-            print "This test should return a error message as '" \
-                  " ERROR running protocol scipion - chimera rigid fit"
+            print("This test should return a error message as: \' ERROR "
+                  "running protocol scipion - chimera rigid fit \' ")
 
             return
         self.assertTrue(False)
@@ -382,8 +382,8 @@ class TestChimeraFit(TestImportData):
         # This test corroborates that chimera does not run unless a volume
         # is provided (directly as inputVol or associated to the imputPDB)
         # protocol should raise an exception
-        print "Run chimera from imported mmCIF file without imported or " \
-              "mmCIF-associated volume"
+        print("Run chimera from imported mmCIF file without imported or "
+              "mmCIF-associated volume")
 
         structure1_mmCIF = self._importStructuremmCIFWoVol()
         self.assertTrue(structure1_mmCIF.getFileName())
@@ -396,8 +396,8 @@ class TestChimeraFit(TestImportData):
             self.launchProtocol(protChimera)
         except Exception as e:
             self.assertTrue(True)
-            print "This test should return a error message as '" \
-                  " ERROR running protocol scipion - chimera rigid fit"
+            print("This test should return a error message as:"
+                  "ERROR running protocol scipion - chimera rigid fit")
 
             return
         self.assertTrue(False)
@@ -406,8 +406,8 @@ class TestChimeraFit(TestImportData):
         # This test checks that chimera runs when a volume is provided
         # associated to the input PDB and several PDB files are added
 
-        print "Run Chimera fit from imported pdb file and volume associated " \
-              "and addition of two other pdb files"
+        print("Run Chimera fit from imported pdb file and volume associated "
+              "and addition of two other pdb files")
 
         structure2_PDB = self._importStructurePDBWithVol()
         structure3_PDB = self._importMut1StructurePDBWoVol()
@@ -441,8 +441,8 @@ class TestChimeraFit(TestImportData):
     def testChimeraFitFromChimeraPDB(self):
         # This test checks that chimera runs with objects not imported
         # but generated in other programs
-        print "Run Chimera fit using the pdb and its volume associated " \
-              "generated in a previous protocol of Chimera rigid fit"
+        print("Run Chimera fit using the pdb and its volume associated "
+              "generated in a previous protocol of Chimera rigid fit")
 
         volume = self._importVolume()
         structure1_PDB = self._importStructurePDBWoVol()
@@ -523,8 +523,8 @@ class TestCootRefinement(TestImportData):
     def testCootFlexibleFitFromPDB(self):
         """ This test checks that coot runs with an atomic structure;
          No Volume was provided and an error message is expected"""
-        print "Run Coot fit from imported pdb file without imported or " \
-              "pdb-associated volume"
+        print("Run Coot fit from imported pdb file without imported or "
+              "pdb-associated volume")
 
         # import PDB
         structure_PDB = self._importStructurePDBWoVol()
@@ -542,8 +542,8 @@ class TestCootRefinement(TestImportData):
             self.launchProtocol(protCoot)
         except Exception as e:
             self.assertTrue(True)
-            print "This test should return a error message as '" \
-                  " ERROR running protocol scipion - coot refinement"
+            print("This test should return a error message as:"
+                  " ERROR running protocol scipion - coot refinement")
 
             return
         self.assertTrue(False)
@@ -552,7 +552,7 @@ class TestCootRefinement(TestImportData):
         """ This test checks that coot runs with a volume provided
         directly as inputVol, input PDB (not previously fitted with Chimera)
          """
-        print "Run Coot fit from imported volume and pdb file not fitted"
+        print("Run Coot fit from imported volume and pdb file not fitted")
 
         # Import Volume
         volume = self._importVolume()
@@ -582,7 +582,7 @@ class TestCootRefinement(TestImportData):
     def testCootFlexibleFitFromVolAndPDB(self):
         """ This test checks that coot runs with a volume provided
         directly as inputVol, input PDB """
-        print "Run Coot fit from imported volume and pdb file"
+        print("Run Coot fit from imported volume and pdb file")
 
         # Import Volume
         volume = self._importVolume()
@@ -634,7 +634,7 @@ class TestCootRefinement(TestImportData):
 
         # This test checks that coot runs when a volume is provided
         # associated to the input PDB
-        print "Run Coot fit from imported pdb file and volume associated "
+        print("Run Coot fit from imported pdb file and volume associated ")
 
         # Import Volume
         volume = self._importVolume()
@@ -682,7 +682,7 @@ class TestCootRefinement(TestImportData):
     def testCootFlexibleFitFromtwoVolAndPDB(self):
         """ This test checks that coot runs with two volumes provided
         directly as inputVol, input PDB """
-        print "Run Coot fit from imported volume and pdb file"
+        print("Run Coot fit from imported volume and pdb file")
 
         # Import Volume
         volume = self._importVolume()
@@ -736,7 +736,7 @@ class TestCootRefinement(TestImportData):
         # associated to the input PDB file after Chimera
         # workflow, and not directly as inputVol
         # starting volume with a different coordinate origin
-        print "Run Coot fit from PDB file saved from Chimera_2"
+        print("Run Coot fit from PDB file saved from Chimera_2")
 
         volume2 = self._importVolume2()
         structure1_PDB = self._importStructurePDBWoVol()
@@ -786,7 +786,7 @@ class TestCootRefinement(TestImportData):
         # associated to the input PDB file after Chimera
         # workflow, and not directly as inputVol
         # starting volume with a different coordinate origin
-        print "Run Coot fit from PDB file saved from Chimera_2"
+        print("Run Coot fit from PDB file saved from Chimera_2")
 
         volume2 = self._importVolume2()
         structure1_PDB = self._importStructurePDBWoVol()
@@ -828,7 +828,7 @@ class TestCootRefinement(TestImportData):
         try:
             self.launchProtocol(protCoot)
         except:
-            print "first call to coot ended"
+            print("first call to coot ended")
         self.assertIsNotNone(protCoot.testLabel6.getFileName(),
                              "There was a problem with the alignment")
         self.assertTrue(os.path.exists(protCoot.testLabel6.getFileName()))
@@ -842,7 +842,7 @@ class TestCootRefinement(TestImportData):
         try:
             self.launchProtocol(protCoot)
         except:
-            print "second call to coot ended"
+            print("second call to coot ended")
         self.assertIsNotNone(protCoot.cootOut0001.getFileName(),
                              "There was a problem with the alignment")
         self.assertTrue(os.path.exists(protCoot.cootOut0001.getFileName()))
@@ -857,7 +857,7 @@ class TestCootRefinement(TestImportData):
         try:
             self.launchProtocol(protCoot)
         except:
-            print "third call to coot ended"
+            print("third call to coot ended")
         self.assertIsNotNone(protCoot.lastTestLabel.getFileName(),
                              "There was a problem with the alignment")
         self.assertTrue(os.path.exists(protCoot.lastTestLabel.getFileName()))
@@ -871,8 +871,8 @@ class TestRefmacRefinement(TestImportData):
     def testRefmacFlexibleFitFromPDB(self):
         """ This test checks that refmac runs with an atomic structure;
          No Volume was provided and an error message is expected"""
-        print "Run Refmac refinement from imported pdb file without imported " \
-              "or pdb-associated volume"
+        print("Run Refmac refinement from imported pdb file without imported "
+              "or pdb-associated volume")
 
         # import PDB
         structure_PDB = self._importStructurePDBWoVol()
@@ -889,8 +889,8 @@ class TestRefmacRefinement(TestImportData):
             self.launchProtocol(protRefmac)
         except Exception as e:
             self.assertTrue(True)
-            print "This test should return a error message as '" \
-                  " ERROR running protocol scipion - refmac refinement"
+            print("This test should return a error message as:"
+                  " ERROR running protocol scipion - refmac refinement")
 
             return
         self.assertTrue(False)
@@ -900,8 +900,8 @@ class TestRefmacRefinement(TestImportData):
         directly as inputVol, the input PDB was fitted to the volume and
         refined previously by coot
          """
-        print "Run Refmac refinement from imported volume and pdb file " \
-              "fitted and refined by Coot"
+        print("Run Refmac refinement from imported volume and pdb file "
+              "fitted and refined by Coot")
 
         # Import Volume
         volume = self._importVolume()
@@ -940,8 +940,8 @@ class TestRefmacRefinement(TestImportData):
     def testRefmacFlexibleFitAfterChimeraAndCoot(self):
         """ This test checks that refmac runs with a volume provided
         by Chimera, the input PDB is provided by Coot """
-        print "Run Refmac refinement from volume provided by Chimera " \
-              "and pdb file provided by Coot"
+        print("Run Refmac refinement from volume provided by Chimera "
+              "and pdb file provided by Coot")
 
         # Import Volume
         volume = self._importVolume()
@@ -1002,8 +1002,8 @@ class TestRefmacRefinement(TestImportData):
         # by Chimera workflow
         # the PDB is provided by Coot
         # starting volume with a different coordinate origin
-        print "Run Refmac refinement from PDB file saved from " \
-              "Chimera_2/Coot"
+        print("Run Refmac refinement from PDB file saved from "
+              "Chimera_2/Coot")
 
         volume2 = self._importVolume2()
         structure1_PDB = self._importStructurePDBWoVol()

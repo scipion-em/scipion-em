@@ -173,7 +173,7 @@ class TestImportMicrographs(TestImportBase):
         """ Import an EMX file with micrographs and defocus
         """
         micsSqlite = self.dsXmipp.getFile('micrographs/micrographs.sqlite')
-        print "Importing from sqlite: ", micsSqlite
+        print("Importing from sqlite: ", micsSqlite)
 
         micSet = SetOfMicrographs(filename=micsSqlite)
         # Gold values
@@ -182,7 +182,7 @@ class TestImportMicrographs(TestImportBase):
         # _acquisition._magnification -> 50000.0
 
         for k in ['_samplingRate', '_acquisition._voltage', '_acquisition._magnification']:
-            print k, "->", micSet.getProperty(k)
+            print(k, "->", micSet.getProperty(k))
         prot = self.newProtocol(ProtImportMicrographs,
                                 objLabel='from scipion',
                                 importFrom=ProtImportMicrographs.IMPORT_FROM_SCIPION,

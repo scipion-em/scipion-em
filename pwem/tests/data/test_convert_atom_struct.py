@@ -245,8 +245,8 @@ class TestAtomicStructHandler(unittest.TestCase):
 
         if not doTest:
 
-            print "This test is to be tested manually since it opens chimera afterwards"
-            print "For testing this, edit this file and set doTest = True"
+            print("This test is to be tested manually since it opens chimera afterwards")
+            print("For testing this, edit this file and set doTest = True")
             return
 
 

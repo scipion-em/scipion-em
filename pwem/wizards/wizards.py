@@ -184,7 +184,7 @@ class GetStructureChainsWizard(Wizard):
         try:
             models = self.getModelsChainsStep(protocol)
         except Exception as e:
-            print "ERROR: ", e.message
+            print("ERROR: ", e.message)
             return
 
         self.editionListOfChains(models)

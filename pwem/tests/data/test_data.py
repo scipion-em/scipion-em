@@ -173,7 +173,7 @@ class TestImageHandler(unittest.TestCase):
         ih = ImageHandler()
 
         outFn = join('/tmp', outSuffix)
-        print "Converting: \n%s -> %s" % (micFn, outFn)
+        print("Converting: \n%s -> %s" % (micFn, outFn))
 
         ih.convert(micFn, outFn)
 
@@ -197,7 +197,7 @@ class TestImageHandler(unittest.TestCase):
         outSuffix = pwutils.replaceBaseExt(micFn, 'mrc')
 
         outFn = join('/tmp', outSuffix)
-        print "Converting: \n%s -> %s" % (micFn, outFn)
+        print("Converting: \n%s -> %s" % (micFn, outFn))
 
         ih.convert(micFn, outFn)
 
@@ -223,7 +223,7 @@ class TestImageHandler(unittest.TestCase):
         outSuffix = pwutils.replaceBaseExt(micFn, 'mrc')
 
         outFn = join('/tmp', outSuffix)
-        print "Converting: \n%s -> %s" % ((1, micFn), outFn)
+        print("Converting: \n%s -> %s" % ((1, micFn), outFn))
 
         ih.convert((1, micFn), outFn)
 
@@ -256,7 +256,7 @@ class TestImageHandler(unittest.TestCase):
         self.assertEqual(ih.getDataType(outFn), EXPECTED_DT)
 
         if pwutils.envVarOn('SCIPION_DEBUG_NOCLEAN'):
-            print "Not cleaning output movie: ", outFn
+            print("Not cleaning output movie: ", outFn)
         else:
             pwutils.cleanPath(outFn)
 
@@ -354,7 +354,7 @@ class TestSetOfMicrographs(BaseTest):
         """ Read micrographs from a an sqlite file.
         It should contains Acquisition info. """
         micFn = self.dataset.getFile('micsGoldSqlite2')
-        print ">>> Reading gold micrographs from: ", micFn
+        print(">>> Reading gold micrographs from: ", micFn)
         
         micSet = SetOfMicrographs(filename=micFn)
         self.assertEqual(2, micSet.getSize())
@@ -451,7 +451,7 @@ class TestSetOfParticles(BaseTest):
         self.assertEquals(size, imgSet.getSize()) # Check same size
         self.assertEquals(xdim, imgSet.getDim()[0]) # Check same dimensions
         
-        print "writing particles to: ", outFn
+        print("writing particles to: ", outFn)
         imgSet.write()
         
         imgSet2 = SetOfParticles(filename=':memory:')
@@ -464,8 +464,8 @@ class TestSetOfParticles(BaseTest):
         """
         # Allow what huge means to be defined with environment var
         n = int(os.environ.get('SCIPION_TEST_HUGE', 10000))
-        print ">>>> Creating a set of %d particles." % n
-        print "     (set SCIPION_TEST_HUGE environment var to other value)"
+        print(">>>> Creating a set of %d particles." % n)
+        print("     (set SCIPION_TEST_HUGE environment var to other value)")
         
         dbFn = self.getOutputPath('huge_set.sqlite')
         #dbFn = ':memory:'
@@ -490,8 +490,8 @@ class TestSetOfParticles(BaseTest):
         """ Just as a bencharmark comparing to test_hugeSet ."""
         # Allow what huge means to be defined with environment var
         n = int(os.environ.get('SCIPION_TEST_HUGE', 10000))
-        print ">>>> Creating a set of %d particles." % n
-        print "     (set SCIPION_TEST_HUGE environment var to other value)"
+        print(">>>> Creating a set of %d particles." % n)
+        print("     (set SCIPION_TEST_HUGE environment var to other value)")
         
         imgMd = md.MetaData()
         
@@ -503,22 +503,24 @@ class TestSetOfParticles(BaseTest):
             imgMd.setValue(md.MDL_IMAGE, '%06d@images.stk' % (i+1), objId)
             
         mdFn = self.getOutputPath('huge_set.xmd')
-        print "Writing metadata to: ", mdFn
+        print("Writing metadata to: ", mdFn)
         imgMd.write(mdFn)
         
     def test_hugeSetToText(self):
         """ Just as a bencharmark comparing to test_hugeSet ."""
         # Allow what huge means to be defined with environment var
         n = int(os.environ.get('SCIPION_TEST_HUGE', 10000))
-        print ">>>> Creating a set of %d particles." % n
-        print "     (set SCIPION_TEST_HUGE environment var to other value)"
+        print(">>>> Creating a set of %d particles." % n)
+        print("     (set SCIPION_TEST_HUGE environment var to other value)")
         
         textFn = self.getOutputPath('huge_set.txt')
-        print "Writing to text file: ", textFn
+        print("Writing to text file: ", textFn)
         f = open(textFn, 'w')
         
         for i in range(1, n+1):
-            print >> f, '%06d@images.stk' % i
+            string = '%06d@images.stk' % i
+            f.write(string)
+            #print >> f, '%06d@images.stk' % i
             
         f.close()     
         
@@ -609,7 +611,7 @@ class TestSetOfCoordinates(BaseTest):
         # check defined indexes
         setOfCoordinatesFileName = \
             prot._getPath("coordinates.sqlite")
-        print os.path.abspath(setOfCoordinatesFileName)
+        print(os.path.abspath(setOfCoordinatesFileName))
         indexes = sorted([index[1] for index in
                           getIndex(setOfCoordinatesFileName)])
         for index, indexName in zip(indexes, indexesNames):

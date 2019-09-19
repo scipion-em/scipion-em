@@ -57,7 +57,7 @@ class TestXmippWorkflow(TestWorkflow):
         self.validateFiles('protImport', protImport)      
 
         # Import a set of volumes
-        print "Import Volume"
+        print("Import Volume")
         protImportVol = self.newProtocol(ProtImportVolumes,
                                          filesPath=self.vol1,
                                          samplingRate=9.896)
@@ -67,7 +67,7 @@ class TestXmippWorkflow(TestWorkflow):
 #        self.validateFiles('protImportVol', protImportVol)        
 
         # Perform a downsampling on the micrographs
-        print "Downsampling..."
+        print("Downsampling...")
         protDownsampling = self.newProtocol(xmippProtcols.XmippProtPreprocessMicrographs,
                                             doDownsample=True,
                                             downFactor=5,
@@ -80,7 +80,7 @@ class TestXmippWorkflow(TestWorkflow):
                              "There was a problem with the downsampling")
         self.validateFiles('protDownsampling', protDownsampling)
 
-        print "Importing coordinates"
+        print("Importing coordinates")
         protPP = self.newProtocol(ProtImportCoordinates,
                                   importFrom=ProtImportCoordinates.IMPORT_FROM_XMIPP,
                                   filesPath=self.allCrdsDir,
@@ -93,7 +93,7 @@ class TestXmippWorkflow(TestWorkflow):
                            "There was a problem with the import of coordinates")
 
         # Now estimate CTF on the downsampled micrographs
-        print "Performing CTF..."
+        print("Performing CTF...")
         protCTF = self.newProtocol(xmippProtcols.XmippProtCTFMicrographs,
                                    numberOfThreads=4,
                                    minDefocus=2.2,
@@ -108,7 +108,7 @@ class TestXmippWorkflow(TestWorkflow):
 
 
 
-        print "Run extract particles with other downsampling factor"
+        print("Run extract particles with other downsampling factor")
         protExtract = self.newProtocol(xmippProtcols.XmippProtExtractParticles,
                                        boxSize=64, downsampleType=OTHER,
                                        doFlip=True, downFactor=8,
@@ -121,7 +121,7 @@ class TestXmippWorkflow(TestWorkflow):
                              "There was a problem with the extract particles")
         self.validateFiles('protExtract', protExtract)
         
-        print "Run Screen Particles"
+        print("Run Screen Particles")
         protScreen = self.newProtocol(xmippProtcols.XmippProtScreenParticles,
                                       autoParRejection=xmippProtcols.XmippProtScreenParticles.REJ_MAXZSCORE,
                                       maxZscore=3.0)
@@ -130,7 +130,7 @@ class TestXmippWorkflow(TestWorkflow):
         self.assertSetSize(protScreen.outputParticles,
                            msg="There was a problem with Screen Particles")
         
-        print "Run ML2D"
+        print("Run ML2D")
         protML2D = self.newProtocol(xmippProtcols.XmippProtML2D,
                                     numberOfClasses=1,
                                     maxIters=4,
@@ -143,7 +143,7 @@ class TestXmippWorkflow(TestWorkflow):
                              "There was a problem with ML2D")
         self.validateFiles('protML2D', protML2D)
         
-        print "Run CL2D"
+        print("Run CL2D")
         protCL2D = self.newProtocol(xmippProtcols.XmippProtCL2D,
                                     numberOfClasses=2,
                                     numberOfInitialClasses=1,
@@ -153,7 +153,7 @@ class TestXmippWorkflow(TestWorkflow):
         self.assertIsNotNone(protCL2D.outputClasses, "There was a problem with CL2D")
         self.validateFiles('protCL2D', protCL2D) 
 
-        print "Run Only Align2d"
+        print("Run Only Align2d")
         protOnlyAlign = self.newProtocol(xmippProtcols.XmippProtCL2DAlign,
                                          maximumShift=5, numberOfIterations=2,
                                          numberOfMpi=2, numberOfThreads=1, useReferenceImage=False)
