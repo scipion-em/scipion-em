@@ -28,7 +28,7 @@ import os
 
 import pyworkflow.utils as pwutils
 import pyworkflow.viewer as pwviewer
-from pyworkflow.em.data import AtomStruct
+from pwem.data import AtomStruct
 
 
 class Vmd:

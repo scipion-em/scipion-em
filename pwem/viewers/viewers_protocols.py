@@ -25,7 +25,7 @@
 # **************************************************************************
 
 from pyworkflow.viewer import Viewer, DESKTOP_TKINTER, WEB_DJANGO
-from pyworkflow.em.protocol import ProtClassesConsensus
+from pwem.protocol import ProtClassesConsensus
 
 from .views import DataView
 

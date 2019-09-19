@@ -27,7 +27,7 @@
 from pyworkflow.viewer import DESKTOP_TKINTER, Viewer
 from pyworkflow.gui.text import _open_cmd
 
-from pyworkflow.em.protocol import ProtPDFReport
+from pwem.protocol import ProtPDFReport
 
 
 class PDFReportViewer(Viewer):

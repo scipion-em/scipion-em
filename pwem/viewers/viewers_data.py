@@ -29,7 +29,7 @@ import os
 import pyworkflow.viewer as pwviewer
 import pyworkflow.utils as pwutils
 import pyworkflow.em as em
-from pyworkflow.em.convert import ImageHandler
+from pwem.convert import ImageHandler
 
 import views
 import showj

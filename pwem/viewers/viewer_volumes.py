@@ -34,13 +34,13 @@ for input volumes.
 import os
 from distutils.spawn import find_executable
 from tkMessageBox import showerror
-from pyworkflow.em import Volume
+from pwem import Volume
 
 import pyworkflow.protocol.params as params
-from pyworkflow.em.convert import ImageHandler
-from pyworkflow.em.protocol.protocol_import.volumes import ProtImportVolumes
+from pwem.convert import ImageHandler
+from pwem.protocol.protocol_import.volumes import ProtImportVolumes
 from pyworkflow.viewer import DESKTOP_TKINTER, WEB_DJANGO, ProtocolViewer
-from pyworkflow.em.viewers.viewer_chimera import Chimera, ChimeraView
+from pwem.viewers.viewer_chimera import Chimera, ChimeraView
 VOLUME_SLICES = 1
 VOLUME_CHIMERA = 0
 

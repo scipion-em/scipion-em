@@ -34,10 +34,11 @@ import os
 from os.path import join
 from collections import OrderedDict
 import subprocess
-from pyworkflow.utils import getFreePort, importFromPlugin
+from pyworkflow.utils import getFreePort
 import threading
 import shlex
 import SocketServer
+from pwem import Domain
 
 # ----------------------- Showj constants ---------------------------
 COL_RENDER_NONE = 0
@@ -279,9 +280,9 @@ def getJavaIJappArguments(memory, appName, appArgs):
 
 
 def runJavaIJapp(memory, appName, args, env=None):
-    xmipp3 = importFromPlugin('xmipp3')
+    xmipp3 = Domain.importFromPlugin('xmipp3', doRaise=True)
     env = env or {}
-    getEnviron = importFromPlugin('xmipp3', 'Plugin').getEnviron
+    getEnviron = Domain.importFromPlugin('xmipp3', 'Plugin').getEnviron
     env.update(getEnviron(xmippFirst=False))
 
     args = getJavaIJappArguments(memory, appName, args)

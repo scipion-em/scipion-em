@@ -25,8 +25,8 @@
 # **************************************************************************
 
 import pyworkflow.viewer as pwviewer
-from pyworkflow.em.constants import COLOR_OTHER, COLOR_CHOICES
-from pyworkflow.em.convert import ImageHandler
+from pwem.constants import COLOR_OTHER, COLOR_CHOICES
+from pwem.convert import ImageHandler
 
 
 class LocalResolutionViewer(pwviewer.ProtocolViewer):

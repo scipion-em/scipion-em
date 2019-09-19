@@ -33,9 +33,10 @@ except ImportError:  # Python 3
     import tkinter.font as tkFont
     import tkinter.ttk as ttk
 
-from pyworkflow.em.convert import ImageHandler
+from pwem.convert import ImageHandler
 from pyworkflow.viewer import View, Viewer, CommandView, DESKTOP_TKINTER, ProtocolViewer
-from pyworkflow.utils import Environ, runJob, importFromPlugin, getFreePort
+from pyworkflow.utils import Environ, runJob, getFreePort
+from pwem import Domain
 
 import showj
 
@@ -222,11 +223,11 @@ class CtfView(ObjectView):
                        for attrName, _ in obj.getAttributesToStore())
 
         if _anyAttrStartsBy(first, '_ctffind4_ctfResolution'):
-            gviewer = importFromPlugin('grigoriefflab.viewers', '')
+            gviewer = Domain.importFromPlugin('grigoriefflab.viewers', '')
             viewParams[showj.OBJCMDS] = "'%s'" % gviewer.OBJCMD_CTFFIND4
 
         elif _anyAttrStartsBy(first, '_gctf'):
-            OBJCMD_GCTF = importFromPlugin('gctf.viewers', 'OBJCMD_GCTF')
+            OBJCMD_GCTF = Domain.importFromPlugin('gctf.viewers', 'OBJCMD_GCTF')
             viewParams[showj.OBJCMDS] = "'%s'" % OBJCMD_GCTF
 
         inputId = ctfSet.getObjId() or ctfSet.getFileName()
