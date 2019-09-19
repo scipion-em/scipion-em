@@ -32,7 +32,7 @@ for EM data objects like: Image, SetOfImage and others
 import os
 import json
 from pyworkflow.object import *
-from pyworkflow.plugin import Domain
+from pwem import Domain
 from constants import *
 from convert import ImageHandler
 import numpy as np

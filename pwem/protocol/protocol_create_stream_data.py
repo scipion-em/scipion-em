@@ -38,7 +38,7 @@ from pwem.data import SetOfMicrographs, Micrograph, Acquisition, Movie, SetOfMov
 from pyworkflow.protocol.constants import STEPS_PARALLEL
 from os.path import basename
 from pwem.convert import ImageHandler
-from pyworkflow.plugin import Domain
+from pwem import Domain
 
 import xmippLib
 

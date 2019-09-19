@@ -3,7 +3,7 @@
 This scripts seems to be execute with the Python and libraries from Chimera.
 """
 
-
+import sys
 from __future__ import print_function
 from multiprocessing.connection import Listener, Client
 from VolumeData import Array_Grid_Data
@@ -13,12 +13,12 @@ from numpy.linalg import inv
 import chimera
 from time import sleep
 from threading import Thread
+from pwem import Domain
 
-from chimera import runCommand
+runCommand = Domain.importFromPlugin('chimera','Plugin', doRaise=True)
 
 #from time import gmtime, strftime
 #from datetime import datetime
-import sys
 #import socket
 
 class ChimeraServer:

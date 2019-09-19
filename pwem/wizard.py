@@ -35,26 +35,26 @@ import ttk
 from pyworkflow import findResource
 from pyworkflow.object import PointerList, Pointer
 from pyworkflow.wizard import Wizard
-from pyworkflow.em.convert import ImageHandler, Ccp4Header
-from pyworkflow.em.constants import (UNIT_PIXEL,
+from pwem.convert import ImageHandler, Ccp4Header
+from pwem.constants import (UNIT_PIXEL,
                                      UNIT_ANGSTROM,
                                      UNIT_PIXEL_FOURIER,
                                      FILTER_LOW_PASS,
                                      FILTER_BAND_PASS,
                                      FILTER_HIGH_PASS
                                      )
-from pyworkflow.em.data import (Volume, SetOfMicrographs, SetOfParticles,
+from pwem.data import (Volume, SetOfMicrographs, SetOfParticles,
                                 SetOfVolumes)
-from pyworkflow.em.protocol import (ProtImportImages,
+from pwem.protocol import (ProtImportImages,
                                     ProtImportCoordinates,
                                     ProtImportCoordinatesPairs,
                                     ProtImportVolumes)
 import pyworkflow.gui.dialog as dialog
-from pyworkflow.gui.tree import BoundTree, TreeProvider
+from pyworkflow.gui.tree import BoundTree, TreeProvider, ListTreeProvider
 from pyworkflow.gui.widgets import LabelSlider
-from pyworkflow.em.convert.atom_struct import AtomicStructHandler
-from pyworkflow.em.protocol.protocol_import import ProtImportSequence
-from pyworkflow.em.data import String
+from pwem.convert.atom_struct import AtomicStructHandler
+from pwem.protocol.protocol_import import ProtImportSequence
+from pwem.data import String
 import xmippLib
 
 

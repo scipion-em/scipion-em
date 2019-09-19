@@ -25,7 +25,7 @@
 # *
 # **************************************************************************
 
-import pyworkflow.plugin as pwplugin
+from pwem import Domain
 import pyworkflow.utils as pwutils
 
 
@@ -33,7 +33,7 @@ def loadSetFromDb(dbName, dbPrefix=''):
     from pyworkflow.mapper.sqlite import SqliteFlatDb
     db = SqliteFlatDb(dbName=dbName, tablePrefix=dbPrefix)
     setClassName = db.getProperty('self') # get the set class name
-    setObj = pwplugin.Domain.getObjects()[setClassName](filename=dbName, prefix=dbPrefix)
+    setObj = Domain.getObjects()[setClassName](filename=dbName, prefix=dbPrefix)
     return setObj
 
 
@@ -41,17 +41,17 @@ def runProgram(program, params):
     env = None
 
     if program.startswith('xmipp'):
-        xmipp3 = pwplugin.importFromPlugin('xmipp3', 'Plugin')
+        xmipp3 = Domain.importFromPlugin('xmipp3', 'Plugin')
         env = xmipp3.getEnviron()
     if program.startswith('relion'):
-        relion = pwplugin.importFromPlugin('relion', 'Plugin')
+        relion = Domain.importFromPlugin('relion', 'Plugin')
         env = relion.getEnviron()
     elif (program.startswith('e2') or
               program.startswith('sx')):
-        eman2 = pwplugin.importFromPlugin('eman2', 'Plugin')
+        eman2 = Domain.importFromPlugin('eman2', 'Plugin')
         env = eman2.getEnviron()
     elif program.startswith('b'):
-        bsoft = pwplugin.importFromPlugin('bsoft', 'Plugin')
+        bsoft = Domain.importFromPlugin('bsoft', 'Plugin')
         env = bsoft.getEnviron()
 
     pwutils.runJob(None, program, params, env=env)

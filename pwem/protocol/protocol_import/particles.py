@@ -27,7 +27,7 @@
 from os.path import exists
 from os.path import abspath
 
-from pyworkflow.plugin import Domain
+from pwem import Domain
 from pyworkflow.utils.properties import Message
 import pyworkflow.protocol.params as params
 from pwem.constants import ALIGN_2D, ALIGN_3D, ALIGN_PROJ, ALIGN_NONE

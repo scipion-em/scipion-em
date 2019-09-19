@@ -38,7 +38,7 @@ from pyworkflow.utils.path import removeBaseExt, expandPattern
 from pyworkflow.utils.properties import Message
 from pwem.data_tiltpairs import CoordinatesTiltPair
 from pwem.protocol import ProtParticlePicking
-from pyworkflow.plugin import Domain
+from pwem import Domain
 import xmippLib
 from base import ProtImportFiles
 

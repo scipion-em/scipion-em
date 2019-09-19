@@ -34,7 +34,7 @@ from math import ceil
 from pyworkflow.object import Set
 import pyworkflow.utils.path as pwutils
 from pyworkflow.utils import yellowStr, redStr
-from pyworkflow.plugin import Domain
+from pwem import Domain
 import pyworkflow.protocol.params as params
 import pyworkflow.protocol.constants as cons
 from pwem.convert import ImageHandler

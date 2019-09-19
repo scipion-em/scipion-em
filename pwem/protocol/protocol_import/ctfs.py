@@ -26,7 +26,7 @@
 
 
 from pwem.data import SetOfMicrographs
-from pyworkflow.plugin import Domain
+from pwem import Domain
 from pyworkflow.utils.path import removeBaseExt
 from pyworkflow.protocol.params import PointerParam
 

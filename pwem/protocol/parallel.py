@@ -28,7 +28,7 @@ import os
 
 from protocol import Protocol
 from pyworkflow.protocol.params import IntParam, STEPS_PARALLEL
-from pyworkflow.plugin import Domain
+from pwem import Domain
 
 
 class ProtTestParallel(Protocol):
