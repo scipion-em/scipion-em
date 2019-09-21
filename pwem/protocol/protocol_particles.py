@@ -32,14 +32,14 @@ from datetime import datetime
 from collections import OrderedDict
 
 from pyworkflow.object import Set, String
-import pyworkflow.protocol.params as params
 from pyworkflow.protocol import STATUS_NEW
+from pyworkflow.utils.properties import Message
+import pyworkflow.protocol.params as params
+import pyworkflow.utils as pwutils
+
 from pwem.protocol import EMProtocol
 from pwem.constants import RELATION_CTF
 from pwem.objects.data import (SetOfCoordinates, SetOfMicrographs, SetOfCTF)
-
-import pyworkflow.utils as pwutils
-from pyworkflow.utils.properties import Message
 
 
 class ProtParticles(EMProtocol):

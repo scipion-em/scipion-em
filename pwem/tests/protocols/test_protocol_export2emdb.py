@@ -27,19 +27,11 @@
 # **************************************************************************
 
 import os
+
 from pyworkflow.tests import BaseTest, DataSet, setupTestProject
+
 from pwem.protocol import ProtImportVolumes, ProtImportPdb
 from pwem.protocol.protocol_export import ProtExportEMDB
-from pwem import Domain
-
-ChimeraProtRigidFit = Domain.importFromPlugin('chimera.protocols',
-                                                'ChimeraProtRigidFit',
-                                                doRaise=True)
-XmippProtMultipleFSCs = Domain.importFromPlugin('xmipp3.protocols',
-                                                'XmippProtMultipleFSCs',
-                                                doRaise=True)
-XmippProtResolution3D = Domain.importFromPlugin('xmipp3.protocols',
-                                                'XmippProtResolution3D')
 
 class TestExport2EMDB(BaseTest):
     @classmethod
@@ -82,6 +74,10 @@ class TestExport2EMDB(BaseTest):
         return structure_mmCIF
 
     def test_volume1_AtomStructCIF(self):
+        from pwem import Domain
+        XmippProtResolution3D = Domain.importFromPlugin('xmipp3.protocols',
+                                                        'XmippProtResolution3D',
+                                                        doRaise=True)
 
         prot = self.newProtocol(XmippProtResolution3D)
         prot.inputVolume.set(self.protImportHalf1.outputVolume)
@@ -122,7 +118,10 @@ class TestExport2EMDB(BaseTest):
         self.assertListEqual(orig_x, saved_x)
 
     def test_volume1_AtomStructPDB(self):
-
+        from pwem import Domain
+        XmippProtResolution3D = Domain.importFromPlugin('xmipp3.protocols',
+                                                        'XmippProtResolution3D',
+                                                        doRaise=True)
         prot = self.newProtocol(XmippProtResolution3D)
         prot.inputVolume.set(self.protImportHalf1.outputVolume)
         prot.referenceVolume.set(self.protImportHalf2.outputVolume)
@@ -142,6 +141,11 @@ class TestExport2EMDB(BaseTest):
                 'inputVolume': self.protImportHalf1.outputVolume,
                 'pdbFileToBeRefined': self._importAtomStructCIF()
                 }
+        from pwem import Domain
+
+        ChimeraProtRigidFit = Domain.importFromPlugin('chimera.protocols',
+                                                      'ChimeraProtRigidFit',
+                                                      doRaise=True)
         protChimera = self.newProtocol(ChimeraProtRigidFit, **args)
         protChimera.setObjLabel('chimera fit\n volume and PDB\n save model')
         self.launchProtocol(protChimera)

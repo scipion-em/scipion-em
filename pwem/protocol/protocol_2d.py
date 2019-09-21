@@ -26,10 +26,11 @@
 """
 Protocol base classes related to 2D processing.
 """
-from pwem import Class2D
-from pwem.protocol import EMProtocol
 import pyworkflow.protocol.params as params
 from pyworkflow.utils import Message
+
+from pwem.objects import Class2D
+from .protocol import EMProtocol
 
 
 class Prot2D(EMProtocol):

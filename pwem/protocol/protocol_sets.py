@@ -32,10 +32,13 @@ This module contains protocols related to Set operations such us:
 """
 
 import random
-from protocol import EMProtocol
+
 import pyworkflow.protocol as pwprot
 from pyworkflow.object import Boolean
+
 from pwem.objects import SetOfClasses
+
+from .protocol import EMProtocol
 
 
 class ProtSets(EMProtocol):

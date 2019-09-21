@@ -24,17 +24,18 @@
 # *
 # **************************************************************************
 import os.path
-import pyworkflow.utils as pwutils
 
+import pyworkflow.utils as pwutils
 import pyworkflow.protocol.params as params
-from protocol_monitor import ProtMonitor, Monitor
-from protocol_monitor_ctf import MonitorCTF
-from protocol_monitor_movie_gain import MonitorMovieGain
-from protocol_monitor_system import MonitorSystem
 from pyworkflow import VERSION_1_1
+
 from pwem.protocol import ProtCTFMicrographs, ProtAlignMovies
-from pwem.protocol.monitors.report_html import ReportHtml
-import getnifs
+from pwem.protocol.monitors import ReportHtml, getnifs
+
+from .protocol_monitor import ProtMonitor, Monitor
+from .protocol_monitor_ctf import MonitorCTF
+from .protocol_monitor_movie_gain import MonitorMovieGain
+from .protocol_monitor_system import MonitorSystem
 
 
 class ProtMonitorSummary(ProtMonitor):

@@ -29,8 +29,9 @@ import glob
 
 from pyworkflow import VERSION_1_1
 from pyworkflow.protocol.params import PathParam
-from pwem.protocol import EMProtocol
 from pyworkflow.utils.path import moveFile, copyFile
+
+from .protocol import EMProtocol
 
 PDFLATEX = "pdflatex"
 

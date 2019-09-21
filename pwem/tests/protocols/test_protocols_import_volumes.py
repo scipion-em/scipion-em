@@ -23,10 +23,11 @@
 import os
 
 from pyworkflow.tests import BaseTest, setupTestProject, DataSet
+
 from pwem.protocol import ProtImportVolumes
 from pwem.constants import SYM_I222r, SCIPION_SYM_NAME
 from pwem.convert.symmetry import Icosahedron
-from pwem import Domain
+
 
 
 class TestImportBase(BaseTest):
@@ -300,6 +301,7 @@ class TestImportVolumes(TestImportBase):
         """ Internal shortcut function to launch a Xmipp program.
         If xmipp not available o fails return False, else Tru"""
         try:
+            from pwem import Domain
             xmipp3 = Domain.importFromPlugin('xmipp3', doRaise=True)
             xmipp3.Plugin.runXmippProgram(program, args)
         except:

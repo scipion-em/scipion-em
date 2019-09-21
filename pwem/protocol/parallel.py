@@ -24,9 +24,10 @@
 # *
 # **************************************************************************
 
-from protocol import Protocol
 from pyworkflow.protocol.params import IntParam, STEPS_PARALLEL
-from pwem import Domain
+
+from .protocol import Protocol
+
 
 
 class ProtTestParallel(Protocol):
@@ -88,12 +89,13 @@ class ProtTestParallel(Protocol):
         if forceFail:
             self.runJob('echo', " 'Failing for testing purposes...'; exit 1")
         else:
+            from pwem import Domain
             getEnviron = Domain.importFromPlugin('xmipp3', 'getEnviron')
             self.runJob('xmipp_work_test',
                         "--time %d --tag '%s'" % (secs, tag), env=getEnviron())
             
     def awakeStep(self):
-        print "Awaked after an sleep step"
+        print("Awaked after an sleep step")
         
     def endStep(self, iterN):
         self._log.info("Ending iteration: %d" % iterN)

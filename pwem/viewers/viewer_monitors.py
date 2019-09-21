@@ -36,6 +36,7 @@ import pyworkflow.gui.text as text
 import pyworkflow.utils as pwutils
 
 from pyworkflow.viewer import DESKTOP_TKINTER, WEB_DJANGO, Viewer
+
 from pwem.protocol import (ProtMonitorCTF, ProtMonitorMovieGain,
                            ProtMonitorSystem, ProtMonitorSummary,
                            SummaryProvider)

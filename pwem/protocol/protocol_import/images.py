@@ -36,10 +36,11 @@ from datetime import timedelta, datetime
 import pyworkflow.utils as pwutils
 from pyworkflow.utils.properties import Message
 import pyworkflow.protocol.params as params
+
 from pwem.convert import ImageHandler
 from pwem.objects.data import Acquisition
 
-from base import ProtImportFiles
+from .base import ProtImportFiles
 
 
 

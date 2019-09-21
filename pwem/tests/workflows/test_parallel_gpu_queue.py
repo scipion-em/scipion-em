@@ -26,17 +26,18 @@
 import json
 import subprocess
 
+from pwem.protocol import ProtImportParticles
 from pyworkflow.tests import *
-from pwem.protocol import *
 import pyworkflow.utils as pwutils
 from pyworkflow.utils.path import *
-from pwem import Domain
 
-relionProtocols = Domain.importFromPlugin('relion.protocols', doRaise=True)
-relionConvert = Domain.importFromPlugin('relion.convert', doRaise=True)
+import pwem as em
 
-xmipp3Protocols = Domain.importFromPlugin('xmipp3.protocols', doRaise=True)
-xmipp3Convert = Domain.importFromPlugin('xmipp3.convert', doRaise=True)
+relionProtocols = em.Domain.importFromPlugin('relion.protocols', doRaise=True)
+relionConvert = em.Domain.importFromPlugin('relion.convert', doRaise=True)
+
+xmipp3Protocols = em.Domain.importFromPlugin('xmipp3.protocols', doRaise=True)
+xmipp3Convert = em.Domain.importFromPlugin('xmipp3.convert', doRaise=True)
 
 
 # --- Set this to match with your queue system ---
@@ -141,8 +142,9 @@ class TestQueueBase(BaseTest):
                 jobFilesPath = join(getParentFolder(prot.getLogPaths()[0]),
                             str(prot.getObjId()))
 
-                self.assertTrue(exists(jobFilesPath + "-0-1.out") and exists(
-                jobFilesPath + "-0-1.err") and exists(jobFilesPath + "-0-1.job"),
+                self.assertTrue(
+                    pwutils.exists(jobFilesPath + "-0-1.out") and pwutils.exists(
+                jobFilesPath + "-0-1.err") and pwutils.exists(jobFilesPath + "-0-1.job"),
                                 "Job queue files not found in log folder, job did not make it to the queue.")
 
         self.assertIsNotNone(prot.outputClasses,
@@ -372,9 +374,14 @@ class TestQueueSteps(TestQueueBase):
 
         jobFilesPath = join(getParentFolder(protXmippPreproc.getLogPaths()[0]), str(protXmippPreproc.getObjId()))
 
-        self.assertTrue(exists(jobFilesPath + "-0-1.out") and exists(jobFilesPath + "-0-1.err") and exists(jobFilesPath + "-0-1.job") \
-                    and exists(jobFilesPath + "-0-2.out") and exists(jobFilesPath + "-0-2.err") and exists(jobFilesPath + "-0-2.job")
-                        , "Job queue files not found on log folder, job did not make it to the queue.")
+        self.assertTrue(pwutils.exists(jobFilesPath + "-0-1.out") and
+                        pwutils.exists(jobFilesPath + "-0-1.err") and
+                        pwutils.exists(jobFilesPath + "-0-1.job") and
+                        pwutils.exists(jobFilesPath + "-0-2.out") and
+                        pwutils.exists(jobFilesPath + "-0-2.err") and
+                        pwutils.exists(jobFilesPath + "-0-2.job"),
+                        "Job queue files not found on log folder, job did "
+                        "not make it to the queue.")
 
         # Check that results have been produced
         self.assertIsNotNone(protXmippPreproc.outputParticles,

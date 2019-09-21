@@ -22,18 +22,19 @@
 # ***************************************************************************/
 
 import os
-from pwem import Domain
+
 from pyworkflow.tests import BaseTest, setupTestProject, DataSet
+
+import pwem as em
 from pwem.objects.data import SetOfParticles
 from pwem.protocol import ProtImportParticles, ProtImportVolumes, ProtSubSet
 
-XmippProtVolumeHomogenizer = Domain.importFromPlugin('xmipp3.protocols',
+XmippProtVolumeHomogenizer = em.Domain.importFromPlugin('xmipp3.protocols',
                                               'XmippProtEnrich', doRaise=True)
-ProtRelionRefine3D = Domain.importFromPlugin('relion.protocols',
+ProtRelionRefine3D = em.Domain.importFromPlugin('relion.protocols',
                                              'ProtRelionRefine3D', doRaise=True)
 
 
-    
 class TestVolumeHomogenizer(BaseTest):
     @classmethod
     def setUpClass(cls):

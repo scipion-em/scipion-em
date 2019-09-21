@@ -26,19 +26,22 @@
 
 import os
 from itertools import izip
+from cPickle import dumps, loads
 
 from pyworkflow.protocol.params import (PointerParam, FileParam, StringParam)
+from pyworkflow.utils import moveFile
+
 from pwem.protocol import EMProtocol
 from pwem.objects.data import (SetOfImages, SetOfCTF, SetOfClasses,
                                SetOfClasses3D, SetOfVolumes, EMSet,
                                SetOfNormalModes, SetOfParticles, SetOfPDBs,
-                               SetOfMicrographs, ALIGN_NONE)
+                               SetOfMicrographs, Mask)
+from pwem.constants import ALIGN_NONE
 from pwem.objects.data_tiltpairs import (MicrographsTiltPair,
                                          ParticlesTiltPair)
-from pwem.objects.data import Mask
-from pyworkflow.utils import moveFile
 
-from cPickle import dumps, loads
+
+
 
 class BatchProtocol(EMProtocol):
     """ Base class to all protocols that are launched

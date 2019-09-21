@@ -43,3 +43,4 @@ from .viewer_monitors import (ProtMonitorCTFViewer, ProtMonitorSystemViewer,
                               ProtMonitorMovieGainViewer, ViewerMonitorSummary)
 from .viewer_sequence import SequenceViewer
 from .viewer_volumes import viewerProtImportVolumes
+from .showj import *

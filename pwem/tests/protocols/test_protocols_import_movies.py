@@ -26,6 +26,7 @@ from datetime import datetime, timedelta
 import time
 
 from pyworkflow.tests import BaseTest, setupTestProject, DataSet
+
 from pwem.protocol import ProtImportMovies
 
 

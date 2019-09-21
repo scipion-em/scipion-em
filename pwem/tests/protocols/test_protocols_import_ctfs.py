@@ -25,6 +25,7 @@ import os
 
 import pyworkflow.utils as pwutils
 from pyworkflow.tests import BaseTest, setupTestProject, DataSet
+
 from pwem.protocol import ProtImportCTF, ProtImportMicrographs
 
 

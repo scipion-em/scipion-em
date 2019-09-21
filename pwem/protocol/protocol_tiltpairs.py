@@ -43,7 +43,7 @@ from pwem.constants import SAMPLING_FROM_IMAGE, SAMPLING_FROM_SCANNER
 from pwem.convert import ImageHandler
 from pwem.objects import MicrographsTiltPair, TiltPair
 
-from protocol_import import ProtImportFiles
+from .protocol_import import ProtImportFiles
 
 
 class ProtImportMicrographsTiltPairs(ProtImportFiles):
@@ -144,7 +144,7 @@ class ProtImportMicrographsTiltPairs(ProtImportFiles):
             sys.stdout.write("\rImported %d/%d" % (i+1, size))
             sys.stdout.flush()
             
-        print "\n"
+        print("\n")
         
         imgSet.write()
         

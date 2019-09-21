@@ -39,15 +39,16 @@ import pyworkflow as pw
 import pyworkflow.utils as pwutils
 from pyworkflow.viewer import CommandView, Viewer, DESKTOP_TKINTER
 from pyworkflow.gui.matplotlib_image import ImageWindow
+
 from pwem.constants import (SYM_CYCLIC, SYM_DIHEDRAL, SYM_TETRAHEDRAL,
                             SYM_OCTAHEDRAL, SYM_I222, SYM_I222r, SYM_In25,
                             SYM_In25r, SYM_I2n3, SYM_I2n3r, SYM_I2n5, SYM_I2n5r)
-import pyworkflow.em.metadata as md
+import pwem.metadata as md
 from pwem.objects.data import AtomStruct, PdbFile
 from pwem.convert import ImageHandler
 
+from .showj import (CHIMERA_PORT, MODE, MODE_MD, INVERTY)
 
-import showj
 import xmippLib
 
 
@@ -560,13 +561,14 @@ class ChimeraDataView(ChimeraClientView):
     def __init__(self, dataview, vol, viewParams={}, **kwargs):
         self.dataview = dataview
         self.showjPort = pwutils.getFreePort()
-        self.dataview._viewParams[showj.CHIMERA_PORT] = self.showjPort
-        self.dataview._viewParams[showj.MODE] = showj.MODE_MD
-        self.dataview._viewParams[showj.INVERTY] = ''
+        self.dataview._viewParams[CHIMERA_PORT] = self.showjPort
+        self.dataview._viewParams[MODE] = MODE_MD
+        self.dataview._viewParams[INVERTY] = ''
         ChimeraClientView.__init__(self, vol.getFileName(),
                                    showProjection=True,
                                    showjPort=self.showjPort,
                                    voxelSize=vol.getSamplingRate())
+
 
     def show(self):
         self.dataview.show()

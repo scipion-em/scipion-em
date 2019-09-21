@@ -25,11 +25,12 @@
 # *
 # **************************************************************************
 
-from pwem import Domain
+
 import pyworkflow.utils as pwutils
 
 
 def loadSetFromDb(dbName, dbPrefix=''):
+    from pwem import Domain
     from pyworkflow.mapper.sqlite import SqliteFlatDb
     db = SqliteFlatDb(dbName=dbName, tablePrefix=dbPrefix)
     setClassName = db.getProperty('self') # get the set class name
@@ -39,7 +40,7 @@ def loadSetFromDb(dbName, dbPrefix=''):
 
 def runProgram(program, params):
     env = None
-
+    from pwem import Domain
     if program.startswith('xmipp'):
         xmipp3 = Domain.importFromPlugin('xmipp3', 'Plugin')
         env = xmipp3.getEnviron()

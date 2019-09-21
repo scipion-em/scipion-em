@@ -32,7 +32,6 @@ import unittest
 from itertools import izip
 
 from pyworkflow.tests import BaseTest, setupTestProject, DataSet
-
 from pyworkflow.utils import greenStr, magentaStr
 
 from pwem.protocol.protocol_import import (ProtImportMicrographs,

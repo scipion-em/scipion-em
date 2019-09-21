@@ -28,6 +28,7 @@ import sys
 import time
 
 import pyworkflow.protocol.params as params
+
 from pwem.protocol import EMProtocol
 
 

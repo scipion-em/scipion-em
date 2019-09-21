@@ -30,11 +30,11 @@ from collections import Counter
 
 import numpy
 
-from pwem.convert.atom_struct import AtomicStructHandler
-from pwem.convert.transformations import (
-    euler_matrix, translation_matrix, concatenate_matrices)
 from pyworkflow.tests import *
-from pwem import Domain
+from pwem.convert.atom_struct import AtomicStructHandler
+from pwem.convert.transformations import (euler_matrix, translation_matrix,
+                                          concatenate_matrices)
+
 
 
 class TestAtomicStructHandler(unittest.TestCase):
@@ -275,11 +275,13 @@ class TestAtomicStructHandler(unittest.TestCase):
 
         def __runXmippProgram(program, args):
             """ Internal function to launch a Xmipp program. """
+            from pwem import Domain
             xmipp3 = Domain.importFromPlugin('xmipp3')
             xmipp3.runXmippProgram(program, args)
 
         def __getXmippEulerAngles(matrix):
             """ Internal fuction to convert scipion to xmipp angles"""
+            from pwem import Domain
             geometryFromMatrix = Domain.importFromPlugin('xmipp3.convert',
                                                   'geometryFromMatrix')
 

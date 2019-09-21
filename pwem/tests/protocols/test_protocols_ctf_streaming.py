@@ -23,18 +23,17 @@
 
 import time
 import os
-from pwem.objects.data import SetOfCTF
+
 from pyworkflow.tests import BaseTest, setupTestProject
+from pyworkflow.protocol import getProtocolFromDb
+
+import pwem as em
+from pwem.objects.data import SetOfCTF
 from pwem.protocol import ProtCreateStreamData
 from pwem.protocol.monitors.pynvml import nvmlInit, NVMLError
-from pyworkflow.protocol import getProtocolFromDb
 from pwem.protocol.protocol_create_stream_data import SET_OF_RANDOM_MICROGRAPHS
-from pwem import Domain
 
-XmippProtCTFMicrographs = Domain.importFromPlugin('xmipp3.protocols.protocol_ctf_micrographs',
-                                           'XmippProtCTFMicrographs', doRaise=True)
-ProtCTFFind = Domain.importFromPlugin('grigoriefflab.protocols', 'ProtCTFFind', doRaise=True)
-ProtGctf = Domain.importFromPlugin('gctf.protocols', 'ProtGctf', doRaise=True)
+
 
 
 # Load the number of movies for the simulation, by default equal 5, but
@@ -117,6 +116,9 @@ class TestCtfStreaming(BaseTest):
         self.proj.launchProtocol(protStream, wait=False)
 
         # 1st ctf - ctffind4 in streaming
+
+        ProtCTFFind = em.Domain.importFromPlugin('grigoriefflab.protocols',
+                                              'ProtCTFFind', doRaise=True)
         protCTF = ProtCTFFind(useCftfind4=True)
 
         protCTF.inputMicrographs.set(protStream)
@@ -133,6 +135,11 @@ class TestCtfStreaming(BaseTest):
         kwargs = {'ctfDownFactor': 2,
                   'numberOfThreads': 4
                   }
+
+        XmippProtCTFMicrographs = em.Domain.importFromPlugin(
+            'xmipp3.protocols.protocol_ctf_micrographs',
+            'XmippProtCTFMicrographs', doRaise=True)
+
         protCTF2 = self.newProtocol(XmippProtCTFMicrographs, **kwargs)
         protCTF2.inputMicrographs.set(protStream)
         protCTF2.inputMicrographs.setExtended('outputMicrographs')
@@ -144,6 +151,8 @@ class TestCtfStreaming(BaseTest):
         try:
             # check if box has nvidia cuda libs.
             nvmlInit()  # fails if not GPU attached
+            ProtGctf = em.Domain.importFromPlugin('gctf.protocols', 'ProtGctf',
+                                               doRaise=True)
             protCTF3 = ProtGctf()
             protCTF3.inputMicrographs.set(protStream)
             protCTF3.inputMicrographs.setExtended('outputMicrographs')

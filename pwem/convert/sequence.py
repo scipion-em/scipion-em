@@ -85,7 +85,7 @@ class SequenceHandler:
     def downloadSeqFromDatabase(self, seqID):
         # see http://biopython.org/DIST/docs/api/Bio.SeqIO-module.html
         # for format/databases
-        print "Connecting to dabase..."
+        print("Connecting to dabase...")
         seqID = str(seqID)
         sys.stdout.flush()
         counter=1
@@ -99,7 +99,7 @@ class SequenceHandler:
                     url = "http://www.uniprot.org/uniprot/%s.xml"
                     format = "uniprot-xml"
                     handle = urllib2.urlopen(url % seqID)
-                    print "URL", url % seqID
+                    print("URL", url % seqID)
                 else:
                     dataBase = 'GeneBank'
                     Entrez.email = "adam.richards@stat.duke.edu"
@@ -130,7 +130,7 @@ class SequenceHandler:
                                                   referenceSeq.seq)
             return alignments
         else:
-            print "read the sequence first"
+            print("read the sequence first")
             exit(0)
 
 def cleanSequenceScipion(isAminoacid, iUPACAlphabet, sequence):

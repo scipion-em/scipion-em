@@ -30,7 +30,8 @@ This modules contains data classes related to Random Connical Tilt workflow.
 
 #NOTE: Some of this importS are needed by the mapper,
 # not directly in the code
-from pwem.objects.data import (EMObject, EMSet)
+
+from .data import *
 from pyworkflow.object import Float, Pointer
 
 

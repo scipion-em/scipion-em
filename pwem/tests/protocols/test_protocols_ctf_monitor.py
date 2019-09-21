@@ -21,19 +21,15 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # ***************************************************************************/
 
-import time
 import os
 
-from pwem.protocol.monitors.protocol_monitor_ctf import CTF_LOG_SQLITE
-from pyworkflow.tests import BaseTest, setupTestProject
-from pwem.protocol import ProtCreateStreamData
-from pyworkflow.protocol import getProtocolFromDb
-from pwem.protocol import ProtMonitorCTF
-from pwem.protocol.protocol_create_stream_data import SET_OF_RANDOM_MICROGRAPHS
-from pwem import Domain
 
-ProtCTFFind = Domain.importFromPlugin('grigoriefflab.protocols',
-                                      'ProtCTFFind', doRaise=True)
+from pyworkflow.tests import BaseTest, setupTestProject
+from pyworkflow.protocol import getProtocolFromDb
+
+from pwem.protocol import (ProtCreateStreamData, SET_OF_RANDOM_MICROGRAPHS,
+                           ProtMonitorCTF)
+from pwem.protocol.monitors import CTF_LOG_SQLITE
 
 
 # Load the number of movies for the simulation, by default equal 5, but
@@ -83,6 +79,10 @@ class TestCtfStream(BaseTest):
             'lowRes': 0.05,
             'numberOfThreads': 4
         }
+        from pwem import Domain
+
+        ProtCTFFind = Domain.importFromPlugin('grigoriefflab.protocols',
+                                              'ProtCTFFind', doRaise=True)
         protCTF = self.newProtocol(ProtCTFFind, **kwargs)
         protCTF.inputMicrographs.set(protStream.outputMicrographs)
         self.proj.launchProtocol(protCTF, wait=False)

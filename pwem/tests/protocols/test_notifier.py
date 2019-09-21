@@ -24,10 +24,10 @@ import time
 import urllib2
 import json
 
-from pyworkflow.tests import BaseTest, setupTestProject
-from pwem.protocol import ProtStress
-
 import pyworkflow.webservices as pws
+from pyworkflow.tests import BaseTest, setupTestProject
+
+from pwem.protocol import ProtStress
 
 
 class TestNotifier(BaseTest):

@@ -27,13 +27,7 @@
 from pyworkflow.tests import *
 from test_workflow import TestWorkflow
 from pwem.protocol import *
-from pwem import Domain
-
-xmippProtcols = Domain.importFromPlugin('xmipp3.protocols',
-                                        doRaise=True)
-xmippConstants = Domain.importFromPlugin('xmipp3.constants',
-                                         doRaise=True)
-
+import pwem as em
 
 class TestXmippWorkflow(TestWorkflow):
 
@@ -68,6 +62,8 @@ class TestXmippWorkflow(TestWorkflow):
 
         # Perform a downsampling on the micrographs
         print("Downsampling...")
+        xmippProtcols = em.Domain.importFromPlugin('xmipp3.protocols',
+                                                   doRaise=True)
         protDownsampling = self.newProtocol(xmippProtcols.XmippProtPreprocessMicrographs,
                                             doDownsample=True,
                                             downFactor=5,
@@ -162,7 +158,7 @@ class TestXmippWorkflow(TestWorkflow):
         self.assertIsNotNone(protOnlyAlign.outputParticles, "There was a problem with Only align2d")  
         self.validateFiles('protOnlyAlign', protOnlyAlign)
         
-        print "Run kerdensom"
+        print("Run kerdensom")
         ProtKerdensom = self.newProtocol(xmippProtcols.XmippProtKerdensom,
                                          useMask=False, SomXdim=2, SomYdim=2,
                                  SomReg0=800, SomReg1=400, SomSteps=2)
@@ -171,7 +167,7 @@ class TestXmippWorkflow(TestWorkflow):
         self.assertIsNotNone(ProtKerdensom.outputClasses, "There was a problem with kerdensom")  
         #self.validateFiles('ProtKerdensom', ProtKerdensom)
         
-        print "Run Rotational Spectra"
+        print("Run Rotational Spectra")
         xmippProtRotSpectra = self.newProtocol(xmippProtcols.XmippProtRotSpectra,
                                                SomXdim=2, SomYdim=2,
                                                spectraInnerRadius=4,

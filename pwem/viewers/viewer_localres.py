@@ -25,6 +25,7 @@
 # **************************************************************************
 
 import pyworkflow.viewer as pwviewer
+
 from pwem.constants import COLOR_OTHER, COLOR_CHOICES
 from pwem.convert import ImageHandler
 

@@ -30,11 +30,11 @@ from math import isinf
 import sqlite3 as lite
 
 import pyworkflow.protocol.params as params
-from protocol_monitor import ProtMonitor, Monitor
 from pyworkflow import VERSION_1_1
-
 from pyworkflow.protocol.constants import STATUS_RUNNING
 from pyworkflow.protocol import getUpdatedProtocol
+
+from .protocol_monitor import ProtMonitor, Monitor
 
 PHASE_SHIFT = 'phaseShift'
 TIME_STAMP = 'timeStamp'

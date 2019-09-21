@@ -28,8 +28,9 @@
 import os
 
 from pyworkflow.viewer import Viewer, DESKTOP_TKINTER
-from pwem.objects.data import Sequence
 from pyworkflow.gui.text import openTextFileEditor
+
+from pwem.objects.data import Sequence
 
 
 class SequenceViewer(Viewer):

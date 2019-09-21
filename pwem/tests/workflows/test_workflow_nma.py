@@ -24,21 +24,22 @@
 # *
 # **************************************************************************
 
-
-from pwem.protocol import ProtImportPdb, ProtImportVolumes, ProtImportParticles
 from pyworkflow.tests import setupTestProject, DataSet
-from pwem import Domain
-from test_workflow import TestWorkflow
 
-XmippProtNMA = Domain.importFromPlugin('xmipp3.protocols', 'XmippProtNMA',
+import pwem as em
+from pwem.protocol import ProtImportPdb, ProtImportVolumes, ProtImportParticles
+
+from .test_workflow import TestWorkflow
+
+XmippProtNMA = em.Domain.importFromPlugin('xmipp3.protocols', 'XmippProtNMA',
                                        doRaise=True)
-XmippProtAlignmentNMA = Domain.importFromPlugin('xmipp3.protocols',
+XmippProtAlignmentNMA = em.Domain.importFromPlugin('xmipp3.protocols',
                                                 'XmippProtAlignmentNMA')
-XmippProtDimredNMA = Domain.importFromPlugin('xmipp3.protocols',
+XmippProtDimredNMA = em.Domain.importFromPlugin('xmipp3.protocols',
                                              'XmippProtDimredNMA')
-NMA_CUTOFF_ABS = Domain.importFromPlugin('xmipp3.protocols',
+NMA_CUTOFF_ABS = em.Domain.importFromPlugin('xmipp3.protocols',
                                          'NMA_CUTOFF_ABS')
-XmippProtConvertToPseudoAtoms = Domain.importFromPlugin('xmipp3.protocols',
+XmippProtConvertToPseudoAtoms = em.Domain.importFromPlugin('xmipp3.protocols',
                                                         'XmippProtConvertToPseudoAtoms')
    
    
@@ -110,7 +111,7 @@ class TestNMA(TestWorkflow):
         self.launchProtocol(protImportVol)
         
         # Convert the Volume to Pdb
-        NMA_MASK_THRE = Domain.importFromPlugin('xmipp3.protocols.pdb.protocol_pseudoatoms_base',
+        NMA_MASK_THRE = em.Domain.importFromPlugin('xmipp3.protocols.pdb.protocol_pseudoatoms_base',
                                                 'NMA_MASK_THRE')
         protConvertVol = self.newProtocol(XmippProtConvertToPseudoAtoms)
         protConvertVol.inputStructure.set(protImportVol.outputVolume)

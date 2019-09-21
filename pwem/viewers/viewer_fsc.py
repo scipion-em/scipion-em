@@ -30,6 +30,7 @@ from matplotlib.widgets import Button
 
 from pyworkflow.viewer import DESKTOP_TKINTER, WEB_DJANGO, Viewer
 from pyworkflow.utils.properties import Color
+
 from pwem.objects.data import FSC, SetOfFSCs
 from pwem.protocol import ProtCreateFSC
 

@@ -32,6 +32,7 @@ Add functions related to metadata
 from collections import OrderedDict
 
 from pyworkflow.object import ObjectWrap
+
 from xmippLib import MetaData, MetaDataInfo, label2Str, str2Label, MD_APPEND
 
 

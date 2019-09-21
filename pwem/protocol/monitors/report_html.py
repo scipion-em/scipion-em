@@ -36,8 +36,10 @@ from datetime import datetime
 from pyworkflow.protocol import getUpdatedProtocol
 from pyworkflow import getTemplatePath, getConfigPath
 import pyworkflow.utils as pwutils
-from summary_provider import SummaryProvider
+
 from pwem.convert import ImageHandler
+
+from .summary_provider import SummaryProvider
 
 ####################### CONSTANTS ##########################
 # These constants are the keys used in the ctfMonitor function

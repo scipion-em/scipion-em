@@ -29,23 +29,26 @@
 # emringer and molprobity
 
 import os.path
-from pwem import Domain
-from pwem.protocol import ProtImportPdb, ProtImportVolumes
-from pyworkflow.tests import *
 import os.path
 import json
 
+from pyworkflow.tests import *
 
-ChimeraProtRigidFit = Domain.importFromPlugin('chimera.protocols',
+import pwem as em
+from pwem.protocol import ProtImportPdb, ProtImportVolumes
+
+
+
+ChimeraProtRigidFit = em.Domain.importFromPlugin('chimera.protocols',
                                        'ChimeraProtRigidFit', doRaise=True)
-CootRefine = Domain.importFromPlugin('ccp4.protocols', 'CootRefine',
+CootRefine = em.Domain.importFromPlugin('ccp4.protocols', 'CootRefine',
                                      doRaise=True)
-CCP4ProtRunRefmac = Domain.importFromPlugin('ccp4.protocols',
+CCP4ProtRunRefmac = em.Domain.importFromPlugin('ccp4.protocols',
                                             'CCP4ProtRunRefmac')
-PhenixProtRunEMRinger = Domain.importFromPlugin('phenix.protocols',
+PhenixProtRunEMRinger = em.Domain.importFromPlugin('phenix.protocols',
                                                 'PhenixProtRunEMRinger',
                                                 doRaise=True)
-PhenixProtRunMolprobity = Domain.importFromPlugin('phenix.protocols',
+PhenixProtRunMolprobity = em.Domain.importFromPlugin('phenix.protocols',
                                                   'PhenixProtRunMolprobity')
 
 class TestImportBase(BaseTest):
@@ -1043,7 +1046,7 @@ class TestRefmacRefinement(TestImportData):
         try:
             self.launchProtocol(protCoot)
         except:
-            print "first call to coot ended"
+            print("first call to coot ended")
         self.assertIsNotNone(protCoot.testLabel3.getFileName(),
                              "There was a problem with the alignment")
         self.assertTrue(os.path.exists(protCoot.testLabel3.getFileName()))
@@ -1097,8 +1100,8 @@ class TestEMRingerValidation(TestImportData):
         """ This test checks that EMRinger validation protocol runs with an
         atomic structure; No Volume was provided and an error message is
         expected"""
-        print "Run EMRinger validation protocol from imported pdb file " \
-              "without imported or pdb-associated volume"
+        print("Run EMRinger validation protocol from imported pdb file "
+              "without imported or pdb-associated volume")
 
         # import PDB
         structure_PDB = self._importStructurePDBWoVol()
@@ -1115,8 +1118,8 @@ class TestEMRingerValidation(TestImportData):
             self.launchProtocol(protEMRinger)
         except Exception as e:
             self.assertTrue(True)
-            print "This test should return a error message as '" \
-                  " Error: You should provide a volume.\n"
+            print("This test should return a error message as Error: You "
+                  "should provide a volume.\n")
 
             return
         self.assertTrue(False)
@@ -1126,8 +1129,8 @@ class TestEMRingerValidation(TestImportData):
         volume provided directly as inputVol, the input PDB was fitted to
         the volume and refined previously by coot and refmac(without mask)
          """
-        print "Run EMRinger validation from imported volume and pdb file " \
-              "fitted and refined by Coot/Refmac without mask"
+        print("Run EMRinger validation from imported volume and pdb file "
+              "fitted and refined by Coot/Refmac without mask")
 
         # Import Volume
         volume = self._importVolume()
@@ -1185,8 +1188,8 @@ class TestEMRingerValidation(TestImportData):
         volume provided directly as inputVol, the input PDB was fitted to
         the volume and refined previously by coot and refmac(with mask)
         """
-        print "Run EMRinger validation from imported volume and pdb file " \
-              "fitted and refined by Coot/Refmac with mask"
+        print("Run EMRinger validation from imported volume and pdb file "
+              "fitted and refined by Coot/Refmac with mask")
 
         # Import Volume
         volume = self._importVolume()
@@ -1244,8 +1247,8 @@ class TestEMRingerValidation(TestImportData):
     def testEMRingerValidationAfterChimeraAndCootAndRefmacNoMask(self):
         """ This test checks that EMRinger validation protocol runs with a
         volume provided by Chimera, the input PDB is provided by Coot """
-        print "Run EMRinger validation from volume provided by Chimera " \
-              "and pdb file provided by Coot/Refmac without mask"
+        print("Run EMRinger validation from volume provided by Chimera "
+              "and pdb file provided by Coot/Refmac without mask")
 
         # Import Volume
         volume = self._importVolume()
@@ -1345,8 +1348,8 @@ class TestEMRingerValidation(TestImportData):
     def testEMRingerValidationAfterChimeraAndCootAndRefmacWithMask(self):
         """ This test checks that EMRinger validation protocol runs with a
         volume provided by Chimera, the input PDB is provided by Coot """
-        print "Run EMRinger validation from volume provided by Chimera " \
-              "and pdb file provided by Coot/Refmac with mask"
+        print("Run EMRinger validation from volume provided by Chimera "
+              "and pdb file provided by Coot/Refmac with mask")
 
         # Import Volume
         volume = self._importVolume()
@@ -1448,8 +1451,8 @@ class TestEMRingerValidation(TestImportData):
         # This test checks that EMRinger runs when a volume provided
         # by Chimera workflow; the PDB is provided by Coot/Refmac without mask
         # starting volume with a different coordinate origin
-        print "Run EMRinger validation from PDB file saved from " \
-              "Chimera_2/Coot/Refmac without mask"
+        print("Run EMRinger validation from PDB file saved from "
+              "Chimera_2/Coot/Refmac without mask")
 
         volume2 = self._importVolume2()
         structure1_PDB = self._importStructurePDBWoVol()
@@ -1490,7 +1493,7 @@ class TestEMRingerValidation(TestImportData):
         try:
             self.launchProtocol(protCoot)
         except:
-            print "first call to coot ended"
+            print("first call to coot ended")
         self.assertIsNotNone(protCoot.testLabel5.getFileName(),
                              "There was a problem with the alignment")
         self.assertTrue(os.path.exists(protCoot.testLabel5.getFileName()))
@@ -1556,8 +1559,8 @@ class TestEMRingerValidation(TestImportData):
         # This test checks that EMRinger runs when a volume provided
         # by Chimera workflow; the PDB is provided by Coot/Refmac with mask
         # starting volume with a different coordinate origin
-        print "Run EMRinger validation from PDB file saved from " \
-              "Chimera_2/Coot/Refmac with mask"
+        print("Run EMRinger validation from PDB file saved from "
+              "Chimera_2/Coot/Refmac with mask")
 
         volume2 = self._importVolume2()
         structure1_PDB = self._importStructurePDBWoVol()
@@ -1598,7 +1601,7 @@ class TestEMRingerValidation(TestImportData):
         try:
             self.launchProtocol(protCoot)
         except:
-            print "first call to coot ended"
+            print("first call to coot ended")
         self.assertIsNotNone(protCoot.testLabel6.getFileName(),
                              "There was a problem with the alignment")
         self.assertTrue(
@@ -1666,8 +1669,8 @@ class TestEMRingerValidation(TestImportData):
         volume provided directly as inputVol, the input PDB was fitted to
         the volume and refined previously by coot and refmac in another project
          """
-        print "Run EMRinger validation from imported volume and pdb file " \
-              "already refined by Coot and Refmac in another project"
+        print("Run EMRinger validation from imported volume and pdb file "
+              "already refined by Coot and Refmac in another project")
 
         # Import Volume
         volume3 = self._importVolume3()
@@ -1716,8 +1719,8 @@ class TestMolprobityValidation(TestImportData):
         """ This test checks that EMRinger validation protocol runs with an
         atomic structure; No Volume was provided and no error message is
         expected"""
-        print "Run MolProbity validation protocol from imported pdb file " \
-              "without imported or pdb-associated volume"
+        print("Run MolProbity validation protocol from imported pdb file "
+              "without imported or pdb-associated volume")
 
         # import PDB
         structure_PDB = self._importStructurePDBWoVol()
@@ -1745,8 +1748,8 @@ class TestMolprobityValidation(TestImportData):
         density volume; No atomic structure was provided and a error message is
         expected"""
 
-        print "Run MolProbity validation protocol from imported volume file " \
-          "without imported pdb"
+        print("Run MolProbity validation protocol from imported volume file "
+              "without imported pdb")
 
         # import volume
         volume = self._importVolume()
@@ -1764,8 +1767,8 @@ class TestMolprobityValidation(TestImportData):
             self.launchProtocol(protMolProbity)
         except Exception as e:
             self.assertTrue(True)
-            print "This test should return a error message as '" \
-              " Input atomic structure cannot be EMPTY.\n"
+            print("This test should return a error message as: "
+                  " Input atomic structure cannot be EMPTY.\n")
 
             return
         self.assertTrue(False)
@@ -1775,8 +1778,8 @@ class TestMolprobityValidation(TestImportData):
         volume provided directly as inputVol, the input PDB was fitted to
         the volume and refined previously by coot and refmac without mask
          """
-        print "Run MolProbity validation from imported volume and pdb file " \
-              "fitted and refined by Coot/Refmac"
+        print("Run MolProbity validation from imported volume and pdb file "
+              "fitted and refined by Coot/Refmac")
 
         # Import Volume
         volume = self._importVolume()
@@ -1835,8 +1838,8 @@ class TestMolprobityValidation(TestImportData):
         volume provided directly as inputVol, the input PDB was fitted to
         the volume and refined previously by coot and refmac with mask
          """
-        print "Run MolProbity validation from imported volume and pdb file " \
-              "fitted and refined by Coot/Refmac with mask"
+        print("Run MolProbity validation from imported volume and pdb file "
+              "fitted and refined by Coot/Refmac with mask")
 
         # Import Volume
         volume = self._importVolume()
@@ -1893,8 +1896,8 @@ class TestMolprobityValidation(TestImportData):
     def testMolProbityValidationAfterChimeraAndCootAndRefmacNoMask(self):
         """ This test checks that MolProbity validation protocol runs with a
         volume provided by Chimera, the input PDB is provided by Coot """
-        print "Run MolProbity validation from volume provided by Chimera " \
-              "and pdb file provided by Coot/Refmac without mask"
+        print("Run MolProbity validation from volume provided by Chimera "
+              "and pdb file provided by Coot/Refmac without mask")
 
         # Import Volume
         volume = self._importVolume()
@@ -1997,8 +2000,8 @@ class TestMolprobityValidation(TestImportData):
     def testMolProbityValidationAfterChimeraAndCootAndRefmacWithMask(self):
         """ This test checks that MolProbity validation protocol runs with a
         volume provided by Chimera, the input PDB is provided by Coot """
-        print "Run MolProbity validation from volume provided by Chimera " \
-              "and pdb file provided by Coot/Refmac with mask"
+        print("Run MolProbity validation from volume provided by Chimera "
+              "and pdb file provided by Coot/Refmac with mask")
 
         # Import Volume
         volume = self._importVolume()
@@ -2102,8 +2105,8 @@ class TestMolprobityValidation(TestImportData):
         # This test checks that MolProbity runs when a volume provided
         # by Chimera workflow; the PDB is provided by Coot/Refmac
         # starting volume with a different coordinate origin
-        print "Run MolProbity validation from PDB file saved from " \
-              "Chimera_2/Coot/Refmac withouth mask"
+        print("Run MolProbity validation from PDB file saved from "
+              "Chimera_2/Coot/Refmac withouth mask")
 
         volume2 = self._importVolume2()
         structure1_PDB = self._importStructurePDBWoVol()
@@ -2144,7 +2147,7 @@ class TestMolprobityValidation(TestImportData):
         try:
             self.launchProtocol(protCoot)
         except:
-            print "first call to coot ended"
+            print("first call to coot ended")
         self.assertIsNotNone(protCoot.testLabel5.getFileName(),
                              "There was a problem with the alignment")
         self.assertTrue(os.path.exists(protCoot.testLabel5.getFileName()))
@@ -2213,8 +2216,8 @@ class TestMolprobityValidation(TestImportData):
         # This test checks that MolProbity runs when a volume provided
         # by Chimera workflow; the PDB is provided by Coot/Refmac
         # starting volume with a different coordinate origin
-        print "Run MolProbity validation from PDB file saved from " \
-              "Chimera_2/Coot/Refmac with mask"
+        print("Run MolProbity validation from PDB file saved from "
+              "Chimera_2/Coot/Refmac with mask")
 
         volume2 = self._importVolume2()
         structure1_PDB = self._importStructurePDBWoVol()
@@ -2255,7 +2258,7 @@ class TestMolprobityValidation(TestImportData):
         try:
             self.launchProtocol(protCoot)
         except:
-            print "first call to coot ended"
+            print("first call to coot ended")
         self.assertIsNotNone(protCoot.testLabel6.getFileName(),
                              "There was a problem with the alignment")
         self.assertTrue(os.path.exists(protCoot.testLabel6.getFileName()))
@@ -2325,8 +2328,8 @@ class TestMolprobityValidation(TestImportData):
         volume provided directly as inputVol, the input PDB was fitted to
         the volume and refined previously by coot and refmac in another project
          """
-        print "Run MolProbity validation from imported volume and pdb file " \
-              "already refined by Coot and Refmac in another project"
+        print("Run MolProbity validation from imported volume and pdb file "
+              "already refined by Coot and Refmac in another project")
 
         # Import Volume
         volume3 = self._importVolume3()
@@ -2357,8 +2360,8 @@ class TestMolprobityValidation(TestImportData):
         two independent pdbs provided directly without inputVol associated and
         allows the comparison of results
          """
-        print "Run MolProbity validation to compare an imported pdb " \
-              "files obtained in another project"
+        print("Run MolProbity validation to compare an imported pdb "
+              "files obtained in another project")
 
         # import first PDB
         structure6_PDB = self._importStructureMolProbity1()
@@ -2385,8 +2388,8 @@ class TestMolprobityValidation(TestImportData):
         two independent pdbs provided directly without inputVol associated and
         allows the comparison of results
             """
-        print "Run MolProbity validation to compare an imported pdb " \
-                  "files obtained in another project"
+        print("Run MolProbity validation to compare an imported pdb "
+                  "files obtained in another project")
 
         # import second PDB (with higher number of Outliers)
         structure7_PDB = self._importStructureMolProbity2()

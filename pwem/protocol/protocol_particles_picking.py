@@ -32,11 +32,11 @@ from collections import OrderedDict
 from pyworkflow.object import Set, Pointer
 import pyworkflow.protocol.params as params
 from pyworkflow.protocol import STATUS_NEW
-from pwem.objects.data import (SetOfCoordinates, SetOfMicrographs,
-                               SetOfCTF)
 import pyworkflow.utils as pwutils
 from pyworkflow.utils.properties import Message
-from pwem import Domain
+
+from pwem.objects.data import (SetOfCoordinates, SetOfMicrographs,
+                               SetOfCTF)
 from pwem.protocol import ProtParticles
 
 
@@ -156,6 +156,7 @@ class ProtParticlePicking(ProtParticles):
         and it is used from the Java picking GUI to register
         a new SetOfCoordinates when the user click on +Particles button. 
         """
+        from pwem import Domain
         suffix = self.__getOutputSuffix()
         outputName = self.OUTPUT_PREFIX + suffix
 

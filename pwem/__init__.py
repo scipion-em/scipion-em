@@ -32,8 +32,9 @@ from pyworkflow.viewer import Viewer
 from pyworkflow.wizard import Wizard
 import pyworkflow.plugin
 
-from constants import *
+from .constants import *
 from pwem.objects import *
+from .utils import *
 from .filehandlers import *
 
 

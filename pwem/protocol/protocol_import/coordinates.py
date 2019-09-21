@@ -30,16 +30,19 @@ from os.path import exists
 from glob import glob
 from itertools import izip
 
-from pwem import metadata as md
 from pyworkflow.protocol.params import (IntParam, PointerParam, FloatParam,
                                         BooleanParam, PathParam, EnumParam,
                                         LEVEL_ADVANCED)
 from pyworkflow.utils.path import removeBaseExt, expandPattern
 from pyworkflow.utils.properties import Message
-from pwem.objects.data_tiltpairs import CoordinatesTiltPair
+
+import pwem as em
+import pwem.metadata as md
+from pwem.objects import CoordinatesTiltPair
 from pwem.protocol import ProtParticlePicking
-from pwem import Domain
-from base import ProtImportFiles
+
+from .base import ProtImportFiles
+
 
 
 class ProtImportCoordinates(ProtImportFiles, ProtParticlePicking):
@@ -150,26 +153,26 @@ class ProtImportCoordinates(ProtImportFiles, ProtParticlePicking):
         importFrom = self.getImportFrom()
 
         if importFrom == self.IMPORT_FROM_XMIPP:
-            XmippImport = Domain.importFromPlugin('xmipp3.convert', 'XmippImport',
+            XmippImport = em.Domain.importFromPlugin('xmipp3.convert', 'XmippImport',
                                            'Xmipp is needed to import .xmd files',
                                            doRaise=True)
             return XmippImport(self, filesPath)
 
         elif importFrom == self.IMPORT_FROM_RELION:
-            RelionImport = Domain.importFromPlugin('relion.convert', 'RelionImport',
+            RelionImport = em.Domain.importFromPlugin('relion.convert', 'RelionImport',
                                             errorMsg='Relion is needed to import .star files',
                                             doRaise=True)
             return RelionImport(self, filesPath)
 
         elif importFrom == self.IMPORT_FROM_EMAN:
-            EmanImport = Domain.importFromPlugin('eman2.convert', 'EmanImport',
+            EmanImport = em.Domain.importFromPlugin('eman2.convert', 'EmanImport',
                                           errorMsg='Eman is needed to import .json or '
                                                    '.box files',
                                           doRaise=True)
             return EmanImport(self, None)
 
         elif importFrom == self.IMPORT_FROM_DOGPICKER:
-            DogpickerImport = Domain.importFromPlugin('appion.convert', 'DogpickerImport',
+            DogpickerImport = em.Domain.importFromPlugin('appion.convert', 'DogpickerImport',
                                                errorMsg='appion plugin is needed to import '
                                                         'dogpicker files',
                                                doRaise=True)
@@ -314,7 +317,7 @@ class ProtImportCoordinatesPairs(ProtImportFiles):
     def createOutputStep(self):
         micTiltPairs = self.getInputMicrographs()
         # Get the converted input micrographs in Xmipp format
-        writeSetOfMicrographsPairs = Domain.importFromPlugin('xmipp3.convert',
+        writeSetOfMicrographsPairs = em.Domain.importFromPlugin('xmipp3.convert',
                                                       'writeSetOfMicrographsPairs')
         writeSetOfMicrographsPairs(micTiltPairs.getUntilted(),
                                    micTiltPairs.getTilted(),
@@ -371,12 +374,12 @@ class ProtImportCoordinatesPairs(ProtImportFiles):
         importFrom = self.importFrom.get()
 
         if importFrom == self.IMPORT_FROM_XMIPP:
-            XmippImport = Domain.importFromPlugin('xmipp3.convert', 'XmippImport',
+            XmippImport = em.Domain.importFromPlugin('xmipp3.convert', 'XmippImport',
                                            'Xmipp is needed to import .xmd files',
                                            doRaise=True)
             return XmippImport(self, None)
         else:  # import from EMAN
-            EmanImport = Domain.importFromPlugin('eman2.convert', 'EmanImport',
+            EmanImport = em.Domain.importFromPlugin('eman2.convert', 'EmanImport',
                                           errorMsg='Eman is needed to import .json or '
                                                    '.box files',
                                           doRaise=True)
@@ -483,7 +486,7 @@ class ProtImportCoordinatesPairs(ProtImportFiles):
         tCoordSet.write()
 
         if self.importFrom.get() == self.IMPORT_FROM_XMIPP:
-            readAnglesFromMicrographs = Domain.importFromPlugin('xmipp3.convert',
+            readAnglesFromMicrographs = em.Domain.importFromPlugin('xmipp3.convert',
                                                          'readAnglesFromMicrographs')
             if exists(self.xmippMdFn.get()):
                 checkAngles = self._compareMicPairs(self.xmippMdFn, uSet, tSet)
@@ -509,7 +512,7 @@ class ProtImportCoordinatesPairs(ProtImportFiles):
         micMd = md.MetaData(micFn)
         micFnDict = {}
         inputMicsDict = {}
-        XmippMdRow = Domain.importFromPlugin('xmipp3', 'XmippMdRow')
+        XmippMdRow = em.Domain.importFromPlugin('xmipp3', 'XmippMdRow')
         for objId in micMd:
             row = XmippMdRow()
             row.readFromMd(micMd, objId)
@@ -554,7 +557,7 @@ class ProtImportCoordinatesPairs(ProtImportFiles):
     def _readAngles(self, micsFn, suffix=''):
         # Read Angles from input micrographs
         anglesSet = self._createSetOfAngles(suffix=suffix)
-        readAnglesFromMicrographs = Domain.importFromPlugin('xmipp3.convert',
+        readAnglesFromMicrographs = em.Domain.importFromPlugin('xmipp3.convert',
                                                      'readAnglesFromMicrographs')
         readAnglesFromMicrographs(micsFn, anglesSet)
         anglesSet.write()
@@ -567,7 +570,7 @@ class ProtImportCoordinatesPairs(ProtImportFiles):
         uSet = micTiltPairs.getUntilted()
         tSet = micTiltPairs.getTilted()
         # Create Untilted and Tilted SetOfCoordinates
-        readSetOfCoordinates = Domain.importFromPlugin('xmipp3.convert',
+        readSetOfCoordinates = em.Domain.importFromPlugin('xmipp3.convert',
                                                 'readSetOfCoordinates')
         uCoordSet = self._createSetOfCoordinates(uSet, suffix=uSuffix)
         readSetOfCoordinates(coordsDir, uSet, uCoordSet)

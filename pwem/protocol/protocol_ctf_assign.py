@@ -26,6 +26,7 @@
 
 
 import pyworkflow.protocol.params as params
+
 from pwem.objects.data import SetOfParticles
 from pwem.protocol import ProtCTFMicrographs
 
@@ -102,7 +103,7 @@ class ProtCTFAssign(ProtCTFMicrographs):
                 ctfName = ctf.getMicrograph().getMicName()
             else:
                 ctfName = ctf.getMicrograph().getObjId()
-#             print "ctf: ", ctf.printAll(), ctfName
+#             print("ctf: ", ctf.printAll(), ctfName)
             ctfDict[ctfName] = ctf.clone()
         
         missingSet = set() # Report missing micrographs only once

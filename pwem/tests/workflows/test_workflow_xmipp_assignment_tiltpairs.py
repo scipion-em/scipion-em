@@ -24,14 +24,9 @@
 
 from pyworkflow.tests import *
 from test_workflow import TestWorkflow
-from pwem import Domain
+import pwem as em
 from pwem.protocol import (ProtImportMicrographsTiltPairs,
                            ProtImportCoordinates)
-
-XmippProtAssignmentTiltPair = Domain.importFromPlugin('xmipp3.protocols',
-                                                      'XmippProtAssignmentTiltPair',
-                                                      doRaise=True)
-
 
 # update this test when RCT workflow are implemented
 class TestXmippAssignmentTiltPairsWorkflow(TestWorkflow):
@@ -71,7 +66,12 @@ class TestXmippAssignmentTiltPairsWorkflow(TestWorkflow):
         self.launchProtocol(protImportCoorT)
                 
         # Then simulate a particle picking
-        print "Running tilt pairs assignment..."   
+        print("Running tilt pairs assignment...")
+
+        XmippProtAssignmentTiltPair = em.Domain.importFromPlugin(
+                                                'xmipp3.protocols',
+                                                'XmippProtAssignmentTiltPair',
+                                                doRaise=True)
         protAssigning = self.newProtocol(XmippProtAssignmentTiltPair)
         micsTiltPair = protImport.outputMicrographsTiltPair
         protAssigning.inputMicrographsTiltedPair.set(micsTiltPair)

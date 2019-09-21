@@ -29,14 +29,16 @@
 from os.path import exists, basename, abspath, relpath
 
 import pyworkflow.protocol.params as params
-from base import ProtImportFiles
-from images import ProtImportImages
-from pwem import Volume, ImageHandler, AtomStruct
-from pwem.objects.data import Transform
-from pwem.convert import Ccp4Header
+
+from pwem.objects import Volume, Transform, AtomStruct
+from pwem.convert import Ccp4Header, ImageHandler
 from pyworkflow.utils.path import createAbsLink
 from pyworkflow.utils.properties import Message
 from pwem.convert.atom_struct import AtomicStructHandler
+
+from .base import ProtImportFiles
+from .images import ProtImportImages
+
 
 class ProtImportVolumes(ProtImportImages):
     """Protocol to import a set of volumes to the project"""
@@ -280,7 +282,7 @@ Format may be PDB or MMCIF"""
         """Download all pdb files in file_list and unzip them.
         """
         aSH = AtomicStructHandler()
-        print "retriving PDB file %s" % self.pdbId.get()
+        print("retriving PDB file %s" % self.pdbId.get())
         pdbPath = aSH.readFromPDBDatabase(self.pdbId.get(),
                                               type='mmCif',
                                               dir=self._getExtraPath())

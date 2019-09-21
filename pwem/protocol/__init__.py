@@ -46,6 +46,7 @@ from .protocol_classes_consensus import ProtClassesConsensus
 from .protocol_extract_coordinates import ProtExtractCoords
 from .protocol_create_stream_data import ProtCreateStreamData
 from .parallel import ProtTestParallel
+from .protocol_create_stream_data import SET_OF_RANDOM_MICROGRAPHS
 
 from .protocol_import import *
 

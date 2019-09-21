@@ -5,20 +5,23 @@ Created on May 20, 2013
 '''
 
 from glob import iglob
+from itertools import izip
+import sqlite3
+
 from pyworkflow.tests import *
 import pyworkflow.utils as pwutils
-import sqlite3
 from pyworkflow.utils import Timer
+
+from pwem.convert import ImageHandler
 from pwem.objects.data import *
 import pwem.metadata as md
-from pwem import Domain
 
 # try:
 #     from xmipp3.convert import *
 # except:
 #     Domain._pluginNotFound('xmipp', doRaise=True)
 
-xmippConvert = Domain.importFromPlugin('xmipp3.convert', doRaise=True)
+#xmippConvert = Domain.importFromPlugin('xmipp3.convert', doRaise=True)
 
 # set to true if you want to check how fast is the access to
 # the database
@@ -837,7 +840,7 @@ class TestCopyItems(BaseTest):
         outputSet.copyItems(inputSet, 
                             updateItemCallback=self._updateItem)
         
-        #print "writing particles to: ", outFn
+        #print("writing particles to: ", outFn)
         outputSet.write()        
         outputSet.close()
         

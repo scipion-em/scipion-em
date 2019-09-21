@@ -38,7 +38,7 @@ from pyworkflow.utils import getFreePort
 import threading
 import shlex
 import SocketServer
-from pwem import Domain
+import pwem as em
 
 # ----------------------- Showj constants ---------------------------
 COL_RENDER_NONE = 0
@@ -175,8 +175,8 @@ class ColumnsConfig:
 
     def printColumns(self):
         for col in self._columnsDict.values():
-            print "column: ", col.getLabel()
-            print "  values: ", col.getValues()
+            print("column: ", col.getLabel())
+            print("  values: ", col.getValues())
 
 
 class ColumnProperties:
@@ -258,7 +258,7 @@ def getJavaIJappArguments(memory, appName, appArgs):
     """
     if memory is None:
         memory = getJvmMaxMemory()
-        print "No memory size provided. Using default: %s" % memory
+        print("No memory size provided. Using default: %s" % memory)
 
     jdkLib = join(os.environ['JAVA_HOME'], 'lib')
     javaBind = join(os.environ['XMIPP_HOME'], "bindings", "java")
@@ -280,9 +280,9 @@ def getJavaIJappArguments(memory, appName, appArgs):
 
 
 def runJavaIJapp(memory, appName, args, env=None):
-    xmipp3 = Domain.importFromPlugin('xmipp3', doRaise=True)
+    xmipp3 = em.Domain.importFromPlugin('xmipp3', doRaise=True)
     env = env or {}
-    getEnviron = Domain.importFromPlugin('xmipp3', 'Plugin').getEnviron
+    getEnviron = em.Domain.importFromPlugin('xmipp3', 'Plugin').getEnviron
     env.update(getEnviron(xmippFirst=False))
 
     args = getJavaIJappArguments(memory, appName, args)

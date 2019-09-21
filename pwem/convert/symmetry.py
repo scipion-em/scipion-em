@@ -33,6 +33,7 @@ from numpy import array, zeros, float, transpose, add
 from numpy.linalg import inv as matrix_inverse
 from numpy import dot as matrix_multiply
 import operator
+
 import pwem.constants as cts
 
 def _applyMatrix(tf, points):

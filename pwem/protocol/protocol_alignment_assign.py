@@ -26,6 +26,7 @@
 
 
 import pyworkflow.protocol.params as params
+
 from .protocol_2d import ProtAlign2D
 
 

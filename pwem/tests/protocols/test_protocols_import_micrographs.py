@@ -26,6 +26,7 @@ import tempfile
 from itertools import izip
 
 from pyworkflow.tests import BaseTest, setupTestProject, DataSet
+
 from pwem.protocol import ProtImportMicrographs
 from pwem.objects.data import SetOfMicrographs
 

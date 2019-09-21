@@ -41,6 +41,7 @@ import os
 from os.path import exists
 
 import pyworkflow.tests as tests
+
 import pwem as em
 
 xmipp3 = em.Domain.importFromPlugin('xmipp3.protocols', doRaise=True)

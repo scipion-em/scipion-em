@@ -25,9 +25,11 @@
 # **************************************************************************
 
 import time
+
 import pyworkflow.object as pwobj
 import pyworkflow.protocol.params as params
-from protocol_monitor import ProtMonitor
+
+from .protocol_monitor import ProtMonitor
 
 
 class ProtMonitor2dStreamer(ProtMonitor):

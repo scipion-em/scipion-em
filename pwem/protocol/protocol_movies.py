@@ -37,11 +37,12 @@ from pyworkflow.protocol.params import PointerParam
 from pyworkflow.protocol.constants import STEPS_PARALLEL
 import pyworkflow.utils as pwutils
 from pyworkflow.utils.properties import Message
-from pwem.objects.data import SetOfMovies, Movie, MovieAlignment, Acquisition
-from pwem import ImageHandler
 
-from protocol_micrographs import ProtPreprocessMicrographs
-from protocol_particles import ProtExtractParticles
+from pwem.objects.data import SetOfMovies, Movie, MovieAlignment, Acquisition
+from pwem.convert import ImageHandler
+
+from .protocol_micrographs import ProtPreprocessMicrographs
+from .protocol_particles import ProtExtractParticles
 
 
 class ProtProcessMovies(ProtPreprocessMicrographs):

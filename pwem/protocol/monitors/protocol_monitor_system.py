@@ -29,28 +29,28 @@ import sys
 import time
 import sqlite3 as lite
 
-from pyworkflow.utils import red
-
 try:
     import psutil
 except ImportError:
-    print "Cannot import psutil module - this is needed for this application."
-    print "Exiting..."
+    print("Cannot import psutil module - this is needed for this application.")
+    print("Exiting...")
     sys.exit()
 
+from pyworkflow.utils import red
 import pyworkflow.protocol.params as params
-from protocol_monitor import ProtMonitor, Monitor
-import getnifs
 
 from pyworkflow import VERSION_1_1
 from pyworkflow.protocol.constants import STATUS_RUNNING
 from pyworkflow.protocol import getUpdatedProtocol
 
-from pynvml import nvmlInit, nvmlDeviceGetHandleByIndex,\
-    nvmlDeviceGetMemoryInfo, nvmlDeviceGetUtilizationRates,\
-    NVMLError, nvmlDeviceGetTemperature, NVML_TEMPERATURE_GPU,\
-    nvmlDeviceGetComputeRunningProcesses
+from pynvml import (nvmlInit, nvmlDeviceGetHandleByIndex,
+                    nvmlDeviceGetMemoryInfo, nvmlDeviceGetUtilizationRates,
+                    NVMLError, nvmlDeviceGetTemperature, NVML_TEMPERATURE_GPU,
+                    nvmlDeviceGetComputeRunningProcesses)
 
+from pwem.protocol.monitors import getnifs
+
+from .protocol_monitor import ProtMonitor, Monitor
 
 SYSTEM_LOG_SQLITE = 'system_log.sqlite'
 

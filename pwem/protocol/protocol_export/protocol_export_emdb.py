@@ -30,12 +30,11 @@
 import os
 
 import pyworkflow.protocol.params as params
-
 from pyworkflow import VERSION_1_2
-from pwem.convert import ImageHandler
+
+from pwem.convert import ImageHandler, AtomicStructHandler, toCIF
 from pwem.protocol import EMProtocol
-from pwem.objects.data import FSC
-from pwem.convert.atom_struct import AtomicStructHandler, toCIF
+from pwem.objects import FSC
 
 
 class ProtExportEMDB(EMProtocol):

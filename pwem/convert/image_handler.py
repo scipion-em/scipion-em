@@ -30,9 +30,9 @@ from itertools import izip
 import PIL
 
 import pyworkflow.utils as pwutils
-from pwem import Domain
-from pwem.objects.data import Volume, Movie
-import pwem.constants as cts
+
+import pwem.objects as emobj
+import pwem.constants as emcts
 
 try:
   import xmippLib
@@ -82,10 +82,10 @@ class ImageHandler(object):
         # We can not import Volume from top level since
         # data depends on this module
         fn = image.getFileName()
-        if isinstance(image, Volume):
+        if isinstance(image, emobj.Volume):
             if fn.endswith('.mrc') or fn.endswith('.map'):
                 fn += ':mrc'
-        elif isinstance(image, Movie):
+        elif isinstance(image, emobj.Movie):
             if fn.endswith('.mrc'):
                 fn += ':mrcs'
             elif fn.endswith('.em'):
@@ -99,7 +99,7 @@ class ImageHandler(object):
         to a string with @ as expected in Xmipp.
         """
         index, filename = cls._convertToLocation(location)
-        if index != cts.NO_INDEX:
+        if index != emcts.NO_INDEX:
             return "%06d@%s" % (index, filename)
         return filename
     
@@ -115,7 +115,7 @@ class ImageHandler(object):
             outLocation = location
         
         elif isinstance(location, basestring):
-            outLocation = (cts.NO_INDEX, location)
+            outLocation = (emcts.NO_INDEX, location)
         
         elif hasattr(location, 'getLocation'):
             # This case includes Image and its subclasses
@@ -179,6 +179,7 @@ class ImageHandler(object):
         if outputLoc[1].lower().endswith('.img'):
             # FIXME Since now we can not read dm4 format in Scipion natively
             # we are opening an Eman2 process to read the dm4 file
+            from pwem import Domain
             convertImage = Domain.importFromPlugin('eman2.convert',
                                                     'convertImage')
             convertImage(inputLoc, outputLoc)
@@ -211,6 +212,7 @@ class ImageHandler(object):
                 # FIXME Since now we can not read dm4 format in Scipion natively
                 # or writing recent .img format
                 # we are opening an Eman2 process to read the dm4 file
+                from pwem import Domain
                 convertImage = Domain.importFromPlugin('eman2.convert',
                                                         'convertImage')
                 convertImage(inputFn, outputFn)
@@ -266,6 +268,7 @@ class ImageHandler(object):
                 # FIXME Since now we can not read dm4 format in Scipion natively
                 # or recent .img format
                 # we are opening an Eman2 process to read the dm4 file
+                from pwem import Domain
                 getImageDimensions = Domain.importFromPlugin(
                                         'eman2.convert', 'getImageDimensions')
                 return getImageDimensions(fn) # we are ignoring index here
@@ -364,12 +367,14 @@ class ImageHandler(object):
     @classmethod
     def __runXmippProgram(cls, program, args):
         """ Internal shortcut function to launch a Xmipp program. """
+        from pwem import Domain
         xmipp3 = Domain.importFromPlugin('xmipp3')
         xmipp3.Plugin.runXmippProgram(program, args)
 
     @classmethod
     def __runEman2Program(cls, program, args):
         """ Internal workaround to launch an EMAN2 program. """
+        from pwem import Domain
         eman2 = Domain.importFromPlugin('eman2')
         from pyworkflow.utils.process import runJob
         runJob(None, eman2.Plugin.getProgram(program), args,

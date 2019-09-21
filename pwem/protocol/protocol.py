@@ -29,19 +29,19 @@ from itertools import izip
 
 from pyworkflow.protocol import Protocol
 import pyworkflow.protocol.params as params
-from pyworkflow.object import Set
+from pyworkflow.utils.path import cleanPath
+from pyworkflow.mapper.sqlite_db import SqliteDb
+
 from pwem.objects.data import (SetOfMicrographs, SetOfCoordinates,
                                SetOfParticles, SetOfImages,
                                SetOfClasses2D, SetOfClasses3D, SetOfClassesVol,
                                SetOfVolumes, SetOfCTF, SetOfMovies, SetOfFSCs,
                                SetOfMovieParticles, SetOfAverages,
-                               SetOfNormalModes, SetOfAtomStructs)
-from pyworkflow.object import (RELATION_SOURCE, RELATION_TRANSFORM)
-from pwem.constants import RELATION_CTF
+                               SetOfNormalModes, SetOfAtomStructs,
+                               Set, RELATION_SOURCE, RELATION_TRANSFORM)
 from pwem.objects.data_tiltpairs import (SetOfAngles, CoordinatesTiltPair,
                                          TiltPair)
-from pyworkflow.utils.path import cleanPath
-from pyworkflow.mapper.sqlite_db import SqliteDb
+from pwem.constants import RELATION_CTF
 
 
 class EMProtocol(Protocol):

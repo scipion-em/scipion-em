@@ -28,6 +28,7 @@ import os
 
 import pyworkflow.utils as pwutils
 import pyworkflow.viewer as pwviewer
+
 from pwem.objects.data import AtomStruct
 
 

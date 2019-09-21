@@ -35,6 +35,7 @@ import struct
 from math import isnan
 
 from pyworkflow.utils import getExt
+
 from .image_handler import ImageHandler
 
 

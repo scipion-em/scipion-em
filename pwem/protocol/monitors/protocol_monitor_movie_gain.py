@@ -26,9 +26,11 @@
 
 import os
 import pyworkflow.protocol.params as params
-from protocol_monitor import ProtMonitor, Monitor
+
 from pyworkflow.protocol.constants import STATUS_RUNNING
 from pyworkflow import VERSION_1_1
+
+from .protocol_monitor import ProtMonitor, Monitor
 
 
 class ProtMonitorMovieGain(ProtMonitor):

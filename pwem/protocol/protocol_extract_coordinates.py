@@ -32,11 +32,12 @@ from datetime import datetime
 
 from pyworkflow.protocol.params import PointerParam, BooleanParam
 from pyworkflow.protocol.constants import STATUS_NEW
-from pwem.constants import ALIGN_2D, ALIGN_3D, ALIGN_PROJ, ALIGN_NONE
-from pwem.objects import (Coordinate, SetOfParticles, SetOfMicrographs,
-                          SetOfCoordinates, Set)
-from pwem.protocol import ProtParticlePickingAuto
 import pyworkflow.utils as pwutils
+
+from pwem.constants import ALIGN_2D, ALIGN_3D, ALIGN_PROJ, ALIGN_NONE
+from pwem.objects.data import (Coordinate, SetOfParticles, SetOfMicrographs,
+                               SetOfCoordinates, Set)
+from pwem.protocol import ProtParticlePickingAuto
 
 import time
 
@@ -151,7 +152,7 @@ class ProtExtractCoords(ProtParticlePickingAuto):
         inPart = self.getInputParticles()
         inMics = self.getInputMicrographs()
         scale = inPart.getSamplingRate() / inMics.getSamplingRate()
-        print "Scaling coordinates by a factor *%0.2f*" % scale
+        print("Scaling coordinates by a factor *%0.2f*" % scale)
         alignType = inPart.getAlignment()
 
         suffix = self.getSuffix(partsIds[0]) if partsIds is not None else ''
@@ -163,7 +164,7 @@ class ProtExtractCoords(ProtParticlePickingAuto):
             mic = inMics[micKey]
 
             if mic is None:
-                print "Skipping particle, key %s not found" % micKey
+                print("Skipping particle, key %s not found" % micKey)
             else:
                 newCoord.copyObjId(part)
                 x, y = coord.getPosition()

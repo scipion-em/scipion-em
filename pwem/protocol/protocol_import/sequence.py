@@ -29,7 +29,7 @@
 from os.path import exists
 import os
 import pyworkflow.protocol.params as params
-from base import ProtImportFiles
+
 from pwem.objects.data import Sequence
 from pwem.convert.sequence import (SEQ_TYPE_AMINOACIDS, SEQ_TYPE_NUCLEOTIDES,
                                    IUPAC_PROTEIN_ALPHABET, SEQ_TYPE,
@@ -37,7 +37,9 @@ from pwem.convert.sequence import (SEQ_TYPE_AMINOACIDS, SEQ_TYPE_NUCLEOTIDES,
                                    IUPAC_NUCLEOTIDE_ALPHABET,
                                    EXTENDED_DNA_ALPHABET, SequenceHandler,
                                    cleanSequenceScipion,  alphabetToIndex)
-from pwem.convert.atom_struct import AtomicStructHandler
+from pwem.convert import AtomicStructHandler
+
+from .base import ProtImportFiles
 
 
 class ProtImportSequence(ProtImportFiles):
@@ -349,9 +351,8 @@ class ProtImportSequence(ProtImportFiles):
             self.id = self.structureHandler.getFullID(
                     selectedModel, selectedChain)
 
-        print "Selected chain: %s from model: %s from structure: %s" \
-              % (selectedChain, selectedModel,
-                 self.structureHandler.structure.get_id())
+        print("Selected chain: %s from model: %s from structure: %s" %
+              (selectedChain, selectedModel, self.structureHandler.structure.get_id()))
 
     def sequenceDatabaseDownloadStep(self, sequenceDB):
         """Download UniProt/GeneBank sequence from its respective database

@@ -34,6 +34,10 @@ import ttk
 from pyworkflow import findResource
 from pyworkflow.object import PointerList, Pointer
 from pyworkflow.wizard import Wizard
+import pyworkflow.gui.dialog as dialog
+from pyworkflow.gui.tree import BoundTree, ListTreeProvider
+from pyworkflow.gui.widgets import LabelSlider
+
 from pwem.convert import ImageHandler
 from pwem.constants import (UNIT_PIXEL,
                                      UNIT_ANGSTROM,
@@ -44,9 +48,7 @@ from pwem.constants import (UNIT_PIXEL,
                                      )
 from pwem.objects.data import (Volume, SetOfMicrographs, SetOfParticles,
                                SetOfVolumes)
-import pyworkflow.gui.dialog as dialog
-from pyworkflow.gui.tree import BoundTree, ListTreeProvider
-from pyworkflow.gui.widgets import LabelSlider
+
 import xmippLib
 
 

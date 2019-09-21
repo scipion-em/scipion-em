@@ -27,6 +27,7 @@
 # **************************************************************************
 
 from pyworkflow.tests import BaseTest, setupTestProject, DataSet
+
 from pwem.protocol import ProtImportSequence
 from pwem.convert.sequence import (SEQ_TYPE_NUCLEOTIDES, PROTEIN_ALPHABET,
                                    AMBIGOUS_RNA_ALPHABET, EXTENDED_DNA_ALPHABET,

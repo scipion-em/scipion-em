@@ -28,10 +28,11 @@
 but nos available for regular users. This will hide them and prevent the their
  appearance in any GUI search or tree."""
 import time
-from protocol import Protocol
 
 import pyworkflow.protocol.params as params
 from pyworkflow import VERSION_1_1
+
+from .protocol import Protocol
 
 STRESS_NG = 'stress-ng'
 

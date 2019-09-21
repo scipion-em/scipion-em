@@ -24,16 +24,7 @@
 
 from pyworkflow.tests import BaseTest, DataSet, setupTestProject
 from pwem.protocol import ProtImportMicrographs, ProtCreateStreamData
-from pwem import Domain
-
-ProtCTFFind = Domain.importFromPlugin('grigoriefflab.protocols',
-                                      'ProtCTFFind', doRaise=True)
-XmippProtCTFMicrographs = Domain.importFromPlugin('xmipp3.protocols',
-                                                  'XmippProtCTFMicrographs',
-                                                  doRaise=True)
-XmippProtCTFConsensus = Domain.importFromPlugin('xmipp3.protocols',
-                                                'XmippProtCTFConsensus',
-                                                doRaise=True)
+import pwem as em
 
 
 class TestCtfConsensus(BaseTest):
@@ -91,11 +82,16 @@ class TestCtfConsensus(BaseTest):
         self.proj.launchProtocol(protStream, wait=False)
 
         # Computes the CTF with Xmipp
+        XmippProtCTFMicrographs = em.Domain.importFromPlugin('xmipp3.protocols',
+                                                             'XmippProtCTFMicrographs',
+                                                             doRaise=True)
         protCTF1 = self.newProtocol(XmippProtCTFMicrographs)
         protCTF1.inputMicrographs.set(protImport.outputMicrographs)
         self.proj.launchProtocol(protCTF1, wait=False)
 
         # Computes the CTF with CTFFind4
+        ProtCTFFind = em.Domain.importFromPlugin('grigoriefflab.protocols',
+                                              'ProtCTFFind', doRaise=True)
         protCTF2 = self.newProtocol(ProtCTFFind)
         protCTF2.inputMicrographs.set(protImport.outputMicrographs)
         self.proj.launchProtocol(protCTF2, wait=False)
@@ -110,6 +106,9 @@ class TestCtfConsensus(BaseTest):
         # Computes the Consensus of GOOD CTFs
         self._waitOutput(protCTF1, "outputCTF")
         self._waitOutput(protCTF2, "outputCTF")
+        XmippProtCTFConsensus = em.Domain.importFromPlugin('xmipp3.protocols',
+                                                           'XmippProtCTFConsensus',
+                                                           doRaise=True)
         protCTFcons = self.newProtocol(XmippProtCTFConsensus,
                                        useDefocus=False,
                                        useAstigmatism=False,

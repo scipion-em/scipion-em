@@ -29,21 +29,22 @@ from glob import glob
 import threading
 
 import pyworkflow.utils as pwutils
-from pwem import Domain
 from pyworkflow.tests import (BaseTest, setupTestProject, DataSet,
                               getProtocolFromDb)
+
+import pwem as em
 from pwem.convert import ImageHandler
 from pwem.protocol import (ProtImportMovies, ProtMonitorSummary,
                            ProtImportMicrographs, ProtImportAverages)
 
-XmippProtMovieCorr = Domain.importFromPlugin('xmipp3.protocols',
+XmippProtMovieCorr = em.Domain.importFromPlugin('xmipp3.protocols',
                                              'XmippProtMovieCorr', doRaise=True)
-ProtCTFFind = Domain.importFromPlugin('grigoriefflab.protocols',
+ProtCTFFind = em.Domain.importFromPlugin('grigoriefflab.protocols',
                                       'ProtCTFFind', doRaise=True)
-ProtRelionExtractParticles = Domain.importFromPlugin('relion.protocols',
+ProtRelionExtractParticles = em.Domain.importFromPlugin('relion.protocols',
                                                      'ProtRelionExtractParticles',
                                                      doRaise=True)
-ProtRelion2Autopick = Domain.importFromPlugin('relion.protocols',
+ProtRelion2Autopick = em.Domain.importFromPlugin('relion.protocols',
                                               'ProtRelion2Autopick')
 
 

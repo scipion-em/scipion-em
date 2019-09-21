@@ -28,7 +28,8 @@ from pyworkflow.object import Object, Float, Integer
 from pyworkflow.utils.path import cleanPath
 from pyworkflow.protocol.params import PointerParam
 
-from pwem import EMSet
+from pwem.objects.data import EMSet
+
 from .protocol_2d import ProtAlign2D
 
 
