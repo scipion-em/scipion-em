@@ -26,11 +26,11 @@
 
 from os.path import abspath
 
-from pyworkflow.utils.properties import Message
-from pyworkflow.protocol.constants import LEVEL_ADVANCED
+import pyworkflow.utils as pwutils
+import pyworkflow.protocol.constants as pwcts
 import pyworkflow.protocol.params as params
 
-from pwem.constants import ALIGN_2D, ALIGN_3D, ALIGN_PROJ, ALIGN_NONE
+import pwem.constants as emcts
 
 from .images import ProtImportImages
 
@@ -49,7 +49,8 @@ class ProtImportParticles(ProtImportImages):
 
     importFormats = ['emx', 'xmipp3', 'relion', 'scipion', 'frealign', 'eman']
     importExts = ['emx', 'xmd', 'star', 'sqlite', 'par', 'lst']
-    alignTypeList = [ALIGN_2D, ALIGN_3D, ALIGN_PROJ, ALIGN_NONE]
+    alignTypeList = [emcts.ALIGN_2D, emcts.ALIGN_3D, emcts.ALIGN_PROJ,
+                     emcts.ALIGN_NONE]
 
     def _getImportChoices(self):
         """ Return a list of possible choices
@@ -142,7 +143,7 @@ class ProtImportParticles(ProtImportImages):
     def _defineAcquisitionParams(self, form):
         group = ProtImportImages._defineAcquisitionParams(self, form)
         group.addParam('samplingRate', params.FloatParam,
-                   label=Message.LABEL_SAMP_RATE)
+                   label=pwutils.Message.LABEL_SAMP_RATE)
 
 
     def _insertAllSteps(self):
@@ -275,6 +276,6 @@ class ProtImportAverages(ProtImportParticles):
             
     def _defineAcquisitionParams(self, form):
         form.addParam('samplingRate', params.FloatParam, default=1.,
-                      label=Message.LABEL_SAMP_RATE)
+                      label=pwutils.Message.LABEL_SAMP_RATE)
         group = ProtImportImages._defineAcquisitionParams(self, form)
-        group.expertLevel.set(LEVEL_ADVANCED)
+        group.expertLevel.set(pwcts.LEVEL_ADVANCED)

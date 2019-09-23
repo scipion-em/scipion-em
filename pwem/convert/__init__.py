@@ -31,4 +31,6 @@ from .headers import Ccp4Header
 from .symmetry import getSymmetryMatrices
 from .transformations import identity_matrix
 from .sequence import *
+from .transformations import (euler_matrix, translation_matrix,
+                              concatenate_matrices)
 

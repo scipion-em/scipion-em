@@ -30,8 +30,8 @@ import pyworkflow.viewer as pwviewer
 import pyworkflow.utils as pwutils
 
 import pwem as em
-import pwem.protocol as pwemprot
-from pwem.convert import ImageHandler
+import pwem.protocol as emprot
+import pwem.convert as emconv
 
 from .views import (ObjectView, MicrographsView, CoordinatesObjectView,
                     ClassesView, Classes3DView, CtfView, DataView)
@@ -54,8 +54,8 @@ class DataViewer(pwviewer.Viewer):
         em.SetOfMovies,
         em.SetOfNormalModes,
         em.SetOfPDBs,
-        pwemprot.ProtParticlePicking,
-        pwemprot.ProtImportMovies,
+        emprot.ProtParticlePicking,
+        emprot.ProtImportMovies,
         # TiltPairs related data
         em.CoordinatesTiltPair,
         em.MicrographsTiltPair,
@@ -76,13 +76,13 @@ class DataViewer(pwviewer.Viewer):
         cls = type(obj)
 
         if issubclass(cls, em.Volume):
-            fn = ImageHandler.locationToXmipp(obj)
+            fn = emconv.ImageHandler.locationToXmipp(obj)
             self._addObjView(obj, fn,
                              {RENDER: 'image',
                               SAMPLINGRATE: obj.getSamplingRate()})
 
         elif issubclass(cls, em.Image):
-            fn = ImageHandler.locationToXmipp(obj)
+            fn = emconv.ImageHandler.locationToXmipp(obj)
             self._addObjView(obj, fn)
 
         elif issubclass(cls, em.SetOfPDBs):
@@ -210,11 +210,11 @@ class DataViewer(pwviewer.Viewer):
             xmipp3.convert.writeSetOfCoordinates(tmpDir, obj.getTilted())
             launchTiltPairPickerGUI(mdFn, tmpDir, self.protocol)
 
-        elif issubclass(cls, pwemprot.ProtParticlePicking):
+        elif issubclass(cls, emprot.ProtParticlePicking):
             if obj.getOutputsSize() >= 1:
                 self._visualize(obj.getCoords())
 
-        elif issubclass(cls, pwemprot.ProtImportMovies):
+        elif issubclass(cls, emprot.ProtImportMovies):
             movs = obj.outputMovies
             self._visualize(movs)
             gainFn = movs.getGain()

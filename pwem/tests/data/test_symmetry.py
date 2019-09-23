@@ -25,14 +25,13 @@
 # **************************************************************************
 #
 import numpy
-from pyworkflow.tests import *
+import pyworkflow.tests as pwtests
 
-from pwem.constants import (SYM_CYCLIC, SYM_DIHEDRAL, SYM_OCTAHEDRAL,
-                            SYM_TETRAHEDRAL, SYM_I222)
-from pwem.convert import getSymmetryMatrices, identity_matrix
+import pwem.constants as emcts
+import pwem.convert as emconv
 
 
-class TestSymmetry(unittest.TestCase):
+class TestSymmetry(pwtests.unittest.TestCase):
 
     def assertArrayAlmostEqual(self, a1, a2):
         try:
@@ -44,13 +43,13 @@ class TestSymmetry(unittest.TestCase):
         self.assertTrue(res)
 
     def testSymmetryCyclic(self):
-        matrices = getSymmetryMatrices(SYM_CYCLIC, n=3)
+        matrices = emconv.getSymmetryMatrices(emcts.SYM_CYCLIC, n=3)
         m1 = matrices[0]
         m2 = matrices[1]
         m3 = matrices[2]
 
         #m1 is identity
-        r = identity_matrix()
+        r = emconv.identity_matrix()
         self.assertArrayAlmostEqual(r, m1)
 
         #m2 rotated 120 degrees
@@ -73,14 +72,14 @@ class TestSymmetry(unittest.TestCase):
         self.assertArrayAlmostEqual(r, m3)
 
     def testSymmetryDihedral(self):
-        matrices = getSymmetryMatrices(SYM_DIHEDRAL, n=3)
+        matrices = emconv.getSymmetryMatrices(emcts.SYM_DIHEDRAL, n=3)
         # skip m1, m2 and m3 since there are identical to CYCLIC
         m4 = matrices[3]
         m5 = matrices[4]
         m6 = matrices[5]
 
         #m4 mirrored
-        r = identity_matrix()
+        r = emconv.identity_matrix()
         r[1][1] *= -1.
         r[2][2] *= -1.
         self.assertArrayAlmostEqual(r, m4)
@@ -104,7 +103,7 @@ class TestSymmetry(unittest.TestCase):
         self.assertArrayAlmostEqual(r, m6)
 
     def testSymmetryOctahedral(self):
-        matrices = getSymmetryMatrices(SYM_OCTAHEDRAL)
+        matrices = emconv.getSymmetryMatrices(emcts.SYM_OCTAHEDRAL)
         refMatrices=[
             [[ 1.,  0.,  0., 0.],  # 0
              [ 0.,  1.,  0., 0.],
@@ -214,7 +213,7 @@ class TestSymmetry(unittest.TestCase):
             self.assertArrayAlmostEqual(m1, m2)
 
     def testSymmetryTetrahedral(self):
-        matrices = getSymmetryMatrices(SYM_TETRAHEDRAL)
+        matrices = emconv.getSymmetryMatrices(emcts.SYM_TETRAHEDRAL)
         refMatrices= [
         [[ 1.00000000e+00,  6.40987562e-17, -4.53246652e-17, 0.00000000e+00],
          [ 5.55111512e-17,  1.00000000e+00, -5.55111512e-17, 0.00000000e+00],
@@ -269,7 +268,7 @@ class TestSymmetry(unittest.TestCase):
             self.assertArrayAlmostEqual(m1, m2)
 
     def testSymmetryIcosahedral222(self):
-        matrices = getSymmetryMatrices(SYM_I222)
+        matrices = emconv.getSymmetryMatrices(emcts.SYM_I222)
         refMatrices= [
             [[ 1.,          0.,          0.,         0.],  # 1
              [ 0.,          1.,          0.,         0.],

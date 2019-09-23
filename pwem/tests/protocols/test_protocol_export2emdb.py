@@ -28,16 +28,17 @@
 
 import os
 
-from pyworkflow.tests import BaseTest, DataSet, setupTestProject
+import pyworkflow.tests as pwtest
+import pwem.protocol as pwprot
 
-from pwem.protocol import ProtImportVolumes, ProtImportPdb
-from pwem.protocol.protocol_export import ProtExportEMDB
+import pwem.protocol as emprot
 
-class TestExport2EMDB(BaseTest):
+
+class TestExport2EMDB(pwtest.BaseTest):
     @classmethod
     def runImportVolumes(cls, pattern, samplingRate, label):
         """ Run an Import volumes protocol. """
-        cls.protImport = cls.newProtocol(ProtImportVolumes,
+        cls.protImport = cls.newProtocol(pwprot.ProtImportVolumes,
                                          objLabel=label,
                                          filesPath=pattern,
                                          samplingRate=samplingRate
@@ -47,14 +48,14 @@ class TestExport2EMDB(BaseTest):
 
     @classmethod
     def setData(cls, dataProject='resmap'):
-        cls.dataset = DataSet.getDataSet(dataProject)
+        cls.dataset = pwtest.DataSet.getDataSet(dataProject)
         cls.half1 = cls.dataset.getFile('betagal_half1')
         cls.half2 = cls.dataset.getFile('betagal_half2')
-        cls.dsModBuild = DataSet.getDataSet('model_building_tutorial')
+        cls.dsModBuild = pwtest.DataSet.getDataSet('model_building_tutorial')
 
     @classmethod
     def setUpClass(cls):
-        setupTestProject(cls)
+        pwtest.setupTestProject(cls)
         cls.setData()
         cls.protImportHalf1  = cls.runImportVolumes(cls.half1, 3.54,
                                                     'import half1')
@@ -63,11 +64,11 @@ class TestExport2EMDB(BaseTest):
 
     @classmethod
     def _importAtomStructCIF(self):
-        args = {'inputPdbData': ProtImportPdb.IMPORT_FROM_FILES,
+        args = {'inputPdbData': pwprot.ProtImportPdb.IMPORT_FROM_FILES,
                 'pdbFile': self.dsModBuild.getFile(
                     'PDBx_mmCIF/5ni1.cif'),
                 }
-        protImportPDB = self.newProtocol(ProtImportPdb, **args)
+        protImportPDB = self.newProtocol(pwprot.ProtImportPdb, **args)
         protImportPDB.setObjLabel('import atom struct\nmmCIF\n5ni1.cif')
         self.launchProtocol(protImportPDB)
         structure_mmCIF = protImportPDB.outputPdb
@@ -84,7 +85,7 @@ class TestExport2EMDB(BaseTest):
         prot.referenceVolume.set(self.protImportHalf2.outputVolume)
         self.launchProtocol(prot)
 
-        protExp = self.newProtocol(ProtExportEMDB)
+        protExp = self.newProtocol(emprot.ProtExportEMDB)
         protExp.exportVolume.set(self.protImportHalf1.outputVolume)
         protExp.exportFSC.set(prot.outputFSC)
 
@@ -127,7 +128,7 @@ class TestExport2EMDB(BaseTest):
         prot.referenceVolume.set(self.protImportHalf2.outputVolume)
         self.launchProtocol(prot)
 
-        protExp = self.newProtocol(ProtExportEMDB)
+        protExp = self.newProtocol(emprot.ProtExportEMDB)
         protExp.exportVolume.set(self.protImportHalf1.outputVolume)
         protExp.exportFSC.set(prot.outputFSC)
 

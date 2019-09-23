@@ -33,21 +33,23 @@ except ImportError:  # Python 3
     import tkinter.font as tkFont
     import tkinter.ttk as ttk
 
-from pyworkflow.viewer import View
+import pyworkflow.viewer as pwviewer
 
 import pwem as em
-from pwem.convert import ImageHandler
+import pwem.convert as emconv
 
-import showj
+from .showj import (getJvmMaxMemory, MODE, VISIBLE, ZOOM, ORDER, RENDER,
+                    SORT_BY, runJavaIJapp, MODE_MD, OBJCMDS, LABELS,
+                    launchSupervisedPickerGUI)
 
 
-class DataView(View):
+class DataView(pwviewer.View):
     """ Wrapper the arguments to showj (either web or desktop).
     Also useful to visualize images that are not objects,
     e.g.: dark or gain images"""
     def __init__(self, path, viewParams={}, **kwargs):
-        View.__init__(self)
-        self._memory = showj.getJvmMaxMemory()
+        pwviewer.View.__init__(self)
+        self._memory = getJvmMaxMemory()
         self._loadPath(path)
         self._env = kwargs.get('env', {})
         self._viewParams = viewParams
@@ -65,7 +67,7 @@ class DataView(View):
         # If path is a tuple, we will convert to the filename format
         # as expected by Showj
         if isinstance(path, tuple):
-            self._path = ImageHandler.locationToXmipp(path)
+            self._path = emconv.ImageHandler.locationToXmipp(path)
         # Check if there is a table name with @ in path
         # in that case split table name and path
         # table names can never starts with a number
@@ -80,7 +82,7 @@ class DataView(View):
                             "should be 'string' or 'tuple'")
 
     def show(self):
-        showj.runJavaIJapp(self._memory,
+        runJavaIJapp(self._memory,
                            'xmipp.viewer.scipion.ScipionViewer',
                            self.getShowJParams(), env=self._env)
 
@@ -95,12 +97,12 @@ class DataView(View):
     def getShowJWebParams(self):
     
         parameters = {
-            showj.MODE,  # FOR MODE TABLE OR GALLERY
-            showj.VISIBLE,
-            showj.ZOOM,
-            showj.ORDER,
-            showj.RENDER,
-            showj.SORT_BY
+            MODE,  # FOR MODE TABLE OR GALLERY
+            VISIBLE,
+            ZOOM,
+            ORDER,
+            RENDER,
+            SORT_BY
         }
         
         params = {}
@@ -136,7 +138,7 @@ class ObjectView(DataView):
                                           self.port, self.inputid, self.other)
 
     def show(self):
-        showj.runJavaIJapp(self._memory, 'xmipp.viewer.scipion.ScipionViewer',
+        runJavaIJapp(self._memory, 'xmipp.viewer.scipion.ScipionViewer',
                            self.getShowJParams(), env=self._env)
 
 
@@ -158,14 +160,14 @@ class MicrographsView(ObjectView):
         extraLabels = existingLabels(self.EXTRA_LABELS)
         labels = 'id enabled %s %s' % (renderLabels, extraLabels)
 
-        viewParams = {showj.MODE: showj.MODE_MD,
-                      showj.ORDER: labels,
-                      showj.VISIBLE: labels,
-                      showj.ZOOM: 50
+        viewParams = {MODE: MODE_MD,
+                      ORDER: labels,
+                      VISIBLE: labels,
+                      ZOOM: 50
                       }
 
         if renderLabels:
-            viewParams[showj.RENDER] = renderLabels
+            viewParams[RENDER] = renderLabels
 
         inputId = micSet.getObjId() or micSet.getFileName()
         ObjectView.__init__(self, project,
@@ -203,14 +205,14 @@ class CtfView(ObjectView):
         labels += '_phaseShift _resolution _fitQuality %s ' % extraLabels
         labels += ' _micObj._filename'
 
-        viewParams = {showj.MODE: showj.MODE_MD,
-                      showj.ORDER: labels,
-                      showj.VISIBLE: labels,
-                      showj.ZOOM: 50
+        viewParams = {MODE: MODE_MD,
+                      ORDER: labels,
+                      VISIBLE: labels,
+                      ZOOM: 50
                      }
 
         if psdLabels:
-            viewParams[showj.RENDER] = psdLabels
+            viewParams[RENDER] = psdLabels
 
         if ctfSet.isStreamOpen():
             viewParams['dont_recalc_ctf'] = ''
@@ -224,11 +226,11 @@ class CtfView(ObjectView):
 
         if _anyAttrStartsBy(first, '_ctffind4_ctfResolution'):
             gviewer = em.Domain.importFromPlugin('grigoriefflab.viewers', '')
-            viewParams[showj.OBJCMDS] = "'%s'" % gviewer.OBJCMD_CTFFIND4
+            viewParams[OBJCMDS] = "'%s'" % gviewer.OBJCMD_CTFFIND4
 
         elif _anyAttrStartsBy(first, '_gctf'):
             OBJCMD_GCTF = em.Domain.importFromPlugin('gctf.viewers', 'OBJCMD_GCTF')
-            viewParams[showj.OBJCMDS] = "'%s'" % OBJCMD_GCTF
+            viewParams[OBJCMDS] = "'%s'" % OBJCMD_GCTF
 
         inputId = ctfSet.getObjId() or ctfSet.getFileName()
         ObjectView.__init__(self, project,
@@ -241,11 +243,11 @@ class ClassesView(ObjectView):
     def __init__(self, project, inputid, path, other='',
                  viewParams={}, **kwargs):
         labels = 'enabled id _size _representative._filename'
-        defaultViewParams = {showj.ORDER: labels,
-                             showj.VISIBLE: labels,
-                             showj.RENDER: '_representative._filename',
-                             showj.SORT_BY: '_size desc',
-                             showj.LABELS: 'id _size',
+        defaultViewParams = {ORDER: labels,
+                             VISIBLE: labels,
+                             RENDER: '_representative._filename',
+                             SORT_BY: '_size desc',
+                             LABELS: 'id _size',
                              }
         defaultViewParams.update(viewParams)
         ObjectView.__init__(self, project, inputid, path, other,
@@ -256,8 +258,8 @@ class Classes3DView(ClassesView):
     """ Customized ObjectView for SetOfClasses. """
     def __init__(self, project, inputid, path, other='',
                  viewParams={}, **kwargs):
-        defaultViewParams = {showj.ZOOM: '99',
-                             showj.MODE: 'metadata'}
+        defaultViewParams = {ZOOM: '99',
+                             MODE: 'metadata'}
         defaultViewParams.update(viewParams)
         ClassesView.__init__(self, project, inputid, path, other,
                              defaultViewParams, **kwargs)
@@ -278,23 +280,23 @@ class CoordinatesObjectView(DataView):
         self.mode = kwargs.get('mode', None)
 
     def show(self):
-        return showj.launchSupervisedPickerGUI(self._path, self.outputdir,
+        return launchSupervisedPickerGUI(self._path, self.outputdir,
                                                self.protocol, mode=self.mode,
                                                pickerProps=self.pickerProps,
                                                inTmpFolder=self.inTmpFolder)
 
 
-class ImageView(View):
+class ImageView(pwviewer.View):
     """ Customized ObjectView for SetOfClasses. """
     def __init__(self, imagePath, **kwargs):
-        View.__init__(self)
+        pwviewer.View.__init__(self)
         self._imagePath = os.path.abspath(imagePath)
 
     def getImagePath(self):
         return self._imagePath
 
 
-class TableView(View):
+class TableView(pwviewer.View):
     """ show table, pass values as:
         headerList = ['name', 'surname']
         dataList = [

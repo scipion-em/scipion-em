@@ -34,11 +34,10 @@ from datetime import timedelta, datetime
 
 import pyworkflow.utils as pwutils
 import pyworkflow.protocol.params as params
-from pyworkflow.utils.properties import Message
 
 import pwem as em
-from pwem.convert import ImageHandler
-from pwem.constants import SAMPLING_FROM_IMAGE, SAMPLING_FROM_SCANNER
+import pwem.convert as emconv
+import pwem.constants as emcts
 
 
 from images import ProtImportImages
@@ -54,20 +53,20 @@ class ProtImportMicBase(ProtImportImages):
         group = ProtImportImages._defineAcquisitionParams(self, form)
 
         group.addParam('samplingRateMode', params.EnumParam,
-                       choices=[Message.LABEL_SAMP_MODE_1,
-                                Message.LABEL_SAMP_MODE_2],
-                       default=SAMPLING_FROM_IMAGE,
-                       label=Message.LABEL_SAMP_MODE,
-                       help=Message.TEXT_SAMP_MODE)
+                       choices=[pwutils.Message.LABEL_SAMP_MODE_1,
+                                pwutils.Message.LABEL_SAMP_MODE_2],
+                       default=emcts.SAMPLING_FROM_IMAGE,
+                       label=pwutils.Message.LABEL_SAMP_MODE,
+                       help=pwutils.Message.TEXT_SAMP_MODE)
 
         group.addParam('samplingRate', params.FloatParam,  default=1.0,
-                       condition='samplingRateMode==%d' % SAMPLING_FROM_IMAGE, 
-                       label=Message.LABEL_SAMP_RATE,
-                       help=Message.TEXT_SAMP_RATE)
+                       condition='samplingRateMode==%d' % emcts.SAMPLING_FROM_IMAGE,
+                       label=pwutils.Message.LABEL_SAMP_RATE,
+                       help=pwutils.Message.TEXT_SAMP_RATE)
 
         group.addParam('scannedPixelSize', params.FloatParam, default=7.0,
-                       condition='samplingRateMode==%d' % SAMPLING_FROM_SCANNER,
-                       label=Message.LABEL_SCANNED,
+                       condition='samplingRateMode==%d' % emcts.SAMPLING_FROM_SCANNER,
+                       label=pwutils.Message.LABEL_SCANNED,
                        help='')
         return group
 
@@ -144,7 +143,7 @@ class ProtImportMicBase(ProtImportImages):
         
     def setSamplingRate(self, micSet):
         """ Set the sampling rate to the given set. """
-        if self.samplingRateMode == SAMPLING_FROM_IMAGE:
+        if self.samplingRateMode == emcts.SAMPLING_FROM_IMAGE:
             micSet.setSamplingRate(self.samplingRate.get())
         else:
             micSet.setScannedPixelSize(self.scannedPixelSize.get())
@@ -647,7 +646,7 @@ class ProtImportMovies(ProtImportMicBase):
             frameDict[prefix].append((frameid, fileName))
         
         suffix = self.movieSuffix.get()
-        ih = ImageHandler()
+        ih = emconv.ImageHandler()
         
         for movieFn in self.createdStacks:
             uniqueFn = basename(movieFn)

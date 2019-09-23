@@ -29,13 +29,11 @@ from glob import glob
 import threading
 
 import pyworkflow.utils as pwutils
-from pyworkflow.tests import (BaseTest, setupTestProject, DataSet,
-                              getProtocolFromDb)
+import pyworkflow.tests as pwtests
 
 import pwem as em
-from pwem.convert import ImageHandler
-from pwem.protocol import (ProtImportMovies, ProtMonitorSummary,
-                           ProtImportMicrographs, ProtImportAverages)
+import pwem.convert as emconv
+import pwem.protocol as emprot
 
 XmippProtMovieCorr = em.Domain.importFromPlugin('xmipp3.protocols',
                                              'XmippProtMovieCorr', doRaise=True)
@@ -60,11 +58,11 @@ DELAY = _getVar('DELAY', int, 10)  # in seconds
 TIMEOUT = _getVar('TIMEOUT', int, 60)
 
 
-class TestStreamingWorkflow(BaseTest):
+class TestStreamingWorkflow(pwtests.BaseTest):
     @classmethod
     def setUpClass(cls):
-        setupTestProject(cls)
-        cls.ds = DataSet.getDataSet('movies')
+        pwtests.setupTestProject(cls)
+        cls.ds = pwtests.DataSet.getpwtests.DataSet('movies')
         cls.importThread = threading.Thread(name="createInputLinks",
                                             target=cls._createInputLinks)
         cls.importThread.start()
@@ -99,7 +97,7 @@ class TestStreamingWorkflow(BaseTest):
 
         def _loadProt(prot):
             # Load the last version of the protocol from its own database
-            prot2 = getProtocolFromDb(prot.getProject().path,
+            prot2 = pwtests.getProtocolFromDb(prot.getProject().path,
                                       prot.getDbPath(),
                                       prot.getObjId())
             # Close DB connections
@@ -152,9 +150,9 @@ class TestStreamingWorkflow(BaseTest):
     def test_pattern(self):
         protocols = []  # append here all protocols to make final checks
         # ----------- IMPORT MOVIES -------------------
-        protImport = self.newProtocol(ProtImportMovies,
+        protImport = self.newProtocol(emprot.ProtImportMovies,
                                       objLabel='import movies',
-                                      importFrom=ProtImportMovies.IMPORT_FROM_FILES,
+                                      importFrom=emprot.ProtImportMovies.IMPORT_FROM_FILES,
                                       filesPath=os.path.abspath(self.proj.getTmpPath()),
                                       filesPattern="movie*%s" % self.ext,
                                       amplitudConstrast=0.1,
@@ -193,7 +191,7 @@ class TestStreamingWorkflow(BaseTest):
         protocols.append(protCTF)
 
         # --------- SUMMARY MONITOR --------------------------
-        protMonitor = self.newProtocol(ProtMonitorSummary,
+        protMonitor = self.newProtocol(emprot.ProtMonitorSummary,
                                        objLabel='summary')
         protMonitor.inputProtocols.append(protImport)
         protMonitor.inputProtocols.append(protOF)
@@ -205,11 +203,11 @@ class TestStreamingWorkflow(BaseTest):
         self.finalChecks(protImport.outputMovies, protocols)
 
 
-class TestBaseRelionStreaming(BaseTest):
+class TestBaseRelionStreaming(pwtests.BaseTest):
     @classmethod
     def setUpClass(cls):
-        setupTestProject(cls)
-        cls.ds = DataSet.getDataSet('relion_tutorial')
+        pwtests.setupTestProject(cls)
+        cls.ds = pwtests.DataSet.getpwtests.DataSet('relion_tutorial')
         cls.importThread = threading.Thread(name="createInputLinksR",
                                             target=cls._createInputLinks)
         cls.importThread.start()
@@ -245,7 +243,7 @@ class TestRelionExtractStreaming(TestBaseRelionStreaming):
     def testRisosome(self):
         # First, import a set of micrographs
         print("Importing a set of micrographs...")
-        protImport = self.newProtocol(ProtImportMicrographs,
+        protImport = self.newProtocol(emprot.ProtImportMicrographs,
                                       filesPath=os.path.abspath(self.proj.getTmpPath()),
                                       filesPattern="*%s" % self.ext,
                                       samplingRateMode=1,
@@ -305,7 +303,7 @@ class TestRelionExtractStreaming(TestBaseRelionStreaming):
 class TestRelionPickStreaming(TestBaseRelionStreaming):
     def testRisosome(self):
         print("Importing 2D averages (subset of 4)")
-        ih = ImageHandler()
+        ih = emconv.ImageHandler()
         classesFn = self.ds.getFile('import/classify2d/extra/'
                                     'relion_it015_classes.mrcs')
     
@@ -326,7 +324,7 @@ class TestRelionPickStreaming(TestBaseRelionStreaming):
         
         # First, import a set of micrographs
         print("Importing a set of micrographs...")
-        protImport = self.newProtocol(ProtImportMicrographs,
+        protImport = self.newProtocol(emprot.ProtImportMicrographs,
                                       filesPath=os.path.abspath(self.proj.getTmpPath()),
                                       filesPattern="*%s" % self.ext,
                                       samplingRateMode=1,
@@ -373,14 +371,14 @@ class TestRelionPickStreaming(TestBaseRelionStreaming):
         self.launchProtocol(protPick)
 
 
-class TestFrameStacking(BaseTest):
+class TestFrameStacking(pwtests.BaseTest):
     """ Test the cases where the input movies are input as individual frames.
     """
 
     @classmethod
     def setUpClass(cls):
-        setupTestProject(cls)
-        cls.ds = DataSet.getDataSet('movies')
+        pwtests.setupTestProject(cls)
+        cls.ds = pwtests.DataSet.getpwtests.DataSet('movies')
 
     @classmethod
     def _createFrames(cls, delay=0):
@@ -390,7 +388,7 @@ class TestFrameStacking(BaseTest):
 
         nFiles = len(files)
         nMovies = MOVS
-        ih = ImageHandler()
+        ih = emconv.ImageHandler()
 
         for i in range(nMovies):
             # Loop over the number of input movies if we want more for testing
@@ -410,9 +408,9 @@ class TestFrameStacking(BaseTest):
         self._createFrames()
 
         # ----------- IMPORT MOVIES -------------------
-        protImport = self.newProtocol(ProtImportMovies,
+        protImport = self.newProtocol(emprot.ProtImportMovies,
                                       objLabel='import stack no stream',
-                                      importFrom=ProtImportMovies.IMPORT_FROM_FILES,
+                                      importFrom=emprot.ProtImportMovies.IMPORT_FROM_FILES,
                                       filesPath=os.path.abspath(self.proj.getTmpPath()),
                                       filesPattern="movie*.mrc",
                                       amplitudConstrast=0.1,
@@ -438,9 +436,9 @@ class TestFrameStacking(BaseTest):
         time.sleep(5)
 
         # ----------- IMPORT MOVIES -------------------
-        protImport = self.newProtocol(ProtImportMovies,
+        protImport = self.newProtocol(emprot.ProtImportMovies,
                                       objLabel='import stack streaming',
-                                      importFrom=ProtImportMovies.IMPORT_FROM_FILES,
+                                      importFrom=emprot.ProtImportMovies.IMPORT_FROM_FILES,
                                       filesPath=os.path.abspath(self.proj.getTmpPath()),
                                       filesPattern="movie*.mrc",
                                       amplitudConstrast=0.1,

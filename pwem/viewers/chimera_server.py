@@ -13,9 +13,9 @@ from numpy.linalg import inv
 import chimera
 from time import sleep
 from threading import Thread
-from pwem import Domain
 
-runCommand = Domain.importFromPlugin('chimera','Plugin', doRaise=True)
+import pwem as em
+
 
 #from time import gmtime, strftime
 #from datetime import datetime
@@ -48,6 +48,8 @@ class ChimeraServer:
 
     def openVolume(self):
         try:
+            runCommand = em.Domain.importFromPlugin('chimera', 'Plugin',
+                                                    doRaise=True)
             while True:
                 if self.vol_conn.poll():
                     
@@ -79,6 +81,8 @@ class ChimeraServer:
 
     def answer(self, msg):
         #print msg
+        runCommand = em.Domain.importFromPlugin('chimera', 'Plugin',
+                                                doRaise=True)
         if msg == 'open_volume':
             data = self.vol_conn.recv()#objects are serialized by default
             #print data
@@ -187,6 +191,8 @@ class ChimeraVirusServer(ChimeraServer):
     def answer(self, msg):
         """execute a single command and return values"""
         ChimeraServer.answer(msg)
+        runCommand = em.Domain.importFromPlugin('chimera', 'Plugin',
+                                                doRaise=True)
         if msg == 'hk_icosahedron_lattice':
             from IcosahedralCage import cages
             h,k,radius,shellRadius,spheRadius,sym,sphere,color = \

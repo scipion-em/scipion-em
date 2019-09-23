@@ -38,6 +38,7 @@ from pyworkflow.utils import getFreePort
 import threading
 import shlex
 import SocketServer
+
 import pwem as em
 
 # ----------------------- Showj constants ---------------------------

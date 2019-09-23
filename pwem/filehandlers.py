@@ -31,8 +31,7 @@ from os.path import dirname
 
 from pyworkflow.gui.browser import FileHandler, isStandardImage
 from pyworkflow import gui
-from pyworkflow.utils.properties import Icon
-from pyworkflow.utils.path import getExt
+import pyworkflow.utils as pwutils
 
 class ImageFileHandler(FileHandler):
     import xmippLib
@@ -76,7 +75,7 @@ class ImageFileHandler(FileHandler):
         from viewers import DataView
         fn = objFile.getPath()
         return [('Open with Xmipp viewer', lambda: DataView(fn).show(),
-                 Icon.ACTION_VISUALIZE)]
+                 pwutils.Icon.ACTION_VISUALIZE)]
 
 
 class ParticleFileHandler(ImageFileHandler):
@@ -102,7 +101,7 @@ class ChimeraHandler(FileHandler):
         from viewers import ChimeraView
         fn = objFile.getPath()
         return [('Open with Chimera', lambda: ChimeraView(fn).show(),
-                 Icon.ACTION_VISUALIZE)]
+                 pwutils.Icon.ACTION_VISUALIZE)]
 
     def getFileIcon(self, objFile):
         return 'file_text.gif'
@@ -155,7 +154,7 @@ class MdFileHandler(ImageFileHandler):
         self._imgPreview = None
         self._imgInfo = None
         filename = objFile.getPath()
-        ext = getExt(filename)
+        ext = pwutils.getExt(filename)
 
         if ext == '.xmd' or ext == '.ctfparam' or ext == '.pos' or ext == '.doc':
             msg = "*Metadata File* "

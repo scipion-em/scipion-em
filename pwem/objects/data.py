@@ -33,7 +33,9 @@ import os
 import json
 import numpy as np
 
-from pyworkflow.object import *
+from pyworkflow.object import (OrderedObject, Float, Integer, String,
+                               OrderedDict, CsvList, Boolean, Set, Pointer,
+                               Scalar)
 
 import pwem as em
 

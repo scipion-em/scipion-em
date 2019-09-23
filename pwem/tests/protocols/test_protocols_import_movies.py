@@ -25,22 +25,22 @@ import os
 from datetime import datetime, timedelta
 import time
 
-from pyworkflow.tests import BaseTest, setupTestProject, DataSet
+import pyworkflow.tests as pwtests
 
-from pwem.protocol import ProtImportMovies
+import pwem.protocol as emprot
 
 
-class TestImportBase(BaseTest):
+class TestImportBase(pwtests.BaseTest):
     @classmethod
     def setUpClass(cls):
-        setupTestProject(cls)
-        cls.dsMovies = DataSet.getDataSet('movies')
+        pwtests.setupTestProject(cls)
+        cls.dsMovies = pwtests.DataSet.getDataSet('movies')
 
 
 class TestImportMovies(TestImportBase):
 
     def getArgs(self, filesPath, pattern=''):
-        return {'importFrom': ProtImportMovies.IMPORT_FROM_FILES,
+        return {'importFrom': emprot.ProtImportMovies.IMPORT_FROM_FILES,
                 'filesPath': self.dsMovies.getFile(filesPath),
                 'filesPattern': pattern,
                 'amplitudConstrast': 0.1,
@@ -75,7 +75,7 @@ class TestImportMovies(TestImportBase):
         args = self.getArgs('ribo/', pattern='*.mrcs')
 
         # Id's should be set increasing from 1 if ### is not in the pattern
-        protMovieImport = self.newProtocol(ProtImportMovies, **args)
+        protMovieImport = self.newProtocol(emprot.ProtImportMovies, **args)
         protMovieImport.setObjLabel('from files')
         self.launchProtocol(protMovieImport)
         self._checkOutput(protMovieImport, args, [1, 2, 3], size=3,
@@ -85,7 +85,7 @@ class TestImportMovies(TestImportBase):
         args = self.getArgs('cct/cct_1.em')
         args['objLabel'] = 'movie em'
 
-        protMovieImport = self.newProtocol(ProtImportMovies, **args)
+        protMovieImport = self.newProtocol(emprot.ProtImportMovies, **args)
         self.launchProtocol(protMovieImport)
 
         self._checkOutput(protMovieImport, args, size=1, dim=(4096, 4096, 7))
@@ -94,7 +94,7 @@ class TestImportMovies(TestImportBase):
         args = self.getArgs('c3-adp-se-xyz-0228_200.tif')
         args['objLabel'] = 'movie tif'
 
-        protMovieImport = self.newProtocol(ProtImportMovies, **args)
+        protMovieImport = self.newProtocol(emprot.ProtImportMovies, **args)
         self.launchProtocol(protMovieImport)
 
         self._checkOutput(protMovieImport, args, size=1, dim=(7676, 7420, 38))
@@ -103,7 +103,7 @@ class TestImportMovies(TestImportBase):
         args = self.getArgs('Falcon_2012_06_12-14_33_35_0_movie.mrcs.bz2')
         args['objLabel'] = 'movie bz2'
 
-        protMovieImport = self.newProtocol(ProtImportMovies, **args)
+        protMovieImport = self.newProtocol(emprot.ProtImportMovies, **args)
         self.launchProtocol(protMovieImport)
 
         self._checkOutput(protMovieImport, args, size=1)
@@ -135,7 +135,7 @@ class TestImportMovies(TestImportBase):
         args['blacklistDateTo'] = dateTo
         args['useRegexps'] = True
 
-        protBlacklistRegexDate = self.newProtocol(ProtImportMovies, **args)
+        protBlacklistRegexDate = self.newProtocol(emprot.ProtImportMovies, **args)
         protBlacklistRegexDate.setObjLabel('Blacklist date & regexp')
 
         self.launchProtocol(protBlacklistRegexDate)
@@ -152,7 +152,7 @@ class TestImportMovies(TestImportBase):
         args['blacklistFile'] = self.proj.getTmpPath('blacklist_filenames.txt')
         args['useRegexps'] = False
 
-        protBlacklistSetFiles = self.newProtocol(ProtImportMovies, **args)
+        protBlacklistSetFiles = self.newProtocol(emprot.ProtImportMovies, **args)
         protBlacklistSetFiles.blacklistSet.set(protBlacklistRegexDate.outputMovies)
 
         self.launchProtocol(protBlacklistSetFiles)

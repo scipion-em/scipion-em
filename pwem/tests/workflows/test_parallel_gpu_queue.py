@@ -26,19 +26,11 @@
 import json
 import subprocess
 
-from pwem.protocol import ProtImportParticles
 from pyworkflow.tests import *
 import pyworkflow.utils as pwutils
-from pyworkflow.utils.path import *
 
 import pwem as em
-
-relionProtocols = em.Domain.importFromPlugin('relion.protocols', doRaise=True)
-relionConvert = em.Domain.importFromPlugin('relion.convert', doRaise=True)
-
-xmipp3Protocols = em.Domain.importFromPlugin('xmipp3.protocols', doRaise=True)
-xmipp3Convert = em.Domain.importFromPlugin('xmipp3.convert', doRaise=True)
-
+import pwem.protocol as emprot
 
 # --- Set this to match with your queue system ---
 #  json params to fill the queue form, see SCIPION_HOME/config/host.conf
@@ -59,7 +51,7 @@ class TestQueueBase(BaseTest):
     @classmethod
     def runImportParticles(cls, pattern, samplingRate, checkStack=False):
         """ Run an Import particles protocol. """
-        protImport = cls.newProtocol(ProtImportParticles, 
+        protImport = cls.newProtocol(emprot.ProtImportParticles, 
                                      filesPath=pattern,
                                      samplingRate=samplingRate,
                                      checkStack=checkStack)
@@ -73,6 +65,8 @@ class TestQueueBase(BaseTest):
     @classmethod
     def runNormalizeParticles(cls, particles):
         """ Run normalize particles protocol """
+        relionProtocols = em.Domain.importFromPlugin('relion.protocols',
+                                                     doRaise=True)
         protPreproc = cls.newProtocol(relionProtocols.ProtRelionPreprocessParticles,
                                       doNormalize=True)
         protPreproc.inputParticles.set(particles)
@@ -139,7 +133,7 @@ class TestQueueBase(BaseTest):
                 return  # I don't know why, but we cannot retrieve the output, permissions???
             else:
                 # Check that job files have been created
-                jobFilesPath = join(getParentFolder(prot.getLogPaths()[0]),
+                jobFilesPath = join(pwutils.getParentFolder(prot.getLogPaths()[0]),
                             str(prot.getObjId()))
 
                 self.assertTrue(
@@ -169,6 +163,8 @@ class TestQueueBase(BaseTest):
             :param useQueue: Use the queue system or not
             :return: the launched protocol
         """
+        relionProtocols = em.Domain.importFromPlugin('relion.protocols',
+                                                     doRaise=True)
         prot2D = self.newProtocol(relionProtocols.ProtRelionClassify2D,
                                   doCTF=False, maskDiameterA=340,
                                   numberOfMpi=MPI, numberOfThreads=threads)
@@ -354,7 +350,8 @@ class TestQueueSteps(TestQueueBase):
         cls.protImport = cls.runImportParticles(cls.particlesFn, 3.5)
 
     def testStepsNoGPU(self):
-
+        xmipp3Protocols = em.Domain.importFromPlugin('xmipp3.protocols',
+                                                     doRaise=True)
         protXmippPreproc = self.newProtocol(xmipp3Protocols.XmippProtPreprocessParticles,
                                     doNormalize=True, doRemoveDust=True)
 
@@ -372,7 +369,7 @@ class TestQueueSteps(TestQueueBase):
 
         # Check that job files have been created
 
-        jobFilesPath = join(getParentFolder(protXmippPreproc.getLogPaths()[0]), str(protXmippPreproc.getObjId()))
+        jobFilesPath = join(pwutils.getParentFolder(protXmippPreproc.getLogPaths()[0]), str(protXmippPreproc.getObjId()))
 
         self.assertTrue(pwutils.exists(jobFilesPath + "-0-1.out") and
                         pwutils.exists(jobFilesPath + "-0-1.err") and

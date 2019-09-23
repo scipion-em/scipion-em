@@ -27,19 +27,20 @@
 
 import os
 
-from pyworkflow.viewer import Viewer, DESKTOP_TKINTER
+import pyworkflow.viewer as pwviewer
 from pyworkflow.gui.text import openTextFileEditor
 
-from pwem.objects.data import Sequence
+import pwem.objects as emobj
+import pwem.convert as emconv
 
 
-class SequenceViewer(Viewer):
+class SequenceViewer(pwviewer.Viewer):
     """ Wrapper to visualize Sequences with an editor. """
-    _environments = [DESKTOP_TKINTER]
-    _targets = [Sequence]
+    _environments = [pwviewer.DESKTOP_TKINTER]
+    _targets = [emobj.Sequence]
 
     def __init__(self, **kwargs):
-        Viewer.__init__(self, **kwargs)
+        pwviewer.Viewer.__init__(self, **kwargs)
 
     # def visualize(self, obj, **kwargs):
         # fn = obj.getFileName()
@@ -54,8 +55,7 @@ class SequenceViewer(Viewer):
         # object (obj.getSequence()) in a Biopython Sequence:
         # Let keep the SequenceHandler import here to avoid a default BioPython
         # import
-        from pyworkflow.em.convert.sequence import SequenceHandler
-        seqHandler = SequenceHandler(obj.getSequence(),
+        seqHandler = emconv.SequenceHandler(obj.getSequence(),
                                      isAminoacid=obj.getIsAminoacids())
         seqBio = seqHandler._sequence  # Bio.Seq.Seq object
         # Step 2: retrieving of the other args needed in the saveFile method

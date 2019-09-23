@@ -31,18 +31,17 @@ import os
 from datetime import datetime
 from collections import OrderedDict
 
-from pyworkflow.object import Set, String
-from pyworkflow.protocol import STATUS_NEW
-from pyworkflow.utils.properties import Message
+import pyworkflow.object as pwobj
+import pyworkflow.protocol as pwprot
 import pyworkflow.protocol.params as params
 import pyworkflow.utils as pwutils
 
-from pwem.protocol import EMProtocol
-from pwem.constants import RELATION_CTF
-from pwem.objects.data import (SetOfCoordinates, SetOfMicrographs, SetOfCTF)
+import pwem.protocol as emprot
+import pwem.constants as emcts
+import pwem.objects as emobj
 
 
-class ProtParticles(EMProtocol):
+class ProtParticles(emprot.EMProtocol):
     pass
 
 
@@ -52,11 +51,11 @@ class ProtProcessParticles(ProtParticles):
     It is mainly defined by an inputParticles and outputParticles.
     """
     def _defineParams(self, form):
-        form.addSection(label=Message.LABEL_INPUT)
+        form.addSection(label=pwutils.Message.LABEL_INPUT)
         
         form.addParam('inputParticles', params.PointerParam,
                       pointerClass='SetOfParticles',
-                      label=Message.LABEL_INPUT_PART, important=True)
+                      label=pwutils.Message.LABEL_INPUT_PART, important=True)
         # Hook that should be implemented in subclasses
         self._defineProcessParams(form)
         
@@ -142,7 +141,7 @@ class ProtExtractParticles(ProtParticles):
     
         form.addParam('ctfRelations', params.RelationParam, allowsNull=True,
                       condition='inputCoordinates is not None',
-                      relationName=RELATION_CTF,
+                      relationName=emcts.RELATION_CTF,
                       attributeName='getInputMicrographs',
                       label='CTF estimation',
                       help='Choose some CTF estimation related to input '
@@ -344,11 +343,11 @@ class ProtExtractParticles(ProtParticles):
             return newItemDict, streamClosed
 
         def _loadMics(micSet):
-            return _loadSet(micSet, SetOfMicrographs,
+            return _loadSet(micSet, emobj.SetOfMicrographs,
                              lambda mic: mic.getMicName())
 
         def _loadCTFs(ctfSet):
-            return _loadSet(ctfSet, SetOfCTF,
+            return _loadSet(ctfSet, emobj.SetOfCTF,
                              lambda ctf: ctf.getMicrograph().getMicName())
 
         # Load new micrographs coming from the coordinates
@@ -407,9 +406,9 @@ class ProtExtractParticles(ProtParticles):
 
         coordsFn = self.getCoords().getFileName()
         self.debug("Loading input db: %s" % coordsFn)
-        coordSet = SetOfCoordinates(filename=coordsFn)
+        coordSet = emobj.SetOfCoordinates(filename=coordsFn)
         # FIXME: Temporary to avoid loadAllPropertiesFail
-        coordSet._xmippMd = String()
+        coordSet._xmippMd = pwobj.String()
         coordSet.loadAllProperties()
 
         # TODO: horrible code. Rewrite using
@@ -519,7 +518,7 @@ class ProtExtractParticles(ProtParticles):
         self.finished = streamClosed and allDone == inputLen
         self.debug(' is finished? %s ' % self.finished)
         self.debug(' is stream closed? %s ' % streamClosed)
-        streamMode = Set.STREAM_CLOSED if self.finished else Set.STREAM_OPEN
+        streamMode = pwobj.Set.STREAM_CLOSED if self.finished else pwobj.Set.STREAM_OPEN
 
         if newDone:
             self._updateOutputPartSet(newDone, streamMode)
@@ -545,10 +544,10 @@ class ProtExtractParticles(ProtParticles):
         if self.finished:  # Unlock createOutputStep if finished all jobs
 
             # Close the output set
-            self._updateOutputPartSet([], Set.STREAM_CLOSED)
+            self._updateOutputPartSet([], pwobj.Set.STREAM_CLOSED)
             outputStep = self._getFirstJoinStep()
             if outputStep and outputStep.isWaiting():
-                outputStep.setStatus(STATUS_NEW)
+                outputStep.setStatus(pwprot.STATUS_NEW)
 
     def readPartsFromMics(self, micDoneList, outputParts):
         """ This method should be implemented in subclasses to read

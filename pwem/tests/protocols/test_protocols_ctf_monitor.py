@@ -24,12 +24,10 @@
 import os
 
 
-from pyworkflow.tests import BaseTest, setupTestProject
-from pyworkflow.protocol import getProtocolFromDb
+import pyworkflow.tests as pwtests
+import pyworkflow.protocol as pwprot
 
-from pwem.protocol import (ProtCreateStreamData, SET_OF_RANDOM_MICROGRAPHS,
-                           ProtMonitorCTF)
-from pwem.protocol.monitors import CTF_LOG_SQLITE
+import pwem.protocol as emprot
 
 
 # Load the number of movies for the simulation, by default equal 5, but
@@ -37,13 +35,13 @@ from pwem.protocol.monitors import CTF_LOG_SQLITE
 MICS = os.environ.get('SCIPION_TEST_MICS', 3)
 
 
-class TestCtfStream(BaseTest):
+class TestCtfStream(pwtests.BaseTest):
     @classmethod
     def setUpClass(cls):
-        setupTestProject(cls)
+        pwtests.setupTestProject(cls)
 
     def _updateProtocol(self, prot):
-        prot2 = getProtocolFromDb(prot.getProject().path,
+        prot2 = pwprot.getProtocolFromDb(prot.getProject().path,
                                   prot.getDbPath(),
                                   prot.getObjId())
         # Close DB connections
@@ -60,11 +58,11 @@ class TestCtfStream(BaseTest):
                   'samplingRate': 1.25,
                   'creationInterval': 5,
                   'delay': 0,
-                  'setof': SET_OF_RANDOM_MICROGRAPHS  # SetOfMicrographs
+                  'setof': emprot.SET_OF_RANDOM_MICROGRAPHS  # SetOfMicrographs
                 }
 
         # put some stress on the system
-        protStream = self.newProtocol(ProtCreateStreamData, **kwargs)
+        protStream = self.newProtocol(emprot.ProtCreateStreamData, **kwargs)
         protStream.setObjLabel('create Stream Mic')
         self.proj.launchProtocol(protStream, wait=False)
 
@@ -97,9 +95,9 @@ class TestCtfStream(BaseTest):
                   'monitorTime': 5
                   }
 
-        protMonitor = self.newProtocol(ProtMonitorCTF, **kwargs)
+        protMonitor = self.newProtocol(emprot.ProtMonitorCTF, **kwargs)
         protMonitor.inputProtocol.set(protCTF)
         self.launchProtocol(protMonitor)
 
-        baseFn = protMonitor._getPath(CTF_LOG_SQLITE)
+        baseFn = protMonitor._getPath(emprot.CTF_LOG_SQLITE)
         self.assertTrue(os.path.isfile(baseFn))

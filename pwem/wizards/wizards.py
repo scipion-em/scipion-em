@@ -29,20 +29,21 @@ Domain. wizard.py is left for wizard models and base classes."""
 import os
 import requests
 
-from pyworkflow.object import String
+import pyworkflow.object as pwobj
 from pyworkflow.gui import dialog
+import pyworkflow.wizard as pwizard
 from pyworkflow.gui.tree import ListTreeProviderString
 
-from pwem.convert import Ccp4Header, AtomicStructHandler
-from pwem.wizards.wizard import Wizard, EmWizard
-from pwem.protocol import (ProtImportImages, ProtImportCoordinates,
-                           ProtImportCoordinatesPairs, ProtImportVolumes,
-                           ProtImportSequence)
-from pwem.objects import Volume
+import pwem.convert as emconv
+
+from pwem.wizards.wizard import EmWizard
+import pwem.protocol as emprot
+import pwem.objects as emobj
+
 
 
 class ImportAcquisitionWizard(EmWizard):
-    _targets = [(ProtImportImages, ['acquisitionWizard'])]
+    _targets = [(emprot.ProtImportImages, ['acquisitionWizard'])]
 
     def show(self, form, *params):
         acquisitionInfo = form.protocol.loadAcquisitionInfo()
@@ -81,9 +82,9 @@ class ImportAcquisitionWizard(EmWizard):
                 prot.setObjComment(comment)
 
 
-class ImportCoordinatesBoxSizeWizard(Wizard):
-    _targets = [(ProtImportCoordinates, ['boxSize']),
-                (ProtImportCoordinatesPairs, ['boxSize'])]
+class ImportCoordinatesBoxSizeWizard(pwizard.Wizard):
+    _targets = [(emprot.ProtImportCoordinates, ['boxSize']),
+                (emprot.ProtImportCoordinatesPairs, ['boxSize'])]
 
     @classmethod
     def _getBoxSize(cls, protocol):
@@ -95,9 +96,9 @@ class ImportCoordinatesBoxSizeWizard(Wizard):
         form.setVar('boxSize', cls._getBoxSize(form.protocol))
 
 
-class ImportOriginVolumeWizard(Wizard):
+class ImportOriginVolumeWizard(pwizard.Wizard):
 
-    _targets = [(ProtImportVolumes, ['x', 'y', 'z'])]
+    _targets = [(emprot.ProtImportVolumes, ['x', 'y', 'z'])]
 
     def show(self, form, *params):
         protocol = form.protocol
@@ -110,11 +111,11 @@ class ImportOriginVolumeWizard(Wizard):
 
         sampling = protocol.samplingRate.get()
         for fileName, fileId in protocol.iterFiles():
-            inputVol = Volume()
+            inputVol = emobj.Volume()
             inputVol.setFileName(fileName)
             if ((str(fullPattern)).endswith('mrc') or
                (str(fullPattern)).endswith('map')):
-                ccp4header = Ccp4Header(fileName, readHeader=True)
+                ccp4header = emconv.Ccp4Header(fileName, readHeader=True)
                 x, y, z = ccp4header.getOrigin(changeSign=True)  # In Angstroms
             else:
                 x, y, z = self._halfOriginCoordinates(inputVol, sampling)
@@ -134,8 +135,8 @@ class ImportOriginVolumeWizard(Wizard):
         return x, y, z
 
 
-class GetStructureChainsWizard(Wizard):
-    _targets = [(ProtImportSequence, ['inputStructureChain'])
+class GetStructureChainsWizard(pwizard.Wizard):
+    _targets = [(emprot.ProtImportSequence, ['inputStructureChain'])
                 # NOTE: be careful if you change this class since
                 # chimera-wizard inherits from it.
                 # (ChimeraModelFromTemplate, ['inputStructureChain'])
@@ -144,7 +145,7 @@ class GetStructureChainsWizard(Wizard):
 
     @classmethod
     def getModelsChainsStep(cls, protocol):
-        structureHandler = AtomicStructHandler()
+        structureHandler = emconv.AtomicStructHandler()
         fileName = ""
         if hasattr(protocol, 'pdbId'):
             if protocol.pdbId.get() is not None:
@@ -191,7 +192,7 @@ class GetStructureChainsWizard(Wizard):
         self.editionListOfChains(models)
         finalChainList = []
         for i in self.chainList:
-            finalChainList.append(String(i))
+            finalChainList.append(pwobj.String(i))
         provider = ListTreeProviderString(finalChainList)
         dlg = dialog.ListDialog(form.root, "Model chains", provider,
                                 "Select one of the chains (model, chain, "

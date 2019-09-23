@@ -34,11 +34,10 @@ import time
 from datetime import timedelta, datetime
 
 import pyworkflow.utils as pwutils
-from pyworkflow.utils.properties import Message
 import pyworkflow.protocol.params as params
 
 from pwem.convert import ImageHandler
-from pwem.objects.data import Acquisition
+from pwem.objects import Acquisition
 
 from .base import ProtImportFiles
 
@@ -74,17 +73,17 @@ class ProtImportImages(ProtImportFiles):
                             'will try to import the acquisition values.\n'
                             'If not found, required ones should be provided.')
         group.addParam('voltage', params.FloatParam, default=300,
-                   label=Message.LABEL_VOLTAGE, 
-                   help=Message.TEXT_VOLTAGE)
+                   label=pwutils.Message.LABEL_VOLTAGE,
+                   help=pwutils.Message.TEXT_VOLTAGE)
         group.addParam('sphericalAberration', params.FloatParam, default=2.7,
-                   label=Message.LABEL_SPH_ABERRATION, 
-                   help=Message.TEXT_SPH_ABERRATION)
+                   label=pwutils.Message.LABEL_SPH_ABERRATION,
+                   help=pwutils.Message.TEXT_SPH_ABERRATION)
         group.addParam('amplitudeContrast', params.FloatParam, default=0.1,
-                      label=Message.LABEL_AMPLITUDE,
-                      help=Message.TEXT_AMPLITUDE)
+                      label=pwutils.Message.LABEL_AMPLITUDE,
+                      help=pwutils.Message.TEXT_AMPLITUDE)
         group.addParam('magnification', params.IntParam, default=50000,
-                   label=Message.LABEL_MAGNI_RATE, 
-                   help=Message.TEXT_MAGNI_RATE)
+                   label=pwutils.Message.LABEL_MAGNI_RATE,
+                   help=pwutils.Message.TEXT_MAGNI_RATE)
         return group
 
     def _acquisitionWizardCondition(self):

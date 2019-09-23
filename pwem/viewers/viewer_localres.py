@@ -26,8 +26,8 @@
 
 import pyworkflow.viewer as pwviewer
 
-from pwem.constants import COLOR_OTHER, COLOR_CHOICES
-from pwem.convert import ImageHandler
+import pwem.constants as emcts
+import pwem.convert as emconv
 
 
 class LocalResolutionViewer(pwviewer.ProtocolViewer):
@@ -35,14 +35,14 @@ class LocalResolutionViewer(pwviewer.ProtocolViewer):
     Visualization tools for local resolution results.
 
     """
-    binaryCondition = ('(colorMap == %d) ' % (COLOR_OTHER))
+    binaryCondition = ('(colorMap == %d) ' % (emcts.COLOR_OTHER))
 
     def __init__(self, *args, **kwargs):
         pwviewer.ProtocolViewer.__init__(self, *args, **kwargs)
 
     def getImgData(self, imgFile):
         import numpy as np
-        img = ImageHandler().read(imgFile)
+        img = emconv.ImageHandler().read(imgFile)
         imgData = img.getData()
 
         maxRes = np.amax(imgData)
@@ -114,8 +114,8 @@ class LocalResolutionViewer(pwviewer.ProtocolViewer):
         return rangeList
 
     def _getColorName(self):
-        if self.colorMap.get() != COLOR_OTHER:
-            return COLOR_CHOICES[self.colorMap.get()]
+        if self.colorMap.get() != emcts.COLOR_OTHER:
+            return emcts.COLOR_CHOICES[self.colorMap.get()]
         else:
             return self.otherColorMap.get()
 

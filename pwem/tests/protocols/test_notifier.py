@@ -25,15 +25,15 @@ import urllib2
 import json
 
 import pyworkflow.webservices as pws
-from pyworkflow.tests import BaseTest, setupTestProject
+import pyworkflow.tests as pwtests
 
-from pwem.protocol import ProtStress
+import pwem.protocol as emprot
 
 
-class TestNotifier(BaseTest):
+class TestNotifier(pwtests.BaseTest):
     @classmethod
     def setUpClass(cls):
-        setupTestProject(cls)
+        pwtests.setupTestProject(cls)
 
     def _getUrl(self):
         return os.environ.get('SCIPION_NOTIFY_URL',
@@ -67,7 +67,7 @@ class TestNotifier(BaseTest):
                   'delay': 1
                   }
         # Create and execute protocol stress
-        prot1 = self.newProtocol(ProtStress, **kwargs)
+        prot1 = self.newProtocol(emprot.ProtStress, **kwargs)
         prot1.setObjLabel('stress')
         self.proj.launchProtocol(prot1, wait=True)
 

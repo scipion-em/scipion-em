@@ -24,11 +24,11 @@
 # *
 # **************************************************************************
 
-from pyworkflow.object import Object, Float, Integer
-from pyworkflow.utils.path import cleanPath
-from pyworkflow.protocol.params import PointerParam
+import pyworkflow.object as pwobj
+import pyworkflow.utils as pwutils
+import pyworkflow.protocol.params as params
 
-from pwem.objects.data import EMSet
+import pwem.objects as emobj
 
 from .protocol_2d import ProtAlign2D
 
@@ -41,10 +41,10 @@ class ProtClassesConsensus(ProtAlign2D):
     def _defineParams(self, form):
         form.addSection(label='Input')
 
-        form.addParam('inputClasses1', PointerParam, pointerClass='SetOfClasses',
+        form.addParam('inputClasses1', params.PointerParam, pointerClass='SetOfClasses',
                       label='Input classes 1',
                       help='')
-        form.addParam('inputClasses2', PointerParam, pointerClass='SetOfClasses',
+        form.addParam('inputClasses2', params.PointerParam, pointerClass='SetOfClasses',
                       label='Input classes 2',
                       help='')
 
@@ -84,23 +84,23 @@ class ProtClassesConsensus(ProtAlign2D):
         jaccardList.sort(key=lambda e: e[4], reverse=True)
         visitedClasses = set()
         outputFn = self._getPath('consensus.sqlite')
-        cleanPath(outputFn)
-        outputSet = EMSet(filename=outputFn)
+        pwutils.cleanPath(outputFn)
+        outputSet = emobj.EMSet(filename=outputFn)
         
         for clsId1, clsId2, inter, union, jaccardIndex in jaccardList:
             if clsId1 not in visitedClasses:
                 visitedClasses.add(clsId1) # mark as visited
                 cls1 = set1[clsId1]
                 cls2 = set2[clsId2]
-                o = Object()
+                o = pwobj.Object()
                 o.setObjLabel('classes %d - %d' % (clsId1, clsId2))
                 o.class1 = cls1.clone()
-                o.class1.id = Integer(clsId1)
+                o.class1.id = pwobj.Integer(clsId1)
                 o.class2 = cls2.clone()
-                o.class2.id = Integer(clsId2)
-                o.jaccard = Float(jaccardIndex)
-                o.intersection = Integer(inter)
-                o.union = Integer(union)
+                o.class2.id = pwobj.Integer(clsId2)
+                o.jaccard = pwobj.Float(jaccardIndex)
+                o.intersection = pwobj.Integer(inter)
+                o.union = pwobj.Integer(union)
                 outputSet.append(o)
                 
         self._defineOutputs(outputConsensus=outputSet)

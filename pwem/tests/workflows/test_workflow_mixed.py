@@ -22,19 +22,18 @@
 # *
 # **************************************************************************
 
-from pyworkflow.tests import DataSet, setupTestProject
+import pyworkflow.tests as pwtests
 import pwem as em
-from pwem.protocol.protocol_import import (ProtImportCoordinates,
-                                           ProtImportMicrographs,
-                                           ProtImportVolumes)
+import pwem.protocol as emprot 
+
 from .test_workflow import TestWorkflow
 
 
 class TestMixedBPV(TestWorkflow):
     @classmethod
     def setUpClass(cls):
-        setupTestProject(cls)
-        cls.dataset = DataSet.getDataSet('xmipp_tutorial')
+        pwtests.setupTestProject(cls)
+        cls.dataset = pwtests.DataSet.getDataSet('xmipp_tutorial')
         cls.crdsDir = cls.dataset.getFile('boxingDir')
         cls.micsFn = cls.dataset.getFile('allMics')
         cls.vol1 = cls.dataset.getFile('vol1')
@@ -42,7 +41,7 @@ class TestMixedBPV(TestWorkflow):
     def test_workflow(self):
         from itertools import izip
         #First, import a set of micrographs
-        protImport = self.newProtocol(ProtImportMicrographs,
+        protImport = self.newProtocol(emprot.ProtImportMicrographs,
                                       filesPath=self.micsFn,
                                       samplingRate=1.237, voltage=300)
         self.launchProtocol(protImport)
@@ -52,7 +51,7 @@ class TestMixedBPV(TestWorkflow):
         
         #Import a set of volumes        
         print("Import Volume")
-        protImportVol = self.newProtocol(ProtImportVolumes, filesPath=self.vol1,
+        protImportVol = self.newProtocol(emprot.ProtImportVolumes, filesPath=self.vol1,
                                          samplingRate=9.896)
         self.launchProtocol(protImportVol)
         self.assertIsNotNone(protImportVol.getFiles(),
@@ -94,8 +93,8 @@ class TestMixedBPV(TestWorkflow):
 #         self.validateFiles('protCTF', protCTF)
 
         print("Running Eman import coordinates...")
-        protPP = self.newProtocol(ProtImportCoordinates,
-                                 importFrom=ProtImportCoordinates.IMPORT_FROM_EMAN,
+        protPP = self.newProtocol(emprot.ProtImportCoordinates,
+                                 importFrom=emprot.ProtImportCoordinates.IMPORT_FROM_EMAN,
                                  filesPath=self.crdsDir,
                                  filesPattern='*_info.json', boxSize=110)
         protPP.inputMicrographs.set(protDownsampling.outputMicrographs)
@@ -150,15 +149,15 @@ class TestMixedBPV2(TestWorkflow):
 
     @classmethod
     def setUpClass(cls):
-        setupTestProject(cls)
-        cls.dataset = DataSet.getDataSet('xmipp_tutorial')
+        pwtests.setupTestProject(cls)
+        cls.dataset = pwtests.DataSet.getDataSet('xmipp_tutorial')
         cls.crdsDir = cls.dataset.getFile('boxingDir')
         cls.micsFn = cls.dataset.getFile('allMics')
         cls.vol1 = cls.dataset.getFile('vol1')
         
     def test_workflow(self):
         #First, import a set of micrographs
-        protImport = self.newProtocol(ProtImportMicrographs,
+        protImport = self.newProtocol(emprot.ProtImportMicrographs,
                                       filesPath=self.micsFn,
                                       samplingRate=1.237, voltage=300)
         self.launchProtocol(protImport)
@@ -168,7 +167,7 @@ class TestMixedBPV2(TestWorkflow):
         
         #Import a set of volumes        
         print("Import Volume")
-        protImportVol = self.newProtocol(ProtImportVolumes, filesPath=self.vol1,
+        protImportVol = self.newProtocol(emprot.ProtImportVolumes, filesPath=self.vol1,
                                          samplingRate=9.896)
         self.launchProtocol(protImportVol)
         self.assertIsNotNone(protImportVol.getFiles(),
@@ -203,8 +202,8 @@ class TestMixedBPV2(TestWorkflow):
 #         self.validateFiles('protCTF', protCTF)
 
         print("Running Eman import coordinates...")
-        protPP = self.newProtocol(ProtImportCoordinates,
-                                 importFrom=ProtImportCoordinates.IMPORT_FROM_EMAN,
+        protPP = self.newProtocol(emprot.ProtImportCoordinates,
+                                 importFrom=emprot.ProtImportCoordinates.IMPORT_FROM_EMAN,
                                  filesPath=self.crdsDir,
                                  filesPattern='*_info.json', boxSize=110)
         protPP.inputMicrographs.set(protDownsampling.outputMicrographs)

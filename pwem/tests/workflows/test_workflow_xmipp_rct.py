@@ -21,11 +21,10 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-
-from pwem.protocol import ProtImportMicrographsTiltPairs
-from pyworkflow.tests import *
+import pyworkflow.tests as pwtests
 
 import pwem as em
+import pwem.protocol as emprot 
 
 from .test_workflow import TestWorkflow
 
@@ -33,8 +32,8 @@ from .test_workflow import TestWorkflow
 class TestXmippRCTWorkflow(TestWorkflow):
     @classmethod
     def setUpClass(cls):    
-        setupTestProject(cls)
-        cls.dataset = DataSet.getDataSet('rct')
+        pwtests.setupTestProject(cls)
+        cls.dataset = pwtests.DataSet.getDataSet('rct')
         cls.allCrdsDir = cls.dataset.getFile('positions')
         cls.micsUFn = cls.dataset.getFile('untilted')
         cls.micsTFn = cls.dataset.getFile('tilted')
@@ -42,7 +41,7 @@ class TestXmippRCTWorkflow(TestWorkflow):
         
     def testXmippRCTWorkflowBasic(self):
         #First, import a set of micrographs
-        protImport = self.newProtocol(ProtImportMicrographsTiltPairs, 
+        protImport = self.newProtocol(emprot.ProtImportMicrographsTiltPairs, 
                                       patternUntilted=self.micsUFn,
                                       patternTilted=self.micsTFn,
                                       samplingRate=2.28, voltage=100,

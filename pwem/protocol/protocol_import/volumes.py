@@ -28,13 +28,11 @@
 
 from os.path import exists, basename, abspath, relpath
 
+import pyworkflow.utils as pwutils
 import pyworkflow.protocol.params as params
 
-from pwem.objects import Volume, Transform, AtomStruct
-from pwem.convert import Ccp4Header, ImageHandler
-from pyworkflow.utils.path import createAbsLink
-from pyworkflow.utils.properties import Message
-from pwem.convert.atom_struct import AtomicStructHandler
+import pwem.objects as emobj
+import pwem.convert as emconv
 
 from .base import ProtImportFiles
 from .images import ProtImportImages
@@ -63,7 +61,7 @@ class ProtImportVolumes(ProtImportImages):
                       label='Path half map2', help='Select second half map',
                       condition='setHalfMaps')
         form.addParam('samplingRate', params.FloatParam,
-                      label=Message.LABEL_SAMP_RATE)
+                      label=pwutils.Message.LABEL_SAMP_RATE)
         form.addParam('setOrigCoord', params.BooleanParam,
                       label="Set origin of coordinates",
                       help="Option YES:\nA new volume will be created with "
@@ -127,10 +125,10 @@ class ProtImportVolumes(ProtImportImages):
         self.info("Using pattern: '%s'" % pattern)
 
         # Create a Volume template object
-        vol = Volume()
+        vol = emobj.Volume()
         vol.setSamplingRate(samplingRate)
 
-        imgh = ImageHandler()
+        imgh = emconv.ImageHandler()
 
         volSet = self._createSetOfVolumes()
         volSet.setSamplingRate(samplingRate)
@@ -146,7 +144,7 @@ class ProtImportVolumes(ProtImportImages):
                     zDim = z
             else:
                 zDim = z
-            origin = Transform()
+            origin = emobj.Transform()
             if setOrigCoord:
                 origin.setShiftsTuple(self._getOrigCoord())
             else:
@@ -158,26 +156,26 @@ class ProtImportVolumes(ProtImportImages):
 
             if self.copyFiles or setOrigCoord:
                 newFileName = abspath(self._getVolumeFileName(fileName, "mrc"))
-                Ccp4Header.fixFile(fileName, newFileName, origin.getShifts(),
-                                   samplingRate, Ccp4Header.ORIGIN)
+                emconv.Ccp4Header.fixFile(fileName, newFileName, origin.getShifts(),
+                                   samplingRate, emconv.Ccp4Header.ORIGIN)
                 if self.setHalfMaps.get():
                     newFileName1 = abspath(self._getVolumeFileName(self.half1map.get(), "mrc"))
-                    Ccp4Header.fixFile(fileName, newFileName1, origin.getShifts(),
-                                       samplingRate, Ccp4Header.ORIGIN)
+                    emconv.Ccp4Header.fixFile(fileName, newFileName1, origin.getShifts(),
+                                       samplingRate, emconv.Ccp4Header.ORIGIN)
                     newFileName2 = abspath(self._getVolumeFileName(self.half2map.get(), "mrc"))
-                    Ccp4Header.fixFile(fileName, newFileName2, origin.getShifts(),
-                                       samplingRate, Ccp4Header.ORIGIN)
+                    emconv.Ccp4Header.fixFile(fileName, newFileName2, origin.getShifts(),
+                                       samplingRate, emconv.Ccp4Header.ORIGIN)
             else:
                 newFileName = abspath(self._getVolumeFileName(fileName))
 
                 if fileName.endswith(':mrc'):
                     fileName = fileName[:-4]
 
-                createAbsLink(fileName, newFileName)
+                pwutils.createAbsLink(fileName, newFileName)
                 if self.setHalfMaps.get():
-                    createAbsLink(self.half1map.get(),
+                    pwutils.createAbsLink(self.half1map.get(),
                                   abspath(self._getVolumeFileName(self.half1map.get())))
-                    createAbsLink(self.half2map.get(),
+                    pwutils.createAbsLink(self.half2map.get(),
                                   abspath(self._getVolumeFileName(self.half2map.get())))
 
             # Make newFileName relative
@@ -281,7 +279,7 @@ Format may be PDB or MMCIF"""
     def pdbDownloadStep(self):
         """Download all pdb files in file_list and unzip them.
         """
-        aSH = AtomicStructHandler()
+        aSH = emconv.AtomicStructHandler()
         print("retriving PDB file %s" % self.pdbId.get())
         pdbPath = aSH.readFromPDBDatabase(self.pdbId.get(),
                                               type='mmCif',
@@ -304,10 +302,10 @@ Format may be PDB or MMCIF"""
                 localPath = localPath.replace(".pdb", ".cif").\
                     replace(".ent", ".cif")
             # normalize input format
-            aSH = AtomicStructHandler()
+            aSH = emconv.AtomicStructHandler()
             aSH.read(atomStructPath)
             aSH.write(localPath)
-        pdb = AtomStruct()
+        pdb = emobj.AtomStruct()
         volume = self.inputVolume.get()
 
         # if a volume exists assign it to the pdb object

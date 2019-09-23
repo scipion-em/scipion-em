@@ -31,20 +31,18 @@ import warnings
 from itertools import izip
 from math import ceil
 
-from pyworkflow.object import Set
-import pyworkflow.utils.path as pwutils
-from pyworkflow.utils import yellowStr, redStr
+import pyworkflow.object as pwobj
+import pyworkflow.utils as pwutils
 from pyworkflow.gui.plotter import Plotter
 import pyworkflow.protocol.params as params
-import pyworkflow.protocol.constants as cons
+import pyworkflow.protocol.constants as pwcts
 
-from pwem.convert import ImageHandler
-from pwem.objects.data import (MovieAlignment, SetOfMovies, SetOfMicrographs,
-                               Image)
-from pwem.protocol import ProtProcessMovies
+import pwem.convert as emconv
+import pwem.objects as emobj
+import pwem.protocol as emprot
 
 
-class ProtAlignMovies(ProtProcessMovies):
+class ProtAlignMovies(emprot.ProtProcessMovies):
     """
     Base class for movie alignment protocols such as:
     motioncorr, crosscorrelation and optical flow
@@ -56,7 +54,7 @@ class ProtAlignMovies(ProtProcessMovies):
 
     # -------------------------- DEFINE param functions -----------------------
     def _defineParams(self, form):
-        ProtProcessMovies._defineParams(self, form)
+        emprot.ProtProcessMovies._defineParams(self, form)
         self._defineAlignmentParams(form)
 
     def _defineAlignmentParams(self, form):
@@ -100,10 +98,10 @@ class ProtAlignMovies(ProtProcessMovies):
 
         form.addParam('doSaveAveMic', params.BooleanParam, default=True,
                       label="Save aligned micrograph",
-                      expertLevel=cons.LEVEL_ADVANCED)
+                      expertLevel=pwcts.LEVEL_ADVANCED)
 
         form.addParam('doSaveMovie', params.BooleanParam, default=False,
-                      label="Save movie", expertLevel=cons.LEVEL_ADVANCED,
+                      label="Save movie", expertLevel=pwcts.LEVEL_ADVANCED,
                       help="Save Aligned movie")
 
     # --------------------------- STEPS functions ----------------------------
@@ -116,10 +114,10 @@ class ProtAlignMovies(ProtProcessMovies):
             output = self.outputMicrographs
 
         if output.getSize() == 0 and len(self.listOfMovies) != 0:
-            raise Exception(redStr("All movies failed, didn't create outputMicrographs."
+            raise Exception(pwutils.redStr("All movies failed, didn't create outputMicrographs."
                                    "Please review movie processing steps above."))
         elif output.getSize() < len(self.listOfMovies):
-            self.warning(yellowStr("WARNING - Failed to align %d movies."
+            self.warning(pwutils.yellowStr("WARNING - Failed to align %d movies."
                                    % (len(self.listOfMovies) - self.outputMicrographs.getSize())))
 
     def _loadOutputSet(self, SetClass, baseName, fixSampling=True):
@@ -169,7 +167,7 @@ class ProtAlignMovies(ProtProcessMovies):
         # We have finished when there is not more input movies (stream closed)
         # and the number of processed movies is equal to the number of inputs
         self.finished = self.streamClosed and allDone == len(self.listOfMovies)
-        streamMode = Set.STREAM_CLOSED if self.finished else Set.STREAM_OPEN
+        streamMode = pwobj.Set.STREAM_CLOSED if self.finished else pwobj.Set.STREAM_OPEN
 
         if newDone:
             self._writeDoneList(newDone)
@@ -188,7 +186,7 @@ class ProtAlignMovies(ProtProcessMovies):
 
         if self._createOutputMovies():
             saveMovie = self.getAttributeValue('doSaveMovie', False)
-            movieSet = self._loadOutputSet(SetOfMovies, 'movies.sqlite',
+            movieSet = self._loadOutputSet(emobj.SetOfMovies, 'movies.sqlite',
                                            fixSampling=saveMovie)
 
             # If need to save the movie
@@ -202,13 +200,13 @@ class ProtAlignMovies(ProtProcessMovies):
                     if newMovie.getAlignment().getShifts()[0]:
                         movieSet.append(newMovie)
                     else:
-                        print(yellowStr("WARNING: Movie %s has empty alignment "
+                        print(pwutils.yellowStr("WARNING: Movie %s has empty alignment "
                                         "data, can't add it to output set."
                                         % movie.getFileName()))
 
                 # Warn about any exception creating the movie
                 except Exception as e:
-                    print(redStr("ERROR: Movie %s couldn't be "
+                    print(pwutils.redStr("ERROR: Movie %s couldn't be "
                                  "added to the output set.\n%s"
                                  % (movie.getFileName(), e)))
 
@@ -226,7 +224,7 @@ class ProtAlignMovies(ProtProcessMovies):
 
         def _updateOutputMicSet(sqliteFn, getOutputMicName, outputName):
             """ Updated the output micrographs set with new items found. """
-            micSet = self._loadOutputSet(SetOfMicrographs, sqliteFn)
+            micSet = self._loadOutputSet(emobj.SetOfMicrographs, sqliteFn)
             doneFailed = []
 
             for movie in newDone:
@@ -238,7 +236,7 @@ class ProtAlignMovies(ProtProcessMovies):
                 extraMicFn = self._getExtraPath(getOutputMicName(movie))
                 mic.setFileName(extraMicFn)
                 if not os.path.exists(extraMicFn):
-                    print(yellowStr("WARNING: Micrograph %s was not generated, "
+                    print(pwutils.yellowStr("WARNING: Micrograph %s was not generated, "
                                     "can't add it to output set." % extraMicFn))
                     doneFailed.append(movie)
                     continue
@@ -269,7 +267,7 @@ class ProtAlignMovies(ProtProcessMovies):
         if self.finished:  # Unlock createOutputStep if finished all jobs
             outputStep = self._getFirstJoinStep()
             if outputStep and outputStep.isWaiting():
-                outputStep.setStatus(cons.STATUS_NEW)
+                outputStep.setStatus(pwcts.STATUS_NEW)
 
     # --------------------------- INFO functions ------------------------------
     def _validate(self):
@@ -327,7 +325,7 @@ class ProtAlignMovies(ProtProcessMovies):
             _validateRange("align")
             _validateRange("sum")
 
-        if not ImageHandler().existsLocation(firstItem.getLocation()):
+        if not emconv.ImageHandler().existsLocation(firstItem.getLocation()):
             errors.append("The input movie files do not exist!!! "
                           "Since usually input movie files are symbolic links, "
                           "please check that links are not broken if you "
@@ -398,7 +396,7 @@ class ProtAlignMovies(ProtProcessMovies):
             firstFrameIndex = first
 
         framesRange.setFirstFrameIndex(firstFrameIndex)
-        alignment = MovieAlignment(first=first, last=last, xshifts=xshifts,
+        alignment = emobj.MovieAlignment(first=first, last=last, xshifts=xshifts,
                                    yshifts=yshifts)
 
         roiList = [self.getAttributeValue(s, 0) for s in
@@ -568,7 +566,7 @@ class ProtAlignMovies(ProtProcessMovies):
                    overlap=0.4):
         warnings.warn("Use psd = image.computePSD(overlap=0.4, xdim=384, ydim=384, fftthreads=1) instead",
                       DeprecationWarning)
-        ih = ImageHandler()
+        ih = emconv.ImageHandler()
         psdImg1 = ih.read(inputMic)
         res = psdImg1.computePSD(overlap, dim, dim)
         res.write(oroot+".psd")
@@ -604,15 +602,15 @@ class ProtAlignMovies(ProtProcessMovies):
          left part from psd1 (uncorrected PSD),
          right-part from psd2 (corrected PSD)
         """
-        ih = ImageHandler()
+        ih = emconv.ImageHandler()
         self.composePSDImages(self, ih.read(psd1), ih.read(psd2), outputFn,
                               outputFnUncorrected, outputFnCorrected)
 
     def computePSDImages(self, movie, fnUncorrected, fnCorrected,
                     outputFnUncorrected=None, outputFnCorrected=None):
         self.composePSDImages(
-            ImageHandler().read(fnUncorrected).computePSD(),
-            ImageHandler().read(fnCorrected).computePSD(),
+            emconv.ImageHandler().read(fnUncorrected).computePSD(),
+            emconv.ImageHandler().read(fnCorrected).computePSD(),
             self._getPsdCorr(movie),
             outputFnUncorrected,
             outputFnCorrected)
@@ -636,7 +634,7 @@ class ProtAlignMovies(ProtProcessMovies):
 
     def correctGain(self, movieFn, outputFn, gainFn=None, darkFn=None):
         """correct a movie with both gain and dark images"""
-        ih = ImageHandler()
+        ih = emconv.ImageHandler()
         _, _, z, n = ih.getDimensions(movieFn)
         numberOfFrames = max(z, n) # in case of wrong mrc stacks as volumes
 
@@ -735,7 +733,7 @@ class ProtAverageFrames(ProtAlignMovies):
 
     def _processMovie(self, movie):
         allFramesSum = self._getPath('all_frames_sum.mrc')
-        ih = ImageHandler()
+        ih = emconv.ImageHandler()
         sumImg = ih.createImage()
         img = ih.createImage()
 
@@ -763,12 +761,12 @@ class ProtAverageFrames(ProtAlignMovies):
         self._loadInputList()
         n = len(self.listOfMovies)
 
-        ih = ImageHandler()
+        ih = emconv.ImageHandler()
         sumImg = ih.read(allFramesSum)
         sumImg.inplaceDivide(float(n))
         sumImg.write(allFramesAvg)
 
-        outputAvg = Image()
+        outputAvg = emobj.Image()
         outputAvg.setFileName(allFramesAvg)
         outputAvg.setSamplingRate(self.listOfMovies[0].getSamplingRate())
         self._defineOutputs(outputAverage=outputAvg)

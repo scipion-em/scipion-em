@@ -27,11 +27,11 @@
 
 import pyworkflow.protocol.params as params
 
-from pwem.objects.data import SetOfParticles
-from pwem.protocol import ProtCTFMicrographs
+import pwem.objects as emobj
+import pwem.protocol as emprot
 
 
-class ProtCTFAssign(ProtCTFMicrographs):
+class ProtCTFAssign(emprot.ProtCTFMicrographs):
     """ This protocol assigns a CTF estimation to a particular
     set of particles producing a new set. """
     _label = 'assign ctf'
@@ -39,7 +39,7 @@ class ProtCTFAssign(ProtCTFMicrographs):
                    'Particles']
     
     def __init__(self, **kwargs):
-        ProtCTFMicrographs.__init__(self, **kwargs)
+        emprot.ProtCTFMicrographs.__init__(self, **kwargs)
         # We need to trace the changes of 'inputType' to 
         # dynamically modify the property of pointerClass
         # of the 'inputSets' parameter
@@ -84,7 +84,7 @@ class ProtCTFAssign(ProtCTFMicrographs):
         inputSet = self.inputSet.get()
         inputCTF = self.inputCTF.get()
         
-        if isinstance(inputSet, SetOfParticles):
+        if isinstance(inputSet, emobj.SetOfParticles):
             self._particlesOutputStep(inputSet, inputCTF)
         else:
             self._micrographsOutputStep(inputSet, inputCTF)
@@ -180,7 +180,7 @@ class ProtCTFAssign(ProtCTFMicrographs):
         errors = []
         # Add some errors if input is not valid
         inputSet = self.inputSet.get()
-        if isinstance(inputSet, SetOfParticles):
+        if isinstance(inputSet, emobj.SetOfParticles):
             part = inputSet.getFirstItem()
             if not part.hasMicId():
                 errors.append("The input particles doesn't have any micrograph"

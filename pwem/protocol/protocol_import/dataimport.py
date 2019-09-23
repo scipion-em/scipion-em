@@ -27,10 +27,10 @@
 from os.path import join, basename, exists
 from collections import OrderedDict
 
-from pyworkflow.utils.path import findRootFrom
+from pyworkflow.utils import findRootFrom
 
-from pwem.objects import SetOfParticles, SetOfMicrographs, SetOfCTF
-from pwem.constants import ALIGN_NONE
+import pwem.objects as emobj
+import pwem.constants as emcts
 
 
 class ScipionImport():
@@ -43,7 +43,7 @@ class ScipionImport():
     
     def importMicrographs(self):
         """ Import a SetOfMicrographs from a given sqlite file. """
-        inputSet = SetOfMicrographs(filename=self._sqliteFile)
+        inputSet = emobj.SetOfMicrographs(filename=self._sqliteFile)
         self._findImagesPath(inputSet)
         
         micSet = self.protocol._createSetOfMicrographs()
@@ -65,8 +65,8 @@ class ScipionImport():
 
     def importParticles(self):
         """ Import particles from a metadata 'images.xmd' """
-        inputSet = SetOfParticles(filename=self._sqliteFile)
-        inputSet.loadProperty('_alignment', ALIGN_NONE)
+        inputSet = emobj.SetOfParticles(filename=self._sqliteFile)
+        inputSet.loadProperty('_alignment', emcts.ALIGN_NONE)
         inputSet.loadProperty('_hasCtf', False)
         self._findImagesPath(inputSet)
 
@@ -126,7 +126,7 @@ class ScipionImport():
         'Properties' table of the particles.sqlite file.
         """
         acq = OrderedDict()
-        inputSet = SetOfParticles(filename=self._sqliteFile)
+        inputSet = emobj.SetOfParticles(filename=self._sqliteFile)
 
         def _get(key):
             return inputSet.getProperty(key)
@@ -142,7 +142,7 @@ class ScipionImport():
         # The first time this function is called, the set of micrographs
         # will be loaded from the given sqlite file
         if not hasattr(self, 'ctfSet'):
-            self.ctfSet = SetOfCTF(filename=self._sqliteFile)
+            self.ctfSet = emobj.SetOfCTF(filename=self._sqliteFile)
 
         return self.ctfSet[mic.getObjId()]
 

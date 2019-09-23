@@ -29,18 +29,16 @@ import os
 from datetime import datetime
 from collections import OrderedDict
 
-from pyworkflow.object import Set, Pointer
+import pyworkflow.object as pwobj
 import pyworkflow.protocol.params as params
-from pyworkflow.protocol import STATUS_NEW
+import pyworkflow.protocol as pwprot
 import pyworkflow.utils as pwutils
-from pyworkflow.utils.properties import Message
 
-from pwem.objects.data import (SetOfCoordinates, SetOfMicrographs,
-                               SetOfCTF)
-from pwem.protocol import ProtParticles
+import pwem.objects as emobj
+import pwem.protocol as emprot
 
 
-class ProtParticlePicking(ProtParticles):
+class ProtParticlePicking(emprot.ProtParticles):
     OUTPUT_PREFIX = 'outputCoordinates'
 
     def _defineParams(self, form):
@@ -48,7 +46,7 @@ class ProtParticlePicking(ProtParticles):
         form.addSection(label='Input')
         form.addParam('inputMicrographs', params.PointerParam,
                       pointerClass='SetOfMicrographs',
-                      label=Message.LABEL_INPUT_MIC, important=True,
+                      label=pwutils.Message.LABEL_INPUT_MIC, important=True,
                       help='Select the SetOfMicrographs to be used during '
                            'picking.')
 
@@ -78,7 +76,7 @@ class ProtParticlePicking(ProtParticles):
                 msg = self.getMethods(output)
                 methodsMsgs.append("%s: %s"%(self.getObjectTag(output), msg))
         else:
-            methodsMsgs.append(Message.TEXT_NO_OUTPUT_CO)
+            methodsMsgs.append(pwutils.Message.TEXT_NO_OUTPUT_CO)
 
         return methodsMsgs
 
@@ -92,7 +90,7 @@ class ProtParticlePicking(ProtParticles):
             for key, output in self.iterOutputAttributes():
                 summary.append("*%s:* \n %s " % (key, output.getObjComment()))
         else:
-            summary.append(Message.TEXT_NO_OUTPUT_CO)
+            summary.append(pwutils.Message.TEXT_NO_OUTPUT_CO)
         return summary
 
     def getInputMicrographsPointer(self):
@@ -108,7 +106,7 @@ class ProtParticlePicking(ProtParticles):
         return result
 
     def getCoords(self):
-        return self._getCoords(SetOfCoordinates)
+        return self._getCoords(emobj.SetOfCoordinates)
 
     def getCoordsTiltPair(self):
         from pwem.objects.data_tiltpairs import CoordinatesTiltPair
@@ -141,7 +139,7 @@ class ProtParticlePicking(ProtParticles):
         and number with a higher value.
         """
         maxCounter = -1
-        for attrName, _ in self.iterOutputAttributes(SetOfCoordinates):
+        for attrName, _ in self.iterOutputAttributes(emobj.SetOfCoordinates):
             suffix = attrName.replace(self.OUTPUT_PREFIX, '')
             try:
                 counter = int(suffix)
@@ -175,7 +173,7 @@ class ProtParticlePicking(ProtParticles):
         # and id changes between the protocol run.db and the main project
         # database. The pointer defined below points to the outputset object
         self._defineSourceRelation(self.getInputMicrographsPointer(),
-                                   Pointer(value=self, extended=outputName))
+                                   pwobj.Pointer(value=self, extended=outputName))
         self._store()
 
 
@@ -335,11 +333,11 @@ class ProtParticlePickingAuto(ProtParticlePicking):
         return newItemDict, streamClosed
 
     def _loadMics(self, micSet):
-        return self._loadSet(micSet, SetOfMicrographs,
+        return self._loadSet(micSet, emobj.SetOfMicrographs,
                         lambda mic: mic.getMicName())
 
     def _loadCTFs(self, ctfSet):
-        return self._loadSet(ctfSet, SetOfCTF,
+        return self._loadSet(ctfSet, emobj.SetOfCTF,
                         lambda ctf: ctf.getMicrograph().getMicName())
 
     def _loadInputList(self):
@@ -394,7 +392,7 @@ class ProtParticlePickingAuto(ProtParticlePicking):
         # We have finished when there is not more input mics (stream closed)
         # and the number of processed mics is equal to the number of inputs
         self.finished = self.streamClosed and allDone == nMics
-        streamMode = Set.STREAM_CLOSED if self.finished else Set.STREAM_OPEN
+        streamMode = pwobj.Set.STREAM_CLOSED if self.finished else pwobj.Set.STREAM_OPEN
         self.debug('   streamMode: %s newDone: %s' % (streamMode,
                                                       not(newDone == [])))
         if newDone:
@@ -421,7 +419,7 @@ class ProtParticlePickingAuto(ProtParticlePicking):
             self._updateStreamState(streamMode)
             outputStep = self._getFirstJoinStep()
             if outputStep and outputStep.isWaiting():
-                outputStep.setStatus(STATUS_NEW)
+                outputStep.setStatus(pwprot.STATUS_NEW)
 
     def _micIsReady(self, mic):
         """ Function to check if a micrograph (although reported done)

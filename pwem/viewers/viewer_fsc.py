@@ -28,22 +28,22 @@
 from matplotlib.ticker import FuncFormatter
 from matplotlib.widgets import Button
 
-from pyworkflow.viewer import DESKTOP_TKINTER, WEB_DJANGO, Viewer
-from pyworkflow.utils.properties import Color
+import pyworkflow.viewer as pwviewer
+import pyworkflow.utils as pwutils
 
-from pwem.objects.data import FSC, SetOfFSCs
-from pwem.protocol import ProtCreateFSC
+import pwem.objects as emobj
+import pwem.protocol as emprot
 
 from .plotter import EmPlotter, plt
 
 
-class FscViewer(Viewer):
+class FscViewer(pwviewer.Viewer):
     """ Viewer for plot a FSC object. """
-    _targets = [FSC, SetOfFSCs]
-    _environments = [DESKTOP_TKINTER, WEB_DJANGO]
+    _targets = [emobj.FSC, emobj.SetOfFSCs]
+    _environments = [pwviewer.DESKTOP_TKINTER, pwviewer.WEB_DJANGO]
 
     def __init__(self, **kwargs):
-        Viewer.__init__(self, **kwargs)
+        pwviewer.Viewer.__init__(self, **kwargs)
         self.threshold = kwargs.get('threshold', 0.143)
         self.legend = ""
         self.plotter = EmPlotter(x=1, y=1, windowTitle='FSC',
@@ -71,7 +71,7 @@ class FscViewer(Viewer):
                          horizontalalignment='center',
                          transform=axcreateFSC.transAxes, color='white')
         bcreateFSC = Button(axcreateFSC, '',  # leave label empty
-                            color=Color.RED_COLOR,
+                            color=pwutils.Color.RED_COLOR,
                             hovercolor='maroon')
         bcreateFSC.on_clicked(self.createFSCObject)
         self._addButton = False
@@ -81,7 +81,7 @@ class FscViewer(Viewer):
         # Keep input object in case we need to launch
         # a new protocol and set dependencies
         self.fscList = []
-        if isinstance(obj, SetOfFSCs):
+        if isinstance(obj, emobj.SetOfFSCs):
             for i, fsc in enumerate(obj):
                 self.fscList.append(fsc.clone())
                 fscLabel = fsc.getObjLabel() or 'FSC %d' % (i + 1)
@@ -98,7 +98,7 @@ class FscViewer(Viewer):
 
     def createFSCObject(self, event):
         self.project = self.getProject()
-        prot = self.getProject().newProtocol(ProtCreateFSC)
+        prot = self.getProject().newProtocol(emprot.ProtCreateFSC)
         prot.setObjLabel('FSC-%s' % self.label)  # label)
         prot.setInputObj(self.protocol)
         prot.setInputFscList(self.fscList)

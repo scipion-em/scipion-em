@@ -33,21 +33,16 @@ from datetime import datetime
 from collections import OrderedDict
 
 
-from pyworkflow.object import Set, Boolean
-from pyworkflow.protocol.constants import (STEPS_PARALLEL, LEVEL_ADVANCED,
-                                           STATUS_NEW)
-from pyworkflow.protocol.params import (PointerParam, FloatParam, IntParam,
-                                        BooleanParam, FileParam)
-from pyworkflow.utils import redStr, yellowStr
-from pyworkflow.utils.path import makePath, makeFilePath, cleanPath
-from pyworkflow.utils.properties import Message
-from pyworkflow.utils.utils import prettyTime
+import pyworkflow.object as pwobj
+import pyworkflow.protocol.constants as pwcts
+import pyworkflow.protocol.params as params
+import pyworkflow.utils as pwutils
 
-from pwem.protocol import EMProtocol
-from pwem.objects import SetOfMicrographs, SetOfCTF
+import pwem.protocol as emprot
+import pwem.objects as emobj
 
 
-class ProtMicrographs(EMProtocol):
+class ProtMicrographs(emprot.EMProtocol):
     pass
 
 
@@ -55,33 +50,33 @@ class ProtCTFMicrographs(ProtMicrographs):
     """ Base class for all protocols that estimates the CTF"""
 
     def __init__(self, **kwargs):
-        EMProtocol.__init__(self, **kwargs)
-        self.stepsExecutionMode = STEPS_PARALLEL
-        self.isFirstTime = Boolean(False)
+        emprot.EMProtocol.__init__(self, **kwargs)
+        self.stepsExecutionMode = pwcts.STEPS_PARALLEL
+        self.isFirstTime = pwobj.Boolean(False)
 
     # -------------------------- DEFINE param functions -----------------------
     def _defineParams(self, form):
-        form.addSection(label=Message.LABEL_CTF_ESTI)
-        form.addParam('recalculate', BooleanParam, default=False,
+        form.addSection(label=pwutils.Message.LABEL_CTF_ESTI)
+        form.addParam('recalculate', params.BooleanParam, default=False,
                       condition='recalculate',
                       label="Do recalculate ctf?")
 
-        form.addParam('continueRun', PointerParam, allowsNull=True,
+        form.addParam('continueRun', params.PointerParam, allowsNull=True,
                       condition='recalculate', label="Input previous run",
                       pointerClass=self.getClassName())
-        form.addHidden('sqliteFile', FileParam, condition='recalculate',
+        form.addHidden('sqliteFile', params.FileParam, condition='recalculate',
                        allowsNull=True)
 
-        form.addParam('inputMicrographs', PointerParam, important=True,
+        form.addParam('inputMicrographs', params.PointerParam, important=True,
                       condition='not recalculate',
-                      label=Message.LABEL_INPUT_MIC,
+                      label=pwutils.Message.LABEL_INPUT_MIC,
                       pointerClass='SetOfMicrographs')
 
-        form.addParam('AutoDownsampling', BooleanParam, default=False,
+        form.addParam('AutoDownsampling', params.BooleanParam, default=False,
                       label='Automatic Downsampling Factor',
                       help='Recomended value to downsample')
 
-        form.addParam('ctfDownFactor', FloatParam, default=1.,
+        form.addParam('ctfDownFactor', params.FloatParam, default=1.,
                       label='Manual CTF Downsampling factor',
                       condition='not AutoDownsampling',    #'not recalculate',
                       help='Set to 1 for no downsampling. Non-integer downsample '
@@ -110,21 +105,21 @@ class ProtCTFMicrographs(ProtMicrographs):
                                  'your micrographs extend further than 0.35, '
                                  'you should consider sampling them at a finer '
                                  'rate.')
-        line.addParam('lowRes', FloatParam, default=0.05, label='Lowest' )
-        line.addParam('highRes', FloatParam, default=0.35, label='Highest')
+        line.addParam('lowRes', params.FloatParam, default=0.05, label='Lowest' )
+        line.addParam('highRes', params.FloatParam, default=0.35, label='Highest')
         line = form.addLine('Defocus search range (microns)',
                             condition='not recalculate',
-                            expertLevel=LEVEL_ADVANCED,
+                            expertLevel=pwcts.LEVEL_ADVANCED,
                             help='Select _minimum_ and _maximum_ values for '
                                  'defocus search range (in microns). Underfocus'
                                  ' is represented by a positive number.')
-        line.addParam('minDefocus', FloatParam, default=0.25,
+        line.addParam('minDefocus',params.FloatParam, default=0.25,
                       label='Min')
-        line.addParam('maxDefocus', FloatParam, default=4.,
+        line.addParam('maxDefocus', params.FloatParam, default=4.,
                       label='Max')
 
-        form.addParam('windowSize', IntParam, default=512,
-                      expertLevel=LEVEL_ADVANCED,
+        form.addParam('windowSize', params.IntParam, default=512,
+                      expertLevel=pwcts.LEVEL_ADVANCED,
                       label='Window size', condition='not recalculate',
                       help='The PSD is estimated from small patches of this '
                            'size. Bigger patches allow identifying more '
@@ -174,7 +169,7 @@ class ProtCTFMicrographs(ProtMicrographs):
         estimate ctfs steps.
         Should return a list of ids of the initial steps. """
 
-        makePath(self._getExtraPath('DONE'))
+        pwutils.makePath(self._getExtraPath('DONE'))
         return []
 
     def _insertNewMicsSteps(self, inputMics):
@@ -191,7 +186,7 @@ class ProtCTFMicrographs(ProtMicrographs):
     def _insertRecalculateSteps(self):
         recalDeps = []
         # For each psd insert the steps to process it
-        self.recalculateSet = SetOfCTF(filename=self.sqliteFile.get(),
+        self.recalculateSet = emobj.SetOfCTF(filename=self.sqliteFile.get(),
                                        objDoStore=False)
         inputMics = self.getInputMicrographs()
         for ctf in self.recalculateSet:
@@ -247,7 +242,7 @@ class ProtCTFMicrographs(ProtMicrographs):
             return
 
         # Clean old finished files
-        cleanPath(micDoneFn)
+        pwutils.cleanPath(micDoneFn)
         self.info("Estimating CTF of micrograph: %s " % mic.getObjId())
         self._estimateCTF(mic, *args)
 
@@ -261,7 +256,7 @@ class ProtCTFMicrographs(ProtMicrographs):
          micFn: micrograph filename
          micDir: micrograph directory
         """
-        raise Exception(Message.ERROR_NO_EST_CTF)
+        raise Exception(pwutils.Message.ERROR_NO_EST_CTF)
 
     def reEstimateCtfStep(self, micId):
         """ CTF - re-estimation that is common for all programs.
@@ -271,7 +266,7 @@ class ProtCTFMicrographs(ProtMicrographs):
         mic = self.micDict[micId]
         micDoneFn = self._getMicrographDone(mic)
         # Clean old finished files
-        cleanPath(micDoneFn)
+        pwutils.cleanPath(micDoneFn)
         self.info("Estimating CTF of micrograph: %s " % mic.getObjId())
         self._reEstimateCTF(mic, ctf)
 
@@ -285,7 +280,7 @@ class ProtCTFMicrographs(ProtMicrographs):
          micFn: micrograph filename
          micDir: micrograph directory
         """
-        raise Exception(Message.ERROR_NO_EST_CTF)
+        raise Exception(pwutils.Message.ERROR_NO_EST_CTF)
 
     # Group of functions to estimate several micrographs if the batch size is
     # defined. In some programs it might be more efficient to estimate many
@@ -310,7 +305,7 @@ class ProtCTFMicrographs(ProtMicrographs):
                           % mic.getFileName())
             else:
                 # Clean old finished files
-                cleanPath(micDoneFn)
+                pwutils.cleanPath(micDoneFn)
                 micList.append(mic)
 
         self.info("Estimating CTF for micrographs: %s"
@@ -371,12 +366,12 @@ class ProtCTFMicrographs(ProtMicrographs):
                                     % newCount)
             else:
                 raise Exception(
-                    redStr("The outputCTF do not exist, all CTFs failed."))
+                    pwutils.redStr("The outputCTF do not exist, all CTFs failed."))
         else:
             self._createOutputStep()
             if self.outputCTF.getSize() == 0:
-                raise Exception(redStr("outputCTF has size zero, all CTFs failed."
-                                       "Please review processing steps above."))
+                raise Exception(pwutils.redStr("outputCTF has size zero, all CTFs failed."
+                                               "Please review processing steps above."))
 
     # -------------------------- INFO functions -------------------------------
     def _summary(self):
@@ -387,10 +382,10 @@ class ProtCTFMicrographs(ProtMicrographs):
                 if self.summaryVar.hasValue():
                     summary.append(self.summaryVar.get())
             else:
-                summary.append(Message.TEXT_NO_CTF_READY)
+                summary.append(pwutils.Message.TEXT_NO_CTF_READY)
         else:
             if not hasattr(self, 'outputCTF'):
-                summary.append(Message.TEXT_NO_CTF_READY)
+                summary.append(pwutils.Message.TEXT_NO_CTF_READY)
             else:
                 summary.append("CTF estimation of %d micrographs."
                                % self.inputMicrographs.get().getSize())
@@ -403,7 +398,7 @@ class ProtCTFMicrographs(ProtMicrographs):
         if hasattr(self, 'outputCTF') and self.isFinished():
             methods.append(self.methodsVar.get())
         else:
-            methods.append(Message.TEXT_NO_CTF_READY)
+            methods.append(pwutils.Message.TEXT_NO_CTF_READY)
 
         return methods
 
@@ -535,8 +530,8 @@ class ProtCTFMicrographs(ProtMicrographs):
         self.lastCheck = getattr(self, 'lastCheck', now)
         mTime = datetime.fromtimestamp(getmtime(localFile))
         self.debug('Last check: %s, modification: %s'
-                  % (prettyTime(self.lastCheck),
-                     prettyTime(mTime)))
+                  % (pwutils.prettyTime(self.lastCheck),
+                     pwutils.prettyTime(mTime)))
         # If the input micrographs.sqlite have not changed since our last check,
         # it does not make sense to check for new input data
         if self.lastCheck > mTime and hasattr(self, 'listOfMics'):
@@ -575,7 +570,7 @@ class ProtCTFMicrographs(ProtMicrographs):
         # We have finished when there is not more input mics (stream closed)
         # and the number of processed mics is equal to the number of inputs
         self.finished = self.streamClosed and allDone == nMics
-        streamMode = Set.STREAM_CLOSED if self.finished else Set.STREAM_OPEN
+        streamMode = pwobj.Set.STREAM_CLOSED if self.finished else pwobj.Set.STREAM_OPEN
         self.debug('   streamMode: %s newDone: %s' % (streamMode,
                                                       not(newDone == [])))
 
@@ -603,11 +598,11 @@ class ProtCTFMicrographs(ProtMicrographs):
             self._updateStreamState(streamMode)
             outputStep = self._getFirstJoinStep()
             if outputStep and outputStep.isWaiting():
-                outputStep.setStatus(STATUS_NEW)
+                outputStep.setStatus(pwcts.STATUS_NEW)
 
     def _loadInputList(self):
         """ Load the input set of micrographs that are ready to be estimated. """
-        return self._loadSet(self.getInputMicrographs(), SetOfMicrographs,
+        return self._loadSet(self.getInputMicrographs(), emobj.SetOfMicrographs,
                         lambda mic: mic.getMicName())
         
     def _loadSet(self, inputSet, SetClass, getKeyFunc):
@@ -657,7 +652,7 @@ class ProtCTFMicrographs(ProtMicrographs):
                 ctf = self._createCtfModel(mic)
                 outputCtf.append(ctf)
             except:
-                print(yellowStr("Missing CTF?: Couldn't update CTF set with mic: %s" % micFn))
+                print(pwutils.yellowStr("Missing CTF?: Couldn't update CTF set with mic: %s" % micFn))
                 doneFailed.append(mic)
 
         self.debug(" _updateOutputCTFSet Stream Mode: %s " % streamMode)
@@ -706,7 +701,7 @@ class ProtCTFMicrographs(ProtMicrographs):
         doneFile = self._getAllDone()
 
         if not exists(doneFile):
-            makeFilePath(doneFile)
+            pwutils.makeFilePath(doneFile)
 
         with open(doneFile, 'a') as f:
             for mic in micList:

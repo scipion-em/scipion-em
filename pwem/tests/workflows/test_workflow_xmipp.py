@@ -24,24 +24,27 @@
 # *
 # **************************************************************************
 
-from pyworkflow.tests import *
-from test_workflow import TestWorkflow
-from pwem.protocol import *
+import pyworkflow.tests as pwtests
+
 import pwem as em
+import pwem.protocol as emprot
+
+from .test_workflow import TestWorkflow
+
 
 class TestXmippWorkflow(TestWorkflow):
 
     @classmethod
     def setUpClass(cls):
-        setupTestProject(cls)
-        cls.dataset = DataSet.getDataSet('xmipp_tutorial')
+        pwtests.setupTestProject(cls)
+        cls.dataset = pwtests.DataSet.getDataSet('xmipp_tutorial')
         cls.allCrdsDir = cls.dataset.getFile('posAllDir')
         cls.micsFn = cls.dataset.getFile('allMics')
         cls.vol1 = cls.dataset.getFile('vol1')
     
     def testXmippWorkflow(self):
         #First, import a set of micrographs
-        protImport = self.newProtocol(ProtImportMicrographs,
+        protImport = self.newProtocol(emprot.ProtImportMicrographs,
                                       filesPath=self.micsFn,
                                       samplingRate=1.237, voltage=300)
         self.launchProtocol(protImport)
@@ -52,7 +55,7 @@ class TestXmippWorkflow(TestWorkflow):
 
         # Import a set of volumes
         print("Import Volume")
-        protImportVol = self.newProtocol(ProtImportVolumes,
+        protImportVol = self.newProtocol(emprot.ProtImportVolumes,
                                          filesPath=self.vol1,
                                          samplingRate=9.896)
         self.launchProtocol(protImportVol)
@@ -77,8 +80,8 @@ class TestXmippWorkflow(TestWorkflow):
         self.validateFiles('protDownsampling', protDownsampling)
 
         print("Importing coordinates")
-        protPP = self.newProtocol(ProtImportCoordinates,
-                                  importFrom=ProtImportCoordinates.IMPORT_FROM_XMIPP,
+        protPP = self.newProtocol(emprot.ProtImportCoordinates,
+                                  importFrom=emprot.ProtImportCoordinates.IMPORT_FROM_XMIPP,
                                   filesPath=self.allCrdsDir,
                                   filesPattern='*.pos', boxSize=110)
 
@@ -106,7 +109,7 @@ class TestXmippWorkflow(TestWorkflow):
 
         print("Run extract particles with other downsampling factor")
         protExtract = self.newProtocol(xmippProtcols.XmippProtExtractParticles,
-                                       boxSize=64, downsampleType=OTHER,
+                                       boxSize=64, downsampleType=emprot.OTHER,
                                        doFlip=True, downFactor=8,
                                        runMode=1, doInvert=True)
         protExtract.inputCoordinates.set(protPP.outputCoordinates)
@@ -179,4 +182,4 @@ class TestXmippWorkflow(TestWorkflow):
 
 
 if __name__ == "__main__":
-    unittest.main()
+    pwtests.unittest.main()

@@ -24,11 +24,11 @@
 # *
 # **************************************************************************
 
-from pyworkflow.utils.path import removeBaseExt
+from pyworkflow.utils import removeBaseExt
 from pyworkflow.protocol.params import PointerParam
 
 import pwem as em
-from pwem.objects import SetOfMicrographs
+import pwem.objects as pwobj
 
 from .base import ProtImportFiles
 
@@ -121,7 +121,7 @@ class ProtImportCTF(ProtImportFiles):
         ctfSet.setMicrographs(inputMics)
 
         outputMics = self._createSetOfMicrographs()
-        SetOfMicrographs.copyInfo(outputMics, inputMics)
+        pwobj.SetOfMicrographs.copyInfo(outputMics, inputMics)
 
         createOutputMics = False
         

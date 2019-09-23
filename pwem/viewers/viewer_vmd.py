@@ -29,7 +29,7 @@ import os
 import pyworkflow.utils as pwutils
 import pyworkflow.viewer as pwviewer
 
-from pwem.objects.data import AtomStruct
+import pwem.objects as emobj
 
 
 class Vmd:
@@ -67,7 +67,7 @@ class VmdViewer(pwviewer.Viewer):
     def visualize(self, obj, **args):
         cls = type(obj)
 
-        if issubclass(cls, AtomStruct):
+        if issubclass(cls, emobj.AtomStruct):
             VmdView(obj.getFileName()).show()
             # FIXME: there is an asymmetry between ProtocolViewer and Viewer.
             # For the first, the visualize method return a list of View's,

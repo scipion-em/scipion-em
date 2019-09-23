@@ -24,10 +24,10 @@
 
 import unittest, sys
 
-from pwem.protocol import ProtImportMovies, ProtImportCoordinates
-from pyworkflow.tests import DataSet, setupTestProject
+import pyworkflow.tests as pwtests
 
 import pwem as em
+import pwem.protocol as emprot
 
 from .test_workflow import TestWorkflow
 
@@ -35,15 +35,15 @@ from .test_workflow import TestWorkflow
 class HighThroughputTest(TestWorkflow):
     @classmethod
     def setUpClass(cls):
-        setupTestProject(cls)
-        cls.dataset = DataSet.getDataSet('ribo_movies')
+        pwtests.setupTestProject(cls)
+        cls.dataset = pwtests.DataSet.getDataSet('ribo_movies')
         cls.movies = cls.dataset.getFile('movies')
         cls.crdsDir = cls.dataset.getFile('posAllDir')
     
     def test_workflow(self):
         #First, import a set of movies
         print("Importing a set of movies...")
-        protImport = ProtImportMovies(filesPath=self.movies, samplingRate=2.37, magnification=59000,
+        protImport = emprot.ProtImportMovies(filesPath=self.movies, samplingRate=2.37, magnification=59000,
                                       voltage=300, sphericalAberration=2.0)
         protImport.setObjLabel('import movies - Day1')
         self.proj.launchProtocol(protImport, wait=True)
@@ -82,8 +82,8 @@ class HighThroughputTest(TestWorkflow):
         self.assertSetSize(protCTF.outputCTF, msg="There was a problem with the CTF")
 
         print("Running Xmipp Import Coordinates")
-        protPP = self.newProtocol(ProtImportCoordinates,
-                                 importFrom=ProtImportCoordinates.IMPORT_FROM_XMIPP,
+        protPP = self.newProtocol(emprot.ProtImportCoordinates,
+                                 importFrom=emprot.ProtImportCoordinates.IMPORT_FROM_XMIPP,
                                  filesPath=self.crdsDir,
                                  filesPattern='*.pos', boxSize=110)
         protPP.inputMicrographs.set(protPreprocess.outputMicrographs)

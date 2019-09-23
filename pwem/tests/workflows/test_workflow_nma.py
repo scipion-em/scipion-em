@@ -24,10 +24,10 @@
 # *
 # **************************************************************************
 
-from pyworkflow.tests import setupTestProject, DataSet
+import pyworkflow.tests as pwtests
 
 import pwem as em
-from pwem.protocol import ProtImportPdb, ProtImportVolumes, ProtImportParticles
+import pwem.protocol as emprot 
 
 from .test_workflow import TestWorkflow
 
@@ -50,8 +50,8 @@ class TestNMA(TestWorkflow):
     @classmethod
     def setUpClass(cls):    
         # Create a new project
-        setupTestProject(cls)
-        cls.ds = DataSet.getDataSet('nma')
+        pwtests.setupTestProject(cls)
+        cls.ds = pwtests.DataSet.getDataSet('nma')
     
     def test_nma1(self):
         """ Run NMA simple workflow for both Atomic and Pseudoatoms. """
@@ -61,7 +61,7 @@ class TestNMA(TestWorkflow):
         #------------------------------------------------
         
         # Import a PDB
-        protImportPdb = self.newProtocol(ProtImportPdb, inputPdbData=1,
+        protImportPdb = self.newProtocol(emprot.ProtImportPdb, inputPdbData=1,
                                          pdbFile=self.ds.getFile('pdb'))
         self.launchProtocol(protImportPdb)
         
@@ -73,7 +73,7 @@ class TestNMA(TestWorkflow):
         
         # Import the set of particles 
         # (in this order just to be in the middle in the tree)
-        protImportParts = self.newProtocol(ProtImportParticles,
+        protImportParts = self.newProtocol(emprot.ProtImportParticles,
                                            filesPath=self.ds.getFile('particles'),
                                            samplingRate=1.0)
         self.launchProtocol(protImportParts) 
@@ -99,13 +99,13 @@ class TestNMA(TestWorkflow):
         #------------------------------------------------
         # Import the set of particles 
         # (in this order just to be in the middle in the tree)
-        protImportParts = self.newProtocol(ProtImportParticles,
+        protImportParts = self.newProtocol(emprot.ProtImportParticles,
                                            filesPath=self.ds.getFile('particles'),
                                            samplingRate=1.0)
         self.launchProtocol(protImportParts) 
         
         # Import a Volume
-        protImportVol = self.newProtocol(ProtImportVolumes,
+        protImportVol = self.newProtocol(emprot.ProtImportVolumes,
                                          filesPath=self.ds.getFile('vol'),
                                          samplingRate=1.0)
         self.launchProtocol(protImportVol)

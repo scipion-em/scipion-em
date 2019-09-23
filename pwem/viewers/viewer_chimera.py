@@ -37,15 +37,14 @@ from numpy import flipud
 
 import pyworkflow as pw
 import pyworkflow.utils as pwutils
-from pyworkflow.viewer import CommandView, Viewer, DESKTOP_TKINTER
-from pyworkflow.gui.matplotlib_image import ImageWindow
+import pyworkflow.viewer as pwviewer
 
-from pwem.constants import (SYM_CYCLIC, SYM_DIHEDRAL, SYM_TETRAHEDRAL,
-                            SYM_OCTAHEDRAL, SYM_I222, SYM_I222r, SYM_In25,
-                            SYM_In25r, SYM_I2n3, SYM_I2n3r, SYM_I2n5, SYM_I2n5r)
+import pyworkflow.gui.matplotlib_image as pwgui 
+
+import pwem.constants as emcts 
 import pwem.metadata as md
-from pwem.objects.data import AtomStruct, PdbFile
-from pwem.convert import ImageHandler
+import pwem.convert as emconv
+import pwem.objects as emobj
 
 from .showj import (CHIMERA_PORT, MODE, MODE_MD, INVERTY)
 
@@ -58,18 +57,18 @@ chimeraScriptFileName = "chimeraScript.py"
 sessionFile = "SESSION.py"
 
 symMapperScipionchimera = {}
-symMapperScipionchimera[SYM_CYCLIC] = "Cn"
-symMapperScipionchimera[SYM_DIHEDRAL] = "Dn"
-symMapperScipionchimera[SYM_TETRAHEDRAL] = "T"
-symMapperScipionchimera[SYM_OCTAHEDRAL] = "O"
-symMapperScipionchimera[SYM_I222] = "222"
-symMapperScipionchimera[SYM_I222r] = "222r"
-symMapperScipionchimera[SYM_In25] = "n25"
-symMapperScipionchimera[SYM_In25r] = "n25r"
-symMapperScipionchimera[SYM_I2n3] = "2n3"
-symMapperScipionchimera[SYM_I2n3r] = "2n3r"
-symMapperScipionchimera[SYM_I2n5] = "2n5"
-symMapperScipionchimera[SYM_I2n5r] = "2n5r"
+symMapperScipionchimera[emcts.SYM_CYCLIC] = "Cn"
+symMapperScipionchimera[emcts.SYM_DIHEDRAL] = "Dn"
+symMapperScipionchimera[emcts.SYM_TETRAHEDRAL] = "T"
+symMapperScipionchimera[emcts.SYM_OCTAHEDRAL] = "O"
+symMapperScipionchimera[emcts.SYM_I222] = "222"
+symMapperScipionchimera[emcts.SYM_I222r] = "222r"
+symMapperScipionchimera[emcts.SYM_In25] = "n25"
+symMapperScipionchimera[emcts.SYM_In25r] = "n25r"
+symMapperScipionchimera[emcts.SYM_I2n3] = "2n3"
+symMapperScipionchimera[emcts.SYM_I2n3r] = "2n3r"
+symMapperScipionchimera[emcts.SYM_I2n5] = "2n5"
+symMapperScipionchimera[emcts.SYM_I2n5r] = "2n5r"
 
 
 class Chimera:
@@ -77,18 +76,18 @@ class Chimera:
 
     # Map symmetries from Scipion convention to Chimera convention
     _symmetryMap = {
-        SYM_CYCLIC: 'Cn',
-        SYM_DIHEDRAL: 'Dn',
-        SYM_TETRAHEDRAL: 'T',
-        SYM_OCTAHEDRAL: 'O',
-        SYM_I222: '222',
-        SYM_I222r: '222r',
-        SYM_In25: 'n25',
-        SYM_In25r: 'n25r',
-        SYM_I2n3: '2n3',
-        SYM_I2n3r: '2n3r',
-        SYM_I2n5: '2n5',
-        SYM_I2n5r: '2n5r'
+        emcts.SYM_CYCLIC: 'Cn',
+        emcts.SYM_DIHEDRAL: 'Dn',
+        emcts.SYM_TETRAHEDRAL: 'T',
+        emcts.SYM_OCTAHEDRAL: 'O',
+        emcts.SYM_I222: '222',
+        emcts.SYM_I222r: '222r',
+        emcts.SYM_In25: 'n25',
+        emcts.SYM_In25r: 'n25r',
+        emcts.SYM_I2n3: '2n3',
+        emcts.SYM_I2n3r: '2n3r',
+        emcts.SYM_I2n5: '2n5',
+        emcts.SYM_I2n5r: '2n5r'
     }
 
     @classmethod
@@ -198,7 +197,7 @@ class ChimeraClient:
         self.port = pwutils.getFreePort()
 
         serverfile = pw.join('em', 'viewers', 'chimera_server.py')
-        command = CommandView("chimera --script '%s %s %s' &" %
+        command = pwviewer.CommandView("chimera --script '%s %s %s' &" %
                               (serverfile, self.port, serverName),
                               env=Chimera.getEnviron(),).show()
         self.authkey = 'test'
@@ -459,7 +458,7 @@ class ChimeraProjectionClient(ChimeraAngDistClient):
             self.image, paddingFactor, maxFreq, splineDegree)
         self.fourierprojector.projectVolume(self.projection, 0, 0, 0)
         self.showjPort = self.kwargs.get('showjPort', None)
-        self.iw = ImageWindow(filename=os.path.basename(volfile),
+        self.iw = pwgui.ImageWindow(filename=os.path.basename(volfile),
                               image=self.projection,
                               dim=self.size, label="Projection")
         self.iw.updateData(flipud(self.projection.getData()))
@@ -536,14 +535,14 @@ class ChimeraProjectionClient(ChimeraAngDistClient):
                 print ('Lost connection to client')
 
 
-class ChimeraView(CommandView):
+class ChimeraView(pwviewer.CommandView):
     """ View for calling an external command. """
     def __init__(self, inputFile, **kwargs):
-        CommandView.__init__(self, 'chimera "%s" &' % inputFile,
+        pwviewer.CommandView.__init__(self, 'chimera "%s" &' % inputFile,
                              env=Chimera.getEnviron(), **kwargs)
 
 
-class ChimeraClientView(CommandView):
+class ChimeraClientView(pwviewer.CommandView):
     """ View for calling an external command. """
     def __init__(self, inputFile, **kwargs):
         self._inputFile = inputFile
@@ -575,17 +574,17 @@ class ChimeraDataView(ChimeraClientView):
         ChimeraClientView.show(self)
 
 
-class ChimeraViewer(Viewer):
+class ChimeraViewer(pwviewer.Viewer):
     """ Wrapper to visualize PDB object with Chimera. """
-    _environments = [DESKTOP_TKINTER]
-    _targets = [AtomStruct, PdbFile]
+    _environments = [pwviewer.DESKTOP_TKINTER]
+    _targets = [emobj.AtomStruct, emobj.PdbFile]
 
     def __init__(self, **kwargs):
-        Viewer.__init__(self, **kwargs)
+        pwviewer.Viewer.__init__(self, **kwargs)
 
     def visualize(self, obj, **kwargs):
         cls = type(obj)
-        if issubclass(cls, AtomStruct):
+        if issubclass(cls, emobj.AtomStruct):
             # if attribute _chimeraScript exists then protocol
             # has create a script file USE IT
             if hasattr(obj, '_chimeraScript'):
@@ -611,7 +610,7 @@ class ChimeraViewer(Viewer):
                     dim = volumeObject.getDim()[0]
                     sampling = volumeObject.getSamplingRate()
                     f.write("open %s\n" % os.path.abspath(
-                        ImageHandler.removeFileType(volumeObject.getFileName())))
+                        emconv.ImageHandler.removeFileType(volumeObject.getFileName())))
                     f.write("volume #%d style surface voxelSize %f\n"
                             % (volID, sampling))
                     x, y, z = volumeObject.getShiftsFromOrigin()

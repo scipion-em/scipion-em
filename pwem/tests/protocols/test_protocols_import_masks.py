@@ -22,16 +22,16 @@
 # ***************************************************************************/
 
 
-from pyworkflow.tests import BaseTest, setupTestProject, DataSet
+import pyworkflow.tests as pwtests
 
-from pwem.protocol import ProtImportMask
+import pwem.protocol as emprot
 
 
-class TestImportBase(BaseTest):
+class TestImportBase(pwtests.BaseTest):
     @classmethod
     def setUpClass(cls):
-        setupTestProject(cls)
-        cls.dsXmipp = DataSet.getDataSet('xmipp_tutorial')
+        pwtests.setupTestProject(cls)
+        cls.dsXmipp = pwtests.DataSet.getDataSet('xmipp_tutorial')
 
     
 class TestImportMasks(TestImportBase):
@@ -43,7 +43,7 @@ class TestImportMasks(TestImportBase):
                 'samplingRate': 2.1
                 }
 
-        prot = self.newProtocol(ProtImportMask, **args)
+        prot = self.newProtocol(emprot.ProtImportMask, **args)
         prot.setObjLabel('import mask 2d')
         self.launchProtocol(prot)
         self.assertIsNotNone(prot.outputMask,
@@ -56,7 +56,7 @@ class TestImportMasks(TestImportBase):
                 'samplingRate': 2.1
                 }
 
-        prot = self.newProtocol(ProtImportMask, **args)
+        prot = self.newProtocol(emprot.ProtImportMask, **args)
         prot.setObjLabel('import mask 3d')
         self.launchProtocol(prot)
         self.assertIsNotNone(prot.outputMask,

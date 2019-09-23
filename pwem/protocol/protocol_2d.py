@@ -27,9 +27,9 @@
 Protocol base classes related to 2D processing.
 """
 import pyworkflow.protocol.params as params
-from pyworkflow.utils import Message
+import pyworkflow.utils as pwutils
 
-from pwem.objects import Class2D
+import pwem.objects as emobj
 from .protocol import EMProtocol
 
 
@@ -48,7 +48,7 @@ class ProtAlign2D(Prot2D):
         form.addSection(label='Input')
         
         form.addParam('inputParticles', params.PointerParam, important=True,
-                      label=Message.LABEL_INPUT_PART, pointerClass='SetOfParticles')
+                      label=pwutils.Message.LABEL_INPUT_PART, pointerClass='SetOfParticles')
         # Hook that should be implemented in subclasses
         self._defineAlignParams(form)
         
@@ -81,7 +81,7 @@ class ProtEvenClassify2D():#ProtClassify2D):
         form.addSection(label='Input')
         
         form.addParam('inputParticles', params.PointerParam, important=True,
-                      label=Message.LABEL_INPUT_PART, pointerClass='SetOfParticles')
+                      label=pwutils.Message.LABEL_INPUT_PART, pointerClass='SetOfParticles')
         form.addParam('numberOfClasses', params.IntParam, default=8,
                       label="Number of classes", 
                       help="Select into how many classes do you want to classify your images.")
@@ -97,7 +97,7 @@ class ProtEvenClassify2D():#ProtClassify2D):
         n = self.numberOfClasses.get()
         
         for classNumber in range(1, n+1):
-            classes.append(Class2D())
+            classes.append(emobj.Class2D())
         
         for img in self.inputParticles.get():
             classNumber = (img.getObjId() % n) + 1

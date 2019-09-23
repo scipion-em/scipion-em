@@ -21,20 +21,18 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # ***************************************************************************/
 
-from pyworkflow.tests import BaseTest, setupTestProject, DataSet
+import pyworkflow.tests as pwtests
 
-from pwem.protocol import (ProtImportCoordinates, ProtImportMicrographs,
-                           ProtImportMicrographsTiltPairs,
-                           ProtImportCoordinatesPairs)
+import pwem.protocol as emprot
 
 
-class TestImportBase(BaseTest):
+class TestImportBase(pwtests.BaseTest):
     @classmethod
     def setUpClass(cls):
-        setupTestProject(cls)
-        cls.dsXmipp = DataSet.getDataSet('xmipp_tutorial')
+        pwtests.setupTestProject(cls)
+        cls.dsXmipp = pwtests.DataSet.getDataSet('xmipp_tutorial')
         #cls.dsRelion = DataSet.getDataSet('relion_tutorial')
-        cls.dsGroel = DataSet.getDataSet('groel')
+        cls.dsGroel = pwtests.DataSet.getDataSet('groel')
         
     def checkOutput(self, prot, outputName, conditions=[]):
         """ Check that an ouput was generated and
@@ -51,7 +49,7 @@ class TestImportCoordinates(TestImportBase):
 
     def testImportCoordinates(self):
         #First, import a set of micrographs
-        protImport = self.newProtocol(ProtImportMicrographs,
+        protImport = self.newProtocol(emprot.ProtImportMicrographs,
                                       filesPath=self.dsXmipp.getFile('allMics'),
                                       samplingRate=1.237, voltage=300)
         protImport.setObjLabel('import micrographs from xmipp tutorial ')
@@ -59,8 +57,8 @@ class TestImportCoordinates(TestImportBase):
         self.assertIsNotNone(protImport.outputMicrographs.getFileName(),
                              "There was a problem with the import")
 
-        prot1 = self.newProtocol(ProtImportCoordinates,
-                                 importFrom=ProtImportCoordinates.IMPORT_FROM_XMIPP,
+        prot1 = self.newProtocol(emprot.ProtImportCoordinates,
+                                 importFrom=emprot.ProtImportCoordinates.IMPORT_FROM_XMIPP,
                                  filesPath=self.dsXmipp.getFile('pickingXmipp'),
                                  filesPattern='*.pos', boxSize=550,
                                  scale=3.,
@@ -86,8 +84,8 @@ class TestImportCoordinates(TestImportBase):
         # prot2.inputMicrographs.set(protImport.outputMicrographs)
         # prot2.setObjLabel('import coords from relion ')
 
-        prot3 = self.newProtocol(ProtImportCoordinates,
-                                 importFrom=ProtImportCoordinates.IMPORT_FROM_EMAN,
+        prot3 = self.newProtocol(emprot.ProtImportCoordinates,
+                                 importFrom=emprot.ProtImportCoordinates.IMPORT_FROM_EMAN,
                                  filesPath=self.dsXmipp.getFile('boxingDir'),
                                  filesPattern='*_info.json', boxSize=550,
                                  scale=5.,
@@ -99,7 +97,7 @@ class TestImportCoordinates(TestImportBase):
         self.launchProtocol(prot3)
 
         #First, import a set of micrographs
-        protImportGroel = self.newProtocol(ProtImportMicrographs,
+        protImportGroel = self.newProtocol(emprot.ProtImportMicrographs,
                                            filesPath=self.dsGroel.getFile('mic1'),
                                            samplingRate=1)
         protImportGroel.setObjLabel('import micrographs from groel')
@@ -107,8 +105,8 @@ class TestImportCoordinates(TestImportBase):
         self.assertIsNotNone(protImportGroel.outputMicrographs.getFileName(),
                              "There was a problem with the import")
 
-        protPickGroel = self.newProtocol(ProtImportCoordinates,
-                                 importFrom=ProtImportCoordinates.IMPORT_FROM_DOGPICKER,
+        protPickGroel = self.newProtocol(emprot.ProtImportCoordinates,
+                                 importFrom=emprot.ProtImportCoordinates.IMPORT_FROM_DOGPICKER,
                                  filesPath=self.dsGroel.getFile('pickingDogpicker'),
                                  filesPattern='*.txt', boxSize=10,
                                  threshold=0.7)
@@ -121,15 +119,15 @@ class TestImportCoordinates(TestImportBase):
 class TestImportCoordinatesPairs(TestImportBase):
     @classmethod
     def setUpClass(cls):
-        setupTestProject(cls)
-        cls.dsRct = DataSet.getDataSet('rct')
+        pwtests.setupTestProject(cls)
+        cls.dsRct = pwtests.DataSet.getDataSet('rct')
         cls.micsFn = cls.dsRct.getFile('positions/input_micrographs.xmd')
         cls.patternU1 = cls.dsRct.getFile('positions/F_rct_u_*.pos')
         cls.patternT1 = cls.dsRct.getFile('positions/F_rct_t_*.pos')
         cls.micsUFn1 = cls.dsRct.getFile('untilted')
         cls.micsTFn1 = cls.dsRct.getFile('tilted')
 
-        cls.dsEman = DataSet.getDataSet('eman')
+        cls.dsEman = pwtests.DataSet.getDataSet('eman')
         cls.micsUFn2 = cls.dsEman.getFile('micU')
         cls.micsTFn2 = cls.dsEman.getFile('micT')
         cls.patternU2 = cls.dsEman.getFile("coords/ip3r10252011-0005_0-2_info.json")
@@ -137,7 +135,7 @@ class TestImportCoordinatesPairs(TestImportBase):
 
     def testImportCoordinatesPairs(self):
         # First, import a set of micrograph pairs
-        protImport1 = self.newProtocol(ProtImportMicrographsTiltPairs,
+        protImport1 = self.newProtocol(emprot.ProtImportMicrographsTiltPairs,
                                        patternUntilted=self.micsUFn1,
                                        patternTilted=self.micsTFn1,
                                        samplingRate=2.28, voltage=100,
@@ -147,7 +145,7 @@ class TestImportCoordinatesPairs(TestImportBase):
         self.assertIsNotNone(protImport1.outputMicrographsTiltPair.getFileName(),
                              "There was a problem with the import")
 
-        protImport2 = self.newProtocol(ProtImportMicrographsTiltPairs,
+        protImport2 = self.newProtocol(emprot.ProtImportMicrographsTiltPairs,
                                        patternUntilted=self.micsUFn2,
                                        patternTilted=self.micsTFn2,
                                        samplingRate=2.8, voltage=200,
@@ -157,8 +155,8 @@ class TestImportCoordinatesPairs(TestImportBase):
         self.assertIsNotNone(protImport2.outputMicrographsTiltPair.getFileName(),
                              "There was a problem with the import")
 
-        prot1 = self.newProtocol(ProtImportCoordinatesPairs,
-                                 importFrom=ProtImportCoordinatesPairs.IMPORT_FROM_XMIPP,
+        prot1 = self.newProtocol(emprot.ProtImportCoordinatesPairs,
+                                 importFrom=emprot.ProtImportCoordinatesPairs.IMPORT_FROM_XMIPP,
                                  xmippMdFn=self.micsFn,
                                  patternUntilted=self.patternU1,
                                  patternTilted=self.patternT1,
@@ -170,8 +168,8 @@ class TestImportCoordinatesPairs(TestImportBase):
         # Make sure that all 1901 coordinates where correctly imported
         self.assertTrue(prot1.outputCoordinatesTiltPair.getSize() == 1901)
 
-        prot2 = self.newProtocol(ProtImportCoordinatesPairs,
-                                 importFrom=ProtImportCoordinatesPairs.IMPORT_FROM_EMAN,
+        prot2 = self.newProtocol(emprot.ProtImportCoordinatesPairs,
+                                 importFrom=emprot.ProtImportCoordinatesPairs.IMPORT_FROM_EMAN,
                                  patternUntilted=self.patternU2,
                                  patternTilted=self.patternT2,
                                  boxSize=256)

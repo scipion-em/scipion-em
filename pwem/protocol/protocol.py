@@ -27,31 +27,24 @@
 import time
 from itertools import izip
 
-from pyworkflow.protocol import Protocol
+import pyworkflow.object as pwobj
+import pyworkflow.protocol as pwprot
 import pyworkflow.protocol.params as params
-from pyworkflow.utils.path import cleanPath
-from pyworkflow.mapper.sqlite_db import SqliteDb
+import pyworkflow.utils as pwutils
+import pyworkflow.mapper as pwmapper
 
-from pwem.objects.data import (SetOfMicrographs, SetOfCoordinates,
-                               SetOfParticles, SetOfImages,
-                               SetOfClasses2D, SetOfClasses3D, SetOfClassesVol,
-                               SetOfVolumes, SetOfCTF, SetOfMovies, SetOfFSCs,
-                               SetOfMovieParticles, SetOfAverages,
-                               SetOfNormalModes, SetOfAtomStructs,
-                               Set, RELATION_SOURCE, RELATION_TRANSFORM)
-from pwem.objects.data_tiltpairs import (SetOfAngles, CoordinatesTiltPair,
-                                         TiltPair)
-from pwem.constants import RELATION_CTF
+import pwem.objects as emobj
+import pwem.constants as emcts
 
 
-class EMProtocol(Protocol):
+class EMProtocol(pwprot.Protocol):
     """ Base class to all EM protocols.
     It will contains some common functionalities. 
     """
     _base = True
     
     def __init__(self, **kwargs):
-        Protocol.__init__(self, **kwargs)
+        pwprot.Protocol.__init__(self, **kwargs)
         
     def __createSet(self, SetClass, template, suffix, **kwargs):
         """ Create a set and set the filename using the suffix. 
@@ -59,19 +52,19 @@ class EMProtocol(Protocol):
         setFn = self._getPath(template % suffix)
         # Close the connection to the database if
         # it is open before deleting the file
-        cleanPath(setFn)
+        pwutils.cleanPath(setFn)
         
-        SqliteDb.closeConnection(setFn)        
+        pwmapper.SqliteDb.closeConnection(setFn)
         setObj = SetClass(filename=setFn, **kwargs)
         return setObj
     
     def _createSetOfMicrographs(self, suffix=''):
-        return self.__createSet(SetOfMicrographs,
+        return self.__createSet(emobj.SetOfMicrographs,
                                 'micrographs%s.sqlite', suffix,
                                 indexes=['_index'])
     
     def _createSetOfCoordinates(self, micSet, suffix=''):
-        coordSet = self.__createSet(SetOfCoordinates,
+        coordSet = self.__createSet(emobj.SetOfCoordinates,
                                     'coordinates%s.sqlite', suffix,
                                     indexes=['_micId'])
         coordSet.setMicrographs(micSet)       
@@ -79,7 +72,7 @@ class EMProtocol(Protocol):
 
     def _createCoordinatesTiltPair(self, micTiltPairs, uCoords, tCoords,
                                    angles, suffix):
-        coordTiltPairs = self.__createSet(CoordinatesTiltPair,
+        coordTiltPairs = self.__createSet(emobj.CoordinatesTiltPair,
                                           'coordinates_pairs%s.sqlite', suffix,
                                           indexes=['_untilted._micId',
                                                    '_tilted._micId'])
@@ -89,7 +82,7 @@ class EMProtocol(Protocol):
         coordTiltPairs.setMicsPair(micTiltPairs)
 
         for coordU, coordT in izip(uCoords, tCoords):
-            coordTiltPairs.append(TiltPair(coordU, coordT))
+            coordTiltPairs.append(emobj.TiltPair(coordU, coordT))
 
         return coordTiltPairs
     
@@ -99,74 +92,74 @@ class EMProtocol(Protocol):
         return _createSetFunc(suffix)
         
     def _createSetOfImages(self, suffix=''):
-        return self.__createSet(SetOfImages, 'images%s.sqlite', suffix)
+        return self.__createSet(emobj.SetOfImages, 'images%s.sqlite', suffix)
 
     def _createSetOfParticles(self, suffix=''):
-        return self.__createSet(SetOfParticles, 'particles%s.sqlite', suffix,
+        return self.__createSet(emobj.SetOfParticles, 'particles%s.sqlite', suffix,
                                 indexes=['_classId', '_micId'])
 
     def _createSetOfAverages(self, suffix=''):
-        return self.__createSet(SetOfAverages, 'averages%s.sqlite', suffix)
+        return self.__createSet(emobj.SetOfAverages, 'averages%s.sqlite', suffix)
         
     def _createSetOfMovieParticles(self, suffix=''):
-        return self.__createSet(SetOfMovieParticles,
+        return self.__createSet(emobj.SetOfMovieParticles,
                                 'movie_particles%s.sqlite', suffix)
     
     def _createSetOfClasses2D(self, imgSet, suffix=''):
-        classes = self.__createSet(SetOfClasses2D,
+        classes = self.__createSet(emobj.SetOfClasses2D,
                                    'classes2D%s.sqlite', suffix)
         classes.setImages(imgSet)
         return classes
     
     def _createSetOfClasses3D(self, imgSet, suffix=''):
-        classes =  self.__createSet(SetOfClasses3D,
+        classes =  self.__createSet(emobj.SetOfClasses3D,
                                     'classes3D%s.sqlite', suffix)
         classes.setImages(imgSet)
         return classes
     
     def _createSetOfClassesVol(self, suffix=''):
-        return self.__createSet(SetOfClassesVol, 'classesVol%s.sqlite', suffix)
+        return self.__createSet(emobj.SetOfClassesVol, 'classesVol%s.sqlite', suffix)
     
     def _createSetOfVolumes(self, suffix=''):
-        return self.__createSet(SetOfVolumes, 'volumes%s.sqlite', suffix)
+        return self.__createSet(emobj.SetOfVolumes, 'volumes%s.sqlite', suffix)
     
     def _createSetOfCTF(self, suffix=''):
-        return self.__createSet(SetOfCTF, 'ctfs%s.sqlite', suffix)
+        return self.__createSet(emobj.SetOfCTF, 'ctfs%s.sqlite', suffix)
     
     def _createSetOfNormalModes(self, suffix=''):
-        return self.__createSet(SetOfNormalModes, 'modes%s.sqlite', suffix)
+        return self.__createSet(emobj.SetOfNormalModes, 'modes%s.sqlite', suffix)
     
     def _createSetOfMovies(self, suffix=''):
-        return self.__createSet(SetOfMovies, 'movies%s.sqlite', suffix)
+        return self.__createSet(emobj.SetOfMovies, 'movies%s.sqlite', suffix)
     
     def _createSetOfAngles(self, suffix=''):
-        return self.__createSet(SetOfAngles,
+        return self.__createSet(emobj.SetOfAngles,
                                 'tiltpairs_angles%s.sqlite', suffix)
 
     def _createSetOfFSCs(self, suffix=''):
-        return self.__createSet(SetOfFSCs, 'fscs%s.sqlite', suffix)
+        return self.__createSet(emobj.SetOfFSCs, 'fscs%s.sqlite', suffix)
        
     def _createSetOfPDBs(self, suffix=''):
-        return self.__createSet(SetOfAtomStructs, 'pdbs%s.sqlite', suffix)
+        return self.__createSet(emobj.SetOfAtomStructs, 'pdbs%s.sqlite', suffix)
 
     def _defineSourceRelation(self, srcObj, dstObj):
         """ Add a DATASOURCE relation between srcObj and dstObj """
-        self._defineRelation(RELATION_SOURCE, srcObj, dstObj)
+        self._defineRelation(pwobj.RELATION_SOURCE, srcObj, dstObj)
     
     def _defineTransformRelation(self, srcObj, dstObj):
-        self._defineRelation(RELATION_TRANSFORM, srcObj, dstObj)
+        self._defineRelation(pwobj.RELATION_TRANSFORM, srcObj, dstObj)
         # A transform relation allways implies a source relation
         self._defineSourceRelation(srcObj, dstObj)
         
     def _defineCtfRelation(self, micsObj, ctfsObj):
-        self._defineRelation(RELATION_CTF, micsObj, ctfsObj)
+        self._defineRelation(emcts.RELATION_CTF, micsObj, ctfsObj)
         # A ctf relation allways implies a source relation
         self._defineSourceRelation(micsObj, ctfsObj)
     
     def _insertChild(self, key, child):
-        if isinstance(child, Set):
+        if isinstance(child, emobj.Set):
             child.write()
-        Protocol._insertChild(self, key, child)
+        pwprot.Protocol._insertChild(self, key, child)
         
     def _validateDim(self, obj1, obj2, errors,
                      label1='Input 1', label2='Input 2'):
@@ -193,8 +186,8 @@ class EMProtocol(Protocol):
         return self.getObjLabel()
     
     def allowsDelete(self, obj):
-        if (isinstance(obj, SetOfCoordinates) or
-            isinstance(obj, CoordinatesTiltPair)):
+        if (isinstance(obj, emobj.SetOfCoordinates) or
+            isinstance(obj, emobj.CoordinatesTiltPair)):
             return True
         return False
         

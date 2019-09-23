@@ -24,16 +24,16 @@
 # *
 # **************************************************************************
 
-from pyworkflow.viewer import Viewer, DESKTOP_TKINTER, WEB_DJANGO
+import pyworkflow.viewer as pwviewer
 
-from pwem.protocol import ProtClassesConsensus
+import pwem.protocol as emprot
 
 from .views import DataView
 
 
-class ViewerClassesConsensus(Viewer):
-    _environments = [DESKTOP_TKINTER, WEB_DJANGO]
-    _targets = [ProtClassesConsensus]
+class ViewerClassesConsensus(pwviewer.Viewer):
+    _environments = [pwviewer.DESKTOP_TKINTER, pwviewer.WEB_DJANGO]
+    _targets = [emprot.ProtClassesConsensus]
 
     def _visualize(self, obj, **kwargs):
         labels = ('class1.id class1._representative._filename class2.id '

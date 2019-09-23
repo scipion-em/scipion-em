@@ -25,11 +25,11 @@
 # **************************************************************************
 
 from pyworkflow.tests import *
-from test_workflow import TestWorkflow
-import pwem as em
-from pwem.protocol import (ProtImportMicrographs, ProtImportVolumes,
-                           ProtImportCoordinates, SAME_AS_PICKING)
 
+import pwem as em
+import pwem.protocol as emprot 
+
+from .test_workflow import TestWorkflow
 
 xmippProtocols = em.Domain.importFromPlugin('xmipp3.protocols', doRaise=True)
 
@@ -41,6 +41,7 @@ EmanProtInitModel = em.Domain.importFromPlugin('eman2.protocols',
                                             doRaise=True)
 relionProtocols = em.Domain.importFromPlugin('relion.protocols',
                                           doRaise=True)
+
 
 class TestMixedRelionTutorial(TestWorkflow):
     @classmethod
@@ -55,7 +56,7 @@ class TestMixedRelionTutorial(TestWorkflow):
     def test_workflow(self):
         #First, import a set of micrographs
         print ("Importing a set of micrographs...")
-        protImport = self.newProtocol(ProtImportMicrographs,
+        protImport = self.newProtocol(emprot.ProtImportMicrographs,
                                       filesPath=self.micsFn,
                                       samplingRateMode=1, magnification=79096,
                                       scannedPixelSize=56, voltage=300,
@@ -66,7 +67,7 @@ class TestMixedRelionTutorial(TestWorkflow):
                              "There was a problem with the import")
         
         print ("Importing a volume...")
-        protImportVol = self.newProtocol(ProtImportVolumes, filesPath=self.vol,
+        protImportVol = self.newProtocol(emprot.ProtImportVolumes, filesPath=self.vol,
                                          samplingRate=7.08)
         protImportVol.setObjLabel('import single vol')
         self.launchProtocol(protImportVol)
@@ -82,8 +83,8 @@ class TestMixedRelionTutorial(TestWorkflow):
                              "There was a problem with the downsampling")
         
         print("Running Eman import coordinates...")
-        protPP = self.newProtocol(ProtImportCoordinates,
-                                 importFrom=ProtImportCoordinates.IMPORT_FROM_EMAN,
+        protPP = self.newProtocol(emprot.ProtImportCoordinates,
+                                 importFrom=emprot.ProtImportCoordinates.IMPORT_FROM_EMAN,
                                  filesPath=self.crdsEmanDir,
                                  filesPattern='info/*_info.json', boxSize=60)
         protPP.inputMicrographs.set(protPreprocess.outputMicrographs)
@@ -105,7 +106,7 @@ class TestMixedRelionTutorial(TestWorkflow):
         print("Run extract particles with <Same as picking> option")
         protExtract = self.newProtocol(xmippProtocols.XmippProtExtractParticles,
                                        boxSize=60,
-                                       downsampleType=SAME_AS_PICKING,
+                                       downsampleType=emprot.SAME_AS_PICKING,
                                        doRemoveDust=False,
                                        doInvert=False,
                                        doFlip=False, backRadius=28, runMode=1)
@@ -140,8 +141,8 @@ class TestMixedRelionTutorial(TestWorkflow):
         self.launchProtocol(protCTF2)
         
         print("Running Xmipp Import Coordinates")
-        protPP2 = self.newProtocol(ProtImportCoordinates,
-                                 importFrom=ProtImportCoordinates.IMPORT_FROM_XMIPP,
+        protPP2 = self.newProtocol(emprot.ProtImportCoordinates,
+                                 importFrom=emprot.ProtImportCoordinates.IMPORT_FROM_XMIPP,
                                  filesPath=self.crdsXmippDir,
                                  filesPattern='*.pos', boxSize=60)
         protPP2.inputMicrographs.set(protPreprocess.outputMicrographs)  
@@ -153,7 +154,7 @@ class TestMixedRelionTutorial(TestWorkflow):
         print("Run extract particles with <Same as picking> option")
         protExtract2 = self.newProtocol(xmippProtocols.XmippProtExtractParticles,
                                         boxSize=60,
-                                        downsampleType=SAME_AS_PICKING,
+                                        downsampleType=emprot.SAME_AS_PICKING,
                                         doRemoveDust=False, doInvert=True,
                                         doFlip=False, backRadius=28, runMode=1)
         protExtract2.inputCoordinates.set(protPP2.outputCoordinates)
@@ -198,7 +199,7 @@ class TestMixedFrealignClassify(TestWorkflow):
         #First, import a set of micrographs
         print("Importing a set of micrographs...")
         #TODO missing contrst amplitude ROB
-        protImport = self.newProtocol(ProtImportMicrographs,
+        protImport = self.newProtocol(emprot.ProtImportMicrographs,
                                       filesPath=self.micsFn,
                                       samplingRateMode=1, magnification=79096,
                                       scannedPixelSize=56, voltage=300,
@@ -209,7 +210,7 @@ class TestMixedFrealignClassify(TestWorkflow):
                              "There was a problem with the import")
         
         print("Importing a volume...")
-        protImportVol = self.newProtocol(ProtImportVolumes,
+        protImportVol = self.newProtocol(emprot.ProtImportVolumes,
                                          filesPath=self.vol, samplingRate=7.08)
         protImportVol.setObjLabel('import single vol')
         self.launchProtocol(protImportVol)
@@ -226,8 +227,8 @@ class TestMixedFrealignClassify(TestWorkflow):
                              "There was a problem with the downsampling")
 
         print("Running Eman import coordinates...")
-        protPP = self.newProtocol(ProtImportCoordinates,
-                                 importFrom=ProtImportCoordinates.IMPORT_FROM_EMAN,
+        protPP = self.newProtocol(emprot.ProtImportCoordinates,
+                                 importFrom=emprot.ProtImportCoordinates.IMPORT_FROM_EMAN,
                                  filesPath=self.crdsEmanDir,
                                  filesPattern='info/*_info.json', boxSize=60)
         protPP.inputMicrographs.set(protPreprocess.outputMicrographs)
@@ -249,7 +250,7 @@ class TestMixedFrealignClassify(TestWorkflow):
         print("Run extract particles with <Same as picking> option")
         protExtract = self.newProtocol(xmippProtocols.XmippProtExtractParticles,
                                        boxSize=60,
-                                       downsampleType=SAME_AS_PICKING,
+                                       downsampleType=emprot.SAME_AS_PICKING,
                                        doRemoveDust=False,
                                        doInvert=False,
                                        doFlip=False, backRadius=28, runMode=1)

@@ -28,21 +28,21 @@
 
 import os
 import numpy
+import time
 from datetime import datetime
 
-from pyworkflow.protocol.params import PointerParam, BooleanParam
+import pyworkflow.protocol.params as params
 from pyworkflow.protocol.constants import STATUS_NEW
 import pyworkflow.utils as pwutils
 
-from pwem.constants import ALIGN_2D, ALIGN_3D, ALIGN_PROJ, ALIGN_NONE
-from pwem.objects.data import (Coordinate, SetOfParticles, SetOfMicrographs,
-                               SetOfCoordinates, Set)
-from pwem.protocol import ProtParticlePickingAuto
-
-import time
+import pwem.constants as emcts
+import pwem.objects as emobj
+import pwem.protocol as emprot
 
 
-class ProtExtractCoords(ProtParticlePickingAuto):
+
+
+class ProtExtractCoords(emprot.ProtParticlePickingAuto):
     """ 
     Extract the coordinates information from a set of particles.
     
@@ -58,19 +58,19 @@ class ProtExtractCoords(ProtParticlePickingAuto):
     def _defineParams(self, form):
         form.addSection(label='Input')
 
-        form.addParam('inputParticles', PointerParam,
+        form.addParam('inputParticles', params.PointerParam,
                       pointerClass='SetOfParticles',
                       label='Input particles', important=True,
                       help='Select the particles from which you want\n'
                            'to extract the coordinates and micrographs.')
         
-        form.addParam('inputMicrographs', PointerParam,
+        form.addParam('inputMicrographs', params.PointerParam,
                       pointerClass='SetOfMicrographs',
                       label='Input micrographs', important=True,
                       help='Select the micrographs to which you want to\n'
                            'associate the coordinates from the particles.')
 
-        form.addParam('applyShifts', BooleanParam, default=False,
+        form.addParam('applyShifts', params.BooleanParam, default=False,
                       label='Apply particle shifts?',
                       help='Apply particle shifts from 2D alignment to '
                            'recalculate new coordinates. This can be useful '
@@ -178,7 +178,7 @@ class ProtExtractCoords(ProtParticlePickingAuto):
                 newCoord.setMicrograph(mic)
                 outputCoords.append(newCoord)
 
-        newCoord = Coordinate()
+        newCoord = emobj.Coordinate()
         if self.streamingModeOn:
             for partId in partsIds:
                 particle = inPart[partId]
@@ -201,7 +201,7 @@ class ProtExtractCoords(ProtParticlePickingAuto):
         self.finished = self.streamClosed and \
                         self.inputSize == self.outputSize
 
-        streamMode = Set.STREAM_CLOSED if self.finished else Set.STREAM_OPEN
+        streamMode = emobj.Set.STREAM_CLOSED if self.finished else emobj.Set.STREAM_OPEN
 
         # we will read all ready files
         files = pwutils.glob(self.getTmpOutputPath('*'))
@@ -211,7 +211,7 @@ class ProtExtractCoords(ProtParticlePickingAuto):
             outSet = self._loadOutputSet()
             if newData:
                 for tmpFile in files:
-                    tmpSet = SetOfCoordinates(filename=tmpFile)
+                    tmpSet = emobj.SetOfCoordinates(filename=tmpFile)
                     tmpSet.loadAllProperties()
                     outSet.copyItems(tmpSet)
                     outSet.setBoxSize(tmpSet.getBoxSize())
@@ -229,11 +229,11 @@ class ProtExtractCoords(ProtParticlePickingAuto):
     def _loadOutputSet(self):
         setFile = self._getPath("coordinates.sqlite")
         if os.path.exists(setFile):
-            outputSet = SetOfCoordinates(filename=setFile)
+            outputSet = emobj.SetOfCoordinates(filename=setFile)
             outputSet.loadAllProperties()
             outputSet.enableAppend()
         else:
-            outputSet = SetOfCoordinates(filename=setFile)
+            outputSet = emobj.SetOfCoordinates(filename=setFile)
             outputSet.setStreamState(outputSet.STREAM_OPEN)
             self._store(outputSet)
             self._defineTransformRelation(self.getInputParticles(), outputSet)
@@ -275,7 +275,7 @@ class ProtExtractCoords(ProtParticlePickingAuto):
 
     def loadInputs(self):
         micsFn = self.getInputMicrographs().getFileName()
-        micsSet = SetOfMicrographs(filename=micsFn)
+        micsSet = emobj.SetOfMicrographs(filename=micsFn)
         micsSet.loadAllProperties()
 
         availableMics = []
@@ -286,7 +286,7 @@ class ProtExtractCoords(ProtParticlePickingAuto):
         micsSet.close()
 
         partsFn = self.getInputParticles().getFileName()
-        partsSet = SetOfParticles(filename=partsFn)
+        partsSet = emobj.SetOfParticles(filename=partsFn)
         partsSet.loadAllProperties()
 
         newParts = []
@@ -311,15 +311,15 @@ class ProtExtractCoords(ProtParticlePickingAuto):
         invTransform == True  -> for xmipp implies projection
                               -> for xmipp implies alignment
         """
-        if alignType == ALIGN_NONE:
+        if alignType == emcts.ALIGN_NONE:
             return None
 
-        inverseTransform = alignType == ALIGN_PROJ
+        inverseTransform = alignType == emcts.ALIGN_PROJ
         # only flip is meaningful if 2D case
         # in that case the 2x2 determinant is negative
         flip = False
         matrix = transform.getMatrix()
-        if alignType == ALIGN_2D:
+        if alignType == emcts.ALIGN_2D:
             # get 2x2 matrix and check if negative
             flip = bool(numpy.linalg.det(matrix[0:2, 0:2]) < 0)
             if flip:
@@ -328,7 +328,7 @@ class ProtExtractCoords(ProtParticlePickingAuto):
             else:
                 pass
 
-        elif alignType == ALIGN_3D:
+        elif alignType == emcts.ALIGN_3D:
             flip = bool(numpy.linalg.det(matrix[0:3, 0:3]) < 0)
             if flip:
                 matrix[0, :4] *= -1.  # now, invert first line including x

@@ -28,19 +28,16 @@
 
 from collections import OrderedDict
 from os.path import basename
-import pyworkflow.protocol.params as params
-from protocol import EMProtocol
 import time
 import random
 
+import pyworkflow.protocol.params as params
 from pyworkflow import VERSION_1_1
 from pyworkflow.protocol.constants import STEPS_PARALLEL
 
-from pwem.objects.data import (SetOfMicrographs, Micrograph, Acquisition, Movie,
-                               SetOfMovies, SetOfParticles, Particle)
-
-
-from pwem.convert import ImageHandler
+from pwem.protocol import EMProtocol
+import pwem.objects as emobj
+import pwem.convert as emconv
 
 import xmippLib
 
@@ -176,7 +173,7 @@ class ProtCreateStreamData(EMProtocol):
                 objSet.loadAllProperties()
         else:
             objSet.setStreamState(objSet.STREAM_OPEN)
-            acquisition = Acquisition()
+            acquisition = emobj.Acquisition()
             if self.setof == SET_OF_MICROGRAPHS:
                 acquisition.setMagnification(
                     self.inputMics.get().getAcquisition().getMagnification())
@@ -214,13 +211,13 @@ class ProtCreateStreamData(EMProtocol):
 
 
         if self.setof == SET_OF_MOVIES:
-            obj = Movie()
+            obj = emobj.Movie()
         elif self.setof == SET_OF_MICROGRAPHS:
-            obj = Micrograph()
+            obj = emobj.Micrograph()
         elif self.setof == SET_OF_RANDOM_MICROGRAPHS:
-            obj = Micrograph()
+            obj = emobj.Micrograph()
         elif self.setof == SET_OF_PARTICLES:
-            obj = Particle()
+            obj = emobj.Particle()
         else:
             raise Exception('Unknown data type')
 
@@ -251,15 +248,13 @@ class ProtCreateStreamData(EMProtocol):
 
     def _checkProcessedData(self):
         if self.setof == SET_OF_MOVIES:
-            objSet = SetOfMovies(filename=self._getPath('movies.sqlite'))
+            objSet = emobj.SetOfMovies(filename=self._getPath('movies.sqlite'))
         elif self.setof == SET_OF_MICROGRAPHS:
-            objSet = \
-                SetOfMicrographs(filename=self._getPath('micrographs.sqlite'))
+            objSet = emobj.SetOfMicrographs(filename=self._getPath('micrographs.sqlite'))
         elif self.setof == SET_OF_RANDOM_MICROGRAPHS:
-            objSet = \
-                SetOfMicrographs(filename=self._getPath('micrographs.sqlite'))
+            objSet = emobj.SetOfMicrographs(filename=self._getPath('micrographs.sqlite'))
         elif self.setof == SET_OF_PARTICLES:
-            objSet = SetOfParticles(filename=self._getPath('particles.sqlite'))
+            objSet = emobj.SetOfParticles(filename=self._getPath('particles.sqlite'))
         else:
             raise Exception('Unknown data type')
 
@@ -291,7 +286,7 @@ class ProtCreateStreamData(EMProtocol):
                         newMov = mov.clone()
                         break
                 ProtCreateStreamData.object = \
-                    ImageHandler().read(newMov.getLocation())
+                    emconv.ImageHandler().read(newMov.getLocation())
                 self.name = "movie"
 
             elif self.setof == SET_OF_MICROGRAPHS:
@@ -301,7 +296,7 @@ class ProtCreateStreamData(EMProtocol):
                         newMic = mic.clone()
                         break
                 ProtCreateStreamData.object = \
-                    ImageHandler().read(newMic.getLocation())
+                    emconv.ImageHandler().read(newMic.getLocation())
                 self.name = "micro"
 
         # save file
@@ -319,7 +314,7 @@ class ProtCreateStreamData(EMProtocol):
                     (idx <= self.counter-1 + self.group)):
                 newP = p.clone()
                 ProtCreateStreamData.object = \
-                    ImageHandler().read(newP.getLocation())
+                    emconv.ImageHandler().read(newP.getLocation())
                 destFn = self._getExtraPath("%s_%05d" % (self.name, idx))
                 ProtCreateStreamData.object.write(destFn)
                 self.dictObj[destFn] = True

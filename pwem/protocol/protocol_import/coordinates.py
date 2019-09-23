@@ -33,8 +33,7 @@ from itertools import izip
 from pyworkflow.protocol.params import (IntParam, PointerParam, FloatParam,
                                         BooleanParam, PathParam, EnumParam,
                                         LEVEL_ADVANCED)
-from pyworkflow.utils.path import removeBaseExt, expandPattern
-from pyworkflow.utils.properties import Message
+import pyworkflow.utils as pwutils
 
 import pwem as em
 import pwem.metadata as md
@@ -207,9 +206,9 @@ class ProtImportCoordinates(ProtImportFiles, ProtParticlePicking):
         micSet = self.inputMicrographs.get()
 
         if fileId is None:
-            coordBase = removeBaseExt(coordFile)
+            coordBase = pwutils.removeBaseExt(coordFile)
             for mic in micSet:
-                micBase = removeBaseExt(mic.getFileName())
+                micBase = pwutils.removeBaseExt(mic.getFileName())
                 # temporal use of in
                 if coordBase in micBase or micBase in coordBase:
                     return mic
@@ -290,10 +289,10 @@ class ProtImportCoordinatesPairs(ProtImportFiles):
                       help='Provide input_micrographs.xmd file that contains '
                            'tilt angles information. This file is usually '
                            'created alongside the coordinates.')
-        form.addParam('patternUntilted', PathParam, label=Message.LABEL_PATTERNU,
-                      help=Message.TEXT_PATTERN)
-        form.addParam('patternTilted', PathParam, label=Message.LABEL_PATTERNT,
-                      help=Message.TEXT_PATTERN)
+        form.addParam('patternUntilted', PathParam, label=pwutils.Message.LABEL_PATTERNU,
+                      help=pwutils.Message.TEXT_PATTERN)
+        form.addParam('patternTilted', PathParam, label=pwutils.Message.LABEL_PATTERNT,
+                      help=pwutils.Message.TEXT_PATTERN)
         form.addParam('inputMicrographsTiltedPair', PointerParam,
                       pointerClass='MicrographsTiltPair',
                       label='Input tilt pair micrographs',
@@ -334,13 +333,13 @@ class ProtImportCoordinatesPairs(ProtImportFiles):
     def _validate(self):
         errors = []
         if not self.patternUntilted.get() or not self.patternTilted.get():
-            errors.append(Message.ERROR_PATTERN_EMPTY)
+            errors.append(pwutils.Message.ERROR_PATTERN_EMPTY)
         else:
-            filePathsUntilted = glob(expandPattern(self.patternUntilted.get()))
-            filePathsTilted = glob(expandPattern(self.patternTilted.get()))
+            filePathsUntilted = glob(pwutils.expandPattern(self.patternUntilted.get()))
+            filePathsTilted = glob(pwutils.expandPattern(self.patternTilted.get()))
 
             if len(filePathsUntilted) == 0 or len(filePathsTilted) == 0:
-                errors.append(Message.ERROR_PATTERN_FILES)
+                errors.append(pwutils.Message.ERROR_PATTERN_FILES)
 
         return errors
 
@@ -397,10 +396,10 @@ class ProtImportCoordinatesPairs(ProtImportFiles):
         coords = []
 
         for mic, pattern in izip(mics, patterns):
-            micFnBase = removeBaseExt(mic.getFileName())
+            micFnBase = pwutils.removeBaseExt(mic.getFileName())
             for coordFn in self._iterFiles(pattern):
                 if coordFn not in coords:
-                    coorBase = removeBaseExt(coordFn).replace('_info', '')
+                    coorBase = pwutils.removeBaseExt(coordFn).replace('_info', '')
                     if coorBase in micFnBase or micFnBase in coorBase:
                         coords.append(coordFn)
 
@@ -503,7 +502,7 @@ class ProtImportCoordinatesPairs(ProtImportFiles):
         return uCoordSet, tCoordSet, anglesSet
 
     def _iterFiles(self, pattern):
-        filePaths = glob(expandPattern(pattern))
+        filePaths = glob(pwutils.expandPattern(pattern))
         for fn in filePaths:
             yield fn
 
@@ -516,12 +515,12 @@ class ProtImportCoordinatesPairs(ProtImportFiles):
         for objId in micMd:
             row = XmippMdRow()
             row.readFromMd(micMd, objId)
-            micUFn = removeBaseExt(row.getValue(md.MDL_MICROGRAPH))
-            micTFn = removeBaseExt(row.getValue(md.MDL_MICROGRAPH_TILTED))
+            micUFn = pwutils.removeBaseExt(row.getValue(md.MDL_MICROGRAPH))
+            micTFn = pwutils.removeBaseExt(row.getValue(md.MDL_MICROGRAPH_TILTED))
             micFnDict[micUFn] = micTFn
 
         for micU, micT in izip(uSet, tSet):
-            inputMicsDict[removeBaseExt(micU.getFileName())] = removeBaseExt(micT.getFileName())
+            inputMicsDict[pwutils.removeBaseExt(micU.getFileName())] = pwutils.removeBaseExt(micT.getFileName())
 
         for micKey in inputMicsDict:
             if micKey not in micFnDict:

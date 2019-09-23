@@ -35,8 +35,7 @@ import json
 from pyworkflow.tests import *
 
 import pwem as em
-from pwem.protocol import ProtImportPdb, ProtImportVolumes
-
+import pwem.protocol as emprot
 
 
 ChimeraProtRigidFit = em.Domain.importFromPlugin('chimera.protocols',
@@ -50,6 +49,7 @@ PhenixProtRunEMRinger = em.Domain.importFromPlugin('phenix.protocols',
                                                 doRaise=True)
 PhenixProtRunMolprobity = em.Domain.importFromPlugin('phenix.protocols',
                                                   'PhenixProtRunMolprobity')
+
 
 class TestImportBase(BaseTest):
     @classmethod
@@ -67,7 +67,7 @@ class TestImportData(TestImportBase):
                 'samplingRate': 1.5,
                 'setOrigCoord': False
                 }
-        protImportVol = self.newProtocol(ProtImportVolumes, **args)
+        protImportVol = self.newProtocol(emprot.ProtImportVolumes, **args)
         protImportVol.setObjLabel('import volume 1ake_4-5A\n with default '
                                   'origin\n')
         self.launchProtocol(protImportVol)
@@ -82,7 +82,7 @@ class TestImportData(TestImportBase):
                 'y': -7.881,
                 'z': 10.91
                 }
-        protImportVol = self.newProtocol(ProtImportVolumes, **args)
+        protImportVol = self.newProtocol(emprot.ProtImportVolumes, **args)
         protImportVol.setObjLabel('import volume 1ake_4-5A\n set origin in 11 '
                                   '-7 10\n')
         self.launchProtocol(protImportVol)
@@ -95,7 +95,7 @@ class TestImportData(TestImportBase):
                 'samplingRate': 0.637,
                 'setOrigCoord': False
                 }
-        protImportVol = self.newProtocol(ProtImportVolumes, **args)
+        protImportVol = self.newProtocol(emprot.ProtImportVolumes, **args)
         protImportVol.setObjLabel('import volume emd_4116\nwith default '
                                   'origin\n')
         self.launchProtocol(protImportVol)
@@ -103,22 +103,22 @@ class TestImportData(TestImportBase):
         return volume3
 
     def _importStructurePDBWoVol(self):
-        args = {'inputPdbData': ProtImportPdb.IMPORT_FROM_FILES,
+        args = {'inputPdbData': emprot.ProtImportPdb.IMPORT_FROM_FILES,
                 'pdbFile': self.dsModBuild.getFile(
                     'PDBx_mmCIF/1ake_start.pdb'),
                 }
-        protImportPDB = self.newProtocol(ProtImportPdb, **args)
+        protImportPDB = self.newProtocol(emprot.ProtImportPdb, **args)
         protImportPDB.setObjLabel('import pdb\n 1ake_start')
         self.launchProtocol(protImportPDB)
         structure1_PDB = protImportPDB.outputPdb
         return structure1_PDB
 
     def _importStructuremmCIFWoVol(self):
-        args = {'inputPdbData': ProtImportPdb.IMPORT_FROM_FILES,
+        args = {'inputPdbData': emprot.ProtImportPdb.IMPORT_FROM_FILES,
                 'pdbFile': self.dsModBuild.getFile(
                     'PDBx_mmCIF/1ake_start.pdb.cif'),
                 }
-        protImportPDB = self.newProtocol(ProtImportPdb, **args)
+        protImportPDB = self.newProtocol(emprot.ProtImportPdb, **args)
         protImportPDB.setObjLabel('import mmCIF\n 1ake_start')
         self.launchProtocol(protImportPDB)
         structure1_mmCIF = protImportPDB.outputPdb
@@ -126,12 +126,12 @@ class TestImportData(TestImportBase):
         return structure1_mmCIF
 
     def _importStructurePDBWithVol(self):
-        args = {'inputPdbData': ProtImportPdb.IMPORT_FROM_FILES,
+        args = {'inputPdbData': emprot.ProtImportPdb.IMPORT_FROM_FILES,
                 'pdbFile': self.dsModBuild.getFile(
                     'PDBx_mmCIF/1ake_start.pdb'),
                 'inputVolume': self._importVolume()
                 }
-        protImportPDB = self.newProtocol(ProtImportPdb, **args)
+        protImportPDB = self.newProtocol(emprot.ProtImportPdb, **args)
         protImportPDB.setObjLabel('import pdb\n volume associated\n 1ake_start')
         self.launchProtocol(protImportPDB)
         structure2_PDB = protImportPDB.outputPdb
@@ -139,12 +139,12 @@ class TestImportData(TestImportBase):
         return structure2_PDB
 
     def _importStructuremmCIFWithVol(self):
-        args = {'inputPdbData': ProtImportPdb.IMPORT_FROM_FILES,
+        args = {'inputPdbData': emprot.ProtImportPdb.IMPORT_FROM_FILES,
                 'pdbFile': self.dsModBuild.getFile('PDBx_mmCIF/'
                                                    '1ake_start.pdb.cif'),
                 'inputVolume': self._importVolume()
                 }
-        protImportPDB = self.newProtocol(ProtImportPdb, **args)
+        protImportPDB = self.newProtocol(emprot.ProtImportPdb, **args)
         protImportPDB.setObjLabel('import mmCIF\n volume associated\n '
                                   '1ake_start')
         self.launchProtocol(protImportPDB)
@@ -153,33 +153,33 @@ class TestImportData(TestImportBase):
         return structure2_mmCIF
 
     def _importMut1StructurePDBWoVol(self):
-        args = {'inputPdbData': ProtImportPdb.IMPORT_FROM_FILES,
+        args = {'inputPdbData': emprot.ProtImportPdb.IMPORT_FROM_FILES,
                 'pdbFile': self.dsModBuild.getFile(
                     'PDBx_mmCIF/1ake_mut1.pdb'),
                 }
-        protImportPDB = self.newProtocol(ProtImportPdb, **args)
+        protImportPDB = self.newProtocol(emprot.ProtImportPdb, **args)
         protImportPDB.setObjLabel('import pdb\n 1ake_mut1')
         self.launchProtocol(protImportPDB)
         structure3_PDB = protImportPDB.outputPdb
         return structure3_PDB
 
     def _importMut2StructurePDBWoVol(self):
-        args = {'inputPdbData': ProtImportPdb.IMPORT_FROM_FILES,
+        args = {'inputPdbData': emprot.ProtImportPdb.IMPORT_FROM_FILES,
                 'pdbFile': self.dsModBuild.getFile(
                     'PDBx_mmCIF/1ake_mut2.pdb'),
                 }
-        protImportPDB = self.newProtocol(ProtImportPdb, **args)
+        protImportPDB = self.newProtocol(emprot.ProtImportPdb, **args)
         protImportPDB.setObjLabel('import pdb\n 1ake_mut2')
         self.launchProtocol(protImportPDB)
         structure4_PDB = protImportPDB.outputPdb
         return structure4_PDB
 
     def _importCootStructureWoVol(self):
-        args = {'inputPdbData': ProtImportPdb.IMPORT_FROM_FILES,
+        args = {'inputPdbData': emprot.ProtImportPdb.IMPORT_FROM_FILES,
                 'pdbFile': self.dsModBuild.getFile(
                         'PDBx_mmCIF/scipionOut0001.pdb')
                 }
-        protImportPDB = self.newProtocol(ProtImportPdb, **args)
+        protImportPDB = self.newProtocol(emprot.ProtImportPdb, **args)
         protImportPDB.setObjLabel('import pdb\n coot')
         self.launchProtocol(protImportPDB)
         structureCoot_PDB = protImportPDB.outputPdb
@@ -187,33 +187,33 @@ class TestImportData(TestImportBase):
         return structureCoot_PDB
 
     def _importStructurePDBWoVol2(self):
-        args = {'inputPdbData': ProtImportPdb.IMPORT_FROM_FILES,
+        args = {'inputPdbData': emprot.ProtImportPdb.IMPORT_FROM_FILES,
                 'pdbFile': self.dsModBuild.getFile(
                     'PDBx_mmCIF/3i3e_fitted.pdb'),
                 }
-        protImportPDB = self.newProtocol(ProtImportPdb, **args)
+        protImportPDB = self.newProtocol(emprot.ProtImportPdb, **args)
         protImportPDB.setObjLabel('import pdb\n 3i3e_fitted')
         self.launchProtocol(protImportPDB)
         structure5_PDB = protImportPDB.outputPdb
         return structure5_PDB
 
     def _importStructureMolProbity1(self):
-        args = {'inputPdbData': ProtImportPdb.IMPORT_FROM_FILES,
+        args = {'inputPdbData': emprot.ProtImportPdb.IMPORT_FROM_FILES,
                 'pdbFile': self.dsModBuild.getFile(
                     'PDBx_mmCIF/jlv_chimeraOut0001.pdb'),
                 }
-        protImportPDB = self.newProtocol(ProtImportPdb, **args)
+        protImportPDB = self.newProtocol(emprot.ProtImportPdb, **args)
         protImportPDB.setObjLabel('import pdb\n jlv_chimeraOut0001')
         self.launchProtocol(protImportPDB)
         structure6_PDB = protImportPDB.outputPdb
         return structure6_PDB
 
     def _importStructureMolProbity2(self):
-        args = {'inputPdbData': ProtImportPdb.IMPORT_FROM_FILES,
+        args = {'inputPdbData': emprot.ProtImportPdb.IMPORT_FROM_FILES,
                 'pdbFile': self.dsModBuild.getFile(
                     'PDBx_mmCIF/jlv_cootOut0016.pdb'),
                 }
-        protImportPDB = self.newProtocol(ProtImportPdb, **args)
+        protImportPDB = self.newProtocol(emprot.ProtImportPdb, **args)
         protImportPDB.setObjLabel('import pdb\n jlv_cootOut0016')
         self.launchProtocol(protImportPDB)
         structure7_PDB = protImportPDB.outputPdb

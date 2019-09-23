@@ -24,7 +24,7 @@
 # *
 # **************************************************************************
 
-from pyworkflow.protocol.params import IntParam, STEPS_PARALLEL
+import pyworkflow.protocol.params as params
 
 from .protocol import Protocol
 
@@ -37,21 +37,21 @@ class ProtTestParallel(Protocol):
     
     def __init__(self, **args):
         Protocol.__init__(self, **args)        
-        self.stepsExecutionMode = STEPS_PARALLEL
+        self.stepsExecutionMode = params.STEPS_PARALLEL
         
     #--------------------------- DEFINE param functions ------------------------
     def _defineParams(self, form):
         form.addSection(label='Input')
-        form.addParam('numberOfIterations', IntParam, default=2, 
+        form.addParam('numberOfIterations', params.IntParam, default=2,
                       label="Number of iterations", 
                       help='Repeat the insertion of steps N times.')
-        form.addParam('numberOfParallelSleeps', IntParam, default=2, 
+        form.addParam('numberOfParallelSleeps', params.IntParam, default=2,
                       label="Number of parallel sleeps", 
                       help='How many sleep steps can be done at the same time.')
-        form.addParam('failAfter', IntParam, default=0,
+        form.addParam('failAfter', params.IntParam, default=0,
                       label="Fail after", 
                       help='If you set an id, the next step should fail')
-        form.addParam('sleepSecs', IntParam, default=2,
+        form.addParam('sleepSecs', params.IntParam, default=2,
                       label='Seconds to sleep')
         
         form.addParallelSection(threads=4, mpi=1)

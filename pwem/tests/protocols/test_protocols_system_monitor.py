@@ -22,27 +22,24 @@
 # ***************************************************************************/
 import os.path
 
-from pyworkflow.tests import BaseTest, setupTestProject
-from pyworkflow.utils import commandExists
+import pyworkflow.tests as pwtests
+import pyworkflow.utils as pwutils
 
-from pwem.protocol.monitors.protocol_monitor_system import SYSTEM_LOG_SQLITE
-from pwem.protocol.protocol_tests import STRESS_NG
-from pwem.protocol import ProtStress, ProtMonitorSystem
+import pwem.protocol as emprot
 
 
-
-class TestStress(BaseTest):
+class TestStress(pwtests.BaseTest):
     @classmethod
     def setUpClass(cls):
-        setupTestProject(cls)
+        pwtests.setupTestProject(cls)
 
     def test_pattern(self):
         """ Import several Particles from a given pattern.
         """
 
         # Check stress-ng is installed
-        self.assertTrue(commandExists(STRESS_NG),
-                        "This test requires to have %s installed" % STRESS_NG)
+        self.assertTrue(pwutils.commandExists(emprot.STRESS_NG),
+                        "This test requires to have %s installed" % emprot.STRESS_NG)
 
         kwargs = {'noCpu': 2,
                   'noMem': 0,
@@ -51,7 +48,7 @@ class TestStress(BaseTest):
                   'delay': 1}
 
         # put some stress on the system
-        prot1 = self.newProtocol(ProtStress, **kwargs)
+        prot1 = self.newProtocol(emprot.ProtStress, **kwargs)
         prot1.setObjLabel('stress')
         self.proj.launchProtocol(prot1, wait=False)
 
@@ -72,11 +69,11 @@ class TestStress(BaseTest):
             "netInterfaces": 1,
             "doDiskIO": True}
 
-        prot2 = self.newProtocol(ProtMonitorSystem, **kwargs)
+        prot2 = self.newProtocol(emprot.ProtMonitorSystem, **kwargs)
         prot2.inputProtocols.append(prot1)
         self.launchProtocol(prot2)
 
-        baseFn = prot2._getPath(SYSTEM_LOG_SQLITE)
+        baseFn = prot2._getPath(emprot.SYSTEM_LOG_SQLITE)
 
         # not sure what to test here
         self.assertTrue(os.path.isfile(baseFn))

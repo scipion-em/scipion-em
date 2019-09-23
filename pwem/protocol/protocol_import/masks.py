@@ -30,7 +30,7 @@ In this module are protocol related to EM imports of Masks...
 
 from os.path import exists, basename
 
-from pyworkflow.protocol.params import PathParam, FloatParam
+import pyworkflow.protocol.params as params
 import pyworkflow.utils as pwutils
 
 from pwem.objects import Mask, VolumeMask
@@ -49,10 +49,10 @@ class ProtImportMask(ProtImport):
         
         form.addSection(label='Import')
 
-        form.addParam('maskPath', PathParam, 
+        form.addParam('maskPath', params.PathParam,
                       label="Mask path",
                       help="Select the file path of the mask\n")
-        form.addParam('samplingRate', FloatParam, default=1.,
+        form.addParam('samplingRate', params.FloatParam, default=1.,
                    label=pwutils.properties.Message.LABEL_SAMP_RATE)
 
     def _insertAllSteps(self):

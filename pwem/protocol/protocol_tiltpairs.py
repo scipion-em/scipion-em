@@ -34,14 +34,12 @@ import sys
 from os.path import basename
 from glob import glob
 
-from pyworkflow.utils.properties import Message
-from pyworkflow.utils.path import (copyFile, createLink, expandPattern,
-                                   cleanPath, commonPath)
-from pyworkflow.protocol.params import (PathParam, FloatParam, BooleanParam,
-                                        EnumParam, IntParam)
-from pwem.constants import SAMPLING_FROM_IMAGE, SAMPLING_FROM_SCANNER
-from pwem.convert import ImageHandler
-from pwem.objects import MicrographsTiltPair, TiltPair
+import pyworkflow.utils as pwutils
+import pyworkflow.protocol.params as params
+
+import pwem.constants as emcts
+import pwem.convert as emconv
+import pwem.objects as emobj
 
 from .protocol_import import ProtImportFiles
 
@@ -57,34 +55,39 @@ class ProtImportMicrographsTiltPairs(ProtImportFiles):
     
     def _defineParams(self, form):
         form.addSection(label='Input')
-        form.addParam('patternUntilted', PathParam, label=Message.LABEL_PATTERNU,
-                      help=Message.TEXT_PATTERN)
-        form.addParam('patternTilted', PathParam, label=Message.LABEL_PATTERNT,
-                      help=Message.TEXT_PATTERN)
-        form.addParam('copyToProj', BooleanParam, label=Message.LABEL_COPYFILES, default=False)
-        form.addParam('voltage', FloatParam, default=200,
-                   label=Message.LABEL_VOLTAGE, help=Message.TEXT_VOLTAGE)
-        form.addParam('sphericalAberration', FloatParam, default=2.26,
-                   label=Message.LABEL_SPH_ABERRATION,
-                   help=Message.TEXT_SPH_ABERRATION)
-        form.addParam('ampContrast', FloatParam, default=0.1,
-                      label=Message.LABEL_AMPLITUDE,
-                      help=Message.TEXT_AMPLITUDE)
-        form.addParam('samplingRateMode', EnumParam, default=SAMPLING_FROM_IMAGE,
-                   label=Message.LABEL_SAMP_MODE,
-                   help=Message.TEXT_SAMP_MODE,
-                   choices=[Message.LABEL_SAMP_MODE_1, Message.LABEL_SAMP_MODE_2])
-        form.addParam('samplingRate', FloatParam, default=1, 
-                   label=Message.LABEL_SAMP_RATE,
-                   help=Message.TEXT_SAMP_RATE,
-                   condition='samplingRateMode==%d' % SAMPLING_FROM_IMAGE)
-        form.addParam('magnification', IntParam, default=50000,
-                   label=Message.LABEL_MAGNI_RATE,
-                   help=Message.TEXT_MAGNI_RATE,
-                   condition='samplingRateMode==%d' % SAMPLING_FROM_SCANNER)
-        form.addParam('scannedPixelSize', FloatParam, default=7.0,
-                   label=Message.LABEL_SCANNED,
-                   condition='samplingRateMode==%d' % SAMPLING_FROM_SCANNER)
+        form.addParam('patternUntilted', params.PathParam,
+                      label=pwutils.Message.LABEL_PATTERNU,
+                      help=pwutils.Message.TEXT_PATTERN)
+        form.addParam('patternTilted', params.PathParam,
+                      label=pwutils.Message.LABEL_PATTERNT,
+                      help=pwutils.Message.TEXT_PATTERN)
+        form.addParam('copyToProj', params.BooleanParam,
+                      label=pwutils.Message.LABEL_COPYFILES, default=False)
+        form.addParam('voltage', params.FloatParam, default=200,
+                   label=pwutils.Message.LABEL_VOLTAGE, help=pwutils.Message.TEXT_VOLTAGE)
+        form.addParam('sphericalAberration', params.FloatParam, default=2.26,
+                   label=pwutils.Message.LABEL_SPH_ABERRATION,
+                   help=pwutils.Message.TEXT_SPH_ABERRATION)
+        form.addParam('ampContrast', params.FloatParam, default=0.1,
+                      label=pwutils.Message.LABEL_AMPLITUDE,
+                      help=pwutils.Message.TEXT_AMPLITUDE)
+        form.addParam('samplingRateMode', params.EnumParam,
+                      default=emcts.SAMPLING_FROM_IMAGE,
+                   label=pwutils.Message.LABEL_SAMP_MODE,
+                   help=pwutils.Message.TEXT_SAMP_MODE,
+                   choices=[pwutils.Message.LABEL_SAMP_MODE_1,
+                            pwutils.Message.LABEL_SAMP_MODE_2])
+        form.addParam('samplingRate', params.FloatParam, default=1,
+                   label=pwutils.Message.LABEL_SAMP_RATE,
+                   help=pwutils.Message.TEXT_SAMP_RATE,
+                   condition='samplingRateMode==%d' % emcts.SAMPLING_FROM_IMAGE)
+        form.addParam('magnification', params.IntParam, default=50000,
+                   label=pwutils.Message.LABEL_MAGNI_RATE,
+                   help=pwutils.Message.TEXT_MAGNI_RATE,
+                   condition='samplingRateMode==%d' % emcts.SAMPLING_FROM_SCANNER)
+        form.addParam('scannedPixelSize', params.FloatParam, default=7.0,
+                   label=pwutils.Message.LABEL_SCANNED,
+                   condition='samplingRateMode==%d' % emcts.SAMPLING_FROM_SCANNER)
     
     
     #--------------------------- INSERT steps functions -------------------------------------------- 
@@ -98,7 +101,7 @@ class ProtImportMicrographsTiltPairs(ProtImportFiles):
         """ Copy images matching the filename pattern
         Register other parameters.
         """
-        filePaths = glob(expandPattern(pattern))
+        filePaths = glob(pwutils.expandPattern(pattern))
         
         #imgSet = SetOfMicrographs(filename=self.micsPairsSqlite, prefix=suffix)
         imgSet = self._createSetOfMicrographs(suffix=suffix)
@@ -112,7 +115,7 @@ class ProtImportMicrographsTiltPairs(ProtImportFiles):
         self._setOtherPars(imgSet)
         
         outFiles = [imgSet.getFileName()]
-        imgh = ImageHandler()
+        imgh = emconv.ImageHandler()
         img = imgSet.ITEM_TYPE()
         n = 1
         size = len(filePaths)
@@ -123,9 +126,9 @@ class ProtImportMicrographsTiltPairs(ProtImportFiles):
 #             ext = os.path.splitext(basename(f))[1]
             dst = self._getExtraPath(basename(fn))
             if self.copyToProj:
-                copyFile(fn, dst)
+                pwutils.copyFile(fn, dst)
             else:
-                createLink(fn, dst)
+                pwutils.createLink(fn, dst)
             
             if n > 1:
                 for index in range(1, n+1):
@@ -154,9 +157,9 @@ class ProtImportMicrographsTiltPairs(ProtImportFiles):
     def createTiltedPairsStep(self):
         args = {} 
         self.micsPairsSqlite = self._getPath('micrographs_pairs.sqlite')
-        cleanPath(self.micsPairsSqlite) # Delete if exists
+        pwutils.cleanPath(self.micsPairsSqlite) # Delete if exists
         
-        micsTiltPair = MicrographsTiltPair(filename=self.micsPairsSqlite)
+        micsTiltPair = emobj.MicrographsTiltPair(filename=self.micsPairsSqlite)
         micsU = self.importMicrographs(self.patternUntilted.get(), 'Untilted',
                                  self.voltage.get(), self.sphericalAberration.get(), self.ampContrast.get())
         micsT = self.importMicrographs(self.patternTilted.get(), 'Tilted',
@@ -166,7 +169,7 @@ class ProtImportMicrographsTiltPairs(ProtImportFiles):
         micsTiltPair.setTilted(micsT)
         
         for micU, micT in izip(micsU, micsT):
-            micsTiltPair.append(TiltPair(micU, micT))
+            micsTiltPair.append(emobj.TiltPair(micU, micT))
         
         args[self.OUTPUT_NAME] = micsTiltPair
         self._defineOutputs(**args)
@@ -175,13 +178,13 @@ class ProtImportMicrographsTiltPairs(ProtImportFiles):
     def _validate(self):
         errors = []
         if (not self.patternUntilted.get() or not self.patternTilted.get()):
-            errors.append(Message.ERROR_PATTERN_EMPTY)
+            errors.append(pwutils.Message.ERROR_PATTERN_EMPTY)
         else:
-            filePathsUntilted = glob(expandPattern(self.patternUntilted.get()))
-            filePathsTilted = glob(expandPattern(self.patternTilted.get()))
+            filePathsUntilted = glob(pwutils.expandPattern(self.patternUntilted.get()))
+            filePathsTilted = glob(pwutils.expandPattern(self.patternTilted.get()))
         
             if (len(filePathsUntilted) == 0 or len(filePathsTilted) == 0):
-                errors.append(Message.ERROR_PATTERN_FILES)
+                errors.append(pwutils.Message.ERROR_PATTERN_FILES)
 
         return errors
     
@@ -218,7 +221,7 @@ class ProtImportMicrographsTiltPairs(ProtImportFiles):
     def _setOtherPars(self, micSet):
         micSet.getAcquisition().setMagnification(self.magnification.get())
         
-        if self.samplingRateMode == SAMPLING_FROM_IMAGE:
+        if self.samplingRateMode == emcts.SAMPLING_FROM_IMAGE:
             micSet.setSamplingRate(self.samplingRate.get())
         else:
             micSet.setScannedPixelSize(self.scannedPixelSize.get())
@@ -227,6 +230,6 @@ class ProtImportMicrographsTiltPairs(ProtImportFiles):
         from pwem import Micrograph
         if isinstance(img, Micrograph):
             filePaths = self.getMatchFiles(pattern=pattern)
-            commPath = commonPath(filePaths)
+            commPath = pwutils.commonPath(filePaths)
             micName = filename.replace(commPath + "/", "").replace("/", "_")
             img.setMicName(micName)

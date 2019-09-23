@@ -40,7 +40,7 @@ Datasets:
 import os
 from os.path import exists
 
-import pyworkflow.tests as tests
+import pyworkflow.tests as pwtests
 
 import pwem as em
 
@@ -48,13 +48,13 @@ xmipp3 = em.Domain.importFromPlugin('xmipp3.protocols', doRaise=True)
 eman2 = em.Domain.importFromPlugin('eman2.protocols', doRaise=True)
 
 
-class TestGroel(tests.BaseTest):
+class TestGroel(pwtests.BaseTest):
 
     @classmethod
     def setUpClass(cls):
         # Create a new project
-        tests.setupTestProject(cls)
-        cls.ds = tests.DataSet.getDataSet('initial_volume')
+        pwtests.setupTestProject(cls)
+        cls.ds = pwtests.DataSet.getDataSet('initial_volume')
 
     def test_groel(self):
         """ Run an Import particles protocol. """
@@ -112,13 +112,13 @@ class TestGroel(tests.BaseTest):
         self.launchProtocol(protAlign)
 
 
-class TestBPV(tests.BaseTest):
+class TestBPV(pwtests.BaseTest):
 
     @classmethod
     def setUpClass(cls):
         # Create a new project
-        tests.setupTestProject(cls)
-        cls.ds = tests.DataSet.getDataSet('initial_volume')
+        pwtests.setupTestProject(cls)
+        cls.ds = pwtests.DataSet.getDataSet('initial_volume')
 
     def test_bpv(self):
         """ Run an Import particles protocol. """
@@ -184,13 +184,13 @@ class TestBPV(tests.BaseTest):
         self.launchProtocol(protAlign)
 
 
-class TestRibosome(tests.BaseTest):
+class TestRibosome(pwtests.BaseTest):
 
     @classmethod
     def setUpClass(cls):
         # Create a new project
-        tests.setupTestProject(cls)
-        cls.ds = tests.DataSet.getDataSet('initial_volume')
+        pwtests.setupTestProject(cls)
+        cls.ds = pwtests.DataSet.getDataSet('initial_volume')
 
     def test_ribosome(self):
         """ Run an Import particles protocol. """
@@ -247,14 +247,14 @@ class TestRibosome(tests.BaseTest):
         self.launchProtocol(protAlign)
 
 
-class TestSignificant(tests.BaseTest):
+class TestSignificant(pwtests.BaseTest):
     """ Test only significant execution with BPV virus. """
 
     @classmethod
     def setUpClass(cls):
         # Create a new project
-        tests.setupTestProject(cls)
-        cls.ds = tests.DataSet.getDataSet('initial_volume')
+        pwtests.setupTestProject(cls)
+        cls.ds = pwtests.DataSet.getDataSet('initial_volume')
 
     def _runSignificant(self, inputSet, args):
         myargs = dict(args)

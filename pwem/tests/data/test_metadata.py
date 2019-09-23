@@ -25,15 +25,15 @@
 # *
 # **************************************************************************
 
-from pyworkflow.tests import *
+import pyworkflow.tests as pwtests
 
 import pwem.metadata as md
 
 
 
-class TestMetaData(unittest.TestCase):
+class TestMetaData(pwtests.unittest.TestCase):
     
-    _labels = [WEEKLY]
+    _labels = [pwtests.WEEKLY]
 
     def _newMd(self):
         md0 = md.MetaData()

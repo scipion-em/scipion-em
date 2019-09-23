@@ -24,31 +24,27 @@
 import time
 import os
 
-from pyworkflow.tests import BaseTest, setupTestProject
-from pyworkflow.protocol import getProtocolFromDb
+import pyworkflow.tests as pwtests
+import pyworkflow.protocol as pwprot
 
 import pwem as em
-from pwem.objects.data import SetOfCTF
-from pwem.protocol import ProtCreateStreamData
-from pwem.protocol.monitors.pynvml import nvmlInit, NVMLError
-from pwem.protocol.protocol_create_stream_data import SET_OF_RANDOM_MICROGRAPHS
-
-
-
+import pwem.objects as emobj
+import pwem.protocol as emprot
 
 # Load the number of movies for the simulation, by default equal 5, but
 # can be modified in the environment
+
 MICS = os.environ.get('SCIPION_TEST_MICS', 6)
 CTF_SQLITE = "ctfs.sqlite"
 
 
-class TestCtfStreaming(BaseTest):
+class TestCtfStreaming(pwtests.BaseTest):
     @classmethod
     def setUpClass(cls):
-        setupTestProject(cls)
+        pwtests.setupTestProject(cls)
 
     def _updateProtocol(self, prot):
-        prot2 = getProtocolFromDb(prot.getProject().path,
+        prot2 = pwprot.getProtocolFromDb(prot.getProject().path,
                                   prot.getDbPath(),
                                   prot.getObjId())
         # Close DB connections
@@ -81,7 +77,7 @@ class TestCtfStreaming(BaseTest):
                     continue
 
                 if prot.hasAttribute("outputCTF"):
-                    ctfSet = SetOfCTF(filename=prot._getPath(CTF_SQLITE))
+                    ctfSet = emobj.SetOfCTF(filename=prot._getPath(CTF_SQLITE))
                     baseFn = prot._getPath(CTF_SQLITE)
                     self.assertTrue(os.path.isfile(baseFn))
                     counter = 0
@@ -108,10 +104,10 @@ class TestCtfStreaming(BaseTest):
                   'samplingRate': 1.25,
                   'creationInterval': 15,
                   'delay': 0,
-                  'setof': SET_OF_RANDOM_MICROGRAPHS}  # SetOfMicrographs
+                  'setof': emprot.SET_OF_RANDOM_MICROGRAPHS}  # SetOfMicrographs
 
         # create mic in streaming mode
-        protStream = self.newProtocol(ProtCreateStreamData, **kwargs)
+        protStream = self.newProtocol(emprot.ProtCreateStreamData, **kwargs)
         protStream.setObjLabel('create Stream Mic')
         self.proj.launchProtocol(protStream, wait=False)
 
@@ -150,7 +146,7 @@ class TestCtfStreaming(BaseTest):
         protCTF3 = None
         try:
             # check if box has nvidia cuda libs.
-            nvmlInit()  # fails if not GPU attached
+            emprot.nvmlInit()  # fails if not GPU attached
             ProtGctf = em.Domain.importFromPlugin('gctf.protocols', 'ProtGctf',
                                                doRaise=True)
             protCTF3 = ProtGctf()
@@ -159,7 +155,7 @@ class TestCtfStreaming(BaseTest):
             protCTF3.ctfDownFactor.set(2)
             self.proj.scheduleProtocol(protCTF3)
 
-        except NVMLError as err:
+        except emprot.NVMLError as err:
             print("Cannot find GPU."
                   "I assume that no GPU is connected to this machine")
 

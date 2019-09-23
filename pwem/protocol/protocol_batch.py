@@ -32,10 +32,7 @@ from pyworkflow.protocol.params import (PointerParam, FileParam, StringParam)
 from pyworkflow.utils import moveFile
 
 from pwem.protocol import EMProtocol
-from pwem.objects.data import (SetOfImages, SetOfCTF, SetOfClasses,
-                               SetOfClasses3D, SetOfVolumes, EMSet,
-                               SetOfNormalModes, SetOfParticles, SetOfPDBs,
-                               SetOfMicrographs, Mask)
+import pwem.objects as emobj
 from pwem.constants import ALIGN_NONE
 from pwem.objects.data_tiltpairs import (MicrographsTiltPair,
                                          ParticlesTiltPair)
@@ -77,26 +74,26 @@ class ProtUserSubSet(BatchProtocol):
         if other and ',Volume' in other:
             volId = int(other.split(',')[0])
 
-            if isinstance(setObj, SetOfVolumes):
-                volSet = SetOfVolumes(filename=self._dbName)
+            if isinstance(setObj, emobj.SetOfVolumes):
+                volSet = emobj.SetOfVolumes(filename=self._dbName)
                 output = volSet[volId]
             else:
-                classSet = SetOfClasses3D(filename=self._dbName)
+                classSet = emobj.SetOfClasses3D(filename=self._dbName)
                 output = classSet[volId].getRepresentative()
             self._defineOutputs(outputVolume=output)
 
-        elif isinstance(inputObj, SetOfImages):
+        elif isinstance(inputObj, emobj.SetOfImages):
                 output = self._createSubSetFromImages(inputObj)
 
-        elif isinstance(inputObj, SetOfClasses):
+        elif isinstance(inputObj, emobj.SetOfClasses):
             output = self._createSubSetFromClasses(inputObj)
 
-        elif isinstance(inputObj, SetOfCTF):
+        elif isinstance(inputObj, emobj.SetOfCTF):
             outputClassName = self.outputClassName.get()
             if outputClassName.startswith('SetOfMicrographs'):
                 output = self._createMicsSubSetFromCTF(inputObj)
 
-        elif isinstance(inputObj, SetOfPDBs):
+        elif isinstance(inputObj, emobj.SetOfPDBs):
             output = self._createSubSetFromPDBs(inputObj)
 
         elif isinstance(inputObj, MicrographsTiltPair):
@@ -110,19 +107,19 @@ class ProtUserSubSet(BatchProtocol):
                 otherid = self.other.get()
                 otherObj = self.getProject().mapper.selectById(int(otherid))
 
-                if isinstance(setObj, SetOfClasses):
+                if isinstance(setObj, emobj.SetOfClasses):
                     setObj.setImages(otherObj)
                     self._createSubSetFromClasses(setObj)
 
-                elif isinstance(setObj, SetOfImages):
+                elif isinstance(setObj, emobj.SetOfImages):
                     setObj.copyInfo(otherObj)  # copy info from original images
                     self._createSubSetFromImages(setObj)
 
-                elif isinstance(setObj, SetOfNormalModes):
+                elif isinstance(setObj, emobj.SetOfNormalModes):
                     self._createSimpleSubset(otherObj)
             else:
-                if isinstance(setObj, SetOfVolumes):
-                    volSet = SetOfVolumes(filename=self._dbName)
+                if isinstance(setObj, emobj.SetOfVolumes):
+                    volSet = emobj.SetOfVolumes(filename=self._dbName)
                     volSet.loadAllProperties()
                     self._createSimpleSubset(volSet)
 
@@ -225,7 +222,7 @@ class ProtUserSubSet(BatchProtocol):
                             'this SetOfCTF, the micrographs were not set.')
         outputMics.copyInfo(setOfMics)
 
-        modifiedSet = SetOfCTF(filename=self._dbName, prefix=self._dbPrefix)
+        modifiedSet = emobj.SetOfCTF(filename=self._dbName, prefix=self._dbPrefix)
 
         count = 0
         for ctf in modifiedSet:
@@ -359,8 +356,8 @@ class ProtUserSubSet(BatchProtocol):
                                           prefix=self._dbPrefix)
         inputU = micrographsTiltPair.getUntilted()
         inputT = micrographsTiltPair.getTilted()
-        outputU = SetOfMicrographs(filename=self._getPath('mics_untilted.sqlite'))
-        outputT = SetOfMicrographs(filename=self._getPath('mics_tilted.sqlite'))
+        outputU = emobj.SetOfMicrographs(filename=self._getPath('mics_untilted.sqlite'))
+        outputT = emobj.SetOfMicrographs(filename=self._getPath('mics_tilted.sqlite'))
         outputU.copyInfo(inputU)
         outputT.copyInfo(inputT)
 
@@ -379,8 +376,8 @@ class ProtUserSubSet(BatchProtocol):
 
     def _createSubSetFromPDBs(self, setOfPDBs):
         """ Create a subset of SetOfPDBs. """
-        output = SetOfPDBs(filename=self._getPath('pdbs.sqlite'))
-        modifiedSet = SetOfPDBs(filename=self._dbName, prefix=self._dbPrefix)
+        output = emobj.SetOfPDBs(filename=self._getPath('pdbs.sqlite'))
+        modifiedSet = emobj.SetOfPDBs(filename=self._dbName, prefix=self._dbPrefix)
 
         for pdb in modifiedSet:
             if pdb.isEnabled():
@@ -398,8 +395,8 @@ class ProtUserSubSet(BatchProtocol):
 
         inputU = particlesTiltPair.getUntilted()
         inputT = particlesTiltPair.getTilted()
-        outputU = SetOfParticles(filename=self._getPath('particles_untilted.sqlite'))
-        outputT = SetOfParticles(filename=self._getPath('particles_tilted.sqlite'))
+        outputU = emobj.SetOfParticles(filename=self._getPath('particles_untilted.sqlite'))
+        outputT = emobj.SetOfParticles(filename=self._getPath('particles_tilted.sqlite'))
         outputU.copyInfo(inputU)
         outputT.copyInfo(inputT)
 
@@ -451,12 +448,12 @@ class ProtUserSubSet(BatchProtocol):
         inputObj = self.inputObject.get()
         if inputObj is not None:
             inputStr += inputObj.getClassName()
-            if isinstance(inputObj, EMSet):
+            if isinstance(inputObj, emobj.EMSet):
                 inputStr += ' of size %s' % inputObj.getSize()
         output = ''
         for _, attr in self.iterOutputAttributes():
             output += attr.getClassName()
-            if isinstance(attr, EMSet):
+            if isinstance(attr, emobj.EMSet):
                 output += ' of size %s' % attr.getSize()
 
         msg = 'From input %s created output %s ' % (inputStr, output)
@@ -496,7 +493,7 @@ class ProtCreateMask(BatchProtocol):
         if not samplingRate:
             raise Exception("sampling rate required")
 
-        mask = Mask()
+        mask = emobj.Mask()
         mask.setFileName(maskDst)
         mask.setSamplingRate(samplingRate)
         self._defineOutputs(outputMask=mask)
@@ -545,13 +542,12 @@ class ProtCreateFSC(BatchProtocol):
         self._insertFunctionStep('createOutputStep')
 
     def createOutputStep(self):
-        from pyworkflow import em
         fscSet = self._createSetOfFSCs()
         fscSet.setObjLabel("setOfFSCs")
         dataStringList = self.fscValues.get().split("|")
         labelStringList = self.fscLabels.get().split("|")
         for fsc, label in zip(dataStringList, labelStringList):
-            _fsc = em.data.FSC(objLabel=loads(label))
+            _fsc = emobj.FSC(objLabel=loads(label))
             freq, value = loads(fsc)
             _fsc.setData(freq,value)
             fscSet.append(_fsc)

@@ -31,23 +31,16 @@ This module implement some wizards
 import Tkinter as tk
 import ttk
 
-from pyworkflow import findResource
-from pyworkflow.object import PointerList, Pointer
-from pyworkflow.wizard import Wizard
+import pyworkflow as pw
+import pyworkflow.object as pwobj
+import pyworkflow.wizard as pwizard
 import pyworkflow.gui.dialog as dialog
 from pyworkflow.gui.tree import BoundTree, ListTreeProvider
 from pyworkflow.gui.widgets import LabelSlider
 
-from pwem.convert import ImageHandler
-from pwem.constants import (UNIT_PIXEL,
-                                     UNIT_ANGSTROM,
-                                     UNIT_PIXEL_FOURIER,
-                                     FILTER_LOW_PASS,
-                                     FILTER_BAND_PASS,
-                                     FILTER_HIGH_PASS
-                                     )
-from pwem.objects.data import (Volume, SetOfMicrographs, SetOfParticles,
-                               SetOfVolumes)
+import pwem.convert as emconv
+import pwem.constants as emcts
+import pwem.objects as emobj
 
 import xmippLib
 
@@ -56,7 +49,7 @@ import xmippLib
 #    Wizard EM base class
 # ===============================================================================
 
-class EmWizard(Wizard):
+class EmWizard(pwizard.Wizard):
 
     def _getMics(self, objs):
         return [mic.clone() for mic in objs]
@@ -74,7 +67,7 @@ class EmWizard(Wizard):
 
     def _getVols(self, objs):
         vols = []
-        if isinstance(objs, Volume):
+        if isinstance(objs, emobj.Volume):
             vols.append(objs)
         else:
             vols = [vol.clone() for vol in objs]
@@ -89,7 +82,7 @@ class EmWizard(Wizard):
         if objs.hasValue():
             # If objs is a PointerList currently it can only be formed of SetOfVolumes and Volume
             # (for protocol align_volume). Should this change review this part
-            if isinstance(objs, PointerList):
+            if isinstance(objs, pwobj.PointerList):
                 vols_total = []
                 for pointer in objs:
                     obj = pointer.get()
@@ -99,15 +92,16 @@ class EmWizard(Wizard):
             else:
                 objs = objs.get()
 
-                if isinstance(objs, SetOfMicrographs):
+                if isinstance(objs, emobj.SetOfMicrographs):
                     mics = self._getMics(objs)
                     provider = ListTreeProvider(mics)
 
-                if isinstance(objs, SetOfParticles):
+                if isinstance(objs, emobj.SetOfParticles):
                     particles = self._getParticles(objs)
                     provider = ListTreeProvider(particles)
 
-                if isinstance(objs, SetOfVolumes) or isinstance(objs, Volume):
+                if isinstance(objs, emobj.SetOfVolumes) or isinstance(objs,
+                                                                      emobj.Volume):
                     vols = self._getVols(objs)
                     provider = ListTreeProvider(vols)
 
@@ -167,7 +161,7 @@ class EmWizard(Wizard):
 
 class DownsampleWizard(EmWizard):
 
-    def show(self, form, value, label, units=UNIT_PIXEL):
+    def show(self, form, value, label, units=emcts.UNIT_PIXEL):
         protocol = form.protocol
         provider = self._getProvider(protocol)
 
@@ -189,7 +183,7 @@ class DownsampleWizard(EmWizard):
 
 class CtfWizard(EmWizard):
 
-    def show(self, form, value, label, units=UNIT_PIXEL):
+    def show(self, form, value, label, units=emcts.UNIT_PIXEL):
         protocol = form.protocol
         #        form.setParamFromVar('inputMicrographs') # update selected input micrographs
         provider = self._getProvider(protocol)
@@ -214,7 +208,7 @@ class CtfWizard(EmWizard):
 
 class MaskRadiusWizard(EmWizard):
 
-    def show(self, form, value, label, units=UNIT_PIXEL):
+    def show(self, form, value, label, units=emcts.UNIT_PIXEL):
         protocol = form.protocol
         provider = self._getProvider(protocol)
 
@@ -234,7 +228,7 @@ class MaskRadiusWizard(EmWizard):
 
 class MaskRadiiWizard(EmWizard):
 
-    def show(self, form, value, label, units=UNIT_PIXEL):
+    def show(self, form, value, label, units=emcts.UNIT_PIXEL):
         protocol = form.protocol
         provider = self._getProvider(protocol)
 
@@ -273,7 +267,7 @@ class VolumeMaskRadiiWizard(MaskRadiiWizard):
 
 class FilterWizard(EmWizard):
 
-    def show(self, form, value, label, mode, unit=UNIT_PIXEL, **args):
+    def show(self, form, value, label, mode, unit=emcts.UNIT_PIXEL, **args):
         protocol = form.protocol
         provider = self._getProvider(protocol)
 
@@ -281,15 +275,15 @@ class FilterWizard(EmWizard):
             self.mode = mode
             args.update({'mode': self.mode,
                          'unit': unit})
-            if self.mode == FILTER_LOW_PASS:
+            if self.mode == emcts.FILTER_LOW_PASS:
                 args['showLowFreq'] = False
                 args['highFreq'] = value[1]
                 args['freqDecay'] = value[2]
-            elif self.mode == FILTER_HIGH_PASS:
+            elif self.mode == emcts.FILTER_HIGH_PASS:
                 args['showHighFreq'] = False
                 args['lowFreq'] = value[0]
                 args['freqDecay'] = value[2]
-            elif self.mode == FILTER_BAND_PASS:
+            elif self.mode == emcts.FILTER_BAND_PASS:
                 args['lowFreq'] = value[0]
                 args['highFreq'] = value[1]
                 args['freqDecay'] = value[2]
@@ -301,7 +295,7 @@ class FilterWizard(EmWizard):
             if d.resultYes():
                 def setFormValue(flag, value, index):
                     if args.get(flag, True):
-                        if unit == UNIT_ANGSTROM:
+                        if unit == emcts.UNIT_ANGSTROM:
                             value = d.samplingRate / (value)
                         form.setVar(label[index], value)
 
@@ -323,7 +317,7 @@ class FilterVolumesWizard(FilterWizard):
 
 class GaussianWizard(EmWizard):
 
-    def show(self, form, value, label, units=UNIT_PIXEL_FOURIER):
+    def show(self, form, value, label, units=emcts.UNIT_PIXEL_FOURIER):
         protocol = form.protocol
         provider = self._getProvider(protocol)
 
@@ -354,7 +348,7 @@ class PDBVolumeWizard(EmWizard):
             print("pdb ", pdb._volume, str(pdb._volume))
             if pdb._volume:
                 print("Setting ", str(pdb.getVolume()))
-                ptr = Pointer()
+                ptr = pwobj.Pointer()
                 ptr.copy(form.protocol.inputPDB)
                 ptr.setExtended(ptr.getExtended() + "._volume")
                 #                 ptr.set(pdb.getVolume())
@@ -455,12 +449,12 @@ class ImagePreviewDialog(PreviewDialog):
     def _itemSelected(self, obj):
 
         index = obj.getIndex()
-        filename = ImageHandler.fixXmippVolumeFileName(obj)
+        filename = emconv.ImageHandler.fixXmippVolumeFileName(obj)
         if index:
             filename = "%03d@%s" % (index, filename)
 
         #        self.image = xmippLib.Image()
-        self.image = ImageHandler()._img
+        self.image = emconv.ImageHandler()._img
 
         try:
             self.image.readPreview(filename, self.dim)
@@ -469,7 +463,7 @@ class ImagePreviewDialog(PreviewDialog):
             self.Z = self.image.getData()
         except Exception, e:
             from pyworkflow.gui.matplotlib_image import getPngData
-            self.Z = getPngData(findResource('no-image.png'))
+            self.Z = getPngData(pw.findResource('no-image.png'))
             dialog.showError("Input particles", "Error reading image <%s>"
                              % filename, self)
         self.preview.updateData(self.Z)
@@ -483,7 +477,7 @@ class DownsampleDialog(ImagePreviewDialog):
         self.rightPreviewLabel = "PSD"
         self.message = "Computing PSD..."
         self.previewLabel = "Micrograph"
-        self.rightImage = ImageHandler()._img
+        self.rightImage = emconv.ImageHandler()._img
 
     def _createPreview(self, frame):
         """ Should be implemented by subclasses to
@@ -614,7 +608,7 @@ class BandPassFilterDialog(DownsampleDialog):
         self.rightPreviewLabel = "Filtered"
         self.message = "Computing filtered image..."
         self.previewLabel = "Image"
-        self.rightImage = ImageHandler()._img
+        self.rightImage = emconv.ImageHandler()._img
 
     def _createControls(self, frame):
         self.freqFrame = ttk.LabelFrame(frame,
@@ -636,7 +630,7 @@ class BandPassFilterDialog(DownsampleDialog):
         self.samplingRate = 1.0
         self.sliTo = 0.5
         self.sliFrom = 0.01
-        if self.unit == UNIT_ANGSTROM:
+        if self.unit == emcts.UNIT_ANGSTROM:
             self.samplingRate = self.firstItem.getSamplingRate()
             self.itemDim, _, _ = self.firstItem.getDim()
             self.sliFrom = 2. * self.samplingRate
@@ -655,7 +649,7 @@ class BandPassFilterDialog(DownsampleDialog):
     def addFreqSlider(self, label, value, col):
         fromValue = self.sliFrom
         toValue = self.sliTo
-        if self.unit == UNIT_ANGSTROM:
+        if self.unit == emcts.UNIT_ANGSTROM:
             fromValue = self.sliTo
             toValue = self.sliFrom
         slider = LabelSlider(self.freqFrame, label, from_=fromValue, to=toValue,
@@ -673,13 +667,13 @@ class BandPassFilterDialog(DownsampleDialog):
         using the self.lastObj that was selected
         """
         xmippLib.bandPassFilter(self.rightImage,
-                                ImageHandler.locationToXmipp(self.lastObj),
+                                emconv.ImageHandler.locationToXmipp(self.lastObj),
                                 self.getLowFreq(), self.getHighFreq(),
                                 self.getFreqDecay(), self.dim)
 
     def getLowFreq(self):
         if self.showLowFreq:
-            if self.unit == UNIT_ANGSTROM:
+            if self.unit == emcts.UNIT_ANGSTROM:
                 return self.samplingRate / self.lfSlider.get()
             else:
                 return self.lfSlider.get()
@@ -687,7 +681,7 @@ class BandPassFilterDialog(DownsampleDialog):
 
     def getHighFreq(self):
         if self.showHighFreq:
-            if self.unit == UNIT_ANGSTROM:
+            if self.unit == emcts.UNIT_ANGSTROM:
                 return self.samplingRate / self.hfSlider.get()
             else:
                 return self.hfSlider.get()
@@ -695,7 +689,7 @@ class BandPassFilterDialog(DownsampleDialog):
 
     def getFreqDecay(self):
         if self.showDecay:
-            if self.unit == UNIT_ANGSTROM:
+            if self.unit == emcts.UNIT_ANGSTROM:
                 return self.samplingRate / self.freqDecaySlider.get()
             else:
                 return self.freqDecaySlider.get()
@@ -723,7 +717,7 @@ class GaussianFilterDialog(BandPassFilterDialog):
         using the self.lastObj that was selected
         """
         xmippLib.gaussianFilter(self.rightImage,
-                                ImageHandler.locationToXmipp(self.lastObj),
+                                emconv.ImageHandler.locationToXmipp(self.lastObj),
                                 self.getFreqSigma(), self.dim)
 
 
@@ -732,9 +726,9 @@ class MaskPreviewDialog(ImagePreviewDialog):
     def _beforePreview(self):
         self.dim = 256
         self.samplingRate = 1
-        self.unit = getattr(self, 'unit', UNIT_PIXEL)
+        self.unit = getattr(self, 'unit', emcts.UNIT_PIXEL)
 
-        if self.unit != UNIT_PIXEL:
+        if self.unit != emcts.UNIT_PIXEL:
             self.samplingRate = self.firstItem.getSamplingRate()
 
         self.dim_par = self.firstItem.getDim()[0] * self.samplingRate

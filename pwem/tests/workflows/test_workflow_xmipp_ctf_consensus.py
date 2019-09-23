@@ -22,20 +22,21 @@
 # *
 # ***************************************************************************/
 
-from pyworkflow.tests import BaseTest, DataSet, setupTestProject
-from pwem.protocol import ProtImportMicrographs, ProtCreateStreamData
+import pyworkflow.tests as pwtests
+
 import pwem as em
+import pwem.protocol as emprot
 
 
-class TestCtfConsensus(BaseTest):
+class TestCtfConsensus(pwtests.BaseTest):
     """ Check if the Xmipp-CTFconsensus rejects CTFs (and the coorrespondig mics)
         when two CTF estimations give different results,
         and accept when the two estimations give similar results.
     """
     @classmethod
     def setUpClass(cls):
-        setupTestProject(cls)
-        cls.dataset = DataSet.getDataSet('xmipp_tutorial')
+        pwtests.setupTestProject(cls)
+        cls.dataset = pwtests.DataSet.getDataSet('xmipp_tutorial')
         cls.micsFn = cls.dataset.getFile('allMics')
 
     def checkCTFs(self, protConsensus, refCTFs, refMics, label=''):
@@ -64,7 +65,7 @@ class TestCtfConsensus(BaseTest):
 
     def test1(self):
         # Import a set of micrographs
-        protImport = self.newProtocol(ProtImportMicrographs,
+        protImport = self.newProtocol(emprot.ProtImportMicrographs,
                                       filesPath=self.micsFn,
                                       samplingRate=1.237, voltage=300)
         self.launchProtocol(protImport)
@@ -72,7 +73,7 @@ class TestCtfConsensus(BaseTest):
                              "There was a problem with the import")
 
         # Create pure noise micrographs (to force a Discarded consensus set)
-        protStream = self.newProtocol(ProtCreateStreamData,
+        protStream = self.newProtocol(emprot.ProtCreateStreamData,
                                       xDim=9216,
                                       yDim=9441,
                                       nDim=3,

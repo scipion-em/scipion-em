@@ -34,9 +34,9 @@ This module contains protocols related to Set operations such us:
 import random
 
 import pyworkflow.protocol as pwprot
-from pyworkflow.object import Boolean
+import pyworkflow.object as pwobj
 
-from pwem.objects import SetOfClasses
+import pwem.objects as emobj
 
 from .protocol import EMProtocol
 
@@ -150,7 +150,7 @@ class ProtUnionSet(ProtSets):
 
         #TODO ROB remove ignoreExtraAttributes condition
         #or implement it. But this will be for Scipion 1.2
-        self.ignoreExtraAttributes = Boolean(True)
+        self.ignoreExtraAttributes = pwobj.Boolean(True)
         if self.ignoreExtraAttributes:
             _, commonAttrs = self.commonAttributes()
 
@@ -257,7 +257,7 @@ class ProtUnionSet(ProtSets):
         if len(classes) > 1:
             return ["All objects should have the same type.",
                     "Types of objects found: %s" % ", ".join(classes)]
-        if issubclass(type(self.inputSets[0].get()), SetOfClasses):
+        if issubclass(type(self.inputSets[0].get()), emobj.SetOfClasses):
             return["Is not possible to join different sets of classes.\n"
                    "If you want to join different representative, extract them "
                    "with the viewer and them run this protocol with the "

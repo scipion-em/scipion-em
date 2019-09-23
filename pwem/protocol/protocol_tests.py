@@ -29,15 +29,16 @@ but nos available for regular users. This will hide them and prevent the their
  appearance in any GUI search or tree."""
 import time
 
+import pyworkflow.protocol as pwprot
 import pyworkflow.protocol.params as params
 from pyworkflow import VERSION_1_1
 
-from .protocol import Protocol
+
 
 STRESS_NG = 'stress-ng'
 
 
-class ProtTests(Protocol):
+class ProtTests(pwprot.Protocol):
     @classmethod
     def isDisabled(cls):
         """ Return True for all test protocols.

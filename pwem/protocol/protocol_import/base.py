@@ -32,7 +32,6 @@ from datetime import datetime
 
 import pyworkflow.utils as pwutils
 import pyworkflow.protocol.params as params
-from pyworkflow.utils.path import expandPattern, copyFile, createAbsLink
 
 from pwem.protocol import EMProtocol
 
@@ -206,7 +205,7 @@ class ProtImportFiles(ProtImport):
         else:
             fullPattern = filesPath
 
-        pattern = expandPattern(fullPattern.replace("$", ""))
+        pattern = pwutils.expandPattern(fullPattern.replace("$", ""))
         match = re.match('[^#]*(#+)[^#]*', pattern)
 
         if match is not None:
@@ -238,9 +237,9 @@ class ProtImportFiles(ProtImport):
         # Set a function to copyFile or createLink
         # depending in the user selected option 
         if self.copyFiles:
-            return copyFile
+            return pwutils.copyFile
         else:
-            return createAbsLink
+            return pwutils.createAbsLink
 
     def fileModified(self, fileName, fileTimeout):
         """ Check if the fileName modification time is less

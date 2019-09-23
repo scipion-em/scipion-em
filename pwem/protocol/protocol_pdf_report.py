@@ -27,9 +27,9 @@
 import os
 import glob
 
-from pyworkflow import VERSION_1_1
-from pyworkflow.protocol.params import PathParam
-from pyworkflow.utils.path import moveFile, copyFile
+import pyworkflow as pw
+import pyworkflow.protocol.params as params
+import pyworkflow.utils as pwutils
 
 from .protocol import EMProtocol
 
@@ -51,12 +51,12 @@ class ProtPDFReport(EMProtocol):
     when these files are sorted, they will be sorted by the number in front.
     """    
     _label = 'pdf report'
-    _lastUpdateVersion = VERSION_1_1
+    _lastUpdateVersion = pw.VERSION_1_1
     #--------------------------- DEFINE param functions ------------------------
     
     def _defineParams(self, form):
         form.addSection(label='Input')
-        form.addParam('filesPath', PathParam,
+        form.addParam('filesPath', params.PathParam,
                       label="Files directory",
                       help="Directory with the input files. \n"
                            "Check protocol help for more details.")
@@ -93,7 +93,7 @@ class ProtPDFReport(EMProtocol):
             fnDest = fnDest.replace(" ","_")
             fnDest = fnDest.replace(":","_")
             fnDest = fnDest.replace(";","_")
-            copyFile(fileName, self._getExtraPath(fnDest))
+            pwutils.copyFile(fileName, self._getExtraPath(fnDest))
 
             if fnDest.endswith(".tex") or fnDest.endswith(".txt"):
                 fhTex.write("\\input{%s}\n" % fnDest)
@@ -120,7 +120,7 @@ class ProtPDFReport(EMProtocol):
         fnPDF = self._getExtraPath("report.pdf")
 
         if os.path.exists(fnPDF):
-            moveFile(fnPDF,self._getPath("report.pdf"))
+            pwutils.moveFile(fnPDF,self._getPath("report.pdf"))
         else:
             raise Exception("PDF file was not produced.")
 

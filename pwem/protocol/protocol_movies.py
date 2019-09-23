@@ -32,14 +32,12 @@ from os.path import join, basename, exists
 from datetime import datetime
 
 import pyworkflow.object as pwobj
-from pyworkflow.protocol.params import PointerParam
-
-from pyworkflow.protocol.constants import STEPS_PARALLEL
+import pyworkflow.protocol.params as params
+import pyworkflow.protocol.constants as pwcts
 import pyworkflow.utils as pwutils
-from pyworkflow.utils.properties import Message
 
-from pwem.objects.data import SetOfMovies, Movie, MovieAlignment, Acquisition
-from pwem.convert import ImageHandler
+import pwem.objects as emobj
+import pwem.convert as emconv
 
 from .protocol_micrographs import ProtPreprocessMicrographs
 from .protocol_particles import ProtExtractParticles
@@ -58,7 +56,7 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
 
     def __init__(self, **kwargs):
         ProtPreprocessMicrographs.__init__(self, **kwargs)
-        self.stepsExecutionMode = STEPS_PARALLEL
+        self.stepsExecutionMode = pwcts.STEPS_PARALLEL
 
     def _getConvertExtension(self, filename):
         """ This method will be used to check whether a movie needs to be
@@ -88,11 +86,11 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
 
     #--------------------------- DEFINE param functions ----------------------
     def _defineParams(self, form):
-        form.addSection(label=Message.LABEL_INPUT)
+        form.addSection(label=pwutils.Message.LABEL_INPUT)
 
-        form.addParam('inputMovies', PointerParam, pointerClass='SetOfMovies',
+        form.addParam('inputMovies', params.PointerParam, pointerClass='SetOfMovies',
                       important=True,
-                      label=Message.LABEL_INPUT_MOVS,
+                      label=pwutils.Message.LABEL_INPUT_MOVS,
                       help='Select a set of previously imported movies.')
 
     #--------------------------- INSERT steps functions ---------------------
@@ -142,7 +140,7 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
         elif not os.path.exists(finalName):
             # Conversion never happened...
             print('converting %s to %s' % (correctionImage, finalName))
-            ImageHandler().convert(correctionImage, finalName)
+            emconv.ImageHandler().convert(correctionImage, finalName)
 
         # return final name
         return os.path.abspath(finalName)
@@ -199,7 +197,7 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
         """ Load the input set of movies and create a list. """
         moviesFile = self.inputMovies.get().getFileName()
         self.debug("Loading input db: %s" % moviesFile)
-        movieSet = SetOfMovies(filename=moviesFile)
+        movieSet = emobj.SetOfMovies(filename=moviesFile)
         movieSet.loadAllProperties()
         self.listOfMovies = [m.clone() for m in movieSet]
         self.streamClosed = movieSet.isStreamClosed()
@@ -278,11 +276,11 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
         pass
 
     def processMovieStep(self, movieDict, hasAlignment):
-        movie = Movie()
-        movie.setAcquisition(Acquisition())
+        movie = emobj.Movie()
+        movie.setAcquisition(emobj.Acquisition())
 
         if hasAlignment:
-            movie.setAlignment(MovieAlignment())
+            movie.setAlignment(emobj.MovieAlignment())
 
         movie.setAttributesFromDict(movieDict, setBasic=True,
                                     ignoreMissing=True)
@@ -323,7 +321,7 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
                 with open(movieTxt) as f:
                     movieOrigin = os.path.basename(os.readlink(movieFn))
                     newMovieName = movieName.replace('.txt', '.mrcs')
-                    ih = ImageHandler()
+                    ih = emconv.ImageHandler()
                     for i, line in enumerate(f):
                         if line.strip():
                             inputFrame = os.path.join(movieOrigin, line.strip())
@@ -362,7 +360,7 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
                     self.info("Converting movie '%s' -> '%s'"
                               % (inputMovieFn, outputMovieFn))
 
-                    ImageHandler().convertStack(inputMovieFn, outputMovieFn)
+                    emconv.ImageHandler().convertStack(inputMovieFn, outputMovieFn)
 
             # Just store the original name in case it is needed in _processMovie
             movie._originalFileName = pwobj.String(objDoStore=False)
@@ -485,13 +483,13 @@ class ProtMovieAssignGain(ProtPreprocessMicrographs):
 
     #--------------------------- DEFINE param functions ------------------------
     def _defineParams(self, form):
-        form.addSection(label=Message.LABEL_INPUT)
+        form.addSection(label=pwutils.Message.LABEL_INPUT)
 
-        form.addParam('inputMovies', PointerParam, pointerClass='SetOfMovies',
+        form.addParam('inputMovies', params.PointerParam, pointerClass='SetOfMovies',
                       important=True,
-                      label=Message.LABEL_INPUT_MOVS,
+                      label=pwutils.Message.LABEL_INPUT_MOVS,
                       help='Select a set of previously imported movies.')
-        form.addParam('gainImage', PointerParam, pointerClass='Image',
+        form.addParam('gainImage', params.PointerParam, pointerClass='Image',
                       label="Gain image",
                       help="Select a gain image. The movie will be corrected "
                            "as newMovie=Movie/gain")

@@ -34,25 +34,25 @@ for input volumes.
 import os
 from distutils.spawn import find_executable
 from tkMessageBox import showerror
-from pwem import Volume
 
 import pyworkflow.protocol.params as params
-from pyworkflow.viewer import DESKTOP_TKINTER, WEB_DJANGO, ProtocolViewer
+import pyworkflow.viewer as pwviewer
 
-from pwem.convert import ImageHandler
-from pwem.protocol.protocol_import.volumes import ProtImportVolumes
-from pwem.viewers.viewer_chimera import Chimera, ChimeraView
+import pwem.objects as emobj
+import pwem.convert as emconv
+import pwem.protocol as emprot
+import pwem.viewers as emviewer
 
 VOLUME_SLICES = 1
 VOLUME_CHIMERA = 0
 
-class viewerProtImportVolumes(ProtocolViewer):
+class viewerProtImportVolumes(pwviewer.ProtocolViewer):
     """ Wrapper to visualize different type of objects
     with the Xmipp program xmipp_showj. """
 
     _label = 'viewer input volume'
-    _targets = [ProtImportVolumes]
-    _environments = [DESKTOP_TKINTER, WEB_DJANGO]
+    _targets = [emprot.ProtImportVolumes]
+    _environments = [pwviewer.DESKTOP_TKINTER, pwviewer.WEB_DJANGO]
 
     def _defineParams(self, form):
         form.addSection(label='Visualization of input volumes')
@@ -74,7 +74,7 @@ class viewerProtImportVolumes(ProtocolViewer):
 
     def _validate(self):
         if (self.displayVol == VOLUME_CHIMERA
-            and find_executable(Chimera.getProgram()) is None):
+            and find_executable(emviewer.Chimera.getProgram()) is None):
             return ["chimera is not available. "
                     "Either install it or choose option 'slices'. "]
         return []
@@ -118,7 +118,7 @@ class viewerProtImportVolumes(ProtocolViewer):
             dim = self.protocol.outputVolume.getDim()[0]
             tmpFileNameBILD = os.path.abspath(self.protocol._getTmpPath(
                 "axis.bild"))
-            Chimera.createCoordinateAxisFile(dim,
+            emviewer.Chimera.createCoordinateAxisFile(dim,
                                      bildFileName=tmpFileNameBILD,
                                      sampling=sampling)
             f.write("open %s\n" % tmpFileNameBILD)
@@ -126,7 +126,7 @@ class viewerProtImportVolumes(ProtocolViewer):
             count = 1  # skip first model because is not a 3D map
 
         for vol in _setOfVolumes:
-            localVol = os.path.abspath(ImageHandler.removeFileType(
+            localVol = os.path.abspath(emconv.ImageHandler.removeFileType(
                 vol.getFileName()))
             if localVol.endswith("stk"):
                 errorWindow(None, "Extension .stk is not supported")
@@ -152,7 +152,7 @@ class viewerProtImportVolumes(ProtocolViewer):
                             (count, x, y, z))
                     count += 1
         f.close()
-        return [ChimeraView(tmpFileNameCMD)]
+        return [emviewer.ChimeraView(tmpFileNameCMD)]
 
     def _showVolumesSlices(self):
         # Write an sqlite with all volumes selected for visualization.
@@ -161,12 +161,12 @@ class viewerProtImportVolumes(ProtocolViewer):
         if len(setOfVolumes) == 1:
             if self.protocol.outputVolume.getHalfMaps():
                 setOfVolumes = self.protocol._createSetOfVolumes(suffix='tmp')
-                vol = Volume()
+                vol = emobj.Volume()
                 vol.setFileName(self.protocol.outputVolume.getFileName())
                 vol.setSamplingRate(sampling)
                 setOfVolumes.append(vol)
                 for halfMap in self.protocol.outputVolume.getHalfMaps().split(','):
-                    volHalf = Volume()
+                    volHalf = emobj.Volume()
                     volHalf.setSamplingRate(sampling)
                     if not halfMap.endswith(".mrc"):
                         volHalf.setFileName(halfMap.split(".")[0] + ".mrc")
