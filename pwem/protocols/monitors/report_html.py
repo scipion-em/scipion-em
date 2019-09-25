@@ -315,10 +315,10 @@ class ReportHtml:
         return zipped
 
     def getTimeSeries(self, data):
-        from pwem.protocol.monitors.protocol_monitor_ctf import (PHASE_SHIFT,
-                                                                 TIME_STAMP,
-                                                                 DEFOCUS_U,
-                                                                 RESOLUTION)
+        from pwem.protocols.monitors.protocol_monitor_ctf import (PHASE_SHIFT,
+                                                                  TIME_STAMP,
+                                                                  DEFOCUS_U,
+                                                                  RESOLUTION)
 
         # Get timeStamp
         ts = data[TIME_STAMP]

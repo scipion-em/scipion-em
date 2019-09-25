@@ -28,7 +28,7 @@
 import pyworkflow.protocol.params as params
 
 import pwem.objects as emobj
-from pwem.protocol import ProtCTFMicrographs
+from pwem.protocols import ProtCTFMicrographs
 
 
 class ProtCTFAssign(ProtCTFMicrographs):

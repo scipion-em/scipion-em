@@ -30,7 +30,7 @@ from pyworkflow.tests import *
 import pyworkflow.utils as pwutils
 
 from pwem import Domain
-import pwem.protocol as emprot
+import pwem.protocols as emprot
 
 # --- Set this to match with your queue system ---
 #  json params to fill the queue form, see SCIPION_HOME/config/host.conf

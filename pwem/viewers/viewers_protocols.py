@@ -26,7 +26,7 @@
 
 import pyworkflow.viewer as pwviewer
 
-import pwem.protocol as emprot
+import pwem.protocols as emprot
 
 from .views import DataView
 

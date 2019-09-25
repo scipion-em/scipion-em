@@ -25,7 +25,7 @@
 import pyworkflow.tests as pwtests
 
 from pwem import Domain
-import pwem.protocol as emprot
+import pwem.protocols as emprot
 
 
 class TestCtfConsensus(pwtests.BaseTest):

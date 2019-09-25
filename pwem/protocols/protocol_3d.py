@@ -30,7 +30,7 @@ In this module are protocol base classes related to 2D processing
 import pyworkflow.protocol.params as params
 import pyworkflow.utils as pwutils
 
-from pwem.protocol import EMProtocol
+from pwem.protocols import EMProtocol
 
 
 class Prot3D(EMProtocol):

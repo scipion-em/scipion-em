@@ -28,7 +28,7 @@ import pyworkflow.tests as pwtests
 import pyworkflow.protocol as pwprot
 
 import pwem.objects as emobj
-import pwem.protocol as emprot
+import pwem.protocols as emprot
 
 # Load the number of movies for the simulation, by default equal 5, but
 # can be modified in the environment

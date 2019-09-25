@@ -43,7 +43,7 @@ from os.path import exists
 import pyworkflow.tests as pwtests
 
 from pwem import Domain
-from pwem.protocol import ProtImportAverages
+from pwem.protocols import ProtImportAverages
 
 
 class TestGroel(pwtests.BaseTest):

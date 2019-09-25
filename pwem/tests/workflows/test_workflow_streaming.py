@@ -33,7 +33,7 @@ import pyworkflow.tests as pwtests
 
 from pwem import Domain
 import pwem.convert as emconv
-import pwem.protocol as emprot
+import pwem.protocols as emprot
 
 
 # Load the number of movies for the simulation, by default equal 5, but

@@ -31,7 +31,7 @@ import pyworkflow as pw
 import pyworkflow.protocol.params as params
 import pyworkflow.utils as pwutils
 
-from pwem.protocol import EMProtocol
+from pwem.protocols import EMProtocol
 
 PDFLATEX = "pdflatex"
 

@@ -24,7 +24,7 @@ import os
 
 import pyworkflow.tests as pwtests
 
-import pwem.protocol as emprot
+import pwem.protocols as emprot
 import pwem.constants as emcts
 import pwem.convert as emconv
 

@@ -37,7 +37,7 @@ import pyworkflow.protocol as pwprot
 import pyworkflow.object as pwobj
 
 import pwem.objects as emobj
-from pwem.protocol import EMProtocol
+from pwem.protocols import EMProtocol
 
 
 class ProtSets(EMProtocol):

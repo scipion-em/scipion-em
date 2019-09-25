@@ -28,7 +28,7 @@ from pyworkflow.tests import BaseTest, setupTestProject, DataSet
 
 from pwem import Domain
 from pwem.objects.data import SetOfParticles
-from pwem.protocol import ProtImportParticles, ProtImportVolumes, ProtSubSet
+from pwem.protocols import ProtImportParticles, ProtImportVolumes, ProtSubSet
 
 
 

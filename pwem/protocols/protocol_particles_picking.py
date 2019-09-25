@@ -35,7 +35,7 @@ import pyworkflow.protocol as pwprot
 import pyworkflow.utils as pwutils
 
 import pwem.objects as emobj
-from pwem.protocol import ProtParticles
+from pwem.protocols import ProtParticles
 
 
 class ProtParticlePicking(ProtParticles):

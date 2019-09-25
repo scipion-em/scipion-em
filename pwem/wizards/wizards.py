@@ -37,7 +37,7 @@ from pyworkflow.gui.tree import ListTreeProviderString
 import pwem.convert as emconv
 
 from pwem.wizards.wizard import EmWizard
-import pwem.protocol as emprot
+import pwem.protocols as emprot
 import pwem.objects as emobj
 
 

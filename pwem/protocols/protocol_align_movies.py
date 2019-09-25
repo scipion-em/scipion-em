@@ -44,7 +44,7 @@ import pyworkflow.protocol.constants as pwcts
 import pwem.convert as emconv
 import pwem.objects as emobj
 
-from pwem.protocol import ProtProcessMovies
+from pwem.protocols import ProtProcessMovies
 
 
 class ProtAlignMovies(ProtProcessMovies):

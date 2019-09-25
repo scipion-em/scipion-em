@@ -35,7 +35,7 @@ import pyworkflow.protocol.params as params
 from pyworkflow.protocol.constants import STATUS_NEW
 import pyworkflow.utils as pwutils
 
-from pwem.protocol import ProtParticlePickingAuto
+from pwem.protocols import ProtParticlePickingAuto
 import pwem.constants as emcts
 import pwem.objects as emobj
 

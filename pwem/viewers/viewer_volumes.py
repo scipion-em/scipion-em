@@ -40,7 +40,7 @@ import pyworkflow.viewer as pwviewer
 
 import pwem.objects as emobj
 import pwem.convert as emconv
-import pwem.protocol as emprot
+import pwem.protocols as emprot
 from pwem.viewers import Chimera, ChimeraView
 
 VOLUME_SLICES = 1

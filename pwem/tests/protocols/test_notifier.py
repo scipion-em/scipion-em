@@ -27,7 +27,7 @@ import json
 import pyworkflow.webservices as pws
 import pyworkflow.tests as pwtests
 
-import pwem.protocol as emprot
+import pwem.protocols as emprot
 
 
 class TestNotifier(pwtests.BaseTest):

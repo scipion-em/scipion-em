@@ -41,7 +41,7 @@ import pyworkflow.utils as pwutils
 from pwem import Domain
 import pwem.metadata as md
 from pwem.objects import CoordinatesTiltPair
-from pwem.protocol import ProtParticlePicking
+from pwem.protocols import ProtParticlePicking
 
 from .base import ProtImportFiles
 

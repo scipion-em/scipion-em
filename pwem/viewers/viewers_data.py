@@ -30,7 +30,7 @@ import pyworkflow.viewer as pwviewer
 import pyworkflow.utils as pwutils
 
 import pwem as em
-import pwem.protocol as emprot
+import pwem.protocols as emprot
 import pwem.convert as emconv
 
 from .views import (ObjectView, MicrographsView, CoordinatesObjectView,

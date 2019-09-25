@@ -48,7 +48,7 @@ from pynvml import (nvmlInit, nvmlDeviceGetHandleByIndex,
                     NVMLError, nvmlDeviceGetTemperature, NVML_TEMPERATURE_GPU,
                     nvmlDeviceGetComputeRunningProcesses)
 
-from pwem.protocol.monitors import getnifs
+from pwem.protocols.monitors import getnifs
 
 from .protocol_monitor import ProtMonitor, Monitor
 

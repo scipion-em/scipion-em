@@ -37,7 +37,7 @@ except ImportError:
 import pyworkflow.tests as pwtests
 import pyworkflow.utils as pwutils
 
-import pwem.protocol as emprot 
+import pwem.protocols as emprot
 
 # Used by Roberto's test, where he creates the particles "by hand"
 from pwem.objects.data import Particle, SetOfParticles, Acquisition, CTFModel

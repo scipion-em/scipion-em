@@ -35,7 +35,7 @@ import json
 from pyworkflow.tests import *
 
 from pwem import Domain
-import pwem.protocol as emprot
+import pwem.protocols as emprot
 
 
 class TestImportBase(BaseTest):

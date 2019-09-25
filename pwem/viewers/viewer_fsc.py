@@ -32,7 +32,7 @@ import pyworkflow.viewer as pwviewer
 import pyworkflow.utils as pwutils
 
 import pwem.objects as emobj
-import pwem.protocol as emprot
+import pwem.protocols as emprot
 
 from .plotter import EmPlotter, plt
 

@@ -27,7 +27,7 @@
 import pyworkflow.viewer as pwviewer
 from pyworkflow.gui.text import _open_cmd
 
-import pwem.protocol as emprot
+import pwem.protocols as emprot
 
 
 class PDFReportViewer(pwviewer.Viewer):

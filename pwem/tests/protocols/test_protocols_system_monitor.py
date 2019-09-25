@@ -25,7 +25,7 @@ import os.path
 import pyworkflow.tests as pwtests
 import pyworkflow.utils as pwutils
 
-import pwem.protocol as emprot
+import pwem.protocols as emprot
 
 
 class TestStress(pwtests.BaseTest):

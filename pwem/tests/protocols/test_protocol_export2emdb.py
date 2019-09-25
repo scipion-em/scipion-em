@@ -30,7 +30,7 @@ import os
 
 import pyworkflow.tests as pwtest
 
-import pwem.protocol as emprot
+import pwem.protocols as emprot
 
 
 class TestExport2EMDB(pwtest.BaseTest):

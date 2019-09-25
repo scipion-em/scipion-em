@@ -29,7 +29,7 @@ import pyworkflow.utils as pwutils
 import pyworkflow.protocol.params as params
 from pyworkflow import VERSION_1_1
 
-from pwem.protocol import ProtCTFMicrographs, ProtAlignMovies
+from pwem.protocols import ProtCTFMicrographs, ProtAlignMovies
 from .report_html import ReportHtml
 from .protocol_monitor_system import getnifs
 from .protocol_monitor import ProtMonitor, Monitor

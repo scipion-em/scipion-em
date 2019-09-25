@@ -33,7 +33,7 @@ from pyworkflow.wizard import Wizard
 import pyworkflow.plugin
 
 from .constants import *
-from pwem.objects import *
+from pwem.objects import EMObject
 from .utils import *
 
 

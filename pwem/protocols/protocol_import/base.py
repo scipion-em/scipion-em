@@ -33,7 +33,7 @@ from datetime import datetime
 import pyworkflow.utils as pwutils
 import pyworkflow.protocol.params as params
 
-from pwem.protocol import EMProtocol
+from pwem.protocols import EMProtocol
 
 
 class ProtImport(EMProtocol):

@@ -35,7 +35,7 @@ import pyworkflow.protocol.params as params
 from pyworkflow import VERSION_1_1
 from pyworkflow.protocol.constants import STEPS_PARALLEL
 
-from pwem.protocol import EMProtocol
+from pwem.protocols import EMProtocol
 import pwem.objects as emobj
 import pwem.convert as emconv
 

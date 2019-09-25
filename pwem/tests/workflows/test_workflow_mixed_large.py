@@ -27,7 +27,7 @@
 from pyworkflow.tests import *
 
 from pwem import Domain
-import pwem.protocol as emprot 
+import pwem.protocols as emprot
 
 from .test_workflow import TestWorkflow
 

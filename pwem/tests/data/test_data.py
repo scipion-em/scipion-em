@@ -58,7 +58,7 @@ def createDummyProtocol(projName):
     proj = Manager().createProject(projName)
     os.chdir(proj.path)
 
-    from pwem.protocol import EMProtocol
+    from pwem.protocols import EMProtocol
 
     prot = proj.newProtocol(EMProtocol)
     prot.setObjLabel('dummy protocol')
