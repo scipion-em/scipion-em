@@ -29,7 +29,6 @@ import pyworkflow.tests as pwtests
 import pwem.protocol as emprot
 
 
-
 class TestImportCTFs(pwtests.BaseTest):
     @classmethod
     def setUpClass(cls):

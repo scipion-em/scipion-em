@@ -28,8 +28,8 @@
 This module implement some wizards
 """
 
-import Tkinter as tk
-import ttk
+import tkinter as tk
+import tkinter.ttk as ttk
 
 import pyworkflow as pw
 import pyworkflow.object as pwobj
@@ -461,7 +461,7 @@ class ImagePreviewDialog(PreviewDialog):
             if filename.endswith('.psd'):
                 self.image.convertPSD()
             self.Z = self.image.getData()
-        except Exception, e:
+        except Exception as e:
             from pyworkflow.gui.matplotlib_image import getPngData
             self.Z = getPngData(pw.findResource('no-image.png'))
             dialog.showError("Input particles", "Error reading image <%s>"

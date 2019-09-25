@@ -26,24 +26,12 @@
 
 import pyworkflow.tests as pwtests
 
-import pwem as em
+from pwem import Domain
 import pwem.protocol as emprot 
 
 from .test_workflow import TestWorkflow
 
-XmippProtNMA = em.Domain.importFromPlugin('xmipp3.protocols', 'XmippProtNMA',
-                                       doRaise=True)
-XmippProtAlignmentNMA = em.Domain.importFromPlugin('xmipp3.protocols',
-                                                'XmippProtAlignmentNMA')
-XmippProtDimredNMA = em.Domain.importFromPlugin('xmipp3.protocols',
-                                             'XmippProtDimredNMA')
-NMA_CUTOFF_ABS = em.Domain.importFromPlugin('xmipp3.protocols',
-                                         'NMA_CUTOFF_ABS')
-XmippProtConvertToPseudoAtoms = em.Domain.importFromPlugin('xmipp3.protocols',
-                                                        'XmippProtConvertToPseudoAtoms')
-   
-   
-   
+
 class TestNMA(TestWorkflow):
     """ Check the images are converted properly to spider format. """
     
@@ -66,6 +54,11 @@ class TestNMA(TestWorkflow):
         self.launchProtocol(protImportPdb)
         
         # Launch NMA for PDB imported
+        XmippProtNMA = Domain.importFromPlugin('xmipp3.protocols',
+                                               'XmippProtNMA',
+                                               doRaise=True)
+        NMA_CUTOFF_ABS = Domain.importFromPlugin('xmipp3.protocols',
+                                                 'NMA_CUTOFF_ABS')
         protNMA1 = self.newProtocol(XmippProtNMA,
                                     cutoffMode=NMA_CUTOFF_ABS)
         protNMA1.inputStructure.set(protImportPdb.outputPdb)
@@ -79,6 +72,8 @@ class TestNMA(TestWorkflow):
         self.launchProtocol(protImportParts) 
 
         # Launch NMA alignment, but just reading result from a previous metadata
+        XmippProtAlignmentNMA = Domain.importFromPlugin('xmipp3.protocols',
+                                                        'XmippProtAlignmentNMA')
         protAlignment = self.newProtocol(XmippProtAlignmentNMA,
                                          modeList='7-9',
                                          copyDeformations=self.ds.getFile('gold/pseudo_run1_images.xmd'))
@@ -86,7 +81,9 @@ class TestNMA(TestWorkflow):
         protAlignment.inputParticles.set(protImportParts.outputParticles)
         self.launchProtocol(protAlignment)       
         
-        # Launch Dimred after NMA alignment 
+        # Launch Dimred after NMA alignment
+        XmippProtDimredNMA = Domain.importFromPlugin('xmipp3.protocols',
+                                                     'XmippProtDimredNMA')
         protDimRed = self.newProtocol(XmippProtDimredNMA,
                                       dimredMethod=0, # PCA
                                       reducedDim=2)
@@ -111,8 +108,11 @@ class TestNMA(TestWorkflow):
         self.launchProtocol(protImportVol)
         
         # Convert the Volume to Pdb
-        NMA_MASK_THRE = em.Domain.importFromPlugin('xmipp3.protocols.pdb.protocol_pseudoatoms_base',
+        NMA_MASK_THRE = Domain.importFromPlugin('xmipp3.protocols.pdb.protocol_pseudoatoms_base',
                                                 'NMA_MASK_THRE')
+        XmippProtConvertToPseudoAtoms = Domain.importFromPlugin(
+            'xmipp3.protocols',
+            'XmippProtConvertToPseudoAtoms')
         protConvertVol = self.newProtocol(XmippProtConvertToPseudoAtoms)
         protConvertVol.inputStructure.set(protImportVol.outputVolume)
         protConvertVol.maskMode.set(NMA_MASK_THRE)
@@ -121,12 +121,19 @@ class TestNMA(TestWorkflow):
         self.launchProtocol(protConvertVol)
         
         # Launch NMA with Pseudoatoms
+        XmippProtNMA = Domain.importFromPlugin('xmipp3.protocols',
+                                               'XmippProtNMA',
+                                               doRaise=True)
+        NMA_CUTOFF_ABS = Domain.importFromPlugin('xmipp3.protocols',
+                                                 'NMA_CUTOFF_ABS')
         protNMA2 = self.newProtocol(XmippProtNMA,
                                     cutoffMode=NMA_CUTOFF_ABS)
         protNMA2.inputStructure.set(protConvertVol.outputPdb)
         self.launchProtocol(protNMA2)
                                           
         # Launch NMA alignment, but just reading result from a previous metadata
+        XmippProtAlignmentNMA = Domain.importFromPlugin('xmipp3.protocols',
+                                                        'XmippProtAlignmentNMA')
         protAlignment = self.newProtocol(XmippProtAlignmentNMA,
                                          modeList='7-9',
                                          copyDeformations=self.ds.getFile('gold/pseudo_run1_images.xmd'))
@@ -134,7 +141,9 @@ class TestNMA(TestWorkflow):
         protAlignment.inputParticles.set(protImportParts.outputParticles)
         self.launchProtocol(protAlignment)       
         
-        # Launch Dimred after NMA alignment 
+        # Launch Dimred after NMA alignment
+        XmippProtDimredNMA = Domain.importFromPlugin('xmipp3.protocols',
+                                                     'XmippProtDimredNMA')
         protDimRed = self.newProtocol(XmippProtDimredNMA,
                                       dimredMethod=0, # PCA
                                       reducedDim=2)

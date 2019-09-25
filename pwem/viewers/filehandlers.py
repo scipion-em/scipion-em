@@ -72,7 +72,7 @@ class ImageFileHandler(FileHandler):
         return self._getImagePreview(fn), self._getImageString(fn)
 
     def getFileActions(self, objFile):
-        from viewers import DataView
+        from .views import DataView
         fn = objFile.getPath()
         return [('Open with Xmipp viewer', lambda: DataView(fn).show(),
                  pwutils.Icon.ACTION_VISUALIZE)]
@@ -98,7 +98,7 @@ class StackHandler(ImageFileHandler):
 class ChimeraHandler(FileHandler):
 
     def getFileActions(self, objFile):
-        from viewers import ChimeraView
+        from .viewer_chimera import ChimeraView
         fn = objFile.getPath()
         return [('Open with Chimera', lambda: ChimeraView(fn).show(),
                  pwutils.Icon.ACTION_VISUALIZE)]

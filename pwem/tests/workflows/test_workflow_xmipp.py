@@ -26,7 +26,7 @@
 
 import pyworkflow.tests as pwtests
 
-import pwem as em
+from pwem import Domain
 import pwem.protocol as emprot
 
 from .test_workflow import TestWorkflow
@@ -65,7 +65,7 @@ class TestXmippWorkflow(TestWorkflow):
 
         # Perform a downsampling on the micrographs
         print("Downsampling...")
-        xmippProtcols = em.Domain.importFromPlugin('xmipp3.protocols',
+        xmippProtcols = Domain.importFromPlugin('xmipp3.protocols',
                                                    doRaise=True)
         protDownsampling = self.newProtocol(xmippProtcols.XmippProtPreprocessMicrographs,
                                             doDownsample=True,

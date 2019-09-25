@@ -25,9 +25,7 @@
 # **************************************************************************
 
 import pyworkflow.protocol.params as params
-
-from .protocol import Protocol
-
+from pyworkflow.protocol import Protocol
 
 
 class ProtTestParallel(Protocol):

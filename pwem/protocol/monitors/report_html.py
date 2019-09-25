@@ -309,12 +309,17 @@ class ReportHtml:
                 aboveThresh += 1
         zipped = zip(values, labels)
         zipped[:0] = [(belowThresh, "0-%0.1f" % (minDefocus))]
-        zipped.append((aboveThresh, "> %0.1f" % (maxDefocus)))
+        # TODO unresolved method for class Iterator in python3
+        #zipped.append((aboveThresh, "> %0.1f" % (maxDefocus)))
 
         return zipped
+
     def getTimeSeries(self, data):
-        from pyworkflow.em.protocol.monitors.protocol_monitor_ctf import \
-            PHASE_SHIFT, TIME_STAMP, DEFOCUS_U, RESOLUTION
+        from pwem.protocol.monitors.protocol_monitor_ctf import (PHASE_SHIFT,
+                                                                 TIME_STAMP,
+                                                                 DEFOCUS_U,
+                                                                 RESOLUTION)
+
         # Get timeStamp
         ts = data[TIME_STAMP]
 
@@ -341,8 +346,6 @@ class ReportHtml:
         timeSeries[RESOLUTION] = resSerie
 
         return timeSeries
-
-
 
     def getResolutionHistogram(self, resolutionValues):
         if len(resolutionValues) == 0:

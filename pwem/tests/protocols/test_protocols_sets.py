@@ -29,7 +29,10 @@
 from __future__ import print_function
 import random
 import unittest
-from itertools import izip
+try:
+    from itertools import izip
+except ImportError:
+    izip = zip
 
 import pyworkflow.tests as pwtests
 import pyworkflow.utils as pwutils

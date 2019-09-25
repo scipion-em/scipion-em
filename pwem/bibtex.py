@@ -1,6 +1,7 @@
 # **************************************************************************
 # *
-# * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
+# * Authors: Yunior C. Fonseca Reyna    (cfonseca@cnb.csic.es)
+# *
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -23,32 +24,29 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
+
 """
-This modules contains classes related with EM
+
+@article{delaRosaTrevin201693,
+title = "Scipion: A software framework toward integration, reproducibility and validation in 3D electron microscopy ",
+journal = "Journal of Structural Biology",
+volume = "195",
+number = "1",
+pages = "93 - 99",
+year = "2016",
+note = "",
+issn = "1047-8477",
+doi = "http://doi.org/10.1016/j.jsb.2016.04.010",
+url = "http://www.sciencedirect.com/science/article/pii/S104784771630079X",
+author = "J.M. de la Rosa-Trevín and A. Quintana and L. del Cano and A. Zaldívar and I. Foche and J. Gutiérrez and
+J. Gómez-Blanco and J. Burguet-Castell and J. Cuenca-Alba and V. Abrishami and J. Vargas and J. Otón and G. Sharov
+and J.L. Vilas and J. Navas and P. Conesa and M. Kazemi and R. Marabini and C.O.S. Sorzano and J.M. Carazo",
+keywords = "Electron microscopy",
+keywords = "Single particle analysis",
+keywords = "Image processing",
+keywords = "Software package",
+keywords = "Workflows",
+keywords = "Reproducibility "
+}
+
 """
-
-from pyworkflow.protocol import Protocol
-from pyworkflow.viewer import Viewer
-from pyworkflow.wizard import Wizard
-import pyworkflow.plugin
-
-from .constants import *
-from pwem.objects import *
-from .utils import *
-
-
-class Domain(pyworkflow.plugin.Domain):
-    _name = __name__
-    _objectClass = EMObject
-    _protocolClass = Protocol
-    _viewerClass = Viewer
-    _wizardClass = Wizard
-    _baseClasses = globals()
-
-
-class Plugin(pyworkflow.plugin.Plugin):
-    pass
-
-
-Domain.registerPlugin(__name__)
-

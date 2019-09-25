@@ -34,7 +34,6 @@ import pyworkflow.protocol.params as params
 from pyworkflow import VERSION_1_1
 
 
-
 STRESS_NG = 'stress-ng'
 
 

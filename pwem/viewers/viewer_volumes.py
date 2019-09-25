@@ -33,7 +33,7 @@ for input volumes.
 
 import os
 from distutils.spawn import find_executable
-from tkMessageBox import showerror
+from tkinter.messagebox import showerror
 
 import pyworkflow.protocol.params as params
 import pyworkflow.viewer as pwviewer
@@ -41,7 +41,7 @@ import pyworkflow.viewer as pwviewer
 import pwem.objects as emobj
 import pwem.convert as emconv
 import pwem.protocol as emprot
-import pwem.viewers as emviewer
+from pwem.viewers import Chimera, ChimeraView
 
 VOLUME_SLICES = 1
 VOLUME_CHIMERA = 0
@@ -74,7 +74,7 @@ class viewerProtImportVolumes(pwviewer.ProtocolViewer):
 
     def _validate(self):
         if (self.displayVol == VOLUME_CHIMERA
-            and find_executable(emviewer.Chimera.getProgram()) is None):
+            and find_executable(Chimera.getProgram()) is None):
             return ["chimera is not available. "
                     "Either install it or choose option 'slices'. "]
         return []
@@ -118,7 +118,7 @@ class viewerProtImportVolumes(pwviewer.ProtocolViewer):
             dim = self.protocol.outputVolume.getDim()[0]
             tmpFileNameBILD = os.path.abspath(self.protocol._getTmpPath(
                 "axis.bild"))
-            emviewer.Chimera.createCoordinateAxisFile(dim,
+            Chimera.createCoordinateAxisFile(dim,
                                      bildFileName=tmpFileNameBILD,
                                      sampling=sampling)
             f.write("open %s\n" % tmpFileNameBILD)
@@ -152,7 +152,7 @@ class viewerProtImportVolumes(pwviewer.ProtocolViewer):
                             (count, x, y, z))
                     count += 1
         f.close()
-        return [emviewer.ChimeraView(tmpFileNameCMD)]
+        return [ChimeraView(tmpFileNameCMD)]
 
     def _showVolumesSlices(self):
         # Write an sqlite with all volumes selected for visualization.

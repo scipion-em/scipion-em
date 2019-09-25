@@ -35,12 +35,12 @@ from datetime import timedelta, datetime
 import pyworkflow.utils as pwutils
 import pyworkflow.protocol.params as params
 
-import pwem as em
+from pwem import Domain
 import pwem.convert as emconv
 import pwem.constants as emcts
 
 
-from images import ProtImportImages
+from .images import ProtImportImages
 
 
 class ProtImportMicBase(ProtImportImages):
@@ -415,15 +415,15 @@ class ProtImportMicrographs(ProtImportMicBase):
     def getImportClass(self):
         """ Return the class in charge of importing the files. """
         if self.importFrom == self.IMPORT_FROM_EMX:
-            EmxImport = em.Domain.importFromPlugin('emxlib.convert', 'EmxImport')
+            EmxImport = Domain.importFromPlugin('emxlib.convert', 'EmxImport')
             self.importFilePath = self.emxFile.get('').strip()
             return EmxImport(self, self.importFilePath)
         elif self.importFrom == self.IMPORT_FROM_XMIPP3:
-            XmippImport = em.Domain.importFromPlugin('xmipp3.convert', 'XmippImport')
+            XmippImport = Domain.importFromPlugin('xmipp3.convert', 'XmippImport')
             self.importFilePath = self.mdFile.get('').strip()
             return XmippImport(self, self.mdFile.get())
         elif self.importFrom == self.IMPORT_FROM_SCIPION:
-            from dataimport import ScipionImport
+            from .dataimport import ScipionImport
             self.importFilePath = self.sqliteFile.get('').strip()
             return ScipionImport(self, self.importFilePath) 
         else:

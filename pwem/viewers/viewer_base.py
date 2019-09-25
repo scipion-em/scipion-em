@@ -30,8 +30,8 @@ import pyworkflow.object as pwobj
 
 # FIXME: rename data by objects
 import pwem.objects as emobj
-import pwem.viewers as emviewer
 import pwem.metadata as md
+from pwem.viewers import ObjectView
 
 
 class EmProtocolViewer(pwviewer.ProtocolViewer):
@@ -77,7 +77,7 @@ class EmProtocolViewer(pwviewer.ProtocolViewer):
                             "'Object' (with 'getLocation' or 'getFileName' "
                             "methods).")
 
-        return emviewer.ObjectView(self._project, strId, fn, **kwargs)
+        return ObjectView(self._project, strId, fn, **kwargs)
 
     def createVolumesSqlite(self, files, path, samplingRate,
                             updateItemCallback=None):

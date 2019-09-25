@@ -29,7 +29,6 @@
 import os
 
 import pyworkflow.tests as pwtest
-import pwem.protocol as pwprot
 
 import pwem.protocol as emprot
 
@@ -38,7 +37,7 @@ class TestExport2EMDB(pwtest.BaseTest):
     @classmethod
     def runImportVolumes(cls, pattern, samplingRate, label):
         """ Run an Import volumes protocol. """
-        cls.protImport = cls.newProtocol(pwprot.ProtImportVolumes,
+        cls.protImport = cls.newProtocol(emprot.ProtImportVolumes,
                                          objLabel=label,
                                          filesPath=pattern,
                                          samplingRate=samplingRate
@@ -64,11 +63,11 @@ class TestExport2EMDB(pwtest.BaseTest):
 
     @classmethod
     def _importAtomStructCIF(self):
-        args = {'inputPdbData': pwprot.ProtImportPdb.IMPORT_FROM_FILES,
+        args = {'inputPdbData': emprot.ProtImportPdb.IMPORT_FROM_FILES,
                 'pdbFile': self.dsModBuild.getFile(
                     'PDBx_mmCIF/5ni1.cif'),
                 }
-        protImportPDB = self.newProtocol(pwprot.ProtImportPdb, **args)
+        protImportPDB = self.newProtocol(emprot.ProtImportPdb, **args)
         protImportPDB.setObjLabel('import atom struct\nmmCIF\n5ni1.cif')
         self.launchProtocol(protImportPDB)
         structure_mmCIF = protImportPDB.outputPdb

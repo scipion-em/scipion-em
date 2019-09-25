@@ -28,10 +28,10 @@
 import pyworkflow.protocol.params as params
 
 import pwem.objects as emobj
-import pwem.protocol as emprot
+from pwem.protocol import ProtCTFMicrographs
 
 
-class ProtCTFAssign(emprot.ProtCTFMicrographs):
+class ProtCTFAssign(ProtCTFMicrographs):
     """ This protocol assigns a CTF estimation to a particular
     set of particles producing a new set. """
     _label = 'assign ctf'
@@ -39,7 +39,7 @@ class ProtCTFAssign(emprot.ProtCTFMicrographs):
                    'Particles']
     
     def __init__(self, **kwargs):
-        emprot.ProtCTFMicrographs.__init__(self, **kwargs)
+        ProtCTFMicrographs.__init__(self, **kwargs)
         # We need to trace the changes of 'inputType' to 
         # dynamically modify the property of pointerClass
         # of the 'inputSets' parameter

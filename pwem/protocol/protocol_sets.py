@@ -37,8 +37,7 @@ import pyworkflow.protocol as pwprot
 import pyworkflow.object as pwobj
 
 import pwem.objects as emobj
-
-from .protocol import EMProtocol
+from pwem.protocol import EMProtocol
 
 
 class ProtSets(EMProtocol):
@@ -204,7 +203,7 @@ class ProtUnionSet(ProtSets):
 
             if not prefixedAttribute in verifyAttrs:
                 value._objDoStore = False
-                print ("INFO: %s will be lost." % attr)
+                print("INFO: %s will be lost." % attr)
 
             else:
                 self.cleanExtraAttributes(value, verifyAttrs,

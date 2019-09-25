@@ -25,7 +25,7 @@
 import os
 
 try:  # python 2
-    import Tkinter as tk
+    import tkinter as tk
     import tkFont
     import ttk
 except ImportError:  # Python 3

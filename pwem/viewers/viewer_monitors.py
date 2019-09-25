@@ -25,7 +25,7 @@
 # **************************************************************************
 
 import sys
-import Tkinter as tk
+import tkinter as tk
 from matplotlib import animation
 
 from pyworkflow.gui.plotter import plt

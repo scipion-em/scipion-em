@@ -21,7 +21,7 @@
 # ***************************************************************************/
 import os
 import time
-import urllib2
+from urllib.request import urlopen
 import json
 
 import pyworkflow.webservices as pws
@@ -51,7 +51,7 @@ class TestNotifier(pwtests.BaseTest):
         os.environ["SCIPION_NOTIFY"] = "True"
         url = url.replace("workflow/workflow/",
                           "workflow/protocol/?name=ProtStress")
-        results = json.loads(urllib2.urlopen(url).read())
+        results = json.loads(urlopen(url).read())
         objects = results["objects"]
         if len(objects) != 0:
             objects = results["objects"][0]
@@ -88,7 +88,7 @@ class TestNotifier(pwtests.BaseTest):
         # Get protocol list from database
         urlWork = self._getUrl()
         urlWork += "?project_uuid=" + uuid
-        results = json.loads(urllib2.urlopen(urlWork).read())
+        results = json.loads(urlopen(urlWork).read())
 
         objects = results["objects"]
         if (len(objects) != 0):
@@ -107,7 +107,7 @@ class TestNotifier(pwtests.BaseTest):
         urlProt = urlProt.replace("workflow/workflow/",
                                   "workflow/protocol/?name=ProtStress")
         time.sleep(5)  # notifier runs in a thread so wait a bit
-        results = json.loads(urllib2.urlopen(urlProt).read())
+        results = json.loads(urlopen(urlProt).read())
         objects = results["objects"]
         if len(objects) != 0:
             objects = results["objects"][0]
@@ -120,7 +120,7 @@ class TestNotifier(pwtests.BaseTest):
         # not go through number times should not change
         projectNotifier.notifyWorkflow()
         time.sleep(5)  # notifier runs in a thread so wait a bit
-        results = json.loads(urllib2.urlopen(urlProt).read())
+        results = json.loads(urlopen(urlProt).read())
         objects = results["objects"]
         if len(objects) != 0:
             objects = results["objects"][0]
@@ -134,7 +134,7 @@ class TestNotifier(pwtests.BaseTest):
         time.sleep(25)
         projectNotifier.notifyWorkflow()
         time.sleep(5)  # notifier runs in a thread so wait a bit
-        results = json.loads(urllib2.urlopen(urlProt).read())
+        results = json.loads(urlopen(urlProt).read())
         objects = results["objects"]
         if (len(objects) != 0):
             objects = results["objects"][0]
@@ -144,13 +144,13 @@ class TestNotifier(pwtests.BaseTest):
         self.assertEqual(times_protocolRemote_2, times_protocolRemote + 1)
 
         # Add new protocol and resend after waiting 30 = 25 +5  seconds
-        prot2 = self.newProtocol(ProtStress, **kwargs)
+        prot2 = self.newProtocol(emprot.ProtStress, **kwargs)
         prot2.setObjLabel('stress2')
         self.proj.launchProtocol(prot2, wait=True)
         time.sleep(25)
         projectNotifier.notifyWorkflow()
         time.sleep(5)  # notifier runs in a thread so wait a bit
-        results = json.loads(urllib2.urlopen(urlProt).read())
+        results = json.loads(urlopen(urlProt).read())
         objects = results["objects"]
         if len(objects) != 0:
             objects = results["objects"][0]

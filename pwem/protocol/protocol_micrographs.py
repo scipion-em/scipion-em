@@ -38,11 +38,12 @@ import pyworkflow.protocol.constants as pwcts
 import pyworkflow.protocol.params as params
 import pyworkflow.utils as pwutils
 
-import pwem.protocol as emprot
 import pwem.objects as emobj
 
+from .protocol import EMProtocol
 
-class ProtMicrographs(emprot.EMProtocol):
+
+class ProtMicrographs(EMProtocol):
     pass
 
 
@@ -50,7 +51,7 @@ class ProtCTFMicrographs(ProtMicrographs):
     """ Base class for all protocols that estimates the CTF"""
 
     def __init__(self, **kwargs):
-        emprot.EMProtocol.__init__(self, **kwargs)
+        EMProtocol.__init__(self, **kwargs)
         self.stepsExecutionMode = pwcts.STEPS_PARALLEL
         self.isFirstTime = pwobj.Boolean(False)
 

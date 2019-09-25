@@ -22,11 +22,11 @@
 # *
 # **************************************************************************
 
-import unittest, sys
+import unittest
 
 import pyworkflow.tests as pwtests
 
-import pwem as em
+from pwem import Domain
 import pwem.protocol as emprot
 
 from .test_workflow import TestWorkflow
@@ -39,7 +39,7 @@ class HighThroughputTest(TestWorkflow):
         cls.dataset = pwtests.DataSet.getDataSet('ribo_movies')
         cls.movies = cls.dataset.getFile('movies')
         cls.crdsDir = cls.dataset.getFile('posAllDir')
-    
+
     def test_workflow(self):
         #First, import a set of movies
         print("Importing a set of movies...")
@@ -48,9 +48,9 @@ class HighThroughputTest(TestWorkflow):
         protImport.setObjLabel('import movies - Day1')
         self.proj.launchProtocol(protImport, wait=True)
         self.assertSetSize(protImport.outputMovies,msg="There was a problem importing movies")
-        
+
         print("Aligning the movies...")
-        XmippProtOFAlignment = em.Domain.importFromPlugin('xmipp3.protocols',
+        XmippProtOFAlignment = Domain.importFromPlugin('xmipp3.protocols',
                                                           'XmippProtOFAlignment',
                                                           doRaise=True)
         protAlignMov = XmippProtOFAlignment(useAlignment=False,
@@ -60,9 +60,9 @@ class HighThroughputTest(TestWorkflow):
         protAlignMov.setObjLabel('align movies - Day1')
         self.proj.launchProtocol(protAlignMov, wait=True)
         self.assertSetSize(protAlignMov.outputMicrographs, msg="There was a problem aligning movies")
-        
+
         print("Preprocessing the micrographs...")
-        XmippProtPreprocessMicrographs = em.Domain.importFromPlugin(
+        XmippProtPreprocessMicrographs = Domain.importFromPlugin(
             'xmipp3.protocols',
             'XmippProtPreprocessMicrographs')
         protPreprocess = XmippProtPreprocessMicrographs(doCrop=True, cropPixels=50)
@@ -70,10 +70,10 @@ class HighThroughputTest(TestWorkflow):
         protPreprocess.setObjLabel('crop mics 50px')
         self.proj.launchProtocol(protPreprocess, wait=True)
         self.assertSetSize(protPreprocess.outputMicrographs, msg="There was a problem with the crop")
-        
+
         # Now estimate CTF on the micrographs
         print("Performing CTF Micrographs...")
-        XmippProtCTFMicrographs = em.Domain.importFromPlugin('xmipp3.protocols',
+        XmippProtCTFMicrographs = Domain.importFromPlugin('xmipp3.protocols',
                                                              'XmippProtCTFMicrographs')
         protCTF = XmippProtCTFMicrographs(lowRes=0.04, highRes=0.31, runMode=1, numberOfMpi=1, numberOfThreads=3)
         protCTF.inputMicrographs.set(protPreprocess.outputMicrographs)
@@ -92,9 +92,9 @@ class HighThroughputTest(TestWorkflow):
         self.assertSetSize(protPP.outputCoordinates, msg="There was a problem with the Xmipp import coordinates")
 
 
-        print ("Run extract particles with <Other> option")
-        OTHER = em.Domain.importFromPlugin('xmipp3.constants', 'OTHER')
-        XmippProtExtractParticles = em.Domain.importFromPlugin(
+        print("Run extract particles with <Other> option")
+        OTHER = Domain.importFromPlugin('xmipp3.constants', 'OTHER')
+        XmippProtExtractParticles = Domain.importFromPlugin(
             'xmipp3.protocols',
             'XmippProtExtractParticles')
         protExtract = XmippProtExtractParticles(boxSize=60,
@@ -109,10 +109,10 @@ class HighThroughputTest(TestWorkflow):
         protExtract.setObjLabel('extract particles')
         self.proj.launchProtocol(protExtract, wait=True)
         self.assertSetSize(protExtract.outputParticles, msg="There was a problem with the extract particles")
-        
-        print ("Running Spider Filter")
 
-        SpiderProtFilter = em.Domain.importFromPlugin('spider.protocols',
+        print("Running Spider Filter")
+
+        SpiderProtFilter = Domain.importFromPlugin('spider.protocols',
                                                       'SpiderProtFilter',
                                                       doRaise=True)
         protFilter = SpiderProtFilter(lowFreq=0.07, highFreq=0.43)
@@ -120,28 +120,28 @@ class HighThroughputTest(TestWorkflow):
         protFilter.setObjLabel('spi filter')
         self.proj.launchProtocol(protFilter, wait=True)
         self.assertSetSize(protFilter.outputParticles, msg="There was a problem with the Spider filter")
-        
+
         print("Run Only Align2d")
-        XmippProtCL2DAlign = em.Domain.importFromPlugin('xmipp3.protocols',
+        XmippProtCL2DAlign = Domain.importFromPlugin('xmipp3.protocols',
                                                         'XmippProtCL2DAlign')
-        protOnlyAlign = XmippProtCL2DAlign(maximumShift=5, numberOfIterations=10, 
+        protOnlyAlign = XmippProtCL2DAlign(maximumShift=5, numberOfIterations=10,
                                  numberOfMpi=8, numberOfThreads=1, useReferenceImage=False)
         protOnlyAlign.inputParticles.set(protFilter.outputParticles)
         protOnlyAlign.setObjLabel('cl2d align')
-        self.proj.launchProtocol(protOnlyAlign, wait=True)        
+        self.proj.launchProtocol(protOnlyAlign, wait=True)
         self.assertSetSize(protOnlyAlign.outputParticles, msg="There was a problem with Only align2d")
-        
+
         print("Running Spider Dimension Reduction")
-        SpiderProtCAPCA = em.Domain.importFromPlugin('spider.protocols',
+        SpiderProtCAPCA = Domain.importFromPlugin('spider.protocols',
                                                      'SpiderProtCAPCA')
         protCAPCA = SpiderProtCAPCA()
         protCAPCA.inputParticles.set(protOnlyAlign.outputParticles)
         protCAPCA.setObjLabel('spi PCA')
         self.proj.launchProtocol(protCAPCA, wait=True)
         self.assertIsNotNone(protCAPCA.imcFile, "There was a problem with Spider Dimension Reduction")
-        
+
         print("Running Spider Ward Classification")
-        SpiderProtClassifyWard = em.Domain.importFromPlugin('spider.protocols',
+        SpiderProtClassifyWard = Domain.importFromPlugin('spider.protocols',
                                                             'SpiderProtClassifyWard')
         protWard = SpiderProtClassifyWard()
         protWard.pcaFile.set(protCAPCA.imcFile)

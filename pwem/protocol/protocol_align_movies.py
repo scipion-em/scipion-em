@@ -28,7 +28,11 @@
 
 import os
 import warnings
-from itertools import izip
+
+try:
+    from itertools import izip
+except ImportError:
+    izip = zip
 from math import ceil
 
 import pyworkflow.object as pwobj
@@ -39,10 +43,11 @@ import pyworkflow.protocol.constants as pwcts
 
 import pwem.convert as emconv
 import pwem.objects as emobj
-import pwem.protocol as emprot
+
+from pwem.protocol import ProtProcessMovies
 
 
-class ProtAlignMovies(emprot.ProtProcessMovies):
+class ProtAlignMovies(ProtProcessMovies):
     """
     Base class for movie alignment protocols such as:
     motioncorr, crosscorrelation and optical flow
@@ -54,7 +59,7 @@ class ProtAlignMovies(emprot.ProtProcessMovies):
 
     # -------------------------- DEFINE param functions -----------------------
     def _defineParams(self, form):
-        emprot.ProtProcessMovies._defineParams(self, form)
+        ProtProcessMovies._defineParams(self, form)
         self._defineAlignmentParams(form)
 
     def _defineAlignmentParams(self, form):

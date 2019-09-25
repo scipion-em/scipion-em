@@ -42,10 +42,8 @@ from os.path import exists
 
 import pyworkflow.tests as pwtests
 
-import pwem as em
-
-xmipp3 = em.Domain.importFromPlugin('xmipp3.protocols', doRaise=True)
-eman2 = em.Domain.importFromPlugin('eman2.protocols', doRaise=True)
+from pwem import Domain
+from pwem.protocol import ProtImportAverages
 
 
 class TestGroel(pwtests.BaseTest):
@@ -62,14 +60,15 @@ class TestGroel(pwtests.BaseTest):
         # 1. Run import of averages
         groelAvg = self.ds.getFile('groel')
         sym = 'd7'
-        protImport = self.newProtocol(em.ProtImportAverages,
+        protImport = self.newProtocol(ProtImportAverages,
                                       objLabel='import averages (groel)',
                                       filesPath=groelAvg,
                                       samplingRate=1)
         self.launchProtocol(protImport)
 
         # 2. Run initial models
-        # 2a. Ransac 
+        # 2a. Ransac
+        xmipp3 = Domain.importFromPlugin('xmipp3.protocols', doRaise=True)
         protRansac = self.newProtocol(xmipp3.XmippProtRansac,
                                       objLabel='xmipp - ransac',
                                       symmetryGroup=sym,
@@ -79,7 +78,8 @@ class TestGroel(pwtests.BaseTest):
         protRansac.inputSet.set(protImport.outputAverages)
         self.launchProtocol(protRansac)
 
-        # 2b. Eman 
+        # 2b. Eman
+        eman2 = Domain.importFromPlugin('eman2.protocols', doRaise=True)
         protEmanInitVol = self.newProtocol(eman2.EmanProtInitModel,
                                            objLabel='eman - initial vol',
                                            symmetry=sym,
@@ -126,14 +126,15 @@ class TestBPV(pwtests.BaseTest):
         # 1. Run import of averages
         groelAvg = self.ds.getFile('bpv')
         sym = 'i1'
-        protImport = self.newProtocol(em.ProtImportAverages,
+        protImport = self.newProtocol(ProtImportAverages,
                                       objLabel='import averages (bpv)',
                                       filesPath=groelAvg,
                                       samplingRate=1)
         self.launchProtocol(protImport)
 
         # 2. Run initial models
-        # 2a. Ransac 
+        # 2a. Ransac
+        xmipp3 = Domain.importFromPlugin('xmipp3.protocols', doRaise=True)
         protRansac = self.newProtocol(xmipp3.XmippProtRansac,
                                       objLabel='xmipp - ransac',
                                       objComment='Since there are only 8 projections, a dimensionality reduction '
@@ -151,7 +152,10 @@ class TestBPV(pwtests.BaseTest):
         protRansac.inputSet.set(protImport.outputAverages)
         self.launchProtocol(protRansac)
 
-        # 2b. Eman 
+        # 2b. Eman
+
+        eman2 = Domain.importFromPlugin('eman2.protocols', doRaise=True)
+
         protEmanInitVol = self.newProtocol(eman2.EmanProtInitModel,
                                            objLabel='eman - initial vol',
                                            symmetry='icos',
@@ -198,14 +202,15 @@ class TestRibosome(pwtests.BaseTest):
         # 1. Run import of averages
         groelAvg = self.ds.getFile('ribosome')
         sym = 'c1'
-        protImport = self.newProtocol(em.ProtImportAverages,
+        protImport = self.newProtocol(ProtImportAverages,
                                       objLabel='import averages (ribosome)',
                                       filesPath=groelAvg,
                                       samplingRate=1)
         self.launchProtocol(protImport)
 
         # 2. Run initial models
-        # 2a. Ransac 
+        # 2a. Ransac
+        xmipp3 = Domain.importFromPlugin('xmipp3.protocols', doRaise=True)
         protRansac = self.newProtocol(xmipp3.XmippProtRansac,
                                       objLabel='xmipp - ransac',
                                       symmetryGroup=sym,
@@ -215,7 +220,9 @@ class TestRibosome(pwtests.BaseTest):
         protRansac.inputSet.set(protImport.outputAverages)
         self.launchProtocol(protRansac)
 
-        # 2b. Eman 
+        # 2b. Eman
+        eman2 = Domain.importFromPlugin('eman2.protocols', doRaise=True)
+
         protEmanInitVol = self.newProtocol(eman2.EmanProtInitModel,
                                            objLabel='eman - initial vol',
                                            symmetry=sym,
@@ -258,6 +265,7 @@ class TestSignificant(pwtests.BaseTest):
 
     def _runSignificant(self, inputSet, args):
         myargs = dict(args)
+        xmipp3 = Domain.importFromPlugin('xmipp3.protocols', doRaise=True)
         prot1 = self.newProtocol(xmipp3.XmippProtReconstructSignificant,
                                  objLabel='significant d7',
                                  **myargs
@@ -293,7 +301,7 @@ class TestSignificant(pwtests.BaseTest):
         # 1. Run import of averages
         avg = self.ds.getFile('groel')
 
-        protImport = self.newProtocol(em.ProtImportAverages,
+        protImport = self.newProtocol(ProtImportAverages,
                                       filesPath=avg,
                                       samplingRate=1)
         self.launchProtocol(protImport)

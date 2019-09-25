@@ -225,7 +225,7 @@ class ChimeraClient:
                 msg = self.client.recv()
                 self.answer(msg)
         except EOFError:
-            print ('Lost connection to server')
+            print('Lost connection to server')
         finally:
             self.exit()
 
@@ -391,7 +391,7 @@ class ChimeraVirusClient(ChimeraClient):
     def listToBild(self, points, radius, file, color='0 0 1'):
         f = open(file, 'w')
         for point in points:
-            print ("\n.color", color, "\n.sphere", point[0]+128.,
+            print("\n.color", color, "\n.sphere", point[0]+128.,
                    point[1]+128., point[2]+128., radius, file=f)
 
     def answer(self, msg):
@@ -436,7 +436,7 @@ class ChimeraVirusClient(ChimeraClient):
                 clientsocket.close()
 
             except EOFError:
-                print ('Lost connection to client')
+                print('Lost connection to client')
 
 
 class ChimeraProjectionClient(ChimeraAngDistClient):
@@ -532,7 +532,7 @@ class ChimeraProjectionClient(ChimeraAngDistClient):
                 clientsocket.close()
 
             except EOFError:
-                print ('Lost connection to client')
+                print('Lost connection to client')
 
 
 class ChimeraView(pwviewer.CommandView):

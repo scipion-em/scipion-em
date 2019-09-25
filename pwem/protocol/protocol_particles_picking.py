@@ -35,10 +35,10 @@ import pyworkflow.protocol as pwprot
 import pyworkflow.utils as pwutils
 
 import pwem.objects as emobj
-import pwem.protocol as emprot
+from pwem.protocol import ProtParticles
 
 
-class ProtParticlePicking(emprot.ProtParticles):
+class ProtParticlePicking(ProtParticles):
     OUTPUT_PREFIX = 'outputCoordinates'
 
     def _defineParams(self, form):

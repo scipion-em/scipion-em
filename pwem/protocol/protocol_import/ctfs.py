@@ -27,7 +27,7 @@
 from pyworkflow.utils import removeBaseExt
 from pyworkflow.protocol.params import PointerParam
 
-import pwem as em
+from pwem import Domain
 import pwem.objects as pwobj
 
 from .base import ProtImportFiles
@@ -89,24 +89,24 @@ class ProtImportCTF(ProtImportFiles):
             importFrom = self.getFormat()
 
         if importFrom == self.IMPORT_FROM_XMIPP3:
-            XmippImport = em.Domain.importFromPlugin('xmipp3.convert', 'XmippImport',
+            XmippImport = Domain.importFromPlugin('xmipp3.convert', 'XmippImport',
                                            doRaise=True)
             return XmippImport(self, filesPath)
         elif importFrom == self.IMPORT_FROM_GRIGORIEFF:
-            GrigorieffLabImportCTF = em.Domain.importFromPlugin('grigoriefflab.convert',
+            GrigorieffLabImportCTF = Domain.importFromPlugin('grigoriefflab.convert',
                                                       'GrigorieffLabImportCTF',
                                                       doRaise=True)
             return GrigorieffLabImportCTF(self)
         elif importFrom == self.IMPORT_FROM_GCTF:
-            GctfImportCTF = em.Domain.importFromPlugin('gctf.convert',
+            GctfImportCTF = Domain.importFromPlugin('gctf.convert',
                                                     'GctfImportCTF', doRaise=True)
             return GctfImportCTF(self)
         elif importFrom == self.IMPORT_FROM_EMAN2:
-            EmanImport = em.Domain.importFromPlugin('eman2.convert', 'EmanImport',
+            EmanImport = Domain.importFromPlugin('eman2.convert', 'EmanImport',
                                                  doRaise=True)
             return EmanImport(self, None)
         elif importFrom == self.IMPORT_FROM_SCIPION:
-            from dataimport import ScipionImport
+            from .dataimport import ScipionImport
             return ScipionImport(self, self.filesPath.get('').strip())
         else:
             return None

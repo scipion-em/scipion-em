@@ -58,7 +58,7 @@ def getSubsetByDefocus(inputCTFs, inputMics, nMics):
 
 # TODO: use biopython
 def downloadPdb(pdbId, pdbFile, log=None):
-    print ("""use AtomicStructHandler()
+    print("""use AtomicStructHandler()
 
     aSH = AtomicStructHandler()
     pdbFileName = aSH.readFromPDBDatabase(pdbId, type='mmCif',

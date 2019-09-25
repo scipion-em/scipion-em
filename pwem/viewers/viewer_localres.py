@@ -67,7 +67,10 @@ class LocalResolutionViewer(pwviewer.ProtocolViewer):
     def createChimeraScript(self, scriptFile, fnResVol, fnOrigMap, sampRate):
         import pyworkflow.gui.plotter as plotter
         import os
-        from itertools import izip
+        try:
+            from itertools import izip
+        except ImportError:
+            izip = zip
         fhCmd = open(scriptFile, 'w')
         imageFile = os.path.abspath(fnResVol)
 

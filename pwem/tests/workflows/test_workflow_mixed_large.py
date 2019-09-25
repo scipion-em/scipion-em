@@ -26,21 +26,10 @@
 
 from pyworkflow.tests import *
 
-import pwem as em
+from pwem import Domain
 import pwem.protocol as emprot 
 
 from .test_workflow import TestWorkflow
-
-xmippProtocols = em.Domain.importFromPlugin('xmipp3.protocols', doRaise=True)
-
-grigorieffLabProtocols = em.Domain.importFromPlugin('grigoriefflab.protocols',
-                                                 doRaise=True)
-emanProtocols = em.Domain.importFromPlugin('grigoriefflab.protocols',
-                                        doRaise=True)
-EmanProtInitModel = em.Domain.importFromPlugin('eman2.protocols',
-                                            doRaise=True)
-relionProtocols = em.Domain.importFromPlugin('relion.protocols',
-                                          doRaise=True)
 
 
 class TestMixedRelionTutorial(TestWorkflow):
@@ -55,7 +44,7 @@ class TestMixedRelionTutorial(TestWorkflow):
     
     def test_workflow(self):
         #First, import a set of micrographs
-        print ("Importing a set of micrographs...")
+        print("Importing a set of micrographs...")
         protImport = self.newProtocol(emprot.ProtImportMicrographs,
                                       filesPath=self.micsFn,
                                       samplingRateMode=1, magnification=79096,
@@ -66,7 +55,7 @@ class TestMixedRelionTutorial(TestWorkflow):
         self.assertIsNotNone(protImport.outputMicrographs,
                              "There was a problem with the import")
         
-        print ("Importing a volume...")
+        print("Importing a volume...")
         protImportVol = self.newProtocol(emprot.ProtImportVolumes, filesPath=self.vol,
                                          samplingRate=7.08)
         protImportVol.setObjLabel('import single vol')
@@ -74,6 +63,8 @@ class TestMixedRelionTutorial(TestWorkflow):
         self.assertIsNotNone(protImportVol.outputVolume, "There was a problem with the import")
         
         print("Preprocessing the micrographs...")
+        xmippProtocols = Domain.importFromPlugin('xmipp3.protocols',
+                                                 doRaise=True)
         protPreprocess = self.newProtocol(xmippProtocols.XmippProtPreprocessMicrographs,
                                           doCrop=True, cropPixels=25)
         protPreprocess.inputMicrographs.set(protImport.outputMicrographs)
@@ -95,6 +86,9 @@ class TestMixedRelionTutorial(TestWorkflow):
 
         # Now estimate CTF on the micrographs with ctffind 
         print("Performing CTFfind...")
+        grigorieffLabProtocols = Domain.importFromPlugin(
+            'grigoriefflab.protocols',
+            doRaise=True)
         protCTF = self.newProtocol(grigorieffLabProtocols.ProtCTFFind,
                                    lowRes=0.04, highRes=0.45,
                                    minDefocus=1.2, maxDefocus=3,
@@ -165,6 +159,8 @@ class TestMixedRelionTutorial(TestWorkflow):
                              "There was a problem with the extract particles")
         
         print("Run Relion Classification2d")
+        relionProtocols = Domain.importFromPlugin('relion.protocols',
+                                                  doRaise=True)
         prot2D = relionProtocols.ProtRelionClassify2D(regularisationParamT=2,
                                                       numberOfMpi=4,
                                                       numberOfThreads=4)
@@ -218,6 +214,8 @@ class TestMixedFrealignClassify(TestWorkflow):
                              "There was a problem with the import")
         
         print("Preprocessing the micrographs...")
+        xmippProtocols = Domain.importFromPlugin('xmipp3.protocols',
+                                                 doRaise=True)
         protPreprocess = self.newProtocol(xmippProtocols.XmippProtPreprocessMicrographs,
                                           doCrop=True, cropPixels=25)
         protPreprocess.inputMicrographs.set(protImport.outputMicrographs)
@@ -239,6 +237,9 @@ class TestMixedFrealignClassify(TestWorkflow):
 
         # Now estimate CTF on the micrographs with ctffind 
         print("Performing CTFfind...")
+        grigorieffLabProtocols = Domain.importFromPlugin(
+            'grigoriefflab.protocols',
+            doRaise=True)
         protCTF = self.newProtocol(grigorieffLabProtocols.ProtCTFFind,
                                    lowRes=0.04, highRes=0.45,
                                    minDefocus=1.2, maxDefocus=3,

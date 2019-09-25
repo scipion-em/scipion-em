@@ -25,7 +25,10 @@
 # **************************************************************************
 
 import time
-from itertools import izip
+try:
+    from itertools import izip
+except ImportError:
+    izip = zip
 
 import pyworkflow.object as pwobj
 import pyworkflow.protocol as pwprot
@@ -187,7 +190,7 @@ class EMProtocol(pwprot.Protocol):
     
     def allowsDelete(self, obj):
         if (isinstance(obj, emobj.SetOfCoordinates) or
-            isinstance(obj, emobj.CoordinatesTiltPair)):
+                isinstance(obj, emobj.CoordinatesTiltPair)):
             return True
         return False
         

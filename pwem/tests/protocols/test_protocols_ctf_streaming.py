@@ -27,12 +27,12 @@ import os
 import pyworkflow.tests as pwtests
 import pyworkflow.protocol as pwprot
 
-import pwem as em
 import pwem.objects as emobj
 import pwem.protocol as emprot
 
 # Load the number of movies for the simulation, by default equal 5, but
 # can be modified in the environment
+from pwem import Domain
 
 MICS = os.environ.get('SCIPION_TEST_MICS', 6)
 CTF_SQLITE = "ctfs.sqlite"
@@ -113,7 +113,7 @@ class TestCtfStreaming(pwtests.BaseTest):
 
         # 1st ctf - ctffind4 in streaming
 
-        ProtCTFFind = em.Domain.importFromPlugin('grigoriefflab.protocols',
+        ProtCTFFind = Domain.importFromPlugin('grigoriefflab.protocols',
                                               'ProtCTFFind', doRaise=True)
         protCTF = ProtCTFFind(useCftfind4=True)
 
@@ -132,7 +132,7 @@ class TestCtfStreaming(pwtests.BaseTest):
                   'numberOfThreads': 4
                   }
 
-        XmippProtCTFMicrographs = em.Domain.importFromPlugin(
+        XmippProtCTFMicrographs = Domain.importFromPlugin(
             'xmipp3.protocols.protocol_ctf_micrographs',
             'XmippProtCTFMicrographs', doRaise=True)
 
@@ -147,7 +147,7 @@ class TestCtfStreaming(pwtests.BaseTest):
         try:
             # check if box has nvidia cuda libs.
             emprot.nvmlInit()  # fails if not GPU attached
-            ProtGctf = em.Domain.importFromPlugin('gctf.protocols', 'ProtGctf',
+            ProtGctf = Domain.importFromPlugin('gctf.protocols', 'ProtGctf',
                                                doRaise=True)
             protCTF3 = ProtGctf()
             protCTF3.inputMicrographs.set(protStream)

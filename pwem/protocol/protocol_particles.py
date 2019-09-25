@@ -36,12 +36,12 @@ import pyworkflow.protocol as pwprot
 import pyworkflow.protocol.params as params
 import pyworkflow.utils as pwutils
 
-import pwem.protocol as emprot
 import pwem.constants as emcts
 import pwem.objects as emobj
+from pwem.protocol import EMProtocol
 
 
-class ProtParticles(emprot.EMProtocol):
+class ProtParticles(EMProtocol):
     pass
 
 

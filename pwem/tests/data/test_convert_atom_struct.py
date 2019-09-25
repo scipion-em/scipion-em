@@ -27,8 +27,9 @@
 from copy import deepcopy
 from tempfile import NamedTemporaryFile
 from collections import Counter
+from urllib.request import urlretrieve
 
-import numpy
+import numpy as np
 
 from pyworkflow.tests import *
 
@@ -185,9 +186,9 @@ class TestAtomicStructHandler(unittest.TestCase):
         aSHSource = emconv.AtomicStructHandler(self.PDBFileName)
         structure = aSHSource.getStructure()
         structure_copy = deepcopy(structure)
-        rot = numpy.deg2rad(10)
-        theta = numpy.deg2rad(20.)
-        psi = numpy.deg2rad(30.)
+        rot = np.deg2rad(10)
+        theta = np.deg2rad(20.)
+        psi = np.deg2rad(30.)
         rotation_matrix = emconv.euler_matrix(rot, theta, psi, 'szyz')
         translation = emconv.translation_matrix([0., 0., 0.])
         M = emconv.concatenate_matrices(rotation_matrix, translation)
@@ -204,9 +205,9 @@ class TestAtomicStructHandler(unittest.TestCase):
         aSHSource = emconv.AtomicStructHandler(self.PDBFileName)
         structure = aSHSource.getStructure()
         structure_copy = deepcopy(structure)
-        rot = numpy.deg2rad(10)
-        theta = numpy.deg2rad(20.)
-        psi = numpy.deg2rad(30.)
+        rot = np.deg2rad(10)
+        theta = np.deg2rad(20.)
+        psi = np.deg2rad(30.)
         rotation_matrix = emconv.euler_matrix(rot, theta, psi, 'szyz')
         shift = [100., 50., 25.]
         translation = emconv.translation_matrix(shift)
@@ -257,7 +258,7 @@ class TestAtomicStructHandler(unittest.TestCase):
             url = 'ftp://ftp.ebi.ac.uk/pub/databases/emdb/structures/EMD-%s/map/emd_%s.map.gz' % \
                   (EMDBID, EMDBID)
             import urllib
-            urllib.urlretrieve(url, 'emd_%s.map.gz' % EMDBID)
+            urlretrieve(url, 'emd_%s.map.gz' % EMDBID)
             os.system("gunzip emd_%s.map.gz" % EMDBID)  # file is gzipped
         if False or doAll:  # set to False if you aready have the PDB file
             aSH = emconv.AtomicStructHandler()
@@ -274,14 +275,15 @@ class TestAtomicStructHandler(unittest.TestCase):
         def __runXmippProgram(program, args):
             """ Internal function to launch a Xmipp program. """
             from pwem import Domain
-            xmipp3 = Domain.importFromPlugin('xmipp3')
+            xmipp3 = Domain.importFromPlugin('xmipp3', doRaise=True)
             xmipp3.runXmippProgram(program, args)
 
         def __getXmippEulerAngles(matrix):
             """ Internal fuction to convert scipion to xmipp angles"""
             from pwem import Domain
             geometryFromMatrix = Domain.importFromPlugin('xmipp3.convert',
-                                                  'geometryFromMatrix')
+                                                         'geometryFromMatrix',
+                                                         doRaise=True)
 
             return geometryFromMatrix(matrix, False)
 

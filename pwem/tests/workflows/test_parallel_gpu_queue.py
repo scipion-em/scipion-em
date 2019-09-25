@@ -29,7 +29,7 @@ import subprocess
 from pyworkflow.tests import *
 import pyworkflow.utils as pwutils
 
-import pwem as em
+from pwem import Domain
 import pwem.protocol as emprot
 
 # --- Set this to match with your queue system ---
@@ -65,7 +65,7 @@ class TestQueueBase(BaseTest):
     @classmethod
     def runNormalizeParticles(cls, particles):
         """ Run normalize particles protocol """
-        relionProtocols = em.Domain.importFromPlugin('relion.protocols',
+        relionProtocols = Domain.importFromPlugin('relion.protocols',
                                                      doRaise=True)
         protPreproc = cls.newProtocol(relionProtocols.ProtRelionPreprocessParticles,
                                       doNormalize=True)
@@ -163,8 +163,8 @@ class TestQueueBase(BaseTest):
             :param useQueue: Use the queue system or not
             :return: the launched protocol
         """
-        relionProtocols = em.Domain.importFromPlugin('relion.protocols',
-                                                     doRaise=True)
+        relionProtocols = Domain.importFromPlugin('relion.protocols',
+                                                   doRaise=True)
         prot2D = self.newProtocol(relionProtocols.ProtRelionClassify2D,
                                   doCTF=False, maskDiameterA=340,
                                   numberOfMpi=MPI, numberOfThreads=threads)
@@ -350,7 +350,7 @@ class TestQueueSteps(TestQueueBase):
         cls.protImport = cls.runImportParticles(cls.particlesFn, 3.5)
 
     def testStepsNoGPU(self):
-        xmipp3Protocols = em.Domain.importFromPlugin('xmipp3.protocols',
+        xmipp3Protocols = Domain.importFromPlugin('xmipp3.protocols',
                                                      doRaise=True)
         protXmippPreproc = self.newProtocol(xmipp3Protocols.XmippProtPreprocessParticles,
                                     doNormalize=True, doRemoveDust=True)

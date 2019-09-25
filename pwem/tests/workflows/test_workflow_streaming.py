@@ -31,23 +31,14 @@ import threading
 import pyworkflow.utils as pwutils
 import pyworkflow.tests as pwtests
 
-import pwem as em
+from pwem import Domain
 import pwem.convert as emconv
 import pwem.protocol as emprot
-
-XmippProtMovieCorr = em.Domain.importFromPlugin('xmipp3.protocols',
-                                             'XmippProtMovieCorr', doRaise=True)
-ProtCTFFind = em.Domain.importFromPlugin('grigoriefflab.protocols',
-                                      'ProtCTFFind', doRaise=True)
-ProtRelionExtractParticles = em.Domain.importFromPlugin('relion.protocols',
-                                                     'ProtRelionExtractParticles',
-                                                     doRaise=True)
-ProtRelion2Autopick = em.Domain.importFromPlugin('relion.protocols',
-                                              'ProtRelion2Autopick')
 
 
 # Load the number of movies for the simulation, by default equal 5, but
 # can be modified in the environement
+
 def _getVar(varSuffix, varType, default=None):
     return varType(os.environ.get('SCIPION_TEST_STREAM_%s' % varSuffix, default))
 
@@ -62,7 +53,7 @@ class TestStreamingWorkflow(pwtests.BaseTest):
     @classmethod
     def setUpClass(cls):
         pwtests.setupTestProject(cls)
-        cls.ds = pwtests.DataSet.getpwtests.DataSet('movies')
+        cls.ds = pwtests.DataSet.getDataSet('movies')
         cls.importThread = threading.Thread(name="createInputLinks",
                                             target=cls._createInputLinks)
         cls.importThread.start()
@@ -166,6 +157,9 @@ class TestStreamingWorkflow(pwtests.BaseTest):
         protocols.append(protImport)
 
         # ----------- ALIGNMENT --------------------------
+        XmippProtMovieCorr = Domain.importFromPlugin('xmipp3.protocols',
+                                                        'XmippProtMovieCorr',
+                                                        doRaise=True)
         protOF = self.newProtocol(XmippProtMovieCorr,
                                   objLabel='Movie alignment',
                                   doSaveMovie=False,
@@ -182,6 +176,8 @@ class TestStreamingWorkflow(pwtests.BaseTest):
         protocols.append(protOF)
 
         # --------- CTF ESTIMATION ---------------------------
+        ProtCTFFind = Domain.importFromPlugin('grigoriefflab.protocols',
+                                                 'ProtCTFFind', doRaise=True)
         protCTF = self.newProtocol(ProtCTFFind,
                                    objLabel='ctffind4')
         protCTF.inputMicrographs.set(protOF)
@@ -207,7 +203,7 @@ class TestBaseRelionStreaming(pwtests.BaseTest):
     @classmethod
     def setUpClass(cls):
         pwtests.setupTestProject(cls)
-        cls.ds = pwtests.DataSet.getpwtests.DataSet('relion_tutorial')
+        cls.ds = pwtests.DataSet.getDataSet('relion_tutorial')
         cls.importThread = threading.Thread(name="createInputLinksR",
                                             target=cls._createInputLinks)
         cls.importThread.start()
@@ -259,6 +255,8 @@ class TestRelionExtractStreaming(TestBaseRelionStreaming):
 
         # Now estimate CTF on the micrographs with ctffind
         print("Performing CTFfind...")
+        ProtCTFFind = Domain.importFromPlugin('grigoriefflab.protocols',
+                                                 'ProtCTFFind', doRaise=True)
         protCTF = self.newProtocol(ProtCTFFind,
                                    useCtffind4=True,
                                    lowRes=0.02, highRes=0.45,
@@ -272,6 +270,9 @@ class TestRelionExtractStreaming(TestBaseRelionStreaming):
         
         # Now pick particles on the micrographs with Relion
         print("Performing Relion Autopicking (LoG)...")
+
+        ProtRelion2Autopick = Domain.importFromPlugin('relion.protocols',
+                                                         'ProtRelion2Autopick')
         protPick = self.newProtocol(ProtRelion2Autopick,
                                     runType=1,
                                     referencesType=1,
@@ -284,7 +285,10 @@ class TestRelionExtractStreaming(TestBaseRelionStreaming):
         self.proj.launchProtocol(protPick, wait=False)
         self._waitOutput(protPick, 'outputCoordinates')
 
-        
+        ProtRelionExtractParticles = Domain.importFromPlugin(
+            'relion.protocols',
+            'ProtRelionExtractParticles',
+            doRaise=True)
         protExtract = self.newProtocol(ProtRelionExtractParticles,
                                        objLabel='extract box=64',
                                        boxSize=64,
@@ -314,7 +318,7 @@ class TestRelionPickStreaming(TestBaseRelionStreaming):
         for i, index in enumerate([5, 16, 17, 18, 24]):
             ih.convert((index, classesFn), (i + 1, outputFn))
     
-        protAvgs = self.newProtocol(ProtImportAverages,
+        protAvgs = self.newProtocol(emprot.ProtImportAverages,
                                     objLabel='avgs - 5',
                                     filesPath=inputTmp,
                                     filesPattern=outputName,
@@ -340,6 +344,8 @@ class TestRelionPickStreaming(TestBaseRelionStreaming):
         
         # Now estimate CTF on the micrographs with ctffind
         print("Performing CTFfind...")
+        ProtCTFFind = Domain.importFromPlugin('grigoriefflab.protocols',
+                                                 'ProtCTFFind', doRaise=True)
         protCTF = self.newProtocol(ProtCTFFind,
                                    useCtffind4=True,
                                    lowRes=0.02, highRes=0.45,
@@ -354,6 +360,9 @@ class TestRelionPickStreaming(TestBaseRelionStreaming):
         self._waitUntilMinSize(protCTF.outputCTF)
 
         # Select some good averages from the iterations mrcs a
+
+        ProtRelion2Autopick = Domain.importFromPlugin('relion.protocols',
+                                                         'ProtRelion2Autopick')
         protPick = self.newProtocol(ProtRelion2Autopick,
                                     objLabel='autopick refs',
                                     runType=0,
@@ -378,7 +387,7 @@ class TestFrameStacking(pwtests.BaseTest):
     @classmethod
     def setUpClass(cls):
         pwtests.setupTestProject(cls)
-        cls.ds = pwtests.DataSet.getpwtests.DataSet('movies')
+        cls.ds = pwtests.DataSet.getDataSet('movies')
 
     @classmethod
     def _createFrames(cls, delay=0):

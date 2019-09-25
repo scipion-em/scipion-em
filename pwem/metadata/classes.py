@@ -161,7 +161,7 @@ class Row():
             
     def printDict(self):
         """ Fancy printing of the row, mainly for debugging. """
-        print (str(self))
+        print(str(self))
         
         
 class RowMetaData():

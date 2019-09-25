@@ -14,7 +14,7 @@ import chimera
 from time import sleep
 from threading import Thread
 
-import pwem as em
+from pwem import Domain
 
 
 #from time import gmtime, strftime
@@ -48,7 +48,7 @@ class ChimeraServer:
 
     def openVolume(self):
         try:
-            runCommand = em.Domain.importFromPlugin('chimera', 'Plugin',
+            runCommand = Domain.importFromPlugin('chimera', 'Plugin',
                                                     doRaise=True)
             while True:
                 if self.vol_conn.poll():
@@ -76,12 +76,12 @@ class ChimeraServer:
                 else:
                     sleep(0.01)
         except EOFError:
-            print ('Lost connection to client')
+            print('Lost connection to client')
             #should close app??
 
     def answer(self, msg):
         #print msg
-        runCommand = em.Domain.importFromPlugin('chimera', 'Plugin',
+        runCommand = Domain.importFromPlugin('chimera', 'Plugin',
                                                 doRaise=True)
         if msg == 'open_volume':
             data = self.vol_conn.recv()#objects are serialized by default
@@ -145,7 +145,7 @@ class ChimeraServer:
                     else:
                         sleep(0.01)
         except EOFError:
-            print ('Lost connection to client')
+            print('Lost connection to client')
             #should close app??
 
     
@@ -191,7 +191,7 @@ class ChimeraVirusServer(ChimeraServer):
     def answer(self, msg):
         """execute a single command and return values"""
         ChimeraServer.answer(msg)
-        runCommand = em.Domain.importFromPlugin('chimera', 'Plugin',
+        runCommand = Domain.importFromPlugin('chimera', 'Plugin',
                                                 doRaise=True)
         if msg == 'hk_icosahedron_lattice':
             from IcosahedralCage import cages

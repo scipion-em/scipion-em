@@ -26,7 +26,10 @@
 
 import os
 import sys
-from itertools import izip
+try:
+    from itertools import izip
+except ImportError:
+    izip = zip
 import PIL
 
 import pyworkflow.utils as pwutils

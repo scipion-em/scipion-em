@@ -24,7 +24,7 @@
 # *
 # **************************************************************************
 #
-import numpy
+import numpy as np
 import pyworkflow.tests as pwtests
 
 import pwem.constants as emcts
@@ -35,11 +35,11 @@ class TestSymmetry(pwtests.unittest.TestCase):
 
     def assertArrayAlmostEqual(self, a1, a2):
         try:
-            numpy.testing.assert_array_almost_equal(a1, a2, decimal=3)
+            np.testing.assert_array_almost_equal(a1, a2, decimal=3)
             res = True
         except AssertionError as err:
             res = False
-            print (err)
+            print(err)
         self.assertTrue(res)
 
     def testSymmetryCyclic(self):

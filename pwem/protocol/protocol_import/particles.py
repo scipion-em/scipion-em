@@ -30,6 +30,7 @@ import pyworkflow.utils as pwutils
 import pyworkflow.protocol.constants as pwcts
 import pyworkflow.protocol.params as params
 
+from pwem import Domain
 import pwem.constants as emcts
 
 from .images import ProtImportImages
@@ -157,10 +158,9 @@ class ProtImportParticles(ProtImportImages):
                                      self.importFilePath)
             
     def getImportClass(self):
-        import pwem as em
         """ Return the class in charge of importing the files. """
         if self.importFrom == self.IMPORT_FROM_EMX:
-            EmxImport = em.Domain.importFromPlugin('emxlib.convert', 'EmxImport',
+            EmxImport = Domain.importFromPlugin('emxlib.convert', 'EmxImport',
                                   errorMsg='Emx is needed to import .emx files',
                                   doRaise=True)
             self.importFilePath = abspath(self.emxFile.get('').strip())
@@ -168,25 +168,25 @@ class ProtImportParticles(ProtImportImages):
                                    self.alignTypeList[self.alignType.get()])
 
         elif self.importFrom == self.IMPORT_FROM_XMIPP3:
-            XmippImport = em.Domain.importFromPlugin('xmipp3.convert', 'XmippImport',
+            XmippImport = Domain.importFromPlugin('xmipp3.convert', 'XmippImport',
                                            'Xmipp is needed to import .xmd files',
                                            doRaise=True)
             self.importFilePath = self.mdFile.get('').strip()
             return XmippImport(self, self.mdFile.get())
 
         elif self.importFrom == self.IMPORT_FROM_RELION:
-            RelionImport = em.Domain.importFromPlugin('relion.convert', 'RelionImport',
+            RelionImport = Domain.importFromPlugin('relion.convert', 'RelionImport',
                               errorMsg='Relion is needed to import .star files',
                               doRaise=True)
             self.importFilePath = self.starFile.get('').strip()
             return RelionImport(self, self.starFile.get())
         elif self.importFrom == self.IMPORT_FROM_SCIPION:
-            from dataimport import ScipionImport
+            from .dataimport import ScipionImport
             self.importFilePath = self.sqliteFile.get('').strip()
             return ScipionImport(self, self.importFilePath)    
         elif self.importFrom == self.IMPORT_FROM_FREALIGN:
             self.importFilePath = self.parFile.get('').strip()
-            GrigorieffLabImportParticles = em.Domain.importFromPlugin(
+            GrigorieffLabImportParticles = Domain.importFromPlugin(
                      'grigoriefflab.convert', 'GrigorieffLabImportParticles',
                      errorMsg='GrigorieffLab is needed to import .stk files',
                      doRaise=True)
@@ -194,7 +194,7 @@ class ProtImportParticles(ProtImportImages):
                                                 self.stackFile.get())
         elif self.importFrom == self.IMPORT_FROM_EMAN:
             self.importFilePath = self.lstFile.get('').strip()
-            EmanImport = em.Domain.importFromPlugin('eman2.convert', 'EmanImport',
+            EmanImport = Domain.importFromPlugin('eman2.convert', 'EmanImport',
                                           doRaise=True)
             return EmanImport(self, self.lstFile.get())
         else:

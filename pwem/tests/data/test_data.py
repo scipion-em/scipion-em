@@ -5,7 +5,10 @@ Created on May 20, 2013
 '''
 
 from glob import iglob
-from itertools import izip
+try:
+    from itertools import izip
+except ImportError:
+    izip = zip
 import sqlite3
 import numpy as np
 

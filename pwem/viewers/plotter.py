@@ -25,7 +25,10 @@
 # **************************************************************************
 
 from math import radians
-from itertools import izip
+try:
+    from itertools import izip
+except ImportError:
+    izip = zip
 
 from pyworkflow.gui.plotter import Plotter, plt
 

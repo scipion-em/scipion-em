@@ -23,10 +23,11 @@
 # **************************************************************************
 import pyworkflow.tests as pwtests
 
-import pwem as em
+from pwem import Domain
 import pwem.protocol as emprot 
 
 from .test_workflow import TestWorkflow
+
 
 # update this test when RCT workflow are implemented
 class TestXmippRCTWorkflow(TestWorkflow):
@@ -53,7 +54,7 @@ class TestXmippRCTWorkflow(TestWorkflow):
                 
         # Then simulate a particle picking
         print("Running fake particle picking...")
-        XmippProtParticlePickingPairs = em.Domain.importFromPlugin(
+        XmippProtParticlePickingPairs = Domain.importFromPlugin(
                                                 'xmipp3.protocols',
                                                 'XmippProtParticlePickingPairs',
                                                 doRaise=True)
@@ -70,10 +71,10 @@ class TestXmippRCTWorkflow(TestWorkflow):
 
         #Extract particles    
         print("Run extract particles with Same as picking")
-        XmippProtExtractParticlesPairs = em.Domain.importFromPlugin(
+        XmippProtExtractParticlesPairs = Domain.importFromPlugin(
                                             'xmipp3.protocols',
                                             'XmippProtExtractParticlesPairs')
-        SAME_AS_PICKING = em.Domain.importFromPlugin('xmipp3.constants',
+        SAME_AS_PICKING = Domain.importFromPlugin('xmipp3.constants',
                                                      'SAME_AS_PICKING')
         protExtract = self.newProtocol(XmippProtExtractParticlesPairs,
                                        downFactor=2,
@@ -90,7 +91,7 @@ class TestXmippRCTWorkflow(TestWorkflow):
 
         # Classify using Xmipp CL2D
         print("Run CL2D")
-        XmippProtCL2D = em.Domain.importFromPlugin('xmipp3.protocols',
+        XmippProtCL2D = Domain.importFromPlugin('xmipp3.protocols',
                                                    'XmippProtCL2D')
         protCL2D = self.newProtocol(XmippProtCL2D,
                                     numberOfClasses=10,
@@ -104,7 +105,7 @@ class TestXmippRCTWorkflow(TestWorkflow):
         
         # Random Conical Tilt
         print("Run Random Conical Tilt")
-        XmippProtRCT = em.Domain.importFromPlugin('xmipp3.protocols',
+        XmippProtRCT = Domain.importFromPlugin('xmipp3.protocols',
                                                   'XmippProtRCT')
         protRCT = self.newProtocol(XmippProtRCT)
         protRCT.inputParticlesTiltPair.set(protExtract.outputParticlesTiltPair)

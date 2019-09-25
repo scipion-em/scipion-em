@@ -25,7 +25,10 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-from itertools import izip
+try:
+    from itertools import izip
+except ImportError:
+    izip = zip
 """
 This module contains protocols classes related to Random Conical Tilt.
 """

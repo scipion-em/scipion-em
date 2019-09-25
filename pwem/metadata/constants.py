@@ -26,10 +26,12 @@
 """
 Add constants from xmippLib module (binding).
 """
+
+
 from xmippLib import *
 
 LABEL_TYPES = {
-               LABEL_SIZET: long,
+               LABEL_SIZET: float,
                LABEL_DOUBLE: float,
                LABEL_INT: int,
                LABEL_BOOL: bool              

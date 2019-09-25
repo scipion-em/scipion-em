@@ -33,11 +33,12 @@ import os
 import json
 import numpy as np
 
+from pwem import NO_INDEX, ALIGN_NONE, ALIGN_2D, ALIGN_3D, ALIGN_PROJ, \
+    ALIGNMENTS
+from pwem.convert import ImageHandler
 from pyworkflow.object import (OrderedObject, Float, Integer, String,
                                OrderedDict, CsvList, Boolean, Set, Pointer,
                                Scalar)
-
-import pwem as em
 
 
 class EMObject(OrderedObject):
@@ -487,7 +488,7 @@ class Image(EMObject):
 
     def getDim(self):
         """Return image dimensions as tuple: (Xdim, Ydim, Zdim)"""
-        x, y, z, n = em.ImageHandler().getDimensions(self)
+        x, y, z, n = ImageHandler().getDimensions(self)
         return None if x is None else (x, y, z)
 
     def getXDim(self):
@@ -532,7 +533,7 @@ class Image(EMObject):
         elif t == int or t == long:
             index, filename = first, args[1]
         elif t == str or t == unicode:
-            index, filename = em.NO_INDEX, first
+            index, filename = NO_INDEX, first
         else:
             raise Exception('setLocation: unsupported type %s as input.' % t)
 
@@ -728,7 +729,7 @@ class Volume(Image):
         """Return image dimensions as tuple: (Xdim, Ydim, Zdim)"""
         fn = self.getFileName()
         if fn is not None and os.path.exists(fn.replace(':mrc', '')):
-            x, y, z, n = em.ImageHandler().getDimensions(self)
+            x, y, z, n = ImageHandler().getDimensions(self)
 
             # Some volumes in mrc format can have the z dimension
             # as n dimension, so we need to consider this case.
@@ -958,7 +959,7 @@ class SetOfImages(EMSet):
         EMSet.__init__(self, **kwargs)
         self._samplingRate = Float()
         self._hasCtf = Boolean(kwargs.get('ctf', False))
-        self._alignment = String(em.ALIGN_NONE)
+        self._alignment = String(ALIGN_NONE)
         self._isPhaseFlipped = Boolean(False)
         self._isAmplitudeCorrected = Boolean(False)
         self._acquisition = Acquisition()
@@ -981,33 +982,33 @@ class SetOfImages(EMSet):
         self._hasCtf.set(value)
 
     def hasAlignment(self):
-        return self._alignment != em.ALIGN_NONE
+        return self._alignment != ALIGN_NONE
 
     def hasAlignment2D(self):
-        return self._alignment == em.ALIGN_2D
+        return self._alignment == ALIGN_2D
 
     def hasAlignment3D(self):
-        return self._alignment == em.ALIGN_3D
+        return self._alignment == ALIGN_3D
 
     def hasAlignmentProj(self):
-        return self._alignment == em.ALIGN_PROJ
+        return self._alignment == ALIGN_PROJ
 
     def getAlignment(self):
         return self._alignment.get()
 
     def setAlignment(self, value):
-        if value not in em.ALIGNMENTS:
+        if value not in ALIGNMENTS:
             raise Exception('Invalid alignment value: "%s"' % value)
         self._alignment.set(value)
 
     def setAlignment2D(self):
-        self.setAlignment(em.ALIGN_2D)
+        self.setAlignment(ALIGN_2D)
 
     def setAlignment3D(self):
-        self.setAlignment(em.ALIGN_3D)
+        self.setAlignment(ALIGN_3D)
 
     def setAlignmentProj(self):
-        self.setAlignment(em.ALIGN_PROJ)
+        self.setAlignment(ALIGN_PROJ)
 
     def isPhaseFlipped(self):
         return self._isPhaseFlipped.get()
@@ -1080,7 +1081,7 @@ class SetOfImages(EMSet):
     def writeStack(self, fnStack, orderBy='id', direction='ASC',
                    applyTransform=False):
         # TODO create empty file to improve efficiency
-        ih = em.ImageHandler()
+        ih = ImageHandler()
         applyTransform = applyTransform and self.hasAlignment2D()
 
         for i, img in enumerate(self.iterItems(orderBy=orderBy,
@@ -1092,7 +1093,7 @@ class SetOfImages(EMSet):
     # for example: protocol_apply_mask
     def readStack(self, fnStack, postprocessImage=None):
         """ Populate the set with the images in the stack """
-        _, _, _, ndim = em.ImageHandler().getDimensions(fnStack)
+        _, _, _, ndim = ImageHandler().getDimensions(fnStack)
         img = self.ITEM_TYPE()
         for i in range(1, ndim+1):
             img.setObjId(None)
@@ -1866,7 +1867,7 @@ class SetOfClasses2D(SetOfClasses):
         if not self.hasRepresentatives():
             raise Exception('Could not write Averages stack '
                             'if not hasRepresentatives!!!')
-        ih = em.ImageHandler()
+        ih = ImageHandler()
 
         for i, class2D in enumerate(self):
             img = class2D.getRepresentative()
@@ -1998,7 +1999,7 @@ class Movie(Micrograph):
         """Return image dimensions as tuple: (Xdim, Ydim, Zdim)
         Consider compressed Movie files"""
         if not self.isCompressed():
-            x, y, z, n = em.ImageHandler().getDimensions(self)
+            x, y, z, n = ImageHandler().getDimensions(self)
             if x is not None:
                 return x, y, max(z, n)
         return None
@@ -2011,7 +2012,7 @@ class Movie(Micrograph):
             return last - first + 1
 
         if not self.isCompressed():
-            x, y, z, n = em.ImageHandler().getDimensions(self)
+            x, y, z, n = ImageHandler().getDimensions(self)
             if x is not None:
                 return max(z, n)  # Protect against evil mrc files
         return None

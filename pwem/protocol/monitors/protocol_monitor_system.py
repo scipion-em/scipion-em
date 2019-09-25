@@ -391,7 +391,7 @@ class MonitorSystem(Monitor):
                 cur.execute("select %s from %s" % (name, self._tableName))
             except Exception as e:
                 print("ERROR readind data (plotter). I continue")
-                print ("SQLCOMMAND", "select %s from %s" %
+                print("SQLCOMMAND", "select %s from %s" %
                        (name, self._tableName))
             data = cur.fetchall()
             if len(data) == 0:

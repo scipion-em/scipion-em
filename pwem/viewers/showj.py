@@ -37,7 +37,7 @@ import subprocess
 from pyworkflow.utils import getFreePort
 import threading
 import shlex
-import SocketServer
+import socketserver
 
 import pwem as em
 
@@ -287,7 +287,7 @@ def runJavaIJapp(memory, appName, args, env=None):
     env.update(getEnviron(xmippFirst=False))
 
     args = getJavaIJappArguments(memory, appName, args)
-    print 'java %s' % args
+    print('java %s' % args)
     #return subprocess.Popen('java ' + args, shell=True, env=env)
     cmd = ['java'] + shlex.split(args)
     return subprocess.Popen(cmd, env=env)
@@ -323,7 +323,7 @@ def launchTiltPairPickerGUI(micsFn, outputDir, protocol, mode=None):
     return runJavaIJapp(None, app, args)
 
 
-class ProtocolTCPRequestHandler(SocketServer.BaseRequestHandler):
+class ProtocolTCPRequestHandler(socketserver.BaseRequestHandler):
 
     def handle(self):  # FIXME: RUNNING FOREVER
         protocol = self.server.protocol
@@ -344,7 +344,7 @@ class ProtocolTCPRequestHandler(SocketServer.BaseRequestHandler):
             self.request.sendall(answer + '\n')
 
 
-class MySocketServer (SocketServer.TCPServer):
+class MySocketServer (socketserver.TCPServer):
 
     def serve_forever(self):
         self.end = False

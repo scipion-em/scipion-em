@@ -25,8 +25,12 @@
 # **************************************************************************
 
 import os
-from itertools import izip
-from cPickle import dumps, loads
+try:
+    from itertools import izip
+except ImportError:
+    izip = zip
+
+from _pickle import dumps, loads
 
 from pyworkflow.protocol.params import (PointerParam, FileParam, StringParam)
 from pyworkflow.utils import moveFile
@@ -34,8 +38,7 @@ from pyworkflow.utils import moveFile
 from pwem.protocol import EMProtocol
 import pwem.objects as emobj
 from pwem.constants import ALIGN_NONE
-from pwem.objects.data_tiltpairs import (MicrographsTiltPair,
-                                         ParticlesTiltPair)
+from pwem.objects import (MicrographsTiltPair, ParticlesTiltPair)
 
 
 

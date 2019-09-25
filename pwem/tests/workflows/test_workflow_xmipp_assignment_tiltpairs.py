@@ -24,7 +24,7 @@
 
 import pyworkflow.tests as pwtests
 
-import pwem as em
+from pwem import Domain
 import pwem.protocol as emprot
 
 from .test_workflow import TestWorkflow
@@ -70,23 +70,23 @@ class TestXmippAssignmentTiltPairsWorkflow(TestWorkflow):
         # Then simulate a particle picking
         print("Running tilt pairs assignment...")
 
-        XmippProtAssignmentTiltPair = em.Domain.importFromPlugin(
+        XmippProtAssignmentTiltPair = Domain.importFromPlugin(
                                                 'xmipp3.protocols',
                                                 'XmippProtAssignmentTiltPair',
                                                 doRaise=True)
         protAssigning = self.newProtocol(XmippProtAssignmentTiltPair)
         micsTiltPair = protImport.outputMicrographsTiltPair
         protAssigning.inputMicrographsTiltedPair.set(micsTiltPair)
-        print self.micsUFn
-        print self.micsTFn
+        print(self.micsUFn)
+        print(self.micsTFn)
         protAssigning.untiltedSet.set(protImportCoorU.outputCoordinates)
         protAssigning.tiltedSet.set(protImportCoorT.outputCoordinates)
         self.launchProtocol(protAssigning)
         self.assertIsNotNone(protAssigning.outputCoordinatesTiltPair,
                              "There was a problem with the protocol assignment tilt pairs")
-        print '-----------------------------------------------------------'
+        print('-----------------------------------------------------------')
         num_particles = protAssigning.outputCoordinatesTiltPair.getUntilted().getSize()
-        print num_particles
+        print(num_particles)
         if (num_particles>1000):
             out_ = True
         else:

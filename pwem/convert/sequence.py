@@ -25,6 +25,8 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
+from urllib.error import URLError, HTTPError
+from urllib.request import urlopen
 
 
 # sequence related stuff
@@ -47,7 +49,7 @@ UNAMBIGOUS_RNA_ALPHABET = 4
 from Bio.Seq import Seq
 from Bio.Alphabet import IUPAC
 from Bio import Entrez, SeqIO
-import urllib, urllib2, sys
+import urllib, sys
 from Bio.SeqRecord import SeqRecord
 from Bio.Align.Applications import ClustalOmegaCommandline, MuscleCommandline
 from Bio import pairwise2
@@ -98,7 +100,7 @@ class SequenceHandler:
                     dataBase = 'UnitProt'
                     url = "http://www.uniprot.org/uniprot/%s.xml"
                     format = "uniprot-xml"
-                    handle = urllib2.urlopen(url % seqID)
+                    handle = urlopen(url % seqID)
                     print("URL", url % seqID)
                 else:
                     dataBase = 'GeneBank'
@@ -109,12 +111,12 @@ class SequenceHandler:
 
                 record = SeqIO.read(handle, format)
                 break
-            except urllib2.HTTPError, e:
+            except HTTPError as e:
                 error = "%s is a wrong sequence ID" % seqID
-                print e.code
-            except urllib2.URLError, e:
+                print(e.code)
+            except URLError as e:
                 error = "Cannot connect to %s" % dataBase
-                print e.args
+                print(e.args)
             except Exception as ex:
                 template = "An exception of type {0} occurred. Arguments:\n{1!r}"
                 message = template.format(type(ex).__name__, ex.args)

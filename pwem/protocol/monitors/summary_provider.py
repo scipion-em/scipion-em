@@ -74,7 +74,7 @@ class SummaryProvider(TreeProvider):
                 addObj(outSetId, '', outName, outSet.getSize(), pobj)
                 outSet.close()
                 # Store acquisition parameters in case of the import protocol
-                from pyworkflow.em import ProtImportImages
+                from pwem.protocol import ProtImportImages
                 # NOTE by Yaiza: we force the string containing the Å to be unicode
                 # because this is the encoding used when generating report in report_html.py
                 if isinstance(prot, ProtImportImages):

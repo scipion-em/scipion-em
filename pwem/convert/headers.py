@@ -287,7 +287,7 @@ class Ccp4Header:
 
     def __str__(self):
         s = ""
-        for k, v in self._header.iteritems():
+        for k, v in self._header.items():
             s += "%s: %s\n" % (str(k), str(v))
         return s
 

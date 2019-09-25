@@ -138,7 +138,7 @@ class ProtMonitor(EMProtocol):
         return True
 
 
-class Monitor():
+class Monitor:
     def __init__(self, **kwargs):
         # Where to store any data from this monitor
         self.workingDir = kwargs['workingDir']
@@ -183,7 +183,7 @@ class Monitor():
         self._notifiers.append(notifier)
 
 
-class EmailNotifier():
+class EmailNotifier:
     def __init__(self, smtpServer, emailFrom, emailTo):
         self._smtpServer = smtpServer
         self._emailFrom = emailFrom
@@ -216,7 +216,7 @@ class EmailNotifier():
             print(msg.as_string())
 
 
-class PrintNotifier():
+class PrintNotifier:
     def notify(self, title, message):
-        print title, message
+        print(title, message)
         sys.stdout.flush()

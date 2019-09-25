@@ -66,7 +66,7 @@ setup(
     keywords='scipion cryoem imageprocessing scipion-2.0',  # Optional
     packages=find_packages(),
     install_requires=['numpy', 'bibtexparser', 'matplotlib', 'requests', 'Pillow',
-                      'biopython'],
+                      'biopython', 'future', 'tkinter', 'itertools', 'pynvml'],
     # package_data={  # Optional
     # #    '': [''],
     # }

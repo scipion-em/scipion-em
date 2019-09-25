@@ -36,6 +36,7 @@ import operator
 
 import pwem.constants as cts
 
+
 def _applyMatrix(tf, points):
     """
     Args:multiply point by a matrice list """
@@ -45,15 +46,18 @@ def _applyMatrix(tf, points):
     add(r, tf[:, 3], r)
     return r
 
+
 def __length(v):
   d = sqrt(sum([e*e for e in v]))
   return d
+
 
 def _normalizeVector(v):
   d = __length(v)
   if d == 0:
     d = 1
   return tuple([e/d for e in v])
+
 
 def _rotationTransform(axis, angle, center = (0, 0, 0)):
     """ Angle is in degrees. """
@@ -73,6 +77,7 @@ def _rotationTransform(axis, angle, center = (0, 0, 0)):
     rtf = _multiplyMatrices(c_tf, tf, inv_c_tf)
     return rtf
 
+
 def _translationMatrix(shift):
 
   tf = array(((1.0, 0, 0, shift[0]),
@@ -80,9 +85,11 @@ def _translationMatrix(shift):
               (0, 0, 1.0, shift[2])))
   return tf
 
+
 def _identityMatrix():
 
   return ((1.0,0,0,0), (0,1.0,0,0), (0,0,1.0,0))
+
 
 def _invertMatrix(tf):
 
@@ -95,6 +102,7 @@ def _invertMatrix(tf):
     rinv[:,:] = matrix_inverse(r)
     tinv[:] = matrix_multiply(rinv, -t)
     return tfinv
+
 
 def _multiplyMatrices(*mlist):
 
@@ -113,6 +121,7 @@ def _multiplyMatrices(*mlist):
     p = _multiplyMatrices(mlist[0], p)
   return p
 
+
 def _matrixProducts(mlist1, mlist2):
   plist = []
   for m1 in mlist1:
@@ -120,6 +129,7 @@ def _matrixProducts(mlist1, mlist2):
       m1xm2 = _multiplyMatrices(m1, m2)
       plist.append(m1xm2)
   return plist
+
 
 def _coordinateTransformList(tflist, ctf):
 
@@ -134,11 +144,13 @@ def _recenterSymmetries(tflist, center):
     ctf = _translationMatrix([-x for x in center])
     return _coordinateTransformList(tflist, ctf)
 
+
 def _transposeMatrix(tf):
 
   return ((tf[0][0], tf[1][0], tf[2][0], tf[0][3]),
           (tf[0][1], tf[1][1], tf[2][1], tf[1][3]),
           (tf[0][2], tf[1][2], tf[2][2], tf[2][3]))
+
 
 def getSymmetryMatrices(sym=cts.SYM_CYCLIC, n=1, center = (0,0,0)):
     """ interface between scipion and chimera code
@@ -154,16 +166,17 @@ def getSymmetryMatrices(sym=cts.SYM_CYCLIC, n=1, center = (0,0,0)):
         matrices = __octahedralSymmetryMatrices(center)
     elif sym == cts.SYM_TETRAHEDRAL or sym == cts.SYM_TETRAHEDRAL_Z3:
         matrices = __tetrahedralSymmetryMatrices(sym, center)
-    elif sym == cts.SYM_I222 or sym == cts.SYM_I222r or \
-        sym == cts.SYM_In25 or sym == cts.SYM_In25r:
+    elif (sym == cts.SYM_I222 or sym == cts.SYM_I222r or
+          sym == cts.SYM_In25 or sym == cts.SYM_In25r):
         matrices = __icosahedralSymmetryMatrices(sym, center)
 
     # convert from 4x 3 to 4x4 matrix, Scipion standard
     extraRow = (0., 0., 0., 1.)
     for i in range(len(matrices)):
-        matrices[i] +=  (extraRow,)
+        matrices[i] += (extraRow,)
     # convert from sets to lists Scipion standard
     return array(matrices)
+
 
 def __cyclicSymmetrySatrices(n, center = (0, 0, 0)):
     """ Rotation about z axis.
@@ -181,6 +194,7 @@ def __cyclicSymmetrySatrices(n, center = (0, 0, 0)):
     tflist = _recenterSymmetries(tflist, center)
     return tflist
 
+
 def __octahedralSymmetryMatrices(center = (0, 0, 0)):
     """ 4-folds along x, y, z axes. """
     c4 = (((0,0,1),0), ((0,0,1),90), ((0,0,1),180), ((0,0,1),270))
@@ -191,6 +205,7 @@ def __octahedralSymmetryMatrices(center = (0, 0, 0)):
     syms = _matrixProducts(cubesyms, c4syms)
     syms = _recenterSymmetries(syms, center)
     return syms
+
 
 def __dihedralSymmetryMatrices(n, center = (0, 0, 0)):
     """ Rotation about z axis, reflection about x axis. """
@@ -227,7 +242,7 @@ def __tetrahedralSymmetryMatrices(orientation = cts.SYM_TETRAHEDRAL,
     return syms
 
 
-def __icosahedralSymmetryMatrices(orientation = cts.SYM_I222, center = (0,0,0)):
+def __icosahedralSymmetryMatrices(orientation=cts.SYM_I222, center=(0, 0, 0)):
     if orientation == cts.SYM_I222:
         sym = '222'
     elif orientation == cts.SYM_I222r:
@@ -239,6 +254,7 @@ def __icosahedralSymmetryMatrices(orientation = cts.SYM_I222, center = (0,0,0)):
 
     i = Icosahedron(orientation=sym, center=center)
     return list(i.icosahedralSymmetryMatrices())
+
 
 icos_matrices = {}  # Maps orientation name to 60 matrices.
 class Icosahedron(object):
