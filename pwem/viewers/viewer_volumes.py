@@ -94,7 +94,7 @@ class viewerProtImportVolumes(pwviewer.ProtocolViewer):
         try:
             setOfVolumes = self.protocol.outputVolumes
             sampling = self.protocol.outputVolumes.getSamplingRate()
-        except:
+        except Exception as ex:
             setOfVolumes = self.protocol._createSetOfVolumes()
             setOfVolumes.append(self.protocol.outputVolume)
             sampling = self.protocol.outputVolume.getSamplingRate()
@@ -185,6 +185,6 @@ def errorWindow(tkParent, msg):
         showerror("Error",  # bar title
                   msg,  # message
                   parent=tkParent)
-    except:
+    except Exception as ex:
         print("Error:", msg)
 

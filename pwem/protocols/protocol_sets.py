@@ -272,7 +272,7 @@ class ProtUnionSet(ProtSets):
                 'dimensions': 'getDimensions'}
         errors = []
         # For each attribute
-        for key, attr in attrs.iteritems():
+        for key, attr in attrs.items():
 
             # Intentional: we need a default value not None, since some
             # attributes could return None as a valid value.

@@ -360,7 +360,7 @@ class ProtExtractParticles(ProtParticles):
             self.debug("Loading other Mics.")
             oMicDict, oMicClosed = _loadMics(self.inputMicrographs.get())
             self.micsClosed = self.micsClosed and oMicClosed
-            for micKey, mic in micDict.iteritems():
+            for micKey, mic in micDict.items():
                 if micKey in oMicDict:
                     oMic = oMicDict[micKey]
                     # Let's fix the id in case it does not correspond
@@ -375,7 +375,7 @@ class ProtExtractParticles(ProtParticles):
         if self._useCTF():
             self.debug("Loading CTFs.")
             ctfDict, ctfClosed = _loadCTFs(self.ctfRelations.get())
-            for micKey, mic in micDict.iteritems():
+            for micKey, mic in micDict.items():
                 if micKey in ctfDict:
                     mic.setCTF(ctfDict[micKey])
                 else:

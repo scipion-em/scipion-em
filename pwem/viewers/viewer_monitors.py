@@ -113,7 +113,7 @@ class CtfMonitorPlotter(EmPlotter):
 
         data = self.monitor.getData()
         self.x = data['idValues']
-        for k,v in self.lines.iteritems():
+        for k,v in self.lines.items():
             self.y = data[k]
 
             lenght = len(self.x)
@@ -223,7 +223,7 @@ class MovieGainMonitorPlotter(EmPlotter):
 
         data = self.monitor.getData()
         self.x = data['idValues']
-        for k,v in self.lines.iteritems():
+        for k,v in self.lines.items():
             self.y = data[k]
 
             lenght = len(self.x)
@@ -446,7 +446,7 @@ class SystemMonitorPlotter(EmPlotter):
 
         data = self.monitor.getData()
         self.x = data['idValues']
-        for k, v in self.lines.iteritems():
+        for k, v in self.lines.items():
             self.y = data[k]
 
             lenght = len(self.x)

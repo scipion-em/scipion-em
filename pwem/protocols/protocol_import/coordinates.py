@@ -538,7 +538,7 @@ class ProtImportCoordinatesPairs(ProtImportFiles):
             suffix = attrName.replace('outputCoordinatesTiltPair', '')
             try:
                 counter = int(suffix)
-            except:
+            except Exception as ex:
                 counter = 1  # when there is not number assume 1
             maxCounter = max(counter, maxCounter)
 

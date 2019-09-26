@@ -93,10 +93,10 @@ class Row():
         
     def writeToMd(self, md, objId):
         """ Set back row values to a metadata row. """
-        for label, value in self._labelDict.iteritems():
+        for label, value in self._labelDict.items():
             # TODO: Check how to handle correctly unicode type
             # in Xmipp and Scipion
-            if type(value) is unicode:
+            if type(value) is str:
                 value = str(value)
             try:
                 md.setValue(label, value, objId)
@@ -117,7 +117,7 @@ class Row():
         md.write(fn)
         
     def copyFromRow(self, other):
-        for label, value in other._labelDict.iteritems():
+        for label, value in other._labelDict.items():
             self.setValue(label, value)
             
     def clone(self):
@@ -132,12 +132,12 @@ class Row():
         
     def __str__(self):
         s = '{'
-        for k, v in self._labelDict.iteritems():
+        for k, v in self._labelDict.items():
             s += '  %s = %s\n' % (label2Str(k), v)
         return s + '}'
     
     def __iter__(self):
-        return self._labelDict.iteritems()
+        return self._labelDict.items()
         
     def containsAll(self, labels):
         """ Check if all labels are present in the row.

@@ -171,7 +171,7 @@ class ColumnsConfig:
     def configColumn(self, colName, **kwargs):
         """ Configure properties of a given column. """
         col = self._columnsDict[colName]
-        for k, v in kwargs.iteritems():
+        for k, v in kwargs.items():
             setattr(col, k, v)
 
     def printColumns(self):

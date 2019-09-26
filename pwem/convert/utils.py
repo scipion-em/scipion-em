@@ -125,7 +125,7 @@ def __unzipPdb(pdbGz, pdbFile, log, cleanFile=True):
         g.writelines(f.readlines())
         f.close()
         g.close()
-    except:
+    except Exception as ex:
         e = sys.exc_info()[0]
         if log:
             log.error('ERROR opening gzipped file %s: %s' % (pdbGz, e))
@@ -134,7 +134,7 @@ def __unzipPdb(pdbGz, pdbFile, log, cleanFile=True):
     try:
         if success:
             os.remove(pdbGz)
-    except:
+    except Exception as ex:
         e = sys.exc_info()[0]
         if log:
             log.error('ERROR deleting gzipped file: %s' % e)

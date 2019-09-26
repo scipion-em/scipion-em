@@ -287,7 +287,7 @@ class MonitorSystem(Monitor):
                     bytes_sent * self.samplingTime / 1048576
                 valuesDict["%s_recv" % self.nif] = \
                     bytes_recv * self.samplingTime / 1048576
-            except:
+            except Exception as ex:
                 msg = "cannot get information of network interface %s" % \
                       self.nif
 
@@ -303,7 +303,7 @@ class MonitorSystem(Monitor):
                     self.samplingTime * bytes_read / self.mega
                 valuesDict["disk_write"] = \
                     self.samplingTime * bytes_write / self.mega
-            except:
+            except Exception as ex:
                 msg = "cannot get information of disk usage "
 
         if self.cpuAlert < 100 and cpu > self.cpuAlert:

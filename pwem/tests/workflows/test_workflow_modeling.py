@@ -878,7 +878,7 @@ class TestCootRefinement(TestImportData):
 
         try:
             self.launchProtocol(protCoot)
-        except:
+        except Exception as ex:
             print("first call to coot ended")
         self.assertIsNotNone(protCoot.testLabel6.getFileName(),
                              "There was a problem with the alignment")
@@ -892,7 +892,7 @@ class TestCootRefinement(TestImportData):
 
         try:
             self.launchProtocol(protCoot)
-        except:
+        except Exception as ex:
             print("second call to coot ended")
         self.assertIsNotNone(protCoot.cootOut0001.getFileName(),
                              "There was a problem with the alignment")
@@ -907,7 +907,7 @@ class TestCootRefinement(TestImportData):
         protCoot.extraCommands.set(lastExtraCommands)
         try:
             self.launchProtocol(protCoot)
-        except:
+        except Exception as ex:
             print("third call to coot ended")
         self.assertIsNotNone(protCoot.lastTestLabel.getFileName(),
                              "There was a problem with the alignment")
@@ -1114,7 +1114,7 @@ class TestRefmacRefinement(TestImportData):
                              'save model')
         try:
             self.launchProtocol(protCoot)
-        except:
+        except Exception as ex:
             print("first call to coot ended")
         self.assertIsNotNone(protCoot.testLabel3.getFileName(),
                              "There was a problem with the alignment")
@@ -2333,7 +2333,7 @@ class TestMolprobityValidation(TestImportData):
                              'save model')
         try:
             self.launchProtocol(protCoot)
-        except:
+        except Exception as ex:
             print("first call to coot ended")
         self.assertIsNotNone(protCoot.testLabel5.getFileName(),
                              "There was a problem with the alignment")
@@ -2455,7 +2455,7 @@ class TestMolprobityValidation(TestImportData):
                              'save model')
         try:
             self.launchProtocol(protCoot)
-        except:
+        except Exception as ex:
             print("first call to coot ended")
         self.assertIsNotNone(protCoot.testLabel6.getFileName(),
                              "There was a problem with the alignment")

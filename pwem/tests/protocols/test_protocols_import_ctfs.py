@@ -107,7 +107,7 @@ class TestImportCTFs(pwtests.BaseTest):
 
         pattern = 'micrographs/%s.mrc'
 
-        for k, v in micDict.iteritems():
+        for k, v in micDict.items():
             # Create a micrograph link with a given naming convention
             pwutils.createAbsLink(self.dsXmipp.getFile(pattern % k),
                                   self.proj.getTmpPath(pattern % v))

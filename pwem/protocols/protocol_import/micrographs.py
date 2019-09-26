@@ -654,7 +654,7 @@ class ProtImportMovies(ProtImportMicBase):
                 yield movieFn, uniqueFn, None
         
         def checkMovie():
-            for k, v in frameDict.iteritems():
+            for k, v in frameDict.items():
                 moviePath = os.path.dirname(k)
                 movieFn = join(moviePath + "/", self._getUniqueFileName(k) +
                                suffix)

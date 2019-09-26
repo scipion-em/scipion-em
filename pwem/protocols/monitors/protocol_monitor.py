@@ -207,7 +207,7 @@ class EmailNotifier:
             s = smtplib.SMTP(self._smtpServer)
             s.sendmail(self._emailFrom, self._emailTo, msg.as_string())
             s.quit()
-        except:
+        except Exception as ex:
             from traceback import print_exc
             print("Some error happened while trying to send email warning.")
             print(" > Error:")

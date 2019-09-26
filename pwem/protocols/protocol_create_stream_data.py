@@ -221,7 +221,7 @@ class ProtCreateStreamData(EMProtocol):
         else:
             raise Exception('Unknown data type')
 
-        for k, v in self.dictObj.iteritems():
+        for k, v in self.dictObj.items():
             if (k not in objDict):
                 self.counter += 1
                 obj.setFileName(k)

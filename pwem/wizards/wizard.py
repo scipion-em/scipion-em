@@ -374,7 +374,7 @@ class PreviewDialog(dialog.Dialog):
             provider: the TreeProvider to populate items tree.
         """
         # Set the attributes in **args
-        for k, v in args.iteritems():
+        for k, v in args.items():
             setattr(self, k, v)
 
         self.provider = provider

@@ -530,9 +530,9 @@ class Image(EMObject):
         t = type(first)
         if t == tuple:
             index, filename = first
-        elif t == int or t == long:
+        elif t == int:
             index, filename = first, args[1]
-        elif t == str or t == unicode:
+        elif t == str:
             index, filename = NO_INDEX, first
         else:
             raise Exception('setLocation: unsupported type %s as input.' % t)
@@ -2007,7 +2007,7 @@ class Movie(Micrograph):
         """Return image dimensions as tuple: (Xdim, Ydim, Zdim)
         Consider compressed Movie files"""
         from pwem.convert import ImageHandler
-        
+
         if not self.isCompressed():
             x, y, z, n = ImageHandler().getDimensions(self)
             if x is not None:

@@ -652,7 +652,7 @@ class ProtCTFMicrographs(ProtMicrographs):
             try:
                 ctf = self._createCtfModel(mic)
                 outputCtf.append(ctf)
-            except:
+            except Exception as ex:
                 print(pwutils.yellowStr("Missing CTF?: Couldn't update CTF set with mic: %s" % micFn))
                 doneFailed.append(mic)
 

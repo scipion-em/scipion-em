@@ -65,7 +65,7 @@ class TestAtomicStructHandler(unittest.TestCase):
         solDict['author'] = 'R.Z.Kramer,L.Vitagliano,J.Bella,R.Berisio,' \
                             'L.Mazzarella,B.Brodsky,A.Zagari,H.M.Berman'
         solDict['deposition_date'] = '1998-01-22'
-        for k, v in solDict.iteritems():
+        for k, v in solDict.items():
             self.assertEqual(structure.header[k].strip(), v)
 
         solList = ['N', 'CA', 'C', 'O', 'CB']
@@ -92,7 +92,7 @@ class TestAtomicStructHandler(unittest.TestCase):
                                    'repeating sequence (pro-pro-gly)'
         _dict = aSH.readLowLevel(self.CIFFileName)
 
-        for k, v in solDict.iteritems():
+        for k, v in solDict.items():
             self.assertEqual(_dict[k].strip().lower(), v.lower())
 
     def testRenameToChains(self):

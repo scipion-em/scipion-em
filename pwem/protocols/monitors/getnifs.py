@@ -121,7 +121,7 @@ def get_network_interfaces():
         except ValueError :
                 del retval[name]
                 print("get_network_interfaces: Can not connect to NIC %s" % name)
-        except:
+        except Exception as ex:
             print("Unexpected error:", sys.exc_info()[0])
     #print retval.values()
     libc.freeifaddrs(ifap)
