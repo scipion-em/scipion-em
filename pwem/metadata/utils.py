@@ -43,7 +43,7 @@ def getLabel(value):
     """ Return the label value either from an int value or an string. """
     if isinstance(value, int):
         return value
-    elif isinstance(value, basestring):
+    elif isinstance(value, str):
         return str2Label(value)
     else:
         raise Exception("Invalid value type (%s) for label. " % type(value))
@@ -55,7 +55,7 @@ def getFirstRow(mdOrFn):
         mdOrFn: you can pass a metadata or a filename as argument.
     """
 
-    if isinstance(mdOrFn, basestring):
+    if isinstance(mdOrFn, str):
         md = MetaData()
         md.read(mdOrFn, 1)
     else: # mdOrFn is MetaData
@@ -90,7 +90,7 @@ def iterRows(md, sortByLabel=None):
     """
     # If md is string, take as filename and create the metadata
 
-    if isinstance(md, basestring):
+    if isinstance(md, str):
         md = MetaData(md)
 
     if sortByLabel is not None:

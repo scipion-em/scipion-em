@@ -53,7 +53,7 @@ class Row():
     
     def containsLabel(self, label):
         # Allow getValue using the label string
-        if isinstance(label, basestring):
+        if isinstance(label, str):
             label = str2Label(label)
         return label in self._labelDict
     
@@ -65,14 +65,14 @@ class Row():
         """args: this list should contains tuples with 
         MetaData Label and the desired value"""
         # Allow setValue using the label string
-        if isinstance(label, basestring):
+        if isinstance(label, str):
             label = str2Label(label)
         self._labelDict[label] = value
             
     def getValue(self, label, default=None):
         """ Return the value of the row for a given label. """
         # Allow getValue using the label string
-        if isinstance(label, basestring):
+        if isinstance(label, str):
             label = str2Label(label)
         return self._labelDict.get(label, default)
     

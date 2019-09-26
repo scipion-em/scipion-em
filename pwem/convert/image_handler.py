@@ -117,7 +117,7 @@ class ImageHandler(object):
         if isinstance(location, tuple):
             outLocation = location
         
-        elif isinstance(location, basestring):
+        elif isinstance(location, str):
             outLocation = (emcts.NO_INDEX, location)
         
         elif hasattr(location, 'getLocation'):
@@ -139,7 +139,7 @@ class ImageHandler(object):
             fn = None
         elif isinstance(locationObj, tuple):
             fn = locationObj[1]
-        elif isinstance(locationObj, basestring):
+        elif isinstance(locationObj, str):
             fn = locationObj
         elif hasattr(locationObj, 'getLocation'):
             # This case includes Image and its subclasses
@@ -320,7 +320,7 @@ class ImageHandler(object):
         If inputSet is a SetOfImages subclass, we will iterate
         and compute the average from all images.
         """
-        if isinstance(inputSet, basestring):
+        if isinstance(inputSet, str):
             _, _, _, n = self.getDimensions(inputSet)
             if n:
                 avgImage = self.read((1, inputSet))
@@ -473,7 +473,7 @@ class ImageHandler(object):
     def getVolFileName(cls, location):
         if isinstance(location, tuple):
             fn = location[1]
-        elif isinstance(location, basestring):
+        elif isinstance(location, str):
             fn = location
         elif hasattr(location, 'getLocation'):
             fn = location.getLocation()[1]

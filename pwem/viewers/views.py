@@ -72,7 +72,7 @@ class DataView(pwviewer.View):
         # in that case split table name and path
         # table names can never starts with a number
         # this is considering an image inside an stack
-        elif isinstance(path, basestring):
+        elif isinstance(path, str):
             if '@' in path and path[0] not in '0123456789':
                 self._tableName, self._path = path.split('@')
             else:

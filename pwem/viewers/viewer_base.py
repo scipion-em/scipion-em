@@ -50,7 +50,7 @@ class EmProtocolViewer(pwviewer.ProtocolViewer):
         """
         fn = None
 
-        if isinstance(filenameOrObject, basestring):
+        if isinstance(filenameOrObject, str):
             # If the input is a string filename, we should take the object id
             # from the protocol. This assumes that self.protocol have been
             # previously set
