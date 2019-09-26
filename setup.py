@@ -17,6 +17,11 @@ here = path.abspath(path.dirname(__file__))
 with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
 
+# Load requirements.txt
+with open('requirements.txt') as f:
+    requirements = f.read().splitlines()
+
+
 # Arguments marked as "Required" below must be included for upload to PyPI.
 # Fields marked as "Optional" may be commented out.
 
@@ -65,8 +70,7 @@ setup(
     ],
     keywords='scipion cryoem imageprocessing scipion-2.0',  # Optional
     packages=find_packages(),
-    install_requires=['numpy', 'bibtexparser', 'matplotlib', 'requests', 'Pillow',
-                      'biopython', 'future'],
+    install_requires=[requirements],
     # package_data={  # Optional
     # #    '': [''],
     # }
