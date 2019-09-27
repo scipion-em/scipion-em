@@ -354,7 +354,7 @@ class SetOfDefocusGroups():
         iterSet = iter(inputSet.iterItems(orderBy=['_ctfModel._defocusU',
                                                    'id'],
                                           direction='ASC'))
-        first = iterSet.next()
+        first = next(iterSet.next)
         self.__addNewGroup(first.getCTF())
 
         for item in iterSet:
