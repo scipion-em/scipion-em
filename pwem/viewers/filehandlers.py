@@ -33,6 +33,7 @@ from pyworkflow.gui.browser import FileHandler, isStandardImage
 from pyworkflow import gui
 import pyworkflow.utils as pwutils
 
+
 class ImageFileHandler(FileHandler):
     import xmippLib
     _image = xmippLib.Image()

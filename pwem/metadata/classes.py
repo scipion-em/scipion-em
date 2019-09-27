@@ -164,7 +164,7 @@ class Row():
         print(str(self))
         
         
-class RowMetaData():
+class RowMetaData:
     """ This class is a wrapper for MetaData in row mode.
     Where only one object is used.
     """

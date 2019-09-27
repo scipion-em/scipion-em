@@ -46,6 +46,7 @@ from pwem.viewers import Chimera, ChimeraView
 VOLUME_SLICES = 1
 VOLUME_CHIMERA = 0
 
+
 class viewerProtImportVolumes(pwviewer.ProtocolViewer):
     """ Wrapper to visualize different type of objects
     with the Xmipp program xmipp_showj. """
@@ -74,7 +75,7 @@ class viewerProtImportVolumes(pwviewer.ProtocolViewer):
 
     def _validate(self):
         if (self.displayVol == VOLUME_CHIMERA
-            and find_executable(Chimera.getProgram()) is None):
+                and find_executable(Chimera.getProgram()) is None):
             return ["chimera is not available. "
                     "Either install it or choose option 'slices'. "]
         return []

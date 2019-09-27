@@ -17,10 +17,6 @@ from threading import Thread
 from pwem import Domain
 
 
-#from time import gmtime, strftime
-#from datetime import datetime
-#import socket
-
 class ChimeraServer:
     
     def __init__(self,centerVolume=True):
@@ -49,7 +45,7 @@ class ChimeraServer:
     def openVolume(self):
         try:
             runCommand = Domain.importFromPlugin('chimera', 'Plugin',
-                                                    doRaise=True)
+                                                 doRaise=True)
             while True:
                 if self.vol_conn.poll():
                     
@@ -82,7 +78,7 @@ class ChimeraServer:
     def answer(self, msg):
         #print msg
         runCommand = Domain.importFromPlugin('chimera', 'Plugin',
-                                                doRaise=True)
+                                             doRaise=True)
         if msg == 'open_volume':
             data = self.vol_conn.recv()#objects are serialized by default
             #print data
@@ -134,12 +130,17 @@ class ChimeraServer:
                     if msg == 'rotate':
 
                         matrix1 = self.vol_conn.recv()
-                        #undo last rotation and put new one. #Traslation is not undone, if user moves volume wrong translation applied
+                        # undo last rotation and put new one. #Traslation is not
+                        # undone, if user moves volume wrong translation applied
                         matrix = dot(matrix1, inv(self.rotation))
 
-                        xform = chimera.Xform.xform(matrix[0][0], matrix[0][1], matrix[0][2], 0,
-                                       matrix[1][0], matrix[1][1], matrix[1][2], 0,
-                                       matrix[2][0], matrix[2][1], matrix[2][2], 0, orthogonalize=True)
+                        xform = chimera.Xform.xform(matrix[0][0], matrix[0][1],
+                                                    matrix[0][2], 0,
+                                                    matrix[1][0], matrix[1][1],
+                                                    matrix[1][2], 0,
+                                                    matrix[2][0], matrix[2][1],
+                                                    matrix[2][2], 0,
+                                                    orthogonalize=True)
 
                         self.model.openState.globalXform(xform)
                     else:

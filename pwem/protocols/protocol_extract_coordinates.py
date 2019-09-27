@@ -145,7 +145,6 @@ class ProtExtractCoords(ProtParticlePickingAuto):
         outputCoords.close()
         print("write time: %fs" % (time.time()-t0))
 
-
     def extractCoordinates(self, partsIds=None):
         inPart = self.getInputParticles()
         inMics = self.getInputMicrographs()
@@ -190,7 +189,6 @@ class ProtExtractCoords(ProtParticlePickingAuto):
         outputCoords.setBoxSize(boxSize)
 
         return outputCoords
-
 
     def _checkNewOutput(self):
         if getattr(self, 'finished', False):

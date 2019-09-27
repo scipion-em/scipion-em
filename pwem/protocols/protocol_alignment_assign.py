@@ -118,7 +118,7 @@ class ProtAlignmentAssign(ProtAlign2D):
         empty the protocol can be executed.
         """
         #check that input set of aligned particles do have 2D alignment
-        errors = [ ]
+        errors = []
         inputAlignmentSet = self.inputAlignment.get()
         if not inputAlignmentSet.hasAlignment():
             errors.append("Input alignment set should contains some kind of alignment (2D, 3D or Projection).")

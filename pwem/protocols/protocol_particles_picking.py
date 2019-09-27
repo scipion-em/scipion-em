@@ -102,7 +102,7 @@ class ProtParticlePicking(ProtParticles):
     def _getCoords(self, CoordClass):
         result = None
         for _, attr in self.iterOutputAttributes(CoordClass):
-            result = attr # Get the last output that is SetOfCoordinates or so
+            result = attr  # Get the last output that is SetOfCoordinates or so
         return result
 
     def getCoords(self):
@@ -159,7 +159,7 @@ class ProtParticlePicking(ProtParticles):
         outputName = self.OUTPUT_PREFIX + suffix
 
         readSetOfCoordinates = Domain.importFromPlugin('xmipp3.convert',
-                                                'readSetOfCoordinates')
+                                                       'readSetOfCoordinates')
         inputset = self.getInputMicrographs()
         # micrographs are the input set if protocol is not finished
         outputset = self._createSetOfCoordinates(inputset, suffix=suffix)
@@ -173,7 +173,8 @@ class ProtParticlePicking(ProtParticles):
         # and id changes between the protocol run.db and the main project
         # database. The pointer defined below points to the outputset object
         self._defineSourceRelation(self.getInputMicrographsPointer(),
-                                   pwobj.Pointer(value=self, extended=outputName))
+                                   pwobj.Pointer(value=self,
+                                                 extended=outputName))
         self._store()
 
 

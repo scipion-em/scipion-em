@@ -41,10 +41,12 @@ class ProtClassesConsensus(ProtAlign2D):
     def _defineParams(self, form):
         form.addSection(label='Input')
 
-        form.addParam('inputClasses1', params.PointerParam, pointerClass='SetOfClasses',
+        form.addParam('inputClasses1', params.PointerParam,
+                      pointerClass='SetOfClasses',
                       label='Input classes 1',
                       help='')
-        form.addParam('inputClasses2', params.PointerParam, pointerClass='SetOfClasses',
+        form.addParam('inputClasses2', params.PointerParam,
+                      pointerClass='SetOfClasses',
                       label='Input classes 2',
                       help='')
 
@@ -76,7 +78,8 @@ class ProtClassesConsensus(ProtAlign2D):
                 inter = len(ids1.intersection(ids2))
                 union = len(ids1.union(ids2))
                 jaccardIndex = float(inter) / union
-                jaccardTuple = (cls1.getObjId(), cls2.getObjId(), inter, union, jaccardIndex)
+                jaccardTuple = (cls1.getObjId(), cls2.getObjId(), inter, union,
+                                jaccardIndex)
                 f.write('%d %d %d %d %0.3f\n' % jaccardTuple)
                 jaccardList.append(jaccardTuple)
         f.close()

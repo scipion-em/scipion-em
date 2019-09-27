@@ -283,7 +283,6 @@ class MovieGainMonitorPlotter(EmPlotter):
         return self.init
 
 
-
 class ProtMonitorSystemViewer(pwviewer.Viewer):
     _environments = [pwviewer.DESKTOP_TKINTER,pwviewer.WEB_DJANGO]
     _label = 'system monitor'

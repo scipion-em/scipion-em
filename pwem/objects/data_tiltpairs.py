@@ -32,7 +32,6 @@ This modules contains data classes related to Random Connical Tilt workflow.
 # not directly in the code
 
 from .data import *
-from pyworkflow.object import Float, Pointer
 
 
 class TiltPair(EMObject):
