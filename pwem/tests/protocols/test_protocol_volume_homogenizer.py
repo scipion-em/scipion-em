@@ -22,17 +22,16 @@
 # ***************************************************************************/
 
 import os
-from pyworkflow.utils import importFromPlugin
+
+
 from pyworkflow.tests import BaseTest, setupTestProject, DataSet
-from pyworkflow.em.data import SetOfParticles
-from pyworkflow.em.protocol import ProtImportParticles, ProtImportVolumes, ProtSubSet
 
-XmippProtVolumeHomogenizer = importFromPlugin('xmipp3.protocols',
-                                              'XmippProtEnrich', doRaise=True)
-ProtRelionRefine3D = importFromPlugin('relion.protocols', 'ProtRelionRefine3D', doRaise=True)
+from pwem import Domain
+from pwem.objects.data import SetOfParticles
+from pwem.protocols import ProtImportParticles, ProtImportVolumes, ProtSubSet
 
 
-    
+
 class TestVolumeHomogenizer(BaseTest):
     @classmethod
     def setUpClass(cls):
@@ -110,25 +109,31 @@ class TestVolumeHomogenizer(BaseTest):
         return protImportVol
     
     def relionRefine(self,protSubSetClass, vol, classid):
-            
-            relionRefine = self.newProtocol(ProtRelionRefine3D,
-                                            objLabel='relion_%s' % classid,
-                                            doCTF=False, runMode=1,
-                                            memoryPreThreads=1,
-                                            maskDiameterA=424,
-                                            angularSamplingDeg=1,
-                                            localSearchAutoSamplingDeg = 2,
-                                            symmetryGroup="c1",
-                                            numberOfMpi=3, numberOfThreads=1)
-            
-            relionRefine.inputParticles.set(protSubSetClass.outputParticles)
-            relionRefine.referenceVolume.set(vol.outputVolume)
-                        
-            self.launchProtocol(relionRefine)
-            return relionRefine
+
+        ProtRelionRefine3D = Domain.importFromPlugin('relion.protocols',
+                                                     'ProtRelionRefine3D',
+                                                     doRaise=True)
+        relionRefine = self.newProtocol(ProtRelionRefine3D,
+                                        objLabel='relion_%s' % classid,
+                                        doCTF=False, runMode=1,
+                                        memoryPreThreads=1,
+                                        maskDiameterA=424,
+                                        angularSamplingDeg=1,
+                                        localSearchAutoSamplingDeg = 2,
+                                        symmetryGroup="c1",
+                                        numberOfMpi=3, numberOfThreads=1)
+
+        relionRefine.inputParticles.set(protSubSetClass.outputParticles)
+        relionRefine.referenceVolume.set(vol.outputVolume)
+
+        self.launchProtocol(relionRefine)
+        return relionRefine
      
     def homoNoGoldStandardNoAlign(self,relion1,relion2):
         '''test without Goldstandard and alignment'''
+        XmippProtVolumeHomogenizer = Domain.importFromPlugin('xmipp3.protocols',
+                                                             'XmippProtEnrich',
+                                                             doRaise=True)
         protVolumeHomogenizer = self.newProtocol(XmippProtVolumeHomogenizer,
                                 objLabel='volume homogenizer1')
         
@@ -146,6 +151,9 @@ class TestVolumeHomogenizer(BaseTest):
     
     def homoNoGoldStandardAlign(self,relion1,relion2):
         '''test without Goldstandard and alignment'''
+        XmippProtVolumeHomogenizer = Domain.importFromPlugin('xmipp3.protocols',
+                                                             'XmippProtEnrich',
+                                                             doRaise=True)
         protVolumeHomogenizer = self.newProtocol(XmippProtVolumeHomogenizer,
                                 objLabel='volume homogenizer2')
         
@@ -162,6 +170,9 @@ class TestVolumeHomogenizer(BaseTest):
     
     def homoGoldStandardNoAlign(self,relion1,relion2):
         '''test without Goldstandard and alignment'''
+        XmippProtVolumeHomogenizer = Domain.importFromPlugin('xmipp3.protocols',
+                                                             'XmippProtEnrich',
+                                                             doRaise=True)
         protVolumeHomogenizer = self.newProtocol(XmippProtVolumeHomogenizer,
                                 objLabel='volume homogenizer3',
                                 doGoldStandard = True)
@@ -184,6 +195,9 @@ class TestVolumeHomogenizer(BaseTest):
     
     def homoGoldStandardAlign(self,relion1,relion2):
         '''test without Goldstandard with alignment'''
+        XmippProtVolumeHomogenizer = Domain.importFromPlugin('xmipp3.protocols',
+                                                             'XmippProtEnrich',
+                                                             doRaise=True)
         protVolumeHomogenizer = self.newProtocol(XmippProtVolumeHomogenizer,
                                 objLabel='volume homogenizer4',
                                 doGoldStandard = True)

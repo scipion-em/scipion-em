@@ -28,28 +28,15 @@
 # flexible fitting (coot and refmac), as well as validation programs such as
 # emringer and molprobity
 
-
-
 import os.path
-from pyworkflow.tests import *
-import json
-from pyworkflow.tests import *
-from pyworkflow.utils import importFromPlugin
-from pyworkflow.em.protocol.protocol_import import ProtImportPdb, \
-    ProtImportVolumes
-from pyworkflow.tests import *
 import os.path
 import json
 
+from pyworkflow.tests import *
 
-ChimeraProtRigidFit = importFromPlugin('chimera.protocols',
-                                       'ChimeraProtRigidFit', doRaise=True)
-CootRefine = importFromPlugin('ccp4.protocols', 'CootRefine', doRaise=True)
-CCP4ProtRunRefmac = importFromPlugin('ccp4.protocols', 'CCP4ProtRunRefmac')
-PhenixProtRunEMRinger = importFromPlugin('phenix.protocols',
-                                         'PhenixProtRunEMRinger', doRaise=True)
-PhenixProtRunMolprobity = importFromPlugin('phenix.protocols',
-                                           'PhenixProtRunMolprobity')
+from pwem import Domain
+import pwem.protocols as emprot
+
 
 class TestImportBase(BaseTest):
     @classmethod
@@ -67,7 +54,7 @@ class TestImportData(TestImportBase):
                 'samplingRate': 1.5,
                 'setOrigCoord': False
                 }
-        protImportVol = self.newProtocol(ProtImportVolumes, **args)
+        protImportVol = self.newProtocol(emprot.ProtImportVolumes, **args)
         protImportVol.setObjLabel('import volume 1ake_4-5A\n with default '
                                   'origin\n')
         self.launchProtocol(protImportVol)
@@ -82,7 +69,7 @@ class TestImportData(TestImportBase):
                 'y': -7.881,
                 'z': 10.91
                 }
-        protImportVol = self.newProtocol(ProtImportVolumes, **args)
+        protImportVol = self.newProtocol(emprot.ProtImportVolumes, **args)
         protImportVol.setObjLabel('import volume 1ake_4-5A\n set origin in 11 '
                                   '-7 10\n')
         self.launchProtocol(protImportVol)
@@ -95,7 +82,7 @@ class TestImportData(TestImportBase):
                 'samplingRate': 0.637,
                 'setOrigCoord': False
                 }
-        protImportVol = self.newProtocol(ProtImportVolumes, **args)
+        protImportVol = self.newProtocol(emprot.ProtImportVolumes, **args)
         protImportVol.setObjLabel('import volume emd_4116\nwith default '
                                   'origin\n')
         self.launchProtocol(protImportVol)
@@ -103,22 +90,22 @@ class TestImportData(TestImportBase):
         return volume3
 
     def _importStructurePDBWoVol(self):
-        args = {'inputPdbData': ProtImportPdb.IMPORT_FROM_FILES,
+        args = {'inputPdbData': emprot.ProtImportPdb.IMPORT_FROM_FILES,
                 'pdbFile': self.dsModBuild.getFile(
                     'PDBx_mmCIF/1ake_start.pdb'),
                 }
-        protImportPDB = self.newProtocol(ProtImportPdb, **args)
+        protImportPDB = self.newProtocol(emprot.ProtImportPdb, **args)
         protImportPDB.setObjLabel('import pdb\n 1ake_start')
         self.launchProtocol(protImportPDB)
         structure1_PDB = protImportPDB.outputPdb
         return structure1_PDB
 
     def _importStructuremmCIFWoVol(self):
-        args = {'inputPdbData': ProtImportPdb.IMPORT_FROM_FILES,
+        args = {'inputPdbData': emprot.ProtImportPdb.IMPORT_FROM_FILES,
                 'pdbFile': self.dsModBuild.getFile(
                     'PDBx_mmCIF/1ake_start.pdb.cif'),
                 }
-        protImportPDB = self.newProtocol(ProtImportPdb, **args)
+        protImportPDB = self.newProtocol(emprot.ProtImportPdb, **args)
         protImportPDB.setObjLabel('import mmCIF\n 1ake_start')
         self.launchProtocol(protImportPDB)
         structure1_mmCIF = protImportPDB.outputPdb
@@ -126,12 +113,12 @@ class TestImportData(TestImportBase):
         return structure1_mmCIF
 
     def _importStructurePDBWithVol(self):
-        args = {'inputPdbData': ProtImportPdb.IMPORT_FROM_FILES,
+        args = {'inputPdbData': emprot.ProtImportPdb.IMPORT_FROM_FILES,
                 'pdbFile': self.dsModBuild.getFile(
                     'PDBx_mmCIF/1ake_start.pdb'),
                 'inputVolume': self._importVolume()
                 }
-        protImportPDB = self.newProtocol(ProtImportPdb, **args)
+        protImportPDB = self.newProtocol(emprot.ProtImportPdb, **args)
         protImportPDB.setObjLabel('import pdb\n volume associated\n 1ake_start')
         self.launchProtocol(protImportPDB)
         structure2_PDB = protImportPDB.outputPdb
@@ -139,12 +126,12 @@ class TestImportData(TestImportBase):
         return structure2_PDB
 
     def _importStructuremmCIFWithVol(self):
-        args = {'inputPdbData': ProtImportPdb.IMPORT_FROM_FILES,
+        args = {'inputPdbData': emprot.ProtImportPdb.IMPORT_FROM_FILES,
                 'pdbFile': self.dsModBuild.getFile('PDBx_mmCIF/'
                                                    '1ake_start.pdb.cif'),
                 'inputVolume': self._importVolume()
                 }
-        protImportPDB = self.newProtocol(ProtImportPdb, **args)
+        protImportPDB = self.newProtocol(emprot.ProtImportPdb, **args)
         protImportPDB.setObjLabel('import mmCIF\n volume associated\n '
                                   '1ake_start')
         self.launchProtocol(protImportPDB)
@@ -153,33 +140,33 @@ class TestImportData(TestImportBase):
         return structure2_mmCIF
 
     def _importMut1StructurePDBWoVol(self):
-        args = {'inputPdbData': ProtImportPdb.IMPORT_FROM_FILES,
+        args = {'inputPdbData': emprot.ProtImportPdb.IMPORT_FROM_FILES,
                 'pdbFile': self.dsModBuild.getFile(
                     'PDBx_mmCIF/1ake_mut1.pdb'),
                 }
-        protImportPDB = self.newProtocol(ProtImportPdb, **args)
+        protImportPDB = self.newProtocol(emprot.ProtImportPdb, **args)
         protImportPDB.setObjLabel('import pdb\n 1ake_mut1')
         self.launchProtocol(protImportPDB)
         structure3_PDB = protImportPDB.outputPdb
         return structure3_PDB
 
     def _importMut2StructurePDBWoVol(self):
-        args = {'inputPdbData': ProtImportPdb.IMPORT_FROM_FILES,
+        args = {'inputPdbData': emprot.ProtImportPdb.IMPORT_FROM_FILES,
                 'pdbFile': self.dsModBuild.getFile(
                     'PDBx_mmCIF/1ake_mut2.pdb'),
                 }
-        protImportPDB = self.newProtocol(ProtImportPdb, **args)
+        protImportPDB = self.newProtocol(emprot.ProtImportPdb, **args)
         protImportPDB.setObjLabel('import pdb\n 1ake_mut2')
         self.launchProtocol(protImportPDB)
         structure4_PDB = protImportPDB.outputPdb
         return structure4_PDB
 
     def _importCootStructureWoVol(self):
-        args = {'inputPdbData': ProtImportPdb.IMPORT_FROM_FILES,
+        args = {'inputPdbData': emprot.ProtImportPdb.IMPORT_FROM_FILES,
                 'pdbFile': self.dsModBuild.getFile(
                         'PDBx_mmCIF/scipionOut0001.pdb')
                 }
-        protImportPDB = self.newProtocol(ProtImportPdb, **args)
+        protImportPDB = self.newProtocol(emprot.ProtImportPdb, **args)
         protImportPDB.setObjLabel('import pdb\n coot')
         self.launchProtocol(protImportPDB)
         structureCoot_PDB = protImportPDB.outputPdb
@@ -187,33 +174,33 @@ class TestImportData(TestImportBase):
         return structureCoot_PDB
 
     def _importStructurePDBWoVol2(self):
-        args = {'inputPdbData': ProtImportPdb.IMPORT_FROM_FILES,
+        args = {'inputPdbData': emprot.ProtImportPdb.IMPORT_FROM_FILES,
                 'pdbFile': self.dsModBuild.getFile(
                     'PDBx_mmCIF/3i3e_fitted.pdb'),
                 }
-        protImportPDB = self.newProtocol(ProtImportPdb, **args)
+        protImportPDB = self.newProtocol(emprot.ProtImportPdb, **args)
         protImportPDB.setObjLabel('import pdb\n 3i3e_fitted')
         self.launchProtocol(protImportPDB)
         structure5_PDB = protImportPDB.outputPdb
         return structure5_PDB
 
     def _importStructureMolProbity1(self):
-        args = {'inputPdbData': ProtImportPdb.IMPORT_FROM_FILES,
+        args = {'inputPdbData': emprot.ProtImportPdb.IMPORT_FROM_FILES,
                 'pdbFile': self.dsModBuild.getFile(
                     'PDBx_mmCIF/jlv_chimeraOut0001.pdb'),
                 }
-        protImportPDB = self.newProtocol(ProtImportPdb, **args)
+        protImportPDB = self.newProtocol(emprot.ProtImportPdb, **args)
         protImportPDB.setObjLabel('import pdb\n jlv_chimeraOut0001')
         self.launchProtocol(protImportPDB)
         structure6_PDB = protImportPDB.outputPdb
         return structure6_PDB
 
     def _importStructureMolProbity2(self):
-        args = {'inputPdbData': ProtImportPdb.IMPORT_FROM_FILES,
+        args = {'inputPdbData': emprot.ProtImportPdb.IMPORT_FROM_FILES,
                 'pdbFile': self.dsModBuild.getFile(
                     'PDBx_mmCIF/jlv_cootOut0016.pdb'),
                 }
-        protImportPDB = self.newProtocol(ProtImportPdb, **args)
+        protImportPDB = self.newProtocol(emprot.ProtImportPdb, **args)
         protImportPDB.setObjLabel('import pdb\n jlv_cootOut0016')
         self.launchProtocol(protImportPDB)
         structure7_PDB = protImportPDB.outputPdb
@@ -244,7 +231,7 @@ class TestChimeraFit(TestImportData):
     def testChimeraFitFromVolAndPDBWithSavingVol(self):
         """ This test checks that chimera runs with a volume provided
         directly as inputVol, input PDB """
-        print "Run Chimera fit from imported volume and pdb file"
+        print("Run Chimera fit from imported volume and pdb file")
 
         # Import Volume
         volume = self._importVolume()
@@ -265,6 +252,9 @@ class TestChimeraFit(TestImportData):
                 'inputVolume': volume,
                 'pdbFileToBeRefined': structure1_PDB
                 }
+        ChimeraProtRigidFit = Domain.importFromPlugin('chimera.protocols',
+                                                      'ChimeraProtRigidFit',
+                                                      doRaise=True)
         protChimera = self.newProtocol(ChimeraProtRigidFit,
                                        **args)
         protChimera.setObjLabel('chimera fit\n volume and pdb\n save volume '
@@ -279,7 +269,7 @@ class TestChimeraFit(TestImportData):
     def testChimeraFitFromVolAndmmCIFWithSavingVol(self):
         """ This test checks that chimera runs with a volume provided
         directly as inputVol, input CIF file """
-        print "Run Chimera fit from imported volume and cif file"
+        print("Run Chimera fit from imported volume and cif file")
 
         volume = self._importVolume()
         structure1_mmCIF = self._importStructuremmCIFWoVol()
@@ -295,6 +285,9 @@ class TestChimeraFit(TestImportData):
                 'inputVolume': volume,
                 'pdbFileToBeRefined': structure1_mmCIF
                 }
+        ChimeraProtRigidFit = Domain.importFromPlugin('chimera.protocols',
+                                                      'ChimeraProtRigidFit',
+                                                      doRaise=True)
         protChimera = self.newProtocol(ChimeraProtRigidFit, **args)
         protChimera.setObjLabel('chimera fit\n volume and mmCIF\n save volume '
                                 'and model')
@@ -307,7 +300,7 @@ class TestChimeraFit(TestImportData):
     def testChimeraFitFromVolAssocToPDBWithSavingVol(self):
         # This test checks that chimera runs when a volume is provided
         # associated to the input PDB and not directly as inputVol
-        print "Run Chimera fit from imported pdb file and volume associated"
+        print("Run Chimera fit from imported pdb file and volume associated")
 
         structure2_PDB = self._importStructurePDBWithVol()
         extraCommands = ""
@@ -321,6 +314,9 @@ class TestChimeraFit(TestImportData):
         args = {'extraCommands': extraCommands,
                 'pdbFileToBeRefined': structure2_PDB
                 }
+        ChimeraProtRigidFit = Domain.importFromPlugin('chimera.protocols',
+                                                      'ChimeraProtRigidFit',
+                                                      doRaise=True)
         protChimera = self.newProtocol(ChimeraProtRigidFit, **args)
         protChimera.setObjLabel('chimera fit\n pdb and associated volume\n '
                                 'save volume and model')
@@ -333,7 +329,7 @@ class TestChimeraFit(TestImportData):
     def testChimeraFitFromVolAssocTommCIFWithSavingVol(self):
         # This test checks that chimera runs when a volume is provided
         # associated to the imput mmCIF file and not directly as inputVol
-        print "Run Chimera fit from imported mmCIF file and volume associated"
+        print("Run Chimera fit from imported mmCIF file and volume associated")
 
         structure2_mmCIF = self._importStructuremmCIFWithVol()
         extraCommands = ""
@@ -347,6 +343,9 @@ class TestChimeraFit(TestImportData):
         args = {'extraCommands': extraCommands,
                 'pdbFileToBeRefined': structure2_mmCIF
                 }
+        ChimeraProtRigidFit = Domain.importFromPlugin('chimera.protocols',
+                                                      'ChimeraProtRigidFit',
+                                                      doRaise=True)
         protChimera = self.newProtocol(ChimeraProtRigidFit, **args)
         protChimera.setObjLabel('chimera fit\n mmCIF and associated volume\n '
                                 'save volume and model')
@@ -360,13 +359,16 @@ class TestChimeraFit(TestImportData):
         # This test corroborates that chimera does not run unless a volume
         # is provided (directly as inputVol or associated to the imputPDB)
         # protocol should raise an exception
-        print "Run Chimera from imported pdb file without imported or " \
-              "pdb-associated volume"
+        print("Run Chimera from imported pdb file without imported or "
+              "pdb-associated volume")
 
         structure1_PDB = self._importStructurePDBWoVol()
         self.assertTrue(structure1_PDB.getFileName())
         self.assertFalse(structure1_PDB.getVolume())
 
+        ChimeraProtRigidFit = Domain.importFromPlugin('chimera.protocols',
+                                                      'ChimeraProtRigidFit',
+                                                      doRaise=True)
         protChimera = self.newProtocol(ChimeraProtRigidFit)
         protChimera.pdbFileToBeRefined.set(structure1_PDB)
         protChimera.setObjLabel('chimera fit\n no volume\n associated to pdb')
@@ -375,8 +377,8 @@ class TestChimeraFit(TestImportData):
             self.launchProtocol(protChimera)
         except Exception as e:
             self.assertTrue(True)
-            print "This test should return a error message as '" \
-                  " ERROR running protocol scipion - chimera rigid fit"
+            print("This test should return a error message as: \' ERROR "
+                  "running protocol scipion - chimera rigid fit \' ")
 
             return
         self.assertTrue(False)
@@ -385,12 +387,15 @@ class TestChimeraFit(TestImportData):
         # This test corroborates that chimera does not run unless a volume
         # is provided (directly as inputVol or associated to the imputPDB)
         # protocol should raise an exception
-        print "Run chimera from imported mmCIF file without imported or " \
-              "mmCIF-associated volume"
+        print("Run chimera from imported mmCIF file without imported or "
+              "mmCIF-associated volume")
 
         structure1_mmCIF = self._importStructuremmCIFWoVol()
         self.assertTrue(structure1_mmCIF.getFileName())
         self.assertFalse(structure1_mmCIF.getVolume())
+        ChimeraProtRigidFit = Domain.importFromPlugin('chimera.protocols',
+                                                      'ChimeraProtRigidFit',
+                                                      doRaise=True)
         protChimera = self.newProtocol(ChimeraProtRigidFit)
         protChimera.pdbFileToBeRefined.set(structure1_mmCIF)
         protChimera.setObjLabel('chimera fit\n no volume\n associated to mmCIF')
@@ -399,8 +404,8 @@ class TestChimeraFit(TestImportData):
             self.launchProtocol(protChimera)
         except Exception as e:
             self.assertTrue(True)
-            print "This test should return a error message as '" \
-                  " ERROR running protocol scipion - chimera rigid fit"
+            print("This test should return a error message as:"
+                  "ERROR running protocol scipion - chimera rigid fit")
 
             return
         self.assertTrue(False)
@@ -409,8 +414,8 @@ class TestChimeraFit(TestImportData):
         # This test checks that chimera runs when a volume is provided
         # associated to the input PDB and several PDB files are added
 
-        print "Run Chimera fit from imported pdb file and volume associated " \
-              "and addition of two other pdb files"
+        print("Run Chimera fit from imported pdb file and volume associated "
+              "and addition of two other pdb files")
 
         structure2_PDB = self._importStructurePDBWithVol()
         structure3_PDB = self._importMut1StructurePDBWoVol()
@@ -432,6 +437,9 @@ class TestChimeraFit(TestImportData):
                 'pdbFileToBeRefined': structure2_PDB,
                 'inputPdbFiles': _pdbFiles
                 }
+        ChimeraProtRigidFit = Domain.importFromPlugin('chimera.protocols',
+                                                      'ChimeraProtRigidFit',
+                                                      doRaise=True)
         protChimera = self.newProtocol(ChimeraProtRigidFit, **args)
         protChimera.setObjLabel('chimera fit\n pdb and associated volume\n '
                                 'plus other pdbs\n save volume and model')
@@ -444,8 +452,8 @@ class TestChimeraFit(TestImportData):
     def testChimeraFitFromChimeraPDB(self):
         # This test checks that chimera runs with objects not imported
         # but generated in other programs
-        print "Run Chimera fit using the pdb and its volume associated " \
-              "generated in a previous protocol of Chimera rigid fit"
+        print("Run Chimera fit using the pdb and its volume associated "
+              "generated in a previous protocol of Chimera rigid fit")
 
         volume = self._importVolume()
         structure1_PDB = self._importStructurePDBWoVol()
@@ -461,6 +469,9 @@ class TestChimeraFit(TestImportData):
                 'inputVolume': volume,
                 'pdbFileToBeRefined': structure1_PDB
                 }
+        ChimeraProtRigidFit = Domain.importFromPlugin('chimera.protocols',
+                                                      'ChimeraProtRigidFit',
+                                                      doRaise=True)
         protChimera = self.newProtocol(ChimeraProtRigidFit, **args)
         protChimera.setObjLabel("chimera fit \npdb and volume\n save volume "
                                 "and model")
@@ -476,6 +487,9 @@ class TestChimeraFit(TestImportData):
         args = {'extraCommands': extraCommands,
                 'pdbFileToBeRefined': structure2_PDB,
                 }
+        ChimeraProtRigidFit = Domain.importFromPlugin('chimera.protocols',
+                                                      'ChimeraProtRigidFit',
+                                                      doRaise=True)
         protChimera = self.newProtocol(ChimeraProtRigidFit, **args)
         protChimera.setObjLabel("chimera fit\n pdb and associated volume\n ("
                                 "just moves the structure\nto "
@@ -526,8 +540,8 @@ class TestCootRefinement(TestImportData):
     def testCootFlexibleFitFromPDB(self):
         """ This test checks that coot runs with an atomic structure;
          No Volume was provided and an error message is expected"""
-        print "Run Coot fit from imported pdb file without imported or " \
-              "pdb-associated volume"
+        print("Run Coot fit from imported pdb file without imported or "
+              "pdb-associated volume")
 
         # import PDB
         structure_PDB = self._importStructurePDBWoVol()
@@ -538,6 +552,8 @@ class TestCootRefinement(TestImportData):
                 'pdbFileToBeRefined': structure_PDB,
                 'doInteractive': False
                 }
+        CootRefine = Domain.importFromPlugin('ccp4.protocols', 'CootRefine',
+                                             doRaise=True)
         protCoot = self.newProtocol(CootRefine, **args)
         protCoot.setObjLabel('coot refinement\n no volume\n associated to pdb')
 
@@ -545,8 +561,8 @@ class TestCootRefinement(TestImportData):
             self.launchProtocol(protCoot)
         except Exception as e:
             self.assertTrue(True)
-            print "This test should return a error message as '" \
-                  " ERROR running protocol scipion - coot refinement"
+            print("This test should return a error message as:"
+                  " ERROR running protocol scipion - coot refinement")
 
             return
         self.assertTrue(False)
@@ -555,7 +571,7 @@ class TestCootRefinement(TestImportData):
         """ This test checks that coot runs with a volume provided
         directly as inputVol, input PDB (not previously fitted with Chimera)
          """
-        print "Run Coot fit from imported volume and pdb file not fitted"
+        print("Run Coot fit from imported volume and pdb file not fitted")
 
         # Import Volume
         volume = self._importVolume()
@@ -571,6 +587,8 @@ class TestCootRefinement(TestImportData):
                 'pdbFileToBeRefined': structure_PDB,
                 'doInteractive': False
                 }
+        CootRefine = Domain.importFromPlugin('ccp4.protocols', 'CootRefine',
+                                             doRaise=True)
         protCoot = self.newProtocol(CootRefine, **args)
         protCoot.setObjLabel('coot refinement\n volume and unfitted pdb\n '
                              'save model')
@@ -585,7 +603,7 @@ class TestCootRefinement(TestImportData):
     def testCootFlexibleFitFromVolAndPDB(self):
         """ This test checks that coot runs with a volume provided
         directly as inputVol, input PDB """
-        print "Run Coot fit from imported volume and pdb file"
+        print("Run Coot fit from imported volume and pdb file")
 
         # Import Volume
         volume = self._importVolume()
@@ -606,6 +624,9 @@ class TestCootRefinement(TestImportData):
                 'inputVolume': volume,
                 'pdbFileToBeRefined': structure_PDB
                 }
+        ChimeraProtRigidFit = Domain.importFromPlugin('chimera.protocols',
+                                                      'ChimeraProtRigidFit',
+                                                      doRaise=True)
         protChimera = self.newProtocol(ChimeraProtRigidFit, **args)
         protChimera.setObjLabel('chimera fit\n volume and pdb\n '
                              'save volume and model')
@@ -622,6 +643,9 @@ class TestCootRefinement(TestImportData):
                 'pdbFileToBeRefined': structure2_PDB,
                 'doInteractive': False
                 }
+
+        CootRefine = Domain.importFromPlugin('ccp4.protocols', 'CootRefine',
+                                             doRaise=True)
         protCoot = self.newProtocol(CootRefine, **args)
         protCoot.setObjLabel('coot refinement\n volume and fitted pdb\n '
                              'save model')
@@ -637,7 +661,7 @@ class TestCootRefinement(TestImportData):
 
         # This test checks that coot runs when a volume is provided
         # associated to the input PDB
-        print "Run Coot fit from imported pdb file and volume associated "
+        print("Run Coot fit from imported pdb file and volume associated ")
 
         # Import Volume
         volume = self._importVolume()
@@ -658,6 +682,9 @@ class TestCootRefinement(TestImportData):
                 'inputVolume': volume,
                 'pdbFileToBeRefined': structure_PDB
                 }
+        ChimeraProtRigidFit = Domain.importFromPlugin('chimera.protocols',
+                                                      'ChimeraProtRigidFit',
+                                                      doRaise=True)
         protChimera = self.newProtocol(ChimeraProtRigidFit, **args)
         protChimera.setObjLabel('chimera fit\n volume and pdb\n '
                              'save volume and model')
@@ -671,6 +698,9 @@ class TestCootRefinement(TestImportData):
                 'pdbFileToBeRefined': structure2_PDB,
                 'doInteractive': False
                 }
+
+        CootRefine = Domain.importFromPlugin('ccp4.protocols', 'CootRefine',
+                                             doRaise=True)
         protCoot = self.newProtocol(CootRefine, **args)
         protCoot.setObjLabel('coot refinement\n pdb and associated volume\n '
                              'save model')
@@ -685,7 +715,7 @@ class TestCootRefinement(TestImportData):
     def testCootFlexibleFitFromtwoVolAndPDB(self):
         """ This test checks that coot runs with two volumes provided
         directly as inputVol, input PDB """
-        print "Run Coot fit from imported volume and pdb file"
+        print("Run Coot fit from imported volume and pdb file")
 
         # Import Volume
         volume = self._importVolume()
@@ -706,6 +736,9 @@ class TestCootRefinement(TestImportData):
                 'inputVolume': volume,
                 'pdbFileToBeRefined': structure_PDB
                 }
+        ChimeraProtRigidFit = Domain.importFromPlugin('chimera.protocols',
+                                                      'ChimeraProtRigidFit',
+                                                      doRaise=True)
         protChimera = self.newProtocol(ChimeraProtRigidFit, **args)
         protChimera.setObjLabel('chimera fit\n volume and pdb\n save '
                                 'volume and model')
@@ -723,6 +756,9 @@ class TestCootRefinement(TestImportData):
                 'pdbFileToBeRefined': structureCoot_PDB,
                 'doInteractive': False
                 }
+
+        CootRefine = Domain.importFromPlugin('ccp4.protocols', 'CootRefine',
+                                             doRaise=True)
         protCoot = self.newProtocol(CootRefine, **args)
         protCoot.setObjLabel('coot refinement\n two volumes and pdb\n '
                              'save model')
@@ -739,7 +775,7 @@ class TestCootRefinement(TestImportData):
         # associated to the input PDB file after Chimera
         # workflow, and not directly as inputVol
         # starting volume with a different coordinate origin
-        print "Run Coot fit from PDB file saved from Chimera_2"
+        print("Run Coot fit from PDB file saved from Chimera_2")
 
         volume2 = self._importVolume2()
         structure1_PDB = self._importStructurePDBWoVol()
@@ -757,6 +793,9 @@ class TestCootRefinement(TestImportData):
                 'pdbFileToBeRefined': structure1_PDB
                 }
 
+        ChimeraProtRigidFit = Domain.importFromPlugin('chimera.protocols',
+                                                      'ChimeraProtRigidFit',
+                                                      doRaise=True)
         protChimera = self.newProtocol(ChimeraProtRigidFit, **args)
         protChimera.setObjLabel('chimera fit\n pdb and volume associated\n '
                              'save volume and model')
@@ -773,6 +812,9 @@ class TestCootRefinement(TestImportData):
                 'pdbFileToBeRefined': structure3_PDB,
                 'doInteractive': False
                 }
+
+        CootRefine = Domain.importFromPlugin('ccp4.protocols', 'CootRefine',
+                                             doRaise=True)
         protCoot = self.newProtocol(CootRefine, **args)
         protCoot.setObjLabel('coot refinement\n volume and pdb\n '
                              'save model')
@@ -789,7 +831,7 @@ class TestCootRefinement(TestImportData):
         # associated to the input PDB file after Chimera
         # workflow, and not directly as inputVol
         # starting volume with a different coordinate origin
-        print "Run Coot fit from PDB file saved from Chimera_2"
+        print("Run Coot fit from PDB file saved from Chimera_2")
 
         volume2 = self._importVolume2()
         structure1_PDB = self._importStructurePDBWoVol()
@@ -807,6 +849,9 @@ class TestCootRefinement(TestImportData):
                 'pdbFileToBeRefined': structure1_PDB
                 }
 
+        ChimeraProtRigidFit = Domain.importFromPlugin('chimera.protocols',
+                                                      'ChimeraProtRigidFit',
+                                                      doRaise=True)
         protChimera = self.newProtocol(ChimeraProtRigidFit, **args)
         protChimera.setObjLabel('chimera fit\n pdb and associated volume\n '
                              'save volume and model')
@@ -824,14 +869,17 @@ class TestCootRefinement(TestImportData):
                 'pdbFileToBeRefined': structure3_PDB,
                 'doInteractive': True
                 }
+
+        CootRefine = Domain.importFromPlugin('ccp4.protocols', 'CootRefine',
+                                             doRaise=True)
         protCoot = self.newProtocol(CootRefine, **args)
         protCoot.setObjLabel('coot refinement\n volume pdb\n '
                              'save model three times')
 
         try:
             self.launchProtocol(protCoot)
-        except:
-            print "first call to coot ended"
+        except Exception as ex:
+            print("first call to coot ended")
         self.assertIsNotNone(protCoot.testLabel6.getFileName(),
                              "There was a problem with the alignment")
         self.assertTrue(os.path.exists(protCoot.testLabel6.getFileName()))
@@ -844,8 +892,8 @@ class TestCootRefinement(TestImportData):
 
         try:
             self.launchProtocol(protCoot)
-        except:
-            print "second call to coot ended"
+        except Exception as ex:
+            print("second call to coot ended")
         self.assertIsNotNone(protCoot.cootOut0001.getFileName(),
                              "There was a problem with the alignment")
         self.assertTrue(os.path.exists(protCoot.cootOut0001.getFileName()))
@@ -859,8 +907,8 @@ class TestCootRefinement(TestImportData):
         protCoot.extraCommands.set(lastExtraCommands)
         try:
             self.launchProtocol(protCoot)
-        except:
-            print "third call to coot ended"
+        except Exception as ex:
+            print("third call to coot ended")
         self.assertIsNotNone(protCoot.lastTestLabel.getFileName(),
                              "There was a problem with the alignment")
         self.assertTrue(os.path.exists(protCoot.lastTestLabel.getFileName()))
@@ -874,8 +922,8 @@ class TestRefmacRefinement(TestImportData):
     def testRefmacFlexibleFitFromPDB(self):
         """ This test checks that refmac runs with an atomic structure;
          No Volume was provided and an error message is expected"""
-        print "Run Refmac refinement from imported pdb file without imported " \
-              "or pdb-associated volume"
+        print("Run Refmac refinement from imported pdb file without imported "
+              "or pdb-associated volume")
 
         # import PDB
         structure_PDB = self._importStructurePDBWoVol()
@@ -884,6 +932,8 @@ class TestRefmacRefinement(TestImportData):
         args = {'inputStructure': structure_PDB
                 }
 
+        CCP4ProtRunRefmac = Domain.importFromPlugin('ccp4.protocols',
+                                                    'CCP4ProtRunRefmac')
         protRefmac = self.newProtocol(CCP4ProtRunRefmac, **args)
         protRefmac.setObjLabel('refmac refinement\n no volume associated '
                                'to pdb\n save model')
@@ -892,8 +942,8 @@ class TestRefmacRefinement(TestImportData):
             self.launchProtocol(protRefmac)
         except Exception as e:
             self.assertTrue(True)
-            print "This test should return a error message as '" \
-                  " ERROR running protocol scipion - refmac refinement"
+            print("This test should return a error message as:"
+                  " ERROR running protocol scipion - refmac refinement")
 
             return
         self.assertTrue(False)
@@ -903,8 +953,8 @@ class TestRefmacRefinement(TestImportData):
         directly as inputVol, the input PDB was fitted to the volume and
         refined previously by coot
          """
-        print "Run Refmac refinement from imported volume and pdb file " \
-              "fitted and refined by Coot"
+        print("Run Refmac refinement from imported volume and pdb file "
+              "fitted and refined by Coot")
 
         # Import Volume
         volume = self._importVolume()
@@ -921,6 +971,9 @@ class TestRefmacRefinement(TestImportData):
                 'pdbFileToBeRefined': structure_PDB,
                 'doInteractive': False
                 }
+
+        CootRefine = Domain.importFromPlugin('ccp4.protocols', 'CootRefine',
+                                             doRaise=True)
         protCoot = self.newProtocol(CootRefine, **args)
         protCoot.setObjLabel('coot refinement\n volume and unfitted pdb\n '
                              'save model')
@@ -932,6 +985,8 @@ class TestRefmacRefinement(TestImportData):
                 'inputStructure': coot_PDB,
                 'generateMaskedVolume': False
                 }
+        CCP4ProtRunRefmac = Domain.importFromPlugin('ccp4.protocols',
+                                                    'CCP4ProtRunRefmac')
         protRefmac = self.newProtocol(CCP4ProtRunRefmac, **args)
         protRefmac.setObjLabel('refmac refinement\n volume and pdb\n save '
                                'model')
@@ -943,8 +998,8 @@ class TestRefmacRefinement(TestImportData):
     def testRefmacFlexibleFitAfterChimeraAndCoot(self):
         """ This test checks that refmac runs with a volume provided
         by Chimera, the input PDB is provided by Coot """
-        print "Run Refmac refinement from volume provided by Chimera " \
-              "and pdb file provided by Coot"
+        print("Run Refmac refinement from volume provided by Chimera "
+              "and pdb file provided by Coot")
 
         # Import Volume
         volume = self._importVolume()
@@ -965,6 +1020,9 @@ class TestRefmacRefinement(TestImportData):
                 'inputVolume': volume,
                 'pdbFileToBeRefined': structure_PDB
                 }
+        ChimeraProtRigidFit = Domain.importFromPlugin('chimera.protocols',
+                                                      'ChimeraProtRigidFit',
+                                                      doRaise=True)
         protChimera = self.newProtocol(ChimeraProtRigidFit, **args)
         protChimera.setObjLabel('chimera fit\n volume and pdb\n save volume '
                                 'and model')
@@ -981,6 +1039,9 @@ class TestRefmacRefinement(TestImportData):
                 'pdbFileToBeRefined': structure2_PDB,
                 'doInteractive': False
                 }
+
+        CootRefine = Domain.importFromPlugin('ccp4.protocols', 'CootRefine',
+                                             doRaise=True)
         protCoot = self.newProtocol(CootRefine, **args)
         protCoot.setObjLabel('coot refinement\n volume and pdb\n save model')
         self.launchProtocol(protCoot)
@@ -992,6 +1053,8 @@ class TestRefmacRefinement(TestImportData):
                 'generateMaskedVolume': False
                 }
 
+        CCP4ProtRunRefmac = Domain.importFromPlugin('ccp4.protocols',
+                                                    'CCP4ProtRunRefmac')
         protRefmac = self.newProtocol(CCP4ProtRunRefmac, **args)
         protRefmac.setObjLabel('refmac refinement\n volume and pdb\n save '
                                'model')
@@ -1005,8 +1068,8 @@ class TestRefmacRefinement(TestImportData):
         # by Chimera workflow
         # the PDB is provided by Coot
         # starting volume with a different coordinate origin
-        print "Run Refmac refinement from PDB file saved from " \
-              "Chimera_2/Coot"
+        print("Run Refmac refinement from PDB file saved from "
+              "Chimera_2/Coot")
 
         volume2 = self._importVolume2()
         structure1_PDB = self._importStructurePDBWoVol()
@@ -1024,6 +1087,9 @@ class TestRefmacRefinement(TestImportData):
                 'pdbFileToBeRefined': structure1_PDB
                 }
 
+        ChimeraProtRigidFit = Domain.importFromPlugin('chimera.protocols',
+                                                      'ChimeraProtRigidFit',
+                                                      doRaise=True)
         protChimera = self.newProtocol(ChimeraProtRigidFit, **args)
         protChimera.setObjLabel('chimera fit\n volume associated '
                                'to pdb\n save volume and model')
@@ -1040,13 +1106,16 @@ class TestRefmacRefinement(TestImportData):
                 'pdbFileToBeRefined': structure3_PDB,
                 'doInteractive': True
                 }
+
+        CootRefine = Domain.importFromPlugin('ccp4.protocols', 'CootRefine',
+                                             doRaise=True)
         protCoot = self.newProtocol(CootRefine, **args)
         protCoot.setObjLabel('coot refinement\n volume and pdb\n 2 runs\n '
                              'save model')
         try:
             self.launchProtocol(protCoot)
-        except:
-            print "first call to coot ended"
+        except Exception as ex:
+            print("first call to coot ended")
         self.assertIsNotNone(protCoot.testLabel3.getFileName(),
                              "There was a problem with the alignment")
         self.assertTrue(os.path.exists(protCoot.testLabel3.getFileName()))
@@ -1066,6 +1135,8 @@ class TestRefmacRefinement(TestImportData):
                 'generateMaskedVolume': False
                 }
 
+        CCP4ProtRunRefmac = Domain.importFromPlugin('ccp4.protocols',
+                                                    'CCP4ProtRunRefmac')
         protRefmac = self.newProtocol(CCP4ProtRunRefmac, **args)
         protRefmac.setObjLabel('refmac refinement\n volume and '
                                'pdb\n save model')
@@ -1100,8 +1171,8 @@ class TestEMRingerValidation(TestImportData):
         """ This test checks that EMRinger validation protocol runs with an
         atomic structure; No Volume was provided and an error message is
         expected"""
-        print "Run EMRinger validation protocol from imported pdb file " \
-              "without imported or pdb-associated volume"
+        print("Run EMRinger validation protocol from imported pdb file "
+              "without imported or pdb-associated volume")
 
         # import PDB
         structure_PDB = self._importStructurePDBWoVol()
@@ -1110,6 +1181,9 @@ class TestEMRingerValidation(TestImportData):
         args = {'inputStructure': structure_PDB
                 }
 
+        PhenixProtRunEMRinger = Domain.importFromPlugin('phenix.protocols',
+                                                        'PhenixProtRunEMRinger',
+                                                        doRaise=True)
         protEMRinger = self.newProtocol(PhenixProtRunEMRinger, **args)
         protEMRinger.setObjLabel('EMRinger validation\n no volume associated '
                                  'to pdb\n')
@@ -1118,8 +1192,8 @@ class TestEMRingerValidation(TestImportData):
             self.launchProtocol(protEMRinger)
         except Exception as e:
             self.assertTrue(True)
-            print "This test should return a error message as '" \
-                  " Error: You should provide a volume.\n"
+            print("This test should return a error message as Error: You "
+                  "should provide a volume.\n")
 
             return
         self.assertTrue(False)
@@ -1129,8 +1203,8 @@ class TestEMRingerValidation(TestImportData):
         volume provided directly as inputVol, the input PDB was fitted to
         the volume and refined previously by coot and refmac(without mask)
          """
-        print "Run EMRinger validation from imported volume and pdb file " \
-              "fitted and refined by Coot/Refmac without mask"
+        print("Run EMRinger validation from imported volume and pdb file "
+              "fitted and refined by Coot/Refmac without mask")
 
         # Import Volume
         volume = self._importVolume()
@@ -1147,6 +1221,9 @@ class TestEMRingerValidation(TestImportData):
                 'pdbFileToBeRefined': structure_PDB,
                 'doInteractive': False
                 }
+
+        CootRefine = Domain.importFromPlugin('ccp4.protocols', 'CootRefine',
+                                             doRaise=True)
         protCoot = self.newProtocol(CootRefine, **args)
         protCoot.setObjLabel('coot refinement\n volume and pdb\n save model')
         self.launchProtocol(protCoot)
@@ -1157,6 +1234,8 @@ class TestEMRingerValidation(TestImportData):
                 'inputStructure': coot_PDB,
                 'generateMaskedVolume': False
                 }
+        CCP4ProtRunRefmac = Domain.importFromPlugin('ccp4.protocols',
+                                                    'CCP4ProtRunRefmac')
         protRefmac = self.newProtocol(CCP4ProtRunRefmac, **args)
         protRefmac.setObjLabel('refmac refinement\n volume and pdb\n save '
                                'model')
@@ -1171,6 +1250,9 @@ class TestEMRingerValidation(TestImportData):
                 'inputStructure': refmac_PDB,
                 'doTest': True
                 }
+        PhenixProtRunEMRinger = Domain.importFromPlugin('phenix.protocols',
+                                                        'PhenixProtRunEMRinger',
+                                                        doRaise=True)
         protEMRinger = self.newProtocol(PhenixProtRunEMRinger, **args)
         protEMRinger.setObjLabel('EMRinger validation\n volume and pdb\n')
         self.launchProtocol(protEMRinger)
@@ -1188,8 +1270,8 @@ class TestEMRingerValidation(TestImportData):
         volume provided directly as inputVol, the input PDB was fitted to
         the volume and refined previously by coot and refmac(with mask)
         """
-        print "Run EMRinger validation from imported volume and pdb file " \
-              "fitted and refined by Coot/Refmac with mask"
+        print("Run EMRinger validation from imported volume and pdb file "
+              "fitted and refined by Coot/Refmac with mask")
 
         # Import Volume
         volume = self._importVolume()
@@ -1207,6 +1289,9 @@ class TestEMRingerValidation(TestImportData):
                 'pdbFileToBeRefined': structure_PDB,
                 'doInteractive': False
                 }
+
+        CootRefine = Domain.importFromPlugin('ccp4.protocols', 'CootRefine',
+                                             doRaise=True)
         protCoot = self.newProtocol(CootRefine, **args)
         protCoot.setObjLabel(
                 'coot refinement\n volume and pdb\n save model')
@@ -1218,6 +1303,8 @@ class TestEMRingerValidation(TestImportData):
                 'inputStructure': coot_PDB,
                 'generateMaskedVolume': True
                 }
+        CCP4ProtRunRefmac = Domain.importFromPlugin('ccp4.protocols',
+                                                    'CCP4ProtRunRefmac')
         protRefmac = self.newProtocol(CCP4ProtRunRefmac, **args)
         protRefmac.setObjLabel('MASK refmac refinement\n volume and pdb\n save '
                                'model')
@@ -1232,6 +1319,9 @@ class TestEMRingerValidation(TestImportData):
                 'inputStructure': refmac_PDB,
                 'doTest': True
                 }
+        PhenixProtRunEMRinger = Domain.importFromPlugin('phenix.protocols',
+                                                        'PhenixProtRunEMRinger',
+                                                        doRaise=True)
         protEMRinger = self.newProtocol(PhenixProtRunEMRinger, **args)
         protEMRinger.setObjLabel('EMRinger validation\n volume and pdb\n')
         self.launchProtocol(protEMRinger)
@@ -1247,8 +1337,8 @@ class TestEMRingerValidation(TestImportData):
     def testEMRingerValidationAfterChimeraAndCootAndRefmacNoMask(self):
         """ This test checks that EMRinger validation protocol runs with a
         volume provided by Chimera, the input PDB is provided by Coot """
-        print "Run EMRinger validation from volume provided by Chimera " \
-              "and pdb file provided by Coot/Refmac without mask"
+        print("Run EMRinger validation from volume provided by Chimera "
+              "and pdb file provided by Coot/Refmac without mask")
 
         # Import Volume
         volume = self._importVolume()
@@ -1269,6 +1359,10 @@ class TestEMRingerValidation(TestImportData):
                 'inputVolume': volume,
                 'pdbFileToBeRefined': structure_PDB
                 }
+
+        ChimeraProtRigidFit = Domain.importFromPlugin('chimera.protocols',
+                                                      'ChimeraProtRigidFit',
+                                                      doRaise=True)
         protChimera = self.newProtocol(ChimeraProtRigidFit, **args)
         protChimera.setObjLabel('chimera fit\n volume and pdb\n save volume '
                                 'and model')
@@ -1286,6 +1380,9 @@ class TestEMRingerValidation(TestImportData):
                 'pdbFileToBeRefined': structure2_PDB,
                 'doInteractive': False
                 }
+
+        CootRefine = Domain.importFromPlugin('ccp4.protocols', 'CootRefine',
+                                             doRaise=True)
         protCoot = self.newProtocol(CootRefine, **args)
         protCoot.setObjLabel('coot refinement\n volume and pdb\n save model')
         self.launchProtocol(protCoot)
@@ -1300,6 +1397,9 @@ class TestEMRingerValidation(TestImportData):
                 'doTest': True
                 }
 
+        PhenixProtRunEMRinger = Domain.importFromPlugin('phenix.protocols',
+                                                        'PhenixProtRunEMRinger',
+                                                        doRaise=True)
         protEMRinger = self.newProtocol(PhenixProtRunEMRinger, **args)
         protEMRinger.setObjLabel('EMRinger validation\n volume and pdb\n')
         self.launchProtocol(protEMRinger)
@@ -1319,6 +1419,8 @@ class TestEMRingerValidation(TestImportData):
                 'generateMaskedVolume': False
                 }
 
+        CCP4ProtRunRefmac = Domain.importFromPlugin('ccp4.protocols',
+                                                    'CCP4ProtRunRefmac')
         protRefmac = self.newProtocol(CCP4ProtRunRefmac, **args)
         protRefmac.setObjLabel('refmac refinement\n volume and pdb\n save '
                                'model')
@@ -1348,8 +1450,8 @@ class TestEMRingerValidation(TestImportData):
     def testEMRingerValidationAfterChimeraAndCootAndRefmacWithMask(self):
         """ This test checks that EMRinger validation protocol runs with a
         volume provided by Chimera, the input PDB is provided by Coot """
-        print "Run EMRinger validation from volume provided by Chimera " \
-              "and pdb file provided by Coot/Refmac with mask"
+        print("Run EMRinger validation from volume provided by Chimera "
+              "and pdb file provided by Coot/Refmac with mask")
 
         # Import Volume
         volume = self._importVolume()
@@ -1370,6 +1472,10 @@ class TestEMRingerValidation(TestImportData):
                 'inputVolume': volume,
                 'pdbFileToBeRefined': structure_PDB
                 }
+
+        ChimeraProtRigidFit = Domain.importFromPlugin('chimera.protocols',
+                                                      'ChimeraProtRigidFit',
+                                                      doRaise=True)
         protChimera = self.newProtocol(ChimeraProtRigidFit, **args)
         protChimera.setObjLabel(
             'chimera fit\n volume and pdb\n save volume and model')
@@ -1387,6 +1493,9 @@ class TestEMRingerValidation(TestImportData):
                 'pdbFileToBeRefined': structure2_PDB,
                 'doInteractive': False
                 }
+
+        CootRefine = Domain.importFromPlugin('ccp4.protocols', 'CootRefine',
+                                             doRaise=True)
         protCoot = self.newProtocol(CootRefine, **args)
         protCoot.setObjLabel(
             'coot refinement\n volume and pdb\n save model')
@@ -1403,6 +1512,9 @@ class TestEMRingerValidation(TestImportData):
                 'doTest': True
                 }
 
+        PhenixProtRunEMRinger = Domain.importFromPlugin('phenix.protocols',
+                                                        'PhenixProtRunEMRinger',
+                                                        doRaise=True)
         protEMRinger = self.newProtocol(PhenixProtRunEMRinger, **args)
         protEMRinger.setObjLabel('EMRinger validation\n volume and pdb\n')
         self.launchProtocol(protEMRinger)
@@ -1421,6 +1533,8 @@ class TestEMRingerValidation(TestImportData):
                 'inputStructure': coot_PDB,
                 'generateMaskedVolume': True
                 }
+        CCP4ProtRunRefmac = Domain.importFromPlugin('ccp4.protocols',
+                                                    'CCP4ProtRunRefmac')
         protRefmac = self.newProtocol(CCP4ProtRunRefmac, **args)
         protRefmac.setObjLabel('MASK refmac refinement\n volume and pdb\n save '
                                'model')
@@ -1451,8 +1565,8 @@ class TestEMRingerValidation(TestImportData):
         # This test checks that EMRinger runs when a volume provided
         # by Chimera workflow; the PDB is provided by Coot/Refmac without mask
         # starting volume with a different coordinate origin
-        print "Run EMRinger validation from PDB file saved from " \
-              "Chimera_2/Coot/Refmac without mask"
+        print("Run EMRinger validation from PDB file saved from "
+              "Chimera_2/Coot/Refmac without mask")
 
         volume2 = self._importVolume2()
         structure1_PDB = self._importStructurePDBWoVol()
@@ -1470,6 +1584,9 @@ class TestEMRingerValidation(TestImportData):
                 'pdbFileToBeRefined': structure1_PDB
                 }
 
+        ChimeraProtRigidFit = Domain.importFromPlugin('chimera.protocols',
+                                                      'ChimeraProtRigidFit',
+                                                      doRaise=True)
         protChimera = self.newProtocol(ChimeraProtRigidFit, **args)
         protChimera.setObjLabel('chimera fit\n volume associated '
                                'to pdb\n save volume and model')
@@ -1487,13 +1604,16 @@ class TestEMRingerValidation(TestImportData):
                 'pdbFileToBeRefined': structure3_PDB,
                 'doInteractive': True
                 }
+
+        CootRefine = Domain.importFromPlugin('ccp4.protocols', 'CootRefine',
+                                             doRaise=True)
         protCoot = self.newProtocol(CootRefine, **args)
         protCoot.setObjLabel('coot refinement\n volume and pdb\n 2 runs\n '
                              'save model')
         try:
             self.launchProtocol(protCoot)
         except:
-            print "first call to coot ended"
+            print("first call to coot ended")
         self.assertIsNotNone(protCoot.testLabel5.getFileName(),
                              "There was a problem with the alignment")
         self.assertTrue(os.path.exists(protCoot.testLabel5.getFileName()))
@@ -1511,6 +1631,9 @@ class TestEMRingerValidation(TestImportData):
                 'inputStructure': coot_PDB,
                 'doTest': True
                 }
+        PhenixProtRunEMRinger = Domain.importFromPlugin('phenix.protocols',
+                                                        'PhenixProtRunEMRinger',
+                                                        doRaise=True)
         protEMRinger = self.newProtocol(PhenixProtRunEMRinger, **args)
         protEMRinger.setObjLabel('EMRinger validation\n volume and pdb\n')
         self.launchProtocol(protEMRinger)
@@ -1529,6 +1652,8 @@ class TestEMRingerValidation(TestImportData):
                 'inputStructure': coot_PDB,
                 'generateMaskedVolume': False
                 }
+        CCP4ProtRunRefmac = Domain.importFromPlugin('ccp4.protocols',
+                                                    'CCP4ProtRunRefmac')
         protRefmac = self.newProtocol(CCP4ProtRunRefmac, **args)
         protRefmac.setObjLabel('refmac refinement\n volume and pdb\n save '
                                'model')
@@ -1559,8 +1684,8 @@ class TestEMRingerValidation(TestImportData):
         # This test checks that EMRinger runs when a volume provided
         # by Chimera workflow; the PDB is provided by Coot/Refmac with mask
         # starting volume with a different coordinate origin
-        print "Run EMRinger validation from PDB file saved from " \
-              "Chimera_2/Coot/Refmac with mask"
+        print("Run EMRinger validation from PDB file saved from "
+              "Chimera_2/Coot/Refmac with mask")
 
         volume2 = self._importVolume2()
         structure1_PDB = self._importStructurePDBWoVol()
@@ -1578,6 +1703,9 @@ class TestEMRingerValidation(TestImportData):
                 'pdbFileToBeRefined': structure1_PDB
                 }
 
+        ChimeraProtRigidFit = Domain.importFromPlugin('chimera.protocols',
+                                                      'ChimeraProtRigidFit',
+                                                      doRaise=True)
         protChimera = self.newProtocol(ChimeraProtRigidFit, **args)
         protChimera.setObjLabel('chimera fit\n volume associated '
                                     'to pdb\n save volume and model')
@@ -1595,13 +1723,16 @@ class TestEMRingerValidation(TestImportData):
                 'pdbFileToBeRefined': structure3_PDB,
                 'doInteractive': True
                 }
+
+        CootRefine = Domain.importFromPlugin('ccp4.protocols', 'CootRefine',
+                                             doRaise=True)
         protCoot = self.newProtocol(CootRefine, **args)
         protCoot.setObjLabel('coot refinement\n volume and pdb\n 2 runs\n '
                              'save model')
         try:
             self.launchProtocol(protCoot)
         except:
-            print "first call to coot ended"
+            print("first call to coot ended")
         self.assertIsNotNone(protCoot.testLabel6.getFileName(),
                              "There was a problem with the alignment")
         self.assertTrue(
@@ -1620,6 +1751,9 @@ class TestEMRingerValidation(TestImportData):
                 'inputStructure': coot_PDB,
                 'doTest': True
                 }
+        PhenixProtRunEMRinger = Domain.importFromPlugin('phenix.protocols',
+                                                        'PhenixProtRunEMRinger',
+                                                        doRaise=True)
         protEMRinger = self.newProtocol(PhenixProtRunEMRinger, **args)
         protEMRinger.setObjLabel('EMRinger validation\n volume and pdb\n')
         self.launchProtocol(protEMRinger)
@@ -1638,6 +1772,8 @@ class TestEMRingerValidation(TestImportData):
                 'inputStructure': coot_PDB,
                 'generateMaskedVolume': True
                 }
+        CCP4ProtRunRefmac = Domain.importFromPlugin('ccp4.protocols',
+                                                    'CCP4ProtRunRefmac')
         protRefmac = self.newProtocol(CCP4ProtRunRefmac, **args)
         protRefmac.setObjLabel('MASK refmac refinement\n volume and pdb\n save '
                                'model')
@@ -1669,8 +1805,8 @@ class TestEMRingerValidation(TestImportData):
         volume provided directly as inputVol, the input PDB was fitted to
         the volume and refined previously by coot and refmac in another project
          """
-        print "Run EMRinger validation from imported volume and pdb file " \
-              "already refined by Coot and Refmac in another project"
+        print("Run EMRinger validation from imported volume and pdb file "
+              "already refined by Coot and Refmac in another project")
 
         # Import Volume
         volume3 = self._importVolume3()
@@ -1683,6 +1819,9 @@ class TestEMRingerValidation(TestImportData):
                 'inputStructure': structure5_PDB,
                 'doTest': True
                 }
+        PhenixProtRunEMRinger = Domain.importFromPlugin('phenix.protocols',
+                                                        'PhenixProtRunEMRinger',
+                                                        doRaise=True)
         protEMRinger = self.newProtocol(PhenixProtRunEMRinger, **args)
         protEMRinger.setObjLabel('EMRinger validation\n volume and pdb\n')
         self.launchProtocol(protEMRinger)
@@ -1719,8 +1858,8 @@ class TestMolprobityValidation(TestImportData):
         """ This test checks that EMRinger validation protocol runs with an
         atomic structure; No Volume was provided and no error message is
         expected"""
-        print "Run MolProbity validation protocol from imported pdb file " \
-              "without imported or pdb-associated volume"
+        print("Run MolProbity validation protocol from imported pdb file "
+              "without imported or pdb-associated volume")
 
         # import PDB
         structure_PDB = self._importStructurePDBWoVol()
@@ -1729,6 +1868,8 @@ class TestMolprobityValidation(TestImportData):
         args = {'inputStructure': structure_PDB
                }
 
+        PhenixProtRunMolprobity = Domain.importFromPlugin('phenix.protocols',
+                                                          'PhenixProtRunMolprobity')
         protMolProbity = self.newProtocol(PhenixProtRunMolprobity, **args)
         protMolProbity.setObjLabel('PhenixProtRunMolprobity validation\n '
                                    'no volume associated to pdb\n')
@@ -1748,8 +1889,8 @@ class TestMolprobityValidation(TestImportData):
         density volume; No atomic structure was provided and a error message is
         expected"""
 
-        print "Run MolProbity validation protocol from imported volume file " \
-          "without imported pdb"
+        print("Run MolProbity validation protocol from imported volume file "
+              "without imported pdb")
 
         # import volume
         volume = self._importVolume()
@@ -1759,6 +1900,8 @@ class TestMolprobityValidation(TestImportData):
                 'resolution': 3.5
                }
 
+        PhenixProtRunMolprobity = Domain.importFromPlugin('phenix.protocols',
+                                                          'PhenixProtRunMolprobity')
         protMolProbity = self.newProtocol(PhenixProtRunMolprobity, **args)
         protMolProbity.setObjLabel(
         'PhenixProtRunMolprobity validation\n volume and no pdb\n')
@@ -1767,8 +1910,8 @@ class TestMolprobityValidation(TestImportData):
             self.launchProtocol(protMolProbity)
         except Exception as e:
             self.assertTrue(True)
-            print "This test should return a error message as '" \
-              " Input atomic structure cannot be EMPTY.\n"
+            print("This test should return a error message as: "
+                  " Input atomic structure cannot be EMPTY.\n")
 
             return
         self.assertTrue(False)
@@ -1778,8 +1921,8 @@ class TestMolprobityValidation(TestImportData):
         volume provided directly as inputVol, the input PDB was fitted to
         the volume and refined previously by coot and refmac without mask
          """
-        print "Run MolProbity validation from imported volume and pdb file " \
-              "fitted and refined by Coot/Refmac"
+        print("Run MolProbity validation from imported volume and pdb file "
+              "fitted and refined by Coot/Refmac")
 
         # Import Volume
         volume = self._importVolume()
@@ -1796,6 +1939,9 @@ class TestMolprobityValidation(TestImportData):
                 'pdbFileToBeRefined': structure_PDB,
                 'doInteractive': False
                 }
+
+        CootRefine = Domain.importFromPlugin('ccp4.protocols', 'CootRefine',
+                                             doRaise=True)
         protCoot = self.newProtocol(CootRefine, **args)
         protCoot.setObjLabel('coot refinement\n volume and pdb\n save model')
         self.launchProtocol(protCoot)
@@ -1806,6 +1952,8 @@ class TestMolprobityValidation(TestImportData):
                 'inputStructure': coot_PDB,
                 'generateMaskedVolume': False
                 }
+        CCP4ProtRunRefmac = Domain.importFromPlugin('ccp4.protocols',
+                                                    'CCP4ProtRunRefmac')
         protRefmac = self.newProtocol(CCP4ProtRunRefmac, **args)
         protRefmac.setObjLabel('refmac refinement\n volume and pdb\n save '
                                'model')
@@ -1820,6 +1968,9 @@ class TestMolprobityValidation(TestImportData):
                 'resolution': 3.5,
                 'inputStructure': refmac_PDB
                 }
+
+        PhenixProtRunMolprobity = Domain.importFromPlugin('phenix.protocols',
+                                                          'PhenixProtRunMolprobity')
         protMolProbity = self.newProtocol(PhenixProtRunMolprobity, **args)
         protMolProbity.setObjLabel('MolProbity validation\n volume and pdb\n')
         self.launchProtocol(protMolProbity)
@@ -1838,8 +1989,8 @@ class TestMolprobityValidation(TestImportData):
         volume provided directly as inputVol, the input PDB was fitted to
         the volume and refined previously by coot and refmac with mask
          """
-        print "Run MolProbity validation from imported volume and pdb file " \
-              "fitted and refined by Coot/Refmac with mask"
+        print("Run MolProbity validation from imported volume and pdb file "
+              "fitted and refined by Coot/Refmac with mask")
 
         # Import Volume
         volume = self._importVolume()
@@ -1856,6 +2007,9 @@ class TestMolprobityValidation(TestImportData):
                 'pdbFileToBeRefined': structure_PDB,
                 'doInteractive': False
                 }
+
+        CootRefine = Domain.importFromPlugin('ccp4.protocols', 'CootRefine',
+                                             doRaise=True)
         protCoot = self.newProtocol(CootRefine, **args)
         protCoot.setObjLabel('coot refinement\n volume and pdb\n save model')
         self.launchProtocol(protCoot)
@@ -1866,6 +2020,8 @@ class TestMolprobityValidation(TestImportData):
                 'inputStructure': coot_PDB,
                 'generateMaskedVolume': True
                 }
+        CCP4ProtRunRefmac = Domain.importFromPlugin('ccp4.protocols',
+                                                    'CCP4ProtRunRefmac')
         protRefmac = self.newProtocol(CCP4ProtRunRefmac, **args)
         protRefmac.setObjLabel('MASK refmac refinement\n volume and pdb\n save '
                                'model')
@@ -1880,6 +2036,9 @@ class TestMolprobityValidation(TestImportData):
                 'resolution': 3.5,
                 'inputStructure': refmac_PDB
                 }
+
+        PhenixProtRunMolprobity = Domain.importFromPlugin('phenix.protocols',
+                                                          'PhenixProtRunMolprobity')
         protMolProbity = self.newProtocol(PhenixProtRunMolprobity, **args)
         protMolProbity.setObjLabel('MolProbity validation\n volume and pdb\n')
         self.launchProtocol(protMolProbity)
@@ -1896,8 +2055,8 @@ class TestMolprobityValidation(TestImportData):
     def testMolProbityValidationAfterChimeraAndCootAndRefmacNoMask(self):
         """ This test checks that MolProbity validation protocol runs with a
         volume provided by Chimera, the input PDB is provided by Coot """
-        print "Run MolProbity validation from volume provided by Chimera " \
-              "and pdb file provided by Coot/Refmac without mask"
+        print("Run MolProbity validation from volume provided by Chimera "
+              "and pdb file provided by Coot/Refmac without mask")
 
         # Import Volume
         volume = self._importVolume()
@@ -1918,6 +2077,10 @@ class TestMolprobityValidation(TestImportData):
                 'inputVolume': volume,
                 'pdbFileToBeRefined': structure_PDB
                 }
+
+        ChimeraProtRigidFit = Domain.importFromPlugin('chimera.protocols',
+                                                      'ChimeraProtRigidFit',
+                                                      doRaise=True)
         protChimera = self.newProtocol(ChimeraProtRigidFit, **args)
         protChimera.setObjLabel('chimera fit\n volume and pdb\n save volume '
                                 'and model')
@@ -1935,6 +2098,9 @@ class TestMolprobityValidation(TestImportData):
                 'pdbFileToBeRefined': structure2_PDB,
                 'doInteractive': False
                 }
+
+        CootRefine = Domain.importFromPlugin('ccp4.protocols', 'CootRefine',
+                                             doRaise=True)
         protCoot = self.newProtocol(CootRefine, **args)
         protCoot.setObjLabel('coot refinement\n volume and pdb\n save model')
         self.launchProtocol(protCoot)
@@ -1949,6 +2115,8 @@ class TestMolprobityValidation(TestImportData):
                 'inputStructure': coot_PDB
                 }
 
+        PhenixProtRunMolprobity = Domain.importFromPlugin('phenix.protocols',
+                                                          'PhenixProtRunMolprobity')
         protMolProbity = self.newProtocol(PhenixProtRunMolprobity, **args)
         protMolProbity.setObjLabel('MolProbity validation\n volume and pdb\n')
         self.launchProtocol(protMolProbity)
@@ -1969,6 +2137,8 @@ class TestMolprobityValidation(TestImportData):
                 'generateMaskedVolume': False
                 }
 
+        CCP4ProtRunRefmac = Domain.importFromPlugin('ccp4.protocols',
+                                                    'CCP4ProtRunRefmac')
         protRefmac = self.newProtocol(CCP4ProtRunRefmac, **args)
         protRefmac.setObjLabel('refmac refinement\n volume and pdb\n save '
                                'model')
@@ -2000,8 +2170,8 @@ class TestMolprobityValidation(TestImportData):
     def testMolProbityValidationAfterChimeraAndCootAndRefmacWithMask(self):
         """ This test checks that MolProbity validation protocol runs with a
         volume provided by Chimera, the input PDB is provided by Coot """
-        print "Run MolProbity validation from volume provided by Chimera " \
-              "and pdb file provided by Coot/Refmac with mask"
+        print("Run MolProbity validation from volume provided by Chimera "
+              "and pdb file provided by Coot/Refmac with mask")
 
         # Import Volume
         volume = self._importVolume()
@@ -2022,6 +2192,10 @@ class TestMolprobityValidation(TestImportData):
                 'inputVolume': volume,
                 'pdbFileToBeRefined': structure_PDB
                 }
+
+        ChimeraProtRigidFit = Domain.importFromPlugin('chimera.protocols',
+                                                      'ChimeraProtRigidFit',
+                                                      doRaise=True)
         protChimera = self.newProtocol(ChimeraProtRigidFit, **args)
         protChimera.setObjLabel('chimera fit\n volume and pdb\n save volume '
                                 'and model')
@@ -2039,6 +2213,9 @@ class TestMolprobityValidation(TestImportData):
                 'pdbFileToBeRefined': structure2_PDB,
                 'doInteractive': False
                 }
+
+        CootRefine = Domain.importFromPlugin('ccp4.protocols', 'CootRefine',
+                                             doRaise=True)
         protCoot = self.newProtocol(CootRefine, **args)
         protCoot.setObjLabel('coot refinement\n volume and pdb\n save model')
         self.launchProtocol(protCoot)
@@ -2053,6 +2230,8 @@ class TestMolprobityValidation(TestImportData):
                 'inputStructure': coot_PDB
                 }
 
+        PhenixProtRunMolprobity = Domain.importFromPlugin('phenix.protocols',
+                                                          'PhenixProtRunMolprobity')
         protMolProbity = self.newProtocol(PhenixProtRunMolprobity, **args)
         protMolProbity.setObjLabel('MolProbity validation\n volume and pdb\n')
         self.launchProtocol(protMolProbity)
@@ -2073,6 +2252,8 @@ class TestMolprobityValidation(TestImportData):
                 'generateMaskedVolume': True
                 }
 
+        CCP4ProtRunRefmac = Domain.importFromPlugin('ccp4.protocols',
+                                                    'CCP4ProtRunRefmac')
         protRefmac = self.newProtocol(CCP4ProtRunRefmac, **args)
         protRefmac.setObjLabel('MASK refmac refinement\n volume and pdb\n save '
                                'model')
@@ -2105,8 +2286,8 @@ class TestMolprobityValidation(TestImportData):
         # This test checks that MolProbity runs when a volume provided
         # by Chimera workflow; the PDB is provided by Coot/Refmac
         # starting volume with a different coordinate origin
-        print "Run MolProbity validation from PDB file saved from " \
-              "Chimera_2/Coot/Refmac withouth mask"
+        print("Run MolProbity validation from PDB file saved from "
+              "Chimera_2/Coot/Refmac withouth mask")
 
         volume2 = self._importVolume2()
         structure1_PDB = self._importStructurePDBWoVol()
@@ -2124,6 +2305,9 @@ class TestMolprobityValidation(TestImportData):
                 'pdbFileToBeRefined': structure1_PDB
                 }
 
+        ChimeraProtRigidFit = Domain.importFromPlugin('chimera.protocols',
+                                                      'ChimeraProtRigidFit',
+                                                      doRaise=True)
         protChimera = self.newProtocol(ChimeraProtRigidFit, **args)
         protChimera.setObjLabel('chimera fit\n volume associated '
                                'to pdb\n save volume and model')
@@ -2141,13 +2325,16 @@ class TestMolprobityValidation(TestImportData):
                 'pdbFileToBeRefined': structure3_PDB,
                 'doInteractive': True
                 }
+
+        CootRefine = Domain.importFromPlugin('ccp4.protocols', 'CootRefine',
+                                             doRaise=True)
         protCoot = self.newProtocol(CootRefine, **args)
         protCoot.setObjLabel('coot refinement\n volume and pdb\n 2 runs\n '
                              'save model')
         try:
             self.launchProtocol(protCoot)
-        except:
-            print "first call to coot ended"
+        except Exception as ex:
+            print("first call to coot ended")
         self.assertIsNotNone(protCoot.testLabel5.getFileName(),
                              "There was a problem with the alignment")
         self.assertTrue(os.path.exists(protCoot.testLabel5.getFileName()))
@@ -2165,6 +2352,9 @@ class TestMolprobityValidation(TestImportData):
                 'resolution': 3.5,
                 'inputStructure': coot_PDB
                 }
+
+        PhenixProtRunMolprobity = Domain.importFromPlugin('phenix.protocols',
+                                                          'PhenixProtRunMolprobity')
         protMolProbity = self.newProtocol(PhenixProtRunMolprobity, **args)
         protMolProbity.setObjLabel('MolProbity validation\n volume and pdb\n')
         self.launchProtocol(protMolProbity)
@@ -2185,6 +2375,8 @@ class TestMolprobityValidation(TestImportData):
                 'generateMaskedVolume': False
                 }
 
+        CCP4ProtRunRefmac = Domain.importFromPlugin('ccp4.protocols',
+                                                    'CCP4ProtRunRefmac')
         protRefmac = self.newProtocol(CCP4ProtRunRefmac, **args)
         protRefmac.setObjLabel('refmac refinement\n volume and '
                                'pdb\n save model')
@@ -2216,8 +2408,8 @@ class TestMolprobityValidation(TestImportData):
         # This test checks that MolProbity runs when a volume provided
         # by Chimera workflow; the PDB is provided by Coot/Refmac
         # starting volume with a different coordinate origin
-        print "Run MolProbity validation from PDB file saved from " \
-              "Chimera_2/Coot/Refmac with mask"
+        print("Run MolProbity validation from PDB file saved from "
+              "Chimera_2/Coot/Refmac with mask")
 
         volume2 = self._importVolume2()
         structure1_PDB = self._importStructurePDBWoVol()
@@ -2235,6 +2427,9 @@ class TestMolprobityValidation(TestImportData):
                 'pdbFileToBeRefined': structure1_PDB
                 }
 
+        ChimeraProtRigidFit = Domain.importFromPlugin('chimera.protocols',
+                                                      'ChimeraProtRigidFit',
+                                                      doRaise=True)
         protChimera = self.newProtocol(ChimeraProtRigidFit, **args)
         protChimera.setObjLabel('chimera fit\n volume associated '
                                'to pdb\n save volume and model')
@@ -2252,13 +2447,16 @@ class TestMolprobityValidation(TestImportData):
                 'pdbFileToBeRefined': structure3_PDB,
                 'doInteractive': True
                 }
+
+        CootRefine = Domain.importFromPlugin('ccp4.protocols', 'CootRefine',
+                                             doRaise=True)
         protCoot = self.newProtocol(CootRefine, **args)
         protCoot.setObjLabel('coot refinement\n volume and pdb\n 2 runs\n '
                              'save model')
         try:
             self.launchProtocol(protCoot)
-        except:
-            print "first call to coot ended"
+        except Exception as ex:
+            print("first call to coot ended")
         self.assertIsNotNone(protCoot.testLabel6.getFileName(),
                              "There was a problem with the alignment")
         self.assertTrue(os.path.exists(protCoot.testLabel6.getFileName()))
@@ -2276,6 +2474,9 @@ class TestMolprobityValidation(TestImportData):
                 'resolution': 3.5,
                 'inputStructure': coot_PDB
                 }
+
+        PhenixProtRunMolprobity = Domain.importFromPlugin('phenix.protocols',
+                                                          'PhenixProtRunMolprobity')
         protMolProbity = self.newProtocol(PhenixProtRunMolprobity, **args)
         protMolProbity.setObjLabel('MolProbity validation\n volume and pdb\n')
         self.launchProtocol(protMolProbity)
@@ -2296,6 +2497,8 @@ class TestMolprobityValidation(TestImportData):
                 'generateMaskedVolume': True
                 }
 
+        CCP4ProtRunRefmac = Domain.importFromPlugin('ccp4.protocols',
+                                                    'CCP4ProtRunRefmac')
         protRefmac = self.newProtocol(CCP4ProtRunRefmac, **args)
         protRefmac.setObjLabel('MASK refmac refinement\n volume and '
                                'pdb\n save model')
@@ -2328,8 +2531,8 @@ class TestMolprobityValidation(TestImportData):
         volume provided directly as inputVol, the input PDB was fitted to
         the volume and refined previously by coot and refmac in another project
          """
-        print "Run MolProbity validation from imported volume and pdb file " \
-              "already refined by Coot and Refmac in another project"
+        print("Run MolProbity validation from imported volume and pdb file "
+              "already refined by Coot and Refmac in another project")
 
         # Import Volume
         volume3 = self._importVolume3()
@@ -2342,6 +2545,9 @@ class TestMolprobityValidation(TestImportData):
                 'resolution': 2.2,
                 'inputStructure': structure5_PDB
                 }
+
+        PhenixProtRunMolprobity = Domain.importFromPlugin('phenix.protocols',
+                                                          'PhenixProtRunMolprobity')
         protMolProbity = self.newProtocol(PhenixProtRunMolprobity, **args)
         protMolProbity.setObjLabel('MolProbity validation\n volume and pdb\n')
         self.launchProtocol(protMolProbity)
@@ -2360,8 +2566,8 @@ class TestMolprobityValidation(TestImportData):
         two independent pdbs provided directly without inputVol associated and
         allows the comparison of results
          """
-        print "Run MolProbity validation to compare an imported pdb " \
-              "files obtained in another project"
+        print("Run MolProbity validation to compare an imported pdb "
+              "files obtained in another project")
 
         # import first PDB
         structure6_PDB = self._importStructureMolProbity1()
@@ -2370,6 +2576,9 @@ class TestMolprobityValidation(TestImportData):
         args = {
                 'inputStructure': structure6_PDB
                 }
+
+        PhenixProtRunMolprobity = Domain.importFromPlugin('phenix.protocols',
+                                                          'PhenixProtRunMolprobity')
         protMolProbity = self.newProtocol(PhenixProtRunMolprobity, **args)
         protMolProbity.setObjLabel('MolProbity validation\n pdb\n')
         self.launchProtocol(protMolProbity)
@@ -2388,8 +2597,8 @@ class TestMolprobityValidation(TestImportData):
         two independent pdbs provided directly without inputVol associated and
         allows the comparison of results
             """
-        print "Run MolProbity validation to compare an imported pdb " \
-                  "files obtained in another project"
+        print("Run MolProbity validation to compare an imported pdb "
+                  "files obtained in another project")
 
         # import second PDB (with higher number of Outliers)
         structure7_PDB = self._importStructureMolProbity2()
@@ -2398,6 +2607,9 @@ class TestMolprobityValidation(TestImportData):
         args = {
             'inputStructure': structure7_PDB
         }
+
+        PhenixProtRunMolprobity = Domain.importFromPlugin('phenix.protocols',
+                                                          'PhenixProtRunMolprobity')
         protMolProbity = self.newProtocol(PhenixProtRunMolprobity, **args)
         protMolProbity.setObjLabel('MolProbity validation\n pdb\n')
         self.launchProtocol(protMolProbity)

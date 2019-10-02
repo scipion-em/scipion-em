@@ -21,18 +21,13 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # ***************************************************************************/
 
-import time
 import os
 
-from pyworkflow.em.protocol.monitors.protocol_monitor_ctf import CTF_LOG_SQLITE
-from pyworkflow.tests import BaseTest, setupTestProject
-from pyworkflow.em.protocol import ProtCreateStreamData, ProtMonitorSystem
-from pyworkflow.protocol import getProtocolFromDb
-from pyworkflow.em.protocol import ProtMonitorCTF
-from pyworkflow.em.protocol.protocol_create_stream_data import SET_OF_RANDOM_MICROGRAPHS
-from pyworkflow.utils import importFromPlugin
 
-ProtCTFFind = importFromPlugin('grigoriefflab.protocols', 'ProtCTFFind', doRaise=True)
+import pyworkflow.tests as pwtests
+import pyworkflow.protocol as pwprot
+
+import pwem.protocols as emprot
 
 
 # Load the number of movies for the simulation, by default equal 5, but
@@ -40,13 +35,13 @@ ProtCTFFind = importFromPlugin('grigoriefflab.protocols', 'ProtCTFFind', doRaise
 MICS = os.environ.get('SCIPION_TEST_MICS', 3)
 
 
-class TestCtfStream(BaseTest):
+class TestCtfStream(pwtests.BaseTest):
     @classmethod
     def setUpClass(cls):
-        setupTestProject(cls)
+        pwtests.setupTestProject(cls)
 
     def _updateProtocol(self, prot):
-        prot2 = getProtocolFromDb(prot.getProject().path,
+        prot2 = pwprot.getProtocolFromDb(prot.getProject().path,
                                   prot.getDbPath(),
                                   prot.getObjId())
         # Close DB connections
@@ -63,11 +58,11 @@ class TestCtfStream(BaseTest):
                   'samplingRate': 1.25,
                   'creationInterval': 5,
                   'delay': 0,
-                  'setof': SET_OF_RANDOM_MICROGRAPHS  # SetOfMicrographs
+                  'setof': emprot.SET_OF_RANDOM_MICROGRAPHS  # SetOfMicrographs
                 }
 
         # put some stress on the system
-        protStream = self.newProtocol(ProtCreateStreamData, **kwargs)
+        protStream = self.newProtocol(emprot.ProtCreateStreamData, **kwargs)
         protStream.setObjLabel('create Stream Mic')
         self.proj.launchProtocol(protStream, wait=False)
 
@@ -82,6 +77,10 @@ class TestCtfStream(BaseTest):
             'lowRes': 0.05,
             'numberOfThreads': 4
         }
+        from pwem import Domain
+
+        ProtCTFFind = Domain.importFromPlugin('grigoriefflab.protocols',
+                                              'ProtCTFFind', doRaise=True)
         protCTF = self.newProtocol(ProtCTFFind, **kwargs)
         protCTF.inputMicrographs.set(protStream.outputMicrographs)
         self.proj.launchProtocol(protCTF, wait=False)
@@ -96,9 +95,9 @@ class TestCtfStream(BaseTest):
                   'monitorTime': 5
                   }
 
-        protMonitor = self.newProtocol(ProtMonitorCTF, **kwargs)
+        protMonitor = self.newProtocol(emprot.ProtMonitorCTF, **kwargs)
         protMonitor.inputProtocol.set(protCTF)
         self.launchProtocol(protMonitor)
 
-        baseFn = protMonitor._getPath(CTF_LOG_SQLITE)
+        baseFn = protMonitor._getPath(emprot.CTF_LOG_SQLITE)
         self.assertTrue(os.path.isfile(baseFn))

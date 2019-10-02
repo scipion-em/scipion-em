@@ -22,15 +22,16 @@
 # ***************************************************************************/
 
 
-from pyworkflow.tests import BaseTest, setupTestProject, DataSet
-from pyworkflow.em.protocol import ProtImportMask
+import pyworkflow.tests as pwtests
+
+import pwem.protocols as emprot
 
 
-class TestImportBase(BaseTest):
+class TestImportBase(pwtests.BaseTest):
     @classmethod
     def setUpClass(cls):
-        setupTestProject(cls)
-        cls.dsXmipp = DataSet.getDataSet('xmipp_tutorial')
+        pwtests.setupTestProject(cls)
+        cls.dsXmipp = pwtests.DataSet.getDataSet('xmipp_tutorial')
 
     
 class TestImportMasks(TestImportBase):
@@ -42,10 +43,11 @@ class TestImportMasks(TestImportBase):
                 'samplingRate': 2.1
                 }
 
-        prot = self.newProtocol(ProtImportMask, **args)
+        prot = self.newProtocol(emprot.ProtImportMask, **args)
         prot.setObjLabel('import mask 2d')
         self.launchProtocol(prot)
-        self.assertIsNotNone(prot.outputMask, "There was a problem when importing a 2d mask.")
+        self.assertIsNotNone(prot.outputMask,
+                             "There was a problem when importing a 2d mask.")
 
     def test_import_mask3d(self):
         """ Import a mask 3d.
@@ -54,8 +56,9 @@ class TestImportMasks(TestImportBase):
                 'samplingRate': 2.1
                 }
 
-        prot = self.newProtocol(ProtImportMask, **args)
+        prot = self.newProtocol(emprot.ProtImportMask, **args)
         prot.setObjLabel('import mask 3d')
         self.launchProtocol(prot)
-        self.assertIsNotNone(prot.outputMask, "There was a problem when importing a 3d mask.")
+        self.assertIsNotNone(prot.outputMask,
+                             "There was a problem when importing a 3d mask.")
 

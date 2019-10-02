@@ -22,22 +22,23 @@
 # ***************************************************************************/
 import os
 
-from pyworkflow.tests import BaseTest, setupTestProject, DataSet
-from pyworkflow.em.protocol import ProtImportVolumes
-from pyworkflow.em.constants import SYM_I222r, SCIPION_SYM_NAME
-from pyworkflow.em.convert.symmetry import Icosahedron
-import pyworkflow.utils as pwutils
+import pyworkflow.tests as pwtests
+
+import pwem.protocols as emprot
+import pwem.constants as emcts
+import pwem.convert as emconv
 
 
-class TestImportBase(BaseTest):
+
+class TestImportBase(pwtests.BaseTest):
     @classmethod
     def setUpClass(cls):
-        setupTestProject(cls)
-        cls.dsXmipp = DataSet.getDataSet('xmipp_tutorial')
-        cls.dsRelion = DataSet.getDataSet('relion_tutorial')
-        cls.dsEmx = DataSet.getDataSet('emx')
-        cls.dsMda = DataSet.getDataSet('mda')
-        cls.dsModBuild = DataSet.getDataSet('model_building_tutorial')
+        pwtests.setupTestProject(cls)
+        cls.dsXmipp = pwtests.DataSet.getDataSet('xmipp_tutorial')
+        cls.dsRelion = pwtests.DataSet.getDataSet('relion_tutorial')
+        cls.dsEmx = pwtests.DataSet.getDataSet('emx')
+        cls.dsMda = pwtests.DataSet.getDataSet('mda')
+        cls.dsModBuild = pwtests.DataSet.getDataSet('model_building_tutorial')
 
 
 class TestImportVolumes(TestImportBase):
@@ -55,7 +56,7 @@ class TestImportVolumes(TestImportBase):
 
         # Id's should be set increasing from 1 if ### is not in the
         # pattern
-        prot1 = self.newProtocol(ProtImportVolumes, **args)
+        prot1 = self.newProtocol(emprot.ProtImportVolumes, **args)
         prot1.setObjLabel('import vol,\n default origin,\n chimera show '
                           'axis,\n vol origin in coord origin')
         self.launchProtocol(prot1)
@@ -83,7 +84,7 @@ class TestImportVolumes(TestImportBase):
 
         # Id's should be set increasing from 1 if ### is not in the
         # pattern
-        prot2 = self.newProtocol(ProtImportVolumes, **args)
+        prot2 = self.newProtocol(emprot.ProtImportVolumes, **args)
         prot2.setObjLabel('import vol,\n user origin,\n chimera show axis')
         self.launchProtocol(prot2)
         volume = prot2.outputVolume
@@ -117,7 +118,7 @@ class TestImportVolumes(TestImportBase):
 
         # Id's should be set increasing from 1 if ### is not in the
         # pattern
-        prot2 = self.newProtocol(ProtImportVolumes, **args)
+        prot2 = self.newProtocol(emprot.ProtImportVolumes, **args)
         prot2.setObjLabel('import vol,\n user origin,\n chimera show axis')
         self.launchProtocol(prot2)
         volume = prot2.outputVolume
@@ -142,7 +143,7 @@ class TestImportVolumes(TestImportBase):
 
         # Id's should be set increasing from 1 if ### is not in the
         # pattern
-        prot3 = self.newProtocol(ProtImportVolumes, **args)
+        prot3 = self.newProtocol(emprot.ProtImportVolumes, **args)
         prot3.setObjLabel('import 2 vols,\n default origin,\n chimera no '
                           'axis')
         self.launchProtocol(prot3)
@@ -170,7 +171,7 @@ class TestImportVolumes(TestImportBase):
 
         # Id's should be set increasing from 1 if ### is not in the
         # pattern
-        prot4 = self.newProtocol(ProtImportVolumes, **args)
+        prot4 = self.newProtocol(emprot.ProtImportVolumes, **args)
         prot4.setObjLabel('import 2 vols,\n user origin,\n chimera no axis')
         self.launchProtocol(prot4)
         for volume in prot4.outputVolumes:
@@ -187,7 +188,7 @@ class TestImportVolumes(TestImportBase):
         args['filesPath'] = self.dsRelion.getFile('import/case2/'
                                                   'relion_volumes.mrc')
         args['filesPattern'] = ''
-        prot2 = self.newProtocol(ProtImportVolumes, **args)
+        prot2 = self.newProtocol(emprot.ProtImportVolumes, **args)
         prot2.setObjLabel('import 3 vols from mrc stack,\n user origin,'
                           '\n chimera no axis')
         self.launchProtocol(prot2)
@@ -202,7 +203,7 @@ class TestImportVolumes(TestImportBase):
         args['filesPath'] = self.dsRelion.getFile('import/case2/'
                                                   'relion_volumes.stk')
         args['filesPattern'] = ''
-        prot3 = self.newProtocol(ProtImportVolumes, **args)
+        prot3 = self.newProtocol(emprot.ProtImportVolumes, **args)
         prot3.setObjLabel('import 3 vols from spider stack\n user origin,'
                           '\n chimera no axis')
         self.launchProtocol(prot3)
@@ -219,7 +220,7 @@ class TestImportVolumes(TestImportBase):
                 'samplingRate': 2.1,
                 }
 
-        prot4 = self.newProtocol(ProtImportVolumes, **args)
+        prot4 = self.newProtocol(emprot.ProtImportVolumes, **args)
         prot4.setObjLabel('import vol,\n no origin at all, legacy data,'
                           '\n chimera show '
                           'axis,\n vol origin in coord origin')
@@ -245,7 +246,7 @@ class TestImportVolumes(TestImportBase):
         #         'z':
         #         }
         #
-        # protImportVol = self.newProtocol(ProtImportVolumes, **args)
+        # protImportVol = self.newProtocol(emprot.ProtImportVolumes, **args)
         # protImportVol.setObjLabel('import vol 1ake_4-5A,\n header origin,\n chimera show axis')
         # self.launchProtocol(protImportVol)
         # volume = protImportVol.outputVolume
@@ -270,9 +271,9 @@ class TestImportVolumes(TestImportBase):
         volMapNamefull = '/tmp/Icosahedron_map_full.mrc'
         volMapNamehalf1 =  '/tmp/Icosahedron_map_half1.mrc'
         volMapNamehalf2 = '/tmp/Icosahedron_map_half2.mrc'
-        self.createFeatVolume(volFeatName, volMapNamefull, sym=SYM_I222r)
-        self.createFeatVolume(volFeatName, volMapNamehalf1, sym=SYM_I222r)
-        self.createFeatVolume(volFeatName, volMapNamehalf2, sym=SYM_I222r)
+        self.createFeatVolume(volFeatName, volMapNamefull, sym=emcts.SYM_I222r)
+        self.createFeatVolume(volFeatName, volMapNamehalf1, sym=emcts.SYM_I222r)
+        self.createFeatVolume(volFeatName, volMapNamehalf2, sym=emcts.SYM_I222r)
         _samplingRate = 1.0
         args = {'filesPath': volMapNamefull,
                 'filesPattern': '',
@@ -281,7 +282,7 @@ class TestImportVolumes(TestImportBase):
                 'half2map': volMapNamehalf2,
                 'samplingRate': _samplingRate
                 }
-        prot5 = self.newProtocol(ProtImportVolumes, **args)
+        prot5 = self.newProtocol(emprot.ProtImportVolumes, **args)
         prot5.setObjLabel('import phantom icosahedron,\n half1 and half2')
         self.launchProtocol(prot5)
         volume = prot5.outputVolume
@@ -300,14 +301,15 @@ class TestImportVolumes(TestImportBase):
         """ Internal shortcut function to launch a Xmipp program.
         If xmipp not available o fails return False, else Tru"""
         try:
-            xmipp3 = pwutils.importFromPlugin('xmipp3', doRaise=True)
+            from pwem import Domain
+            xmipp3 = Domain.importFromPlugin('xmipp3', doRaise=True)
             xmipp3.Plugin.runXmippProgram(program, args)
         except:
             return False
         return True
 
 
-    def createFeatVolume(self, volFeatName, volMapName, sym=SYM_I222r):
+    def createFeatVolume(self, volFeatName, volMapName, sym=emcts.SYM_I222r):
         f = open(volFeatName, "w")
         f.write("""# Phantom description file, (generated with phantom help)
 # General Volume Parameters:
@@ -316,7 +318,7 @@ class TestImportVolumes(TestImportBase):
 # Feature Parameters:
 #Type  +/=  Density X_Center Y_Center Z_Center
 """)
-        icosahedron = Icosahedron(orientation=SCIPION_SYM_NAME[sym][1:])
+        icosahedron = emconv.Icosahedron(orientation=emcts.SCIPION_SYM_NAME[sym][1:])
         x = 0.;
         y = 0.;
         z = 0.

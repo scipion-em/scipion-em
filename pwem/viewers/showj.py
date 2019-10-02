@@ -34,10 +34,12 @@ import os
 from os.path import join
 from collections import OrderedDict
 import subprocess
-from pyworkflow.utils import getFreePort, importFromPlugin
+from pyworkflow.utils import getFreePort
 import threading
 import shlex
-import SocketServer
+import socketserver
+
+import pwem as em
 
 # ----------------------- Showj constants ---------------------------
 COL_RENDER_NONE = 0
@@ -169,13 +171,13 @@ class ColumnsConfig:
     def configColumn(self, colName, **kwargs):
         """ Configure properties of a given column. """
         col = self._columnsDict[colName]
-        for k, v in kwargs.iteritems():
+        for k, v in kwargs.items():
             setattr(col, k, v)
 
     def printColumns(self):
         for col in self._columnsDict.values():
-            print "column: ", col.getLabel()
-            print "  values: ", col.getValues()
+            print("column: ", col.getLabel())
+            print("  values: ", col.getValues())
 
 
 class ColumnProperties:
@@ -257,7 +259,7 @@ def getJavaIJappArguments(memory, appName, appArgs):
     """
     if memory is None:
         memory = getJvmMaxMemory()
-        print "No memory size provided. Using default: %s" % memory
+        print("No memory size provided. Using default: %s" % memory)
 
     jdkLib = join(os.environ['JAVA_HOME'], 'lib')
     javaBind = join(os.environ['XMIPP_HOME'], "bindings", "java")
@@ -279,13 +281,13 @@ def getJavaIJappArguments(memory, appName, appArgs):
 
 
 def runJavaIJapp(memory, appName, args, env=None):
-    xmipp3 = importFromPlugin('xmipp3')
+    xmipp3 = em.Domain.importFromPlugin('xmipp3', doRaise=True)
     env = env or {}
-    getEnviron = importFromPlugin('xmipp3', 'Plugin').getEnviron
+    getEnviron = em.Domain.importFromPlugin('xmipp3', 'Plugin').getEnviron
     env.update(getEnviron(xmippFirst=False))
 
     args = getJavaIJappArguments(memory, appName, args)
-    print 'java %s' % args
+    print('java %s' % args)
     #return subprocess.Popen('java ' + args, shell=True, env=env)
     cmd = ['java'] + shlex.split(args)
     return subprocess.Popen(cmd, env=env)
@@ -321,7 +323,7 @@ def launchTiltPairPickerGUI(micsFn, outputDir, protocol, mode=None):
     return runJavaIJapp(None, app, args)
 
 
-class ProtocolTCPRequestHandler(SocketServer.BaseRequestHandler):
+class ProtocolTCPRequestHandler(socketserver.BaseRequestHandler):
 
     def handle(self):  # FIXME: RUNNING FOREVER
         protocol = self.server.protocol
@@ -342,7 +344,7 @@ class ProtocolTCPRequestHandler(SocketServer.BaseRequestHandler):
             self.request.sendall(answer + '\n')
 
 
-class MySocketServer (SocketServer.TCPServer):
+class MySocketServer (socketserver.TCPServer):
 
     def serve_forever(self):
         self.end = False

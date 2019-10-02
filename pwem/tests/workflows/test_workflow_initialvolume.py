@@ -40,21 +40,19 @@ Datasets:
 import os
 from os.path import exists
 
-import pyworkflow.tests as tests
-import pyworkflow.em as em
-import pyworkflow.utils as pwutils
+import pyworkflow.tests as pwtests
 
-xmipp3 = pwutils.importFromPlugin('xmipp3.protocols', doRaise=True)
-eman2 = pwutils.importFromPlugin('eman2.protocols', doRaise=True)
+from pwem import Domain
+from pwem.protocols import ProtImportAverages
 
 
-class TestGroel(tests.BaseTest):
+class TestGroel(pwtests.BaseTest):
 
     @classmethod
     def setUpClass(cls):
         # Create a new project
-        tests.setupTestProject(cls)
-        cls.ds = tests.DataSet.getDataSet('initial_volume')
+        pwtests.setupTestProject(cls)
+        cls.ds = pwtests.DataSet.getDataSet('initial_volume')
 
     def test_groel(self):
         """ Run an Import particles protocol. """
@@ -62,14 +60,15 @@ class TestGroel(tests.BaseTest):
         # 1. Run import of averages
         groelAvg = self.ds.getFile('groel')
         sym = 'd7'
-        protImport = self.newProtocol(em.ProtImportAverages,
+        protImport = self.newProtocol(ProtImportAverages,
                                       objLabel='import averages (groel)',
                                       filesPath=groelAvg,
                                       samplingRate=1)
         self.launchProtocol(protImport)
 
         # 2. Run initial models
-        # 2a. Ransac 
+        # 2a. Ransac
+        xmipp3 = Domain.importFromPlugin('xmipp3.protocols', doRaise=True)
         protRansac = self.newProtocol(xmipp3.XmippProtRansac,
                                       objLabel='xmipp - ransac',
                                       symmetryGroup=sym,
@@ -79,7 +78,8 @@ class TestGroel(tests.BaseTest):
         protRansac.inputSet.set(protImport.outputAverages)
         self.launchProtocol(protRansac)
 
-        # 2b. Eman 
+        # 2b. Eman
+        eman2 = Domain.importFromPlugin('eman2.protocols', doRaise=True)
         protEmanInitVol = self.newProtocol(eman2.EmanProtInitModel,
                                            objLabel='eman - initial vol',
                                            symmetry=sym,
@@ -112,13 +112,13 @@ class TestGroel(tests.BaseTest):
         self.launchProtocol(protAlign)
 
 
-class TestBPV(tests.BaseTest):
+class TestBPV(pwtests.BaseTest):
 
     @classmethod
     def setUpClass(cls):
         # Create a new project
-        tests.setupTestProject(cls)
-        cls.ds = tests.DataSet.getDataSet('initial_volume')
+        pwtests.setupTestProject(cls)
+        cls.ds = pwtests.DataSet.getDataSet('initial_volume')
 
     def test_bpv(self):
         """ Run an Import particles protocol. """
@@ -126,14 +126,15 @@ class TestBPV(tests.BaseTest):
         # 1. Run import of averages
         groelAvg = self.ds.getFile('bpv')
         sym = 'i1'
-        protImport = self.newProtocol(em.ProtImportAverages,
+        protImport = self.newProtocol(ProtImportAverages,
                                       objLabel='import averages (bpv)',
                                       filesPath=groelAvg,
                                       samplingRate=1)
         self.launchProtocol(protImport)
 
         # 2. Run initial models
-        # 2a. Ransac 
+        # 2a. Ransac
+        xmipp3 = Domain.importFromPlugin('xmipp3.protocols', doRaise=True)
         protRansac = self.newProtocol(xmipp3.XmippProtRansac,
                                       objLabel='xmipp - ransac',
                                       objComment='Since there are only 8 projections, a dimensionality reduction '
@@ -151,7 +152,10 @@ class TestBPV(tests.BaseTest):
         protRansac.inputSet.set(protImport.outputAverages)
         self.launchProtocol(protRansac)
 
-        # 2b. Eman 
+        # 2b. Eman
+
+        eman2 = Domain.importFromPlugin('eman2.protocols', doRaise=True)
+
         protEmanInitVol = self.newProtocol(eman2.EmanProtInitModel,
                                            objLabel='eman - initial vol',
                                            symmetry='icos',
@@ -184,13 +188,13 @@ class TestBPV(tests.BaseTest):
         self.launchProtocol(protAlign)
 
 
-class TestRibosome(tests.BaseTest):
+class TestRibosome(pwtests.BaseTest):
 
     @classmethod
     def setUpClass(cls):
         # Create a new project
-        tests.setupTestProject(cls)
-        cls.ds = tests.DataSet.getDataSet('initial_volume')
+        pwtests.setupTestProject(cls)
+        cls.ds = pwtests.DataSet.getDataSet('initial_volume')
 
     def test_ribosome(self):
         """ Run an Import particles protocol. """
@@ -198,14 +202,15 @@ class TestRibosome(tests.BaseTest):
         # 1. Run import of averages
         groelAvg = self.ds.getFile('ribosome')
         sym = 'c1'
-        protImport = self.newProtocol(em.ProtImportAverages,
+        protImport = self.newProtocol(ProtImportAverages,
                                       objLabel='import averages (ribosome)',
                                       filesPath=groelAvg,
                                       samplingRate=1)
         self.launchProtocol(protImport)
 
         # 2. Run initial models
-        # 2a. Ransac 
+        # 2a. Ransac
+        xmipp3 = Domain.importFromPlugin('xmipp3.protocols', doRaise=True)
         protRansac = self.newProtocol(xmipp3.XmippProtRansac,
                                       objLabel='xmipp - ransac',
                                       symmetryGroup=sym,
@@ -215,7 +220,9 @@ class TestRibosome(tests.BaseTest):
         protRansac.inputSet.set(protImport.outputAverages)
         self.launchProtocol(protRansac)
 
-        # 2b. Eman 
+        # 2b. Eman
+        eman2 = Domain.importFromPlugin('eman2.protocols', doRaise=True)
+
         protEmanInitVol = self.newProtocol(eman2.EmanProtInitModel,
                                            objLabel='eman - initial vol',
                                            symmetry=sym,
@@ -247,17 +254,18 @@ class TestRibosome(tests.BaseTest):
         self.launchProtocol(protAlign)
 
 
-class TestSignificant(tests.BaseTest):
+class TestSignificant(pwtests.BaseTest):
     """ Test only significant execution with BPV virus. """
 
     @classmethod
     def setUpClass(cls):
         # Create a new project
-        tests.setupTestProject(cls)
-        cls.ds = tests.DataSet.getDataSet('initial_volume')
+        pwtests.setupTestProject(cls)
+        cls.ds = pwtests.DataSet.getDataSet('initial_volume')
 
     def _runSignificant(self, inputSet, args):
         myargs = dict(args)
+        xmipp3 = Domain.importFromPlugin('xmipp3.protocols', doRaise=True)
         prot1 = self.newProtocol(xmipp3.XmippProtReconstructSignificant,
                                  objLabel='significant d7',
                                  **myargs
@@ -293,7 +301,7 @@ class TestSignificant(tests.BaseTest):
         # 1. Run import of averages
         avg = self.ds.getFile('groel')
 
-        protImport = self.newProtocol(em.ProtImportAverages,
+        protImport = self.newProtocol(ProtImportAverages,
                                       filesPath=avg,
                                       samplingRate=1)
         self.launchProtocol(protImport)

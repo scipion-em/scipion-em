@@ -24,16 +24,16 @@
 # *
 # **************************************************************************
 
-from pyworkflow.viewer import DESKTOP_TKINTER, Viewer
+import pyworkflow.viewer as pwviewer
 from pyworkflow.gui.text import _open_cmd
 
-from pyworkflow.em.protocol import ProtPDFReport
+import pwem.protocols as emprot
 
 
-class PDFReportViewer(Viewer):
+class PDFReportViewer(pwviewer.Viewer):
     """ Wrapper to visualize PDF objects. """
-    _environments = [DESKTOP_TKINTER]
-    _targets = [ProtPDFReport]
+    _environments = [pwviewer.DESKTOP_TKINTER]
+    _targets = [emprot.ProtPDFReport]
 
     def visualize(self, obj, **kwargs):
         _open_cmd(obj._getPath("report.pdf"), self.getTkRoot())

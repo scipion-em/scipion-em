@@ -27,19 +27,19 @@
 from copy import deepcopy
 from tempfile import NamedTemporaryFile
 from collections import Counter
+from urllib.request import urlretrieve
 
-import numpy
+import numpy as np
 
-from pyworkflow.em.convert.atom_struct import AtomicStructHandler
-from pyworkflow.em.convert.transformations import (
-    euler_matrix, translation_matrix, concatenate_matrices)
 from pyworkflow.tests import *
+
+import pwem.convert as emconv
 
 
 class TestAtomicStructHandler(unittest.TestCase):
 
     def testIntToChain(self):
-        aSH = AtomicStructHandler(self.PDBFileName)
+        aSH = emconv.AtomicStructHandler(self.PDBFileName)
         solString = ['A',  'B',  'C',  'D',  'E',  'F',  'G',
                      'H',  'I',  'J',  'K',  'L',  'M',  'N',
                      'O',  'P',  'Q',  'R',  'S',  'T',  'U',
@@ -53,7 +53,7 @@ class TestAtomicStructHandler(unittest.TestCase):
             self.assertEqual(solString[i], aSH._intToChain(i))
 
     def testReadPDB(self):
-        aSH = AtomicStructHandler(self.PDBFileName)
+        aSH = emconv.AtomicStructHandler(self.PDBFileName)
         structure = aSH.getStructure()
 
         solDict = {}
@@ -65,7 +65,7 @@ class TestAtomicStructHandler(unittest.TestCase):
         solDict['author'] = 'R.Z.Kramer,L.Vitagliano,J.Bella,R.Berisio,' \
                             'L.Mazzarella,B.Brodsky,A.Zagari,H.M.Berman'
         solDict['deposition_date'] = '1998-01-22'
-        for k, v in solDict.iteritems():
+        for k, v in solDict.items():
             self.assertEqual(structure.header[k].strip(), v)
 
         solList = ['N', 'CA', 'C', 'O', 'CB']
@@ -75,7 +75,7 @@ class TestAtomicStructHandler(unittest.TestCase):
             counter += 1
 
     def testReadCIF(self):
-        aSH = AtomicStructHandler(self.CIFFileName)
+        aSH = emconv.AtomicStructHandler(self.CIFFileName)
         structure = aSH.getStructure()
 
         solList = ['N', 'CA', 'C', 'O', 'CB']
@@ -92,11 +92,11 @@ class TestAtomicStructHandler(unittest.TestCase):
                                    'repeating sequence (pro-pro-gly)'
         _dict = aSH.readLowLevel(self.CIFFileName)
 
-        for k, v in solDict.iteritems():
+        for k, v in solDict.items():
             self.assertEqual(_dict[k].strip().lower(), v.lower())
 
     def testRenameToChains(self):
-        aSH = AtomicStructHandler(self.PDBFileName)
+        aSH = emconv.AtomicStructHandler(self.PDBFileName)
         structure = aSH.getStructure()
 
         model = structure[0]
@@ -107,10 +107,10 @@ class TestAtomicStructHandler(unittest.TestCase):
             self.assertEqual(chain.id, 'C')
 
     def testWritePDB(self):
-        aSH = AtomicStructHandler(self.PDBFileName)
+        aSH = emconv.AtomicStructHandler(self.PDBFileName)
         PDBFileName2 = self.PDBFileName.replace(".pdb", "_2.pdb")
         aSH._write(PDBFileName2)
-        aSH2 = AtomicStructHandler(PDBFileName2)
+        aSH2 = emconv.AtomicStructHandler(PDBFileName2)
         structure1 = aSH.getStructure()
         structure2 = aSH2.getStructure()
 
@@ -120,10 +120,10 @@ class TestAtomicStructHandler(unittest.TestCase):
         os.unlink(PDBFileName2)
 
     def testWriteCIF(self):
-        aSH = AtomicStructHandler(self.PDBFileName)
+        aSH = emconv.AtomicStructHandler(self.PDBFileName)
         CIFFileName2 = self.CIFFileName.replace(".cif", "_2.cif")
         aSH._write(CIFFileName2)
-        aSH2 = AtomicStructHandler(CIFFileName2)
+        aSH2 = emconv.AtomicStructHandler(CIFFileName2)
         structure1 = aSH.getStructure()
         structure2 = aSH2.getStructure()
 
@@ -133,7 +133,7 @@ class TestAtomicStructHandler(unittest.TestCase):
         os.unlink(CIFFileName2)
 
     def testCIFToPDB(self):
-        aSH = AtomicStructHandler(self.CIFFileName)
+        aSH = emconv.AtomicStructHandler(self.CIFFileName)
         structure1 = aSH.getStructure()
         PDBFileName2 = self.PDBFileName.replace(".pdb", "_2.pdb")
         aSH.write(PDBFileName2)
@@ -145,10 +145,10 @@ class TestAtomicStructHandler(unittest.TestCase):
         os.unlink(PDBFileName2)
 
     def testPDBToCIF(self):
-        aSH1 = AtomicStructHandler(self.PDBFileName)
+        aSH1 = emconv.AtomicStructHandler(self.PDBFileName)
         CIFFileName2 = self.CIFFileName.replace(".cif", "_2.cif")
         aSH1.write(CIFFileName2)
-        aSH2 = AtomicStructHandler(CIFFileName2)
+        aSH2 = emconv.AtomicStructHandler(CIFFileName2)
 
         structure1 = aSH1.getStructure()
         structure2 = aSH2.getStructure()
@@ -158,7 +158,7 @@ class TestAtomicStructHandler(unittest.TestCase):
         os.unlink(CIFFileName2)
 
     def testCenterOfMass(self):
-        aSH = AtomicStructHandler()
+        aSH = emconv.AtomicStructHandler()
         structure = aSH.read(self.CIFFileName)
         x, y, z = aSH.centerOfMass(structure)
         self.assertAlmostEqual(x,  8.1593891597, 2)
@@ -166,14 +166,14 @@ class TestAtomicStructHandler(unittest.TestCase):
         self.assertAlmostEqual(z, 20.0177924407, 2)
 
     def testTransformTranslation(self):
-        aSHSource = AtomicStructHandler(self.PDBFileName)
+        aSHSource = emconv.AtomicStructHandler(self.PDBFileName)
         structure = aSHSource.getStructure()
         structure_copy = deepcopy(aSHSource.getStructure())
         shift = [100., 50., 25.]
         #        rotation_matrix = euler_matrix(deg2rad(45.), 0., 0., 'szyz')
-        rotation_matrix = euler_matrix(0., 0., 0., 'szyz')
-        translation = translation_matrix(shift)
-        M = concatenate_matrices(rotation_matrix, translation)
+        rotation_matrix = emconv.euler_matrix(0., 0., 0., 'szyz')
+        translation = emconv.translation_matrix(shift)
+        M = emconv.concatenate_matrices(rotation_matrix, translation)
         aSHSource.transform(M)
         for atom1, atom2 in zip(structure.get_atoms(),
                                 structure_copy.get_atoms()):
@@ -183,15 +183,15 @@ class TestAtomicStructHandler(unittest.TestCase):
                 self.assertAlmostEqual(coord1[i], coord2[i], 2)
 
     def testTransformRotation(self):
-        aSHSource = AtomicStructHandler(self.PDBFileName)
+        aSHSource = emconv.AtomicStructHandler(self.PDBFileName)
         structure = aSHSource.getStructure()
         structure_copy = deepcopy(structure)
-        rot = numpy.deg2rad(10)
-        theta = numpy.deg2rad(20.)
-        psi = numpy.deg2rad(30.)
-        rotation_matrix = euler_matrix(rot, theta, psi, 'szyz')
-        translation = translation_matrix([0., 0., 0.])
-        M = concatenate_matrices(rotation_matrix, translation)
+        rot = np.deg2rad(10)
+        theta = np.deg2rad(20.)
+        psi = np.deg2rad(30.)
+        rotation_matrix = emconv.euler_matrix(rot, theta, psi, 'szyz')
+        translation = emconv.translation_matrix([0., 0., 0.])
+        M = emconv.concatenate_matrices(rotation_matrix, translation)
         aSHSource.transform(M)
         m = M[:3, :3]
         for atom1, atom2 in zip(structure.get_atoms(),
@@ -202,16 +202,16 @@ class TestAtomicStructHandler(unittest.TestCase):
                 self.assertAlmostEqual(coord1[i], coord2[i], 2)
 
     def testTransformRotationAndTranslation(self):
-        aSHSource = AtomicStructHandler(self.PDBFileName)
+        aSHSource = emconv.AtomicStructHandler(self.PDBFileName)
         structure = aSHSource.getStructure()
         structure_copy = deepcopy(structure)
-        rot = numpy.deg2rad(10)
-        theta = numpy.deg2rad(20.)
-        psi = numpy.deg2rad(30.)
-        rotation_matrix = euler_matrix(rot, theta, psi, 'szyz')
+        rot = np.deg2rad(10)
+        theta = np.deg2rad(20.)
+        psi = np.deg2rad(30.)
+        rotation_matrix = emconv.euler_matrix(rot, theta, psi, 'szyz')
         shift = [100., 50., 25.]
-        translation = translation_matrix(shift)
-        M = concatenate_matrices(rotation_matrix, translation)
+        translation = emconv.translation_matrix(shift)
+        M = emconv.concatenate_matrices(rotation_matrix, translation)
         aSHSource.transform(M)
         m = M[:3, :3]
         for atom1, atom2 in zip(structure.get_atoms(),
@@ -244,8 +244,8 @@ class TestAtomicStructHandler(unittest.TestCase):
 
         if not doTest:
 
-            print "This test is to be tested manually since it opens chimera afterwards"
-            print "For testing this, edit this file and set doTest = True"
+            print("This test is to be tested manually since it opens chimera afterwards")
+            print("For testing this, edit this file and set doTest = True")
             return
 
 
@@ -258,29 +258,32 @@ class TestAtomicStructHandler(unittest.TestCase):
             url = 'ftp://ftp.ebi.ac.uk/pub/databases/emdb/structures/EMD-%s/map/emd_%s.map.gz' % \
                   (EMDBID, EMDBID)
             import urllib
-            urllib.urlretrieve(url, 'emd_%s.map.gz' % EMDBID)
+            urlretrieve(url, 'emd_%s.map.gz' % EMDBID)
             os.system("gunzip emd_%s.map.gz" % EMDBID)  # file is gzipped
         if False or doAll:  # set to False if you aready have the PDB file
-            aSH = AtomicStructHandler()
+            aSH = emconv.AtomicStructHandler()
             pdbFileName = aSH.readFromPDBDatabase(PDBID, type='pdb',
                                                   dir=os.getcwd())
         else:
             pdbFileName = 'pdb%s.ent' % PDBID.lower()
 
         # get 3D map sampling
-        from pyworkflow.em.headers import Ccp4Header
+        from pwem.convert.headers import Ccp4Header
         header = Ccp4Header("emd_%s.map" % EMDBID, readHeader=True)
         sampling, y, z = header.getSampling()
 
         def __runXmippProgram(program, args):
             """ Internal function to launch a Xmipp program. """
-            xmipp3 = pwutils.importFromPlugin('xmipp3')
+            from pwem import Domain
+            xmipp3 = Domain.importFromPlugin('xmipp3', doRaise=True)
             xmipp3.runXmippProgram(program, args)
 
         def __getXmippEulerAngles(matrix):
             """ Internal fuction to convert scipion to xmipp angles"""
-            geometryFromMatrix = importFromPlugin('xmipp3.convert',
-                                                  'geometryFromMatrix')
+            from pwem import Domain
+            geometryFromMatrix = Domain.importFromPlugin('xmipp3.convert',
+                                                         'geometryFromMatrix',
+                                                         doRaise=True)
 
             return geometryFromMatrix(matrix, False)
 
@@ -288,35 +291,34 @@ class TestAtomicStructHandler(unittest.TestCase):
             """ auxiliary function, transform PDB and 3dmap files"""
             # create a Scipion transformation matrix
             from numpy import deg2rad
-            rotation_matrix = euler_matrix(deg2rad(angles[0]),
+            rotation_matrix = emconv.euler_matrix(deg2rad(angles[0]),
                                            deg2rad(angles[1]),
                                            deg2rad(angles[2]), 'szyz')
-            translation = translation_matrix(shift)
-            M = concatenate_matrices(rotation_matrix, translation)
+            translation = emconv.translation_matrix(shift)
+            M = emconv.concatenate_matrices(rotation_matrix, translation)
 
             # apply it to the pdb file
             # if rotation move to center
-            aSH = AtomicStructHandler(pdbFileName)
+            aSH = emconv.AtomicStructHandler(pdbFileName)
             if (angles[0] != 0. or angles[1] != 0. or angles[2] != 0.):
-                from pyworkflow.em.convert import ImageHandler
-                ih = ImageHandler()
+                ih = emconv.ImageHandler()
                 x, y, z, n = ih.getDimensions("emd_%s.map" % EMDBID)
                 x /= 2.
                 y /= 2.
                 z /= 2.
                 localShift = [-x, -y, -z]
-                rotation_matrix = euler_matrix(0., 0., 0., 'szyz')
-                translation = translation_matrix(localShift)
-                localM = concatenate_matrices(rotation_matrix, translation)
+                rotation_matrix = emconv.euler_matrix(0., 0., 0., 'szyz')
+                translation = emconv.translation_matrix(localShift)
+                localM = emconv.concatenate_matrices(rotation_matrix, translation)
                 aSH.transform(localM, sampling=sampling)
 
             aSH.transform(M, sampling=sampling)
 
             if (angles[0] != 0. or angles[1] != 0. or angles[2] != 0.):
                 localShift = [x, y, z]
-                rotation_matrix = euler_matrix(0., 0., 0., 'szyz')
-                translation = translation_matrix(localShift)
-                localM = concatenate_matrices(rotation_matrix, translation)
+                rotation_matrix = emconv.euler_matrix(0., 0., 0., 'szyz')
+                translation = emconv.translation_matrix(localShift)
+                localM = emconv.concatenate_matrices(rotation_matrix, translation)
                 aSH.transform(localM, sampling=sampling)
 
             aSH.write("%s_%s_transformed.ent" % (suffix, PDBID.lower()))
@@ -344,7 +346,7 @@ class TestAtomicStructHandler(unittest.TestCase):
             header.writeHeader()
 
             # view the results with chimera
-            from pyworkflow.em.viewers import Chimera
+            from pwem.viewers import Chimera
             args = "%s %s %s %s" % (
                    pdbFileName,
                    "emd_%s.map" % EMDBID,
@@ -389,7 +391,7 @@ class TestAtomicStructHandler(unittest.TestCase):
 
     def testReadFromPDBDatabase(self):
         PDBID = '6CUD'
-        aSH = AtomicStructHandler()
+        aSH = emconv.AtomicStructHandler()
         # EMD-7620
         fileName = aSH.readFromPDBDatabase(PDBID, type='pdb', dir='/tmp')
         self.assertTrue(os.path.exists(fileName))
@@ -401,8 +403,8 @@ class TestAtomicStructHandler(unittest.TestCase):
         pdbID1 = '1P30'  # A
         pdbID2 = '1CJD'  # A, B, C
         outFile = "/tmp/nomodel.cif"  # A, A002, B, C
-        aSH1 = AtomicStructHandler()
-        aSH2 = AtomicStructHandler()
+        aSH1 = emconv.AtomicStructHandler()
+        aSH2 = emconv.AtomicStructHandler()
         #
         fileName1 = aSH1.readFromPDBDatabase(pdbID1, type='mmCif', dir='/tmp')
         fileName2 = aSH2.readFromPDBDatabase(pdbID2, type='mmCif', dir='/tmp')
@@ -428,8 +430,8 @@ class TestAtomicStructHandler(unittest.TestCase):
         pdbID1 = '1P30'  # A,
         pdbID2 = '1CJD'  # A, B, C
         outFile = "/tmp/nomodel.cif"  # A, A002, B, C, A003, B002, C002
-        aSH1 = AtomicStructHandler()
-        aSH2 = AtomicStructHandler()
+        aSH1 = emconv.AtomicStructHandler()
+        aSH2 = emconv.AtomicStructHandler()
         #
         fileName1 = aSH1.readFromPDBDatabase(pdbID1, type='mmCif', dir='/tmp')
         fileName2 = aSH2.readFromPDBDatabase(pdbID2, type='mmCif', dir='/tmp')
@@ -454,8 +456,8 @@ class TestAtomicStructHandler(unittest.TestCase):
         pdbID1 = '1P30'  # A
         pdbID2 = '1CJD'  # A, B,C
         outFile = "/tmp/model.cif"
-        aSH1 = AtomicStructHandler()
-        aSH2 = AtomicStructHandler()
+        aSH1 = emconv.AtomicStructHandler()
+        aSH2 = emconv.AtomicStructHandler()
         #
         fileName1 = aSH1.readFromPDBDatabase(pdbID1, type='mmCif', dir='/tmp')
         fileName2 = aSH2.readFromPDBDatabase(pdbID2, type='mmCif', dir='/tmp')
@@ -480,8 +482,8 @@ class TestAtomicStructHandler(unittest.TestCase):
     def testFunctionSelectChain(self):
         pdbID1 = '1P30'  # A,B,C
         outFile = "/tmp/model.cif"
-        aSH1 = AtomicStructHandler()
-        aSH2 = AtomicStructHandler()
+        aSH1 = emconv.AtomicStructHandler()
+        aSH2 = emconv.AtomicStructHandler()
         #
         fileName1 = aSH1.readFromPDBDatabase(pdbID1, type='mmCif', dir='/tmp')
         atomsNum1 = len([atom.id for atom in aSH1.getStructure().get_atoms()])

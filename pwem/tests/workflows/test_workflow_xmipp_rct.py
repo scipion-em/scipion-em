@@ -21,26 +21,19 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
+import pyworkflow.tests as pwtests
 
-from pyworkflow.em import ProtImportMicrographsTiltPairs, ProtUserSubSet
-from pyworkflow.tests import *
-from test_workflow import TestWorkflow
-from pyworkflow.utils import importFromPlugin
+import pwem.protocols as emprot
 
-XmippProtParticlePickingPairs = importFromPlugin('xmipp3.protocols', 'XmippProtParticlePickingPairs', doRaise=True)
-XmippProtExtractParticlesPairs = importFromPlugin('xmipp3.protocols', 'XmippProtExtractParticlesPairs')
-XmippProtCL2D = importFromPlugin('xmipp3.protocols', 'XmippProtCL2D')
-XmippProtRCT = importFromPlugin('xmipp3.protocols', 'XmippProtRCT')
-SAME_AS_PICKING = importFromPlugin('xmipp3.constants', 'SAME_AS_PICKING')
-OTHER = importFromPlugin('xmipp3.constants', 'OTHER')
+from .test_workflow import TestWorkflow
 
 
 # update this test when RCT workflow are implemented
 class TestXmippRCTWorkflow(TestWorkflow):
     @classmethod
     def setUpClass(cls):    
-        setupTestProject(cls)
-        cls.dataset = DataSet.getDataSet('rct')
+        pwtests.setupTestProject(cls)
+        cls.dataset = pwtests.DataSet.getDataSet('rct')
         cls.allCrdsDir = cls.dataset.getFile('positions')
         cls.micsUFn = cls.dataset.getFile('untilted')
         cls.micsTFn = cls.dataset.getFile('tilted')
@@ -48,7 +41,7 @@ class TestXmippRCTWorkflow(TestWorkflow):
         
     def testXmippRCTWorkflowBasic(self):
         #First, import a set of micrographs
-        protImport = self.newProtocol(ProtImportMicrographsTiltPairs, 
+        protImport = self.newProtocol(emprot.ProtImportMicrographsTiltPairs,
                                       patternUntilted=self.micsUFn,
                                       patternTilted=self.micsTFn,
                                       samplingRate=2.28, voltage=100,
@@ -60,6 +53,11 @@ class TestXmippRCTWorkflow(TestWorkflow):
                 
         # Then simulate a particle picking
         print("Running fake particle picking...")
+        from pwem import Domain
+        XmippProtParticlePickingPairs = Domain.importFromPlugin(
+                                                'xmipp3.protocols',
+                                                'XmippProtParticlePickingPairs',
+                                                doRaise=True)
         protPicking = self.newProtocol(XmippProtParticlePickingPairs,
                                        importFolder=self.allCrdsDir)
                 
@@ -73,6 +71,11 @@ class TestXmippRCTWorkflow(TestWorkflow):
 
         #Extract particles    
         print("Run extract particles with Same as picking")
+        XmippProtExtractParticlesPairs = Domain.importFromPlugin(
+                                            'xmipp3.protocols',
+                                            'XmippProtExtractParticlesPairs')
+        SAME_AS_PICKING = Domain.importFromPlugin('xmipp3.constants',
+                                                     'SAME_AS_PICKING')
         protExtract = self.newProtocol(XmippProtExtractParticlesPairs,
                                        downFactor=2,
                                        boxSize=60,
@@ -88,6 +91,8 @@ class TestXmippRCTWorkflow(TestWorkflow):
 
         # Classify using Xmipp CL2D
         print("Run CL2D")
+        XmippProtCL2D = Domain.importFromPlugin('xmipp3.protocols',
+                                                   'XmippProtCL2D')
         protCL2D = self.newProtocol(XmippProtCL2D,
                                     numberOfClasses=10,
                                     numberOfInitialClasses=1,
@@ -100,6 +105,8 @@ class TestXmippRCTWorkflow(TestWorkflow):
         
         # Random Conical Tilt
         print("Run Random Conical Tilt")
+        XmippProtRCT = Domain.importFromPlugin('xmipp3.protocols',
+                                                  'XmippProtRCT')
         protRCT = self.newProtocol(XmippProtRCT)
         protRCT.inputParticlesTiltPair.set(protExtract.outputParticlesTiltPair)
         protRCT.inputParticles.set(protCL2D.outputClasses)

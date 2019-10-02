@@ -23,34 +23,28 @@
 
 import time
 import os
-from pyworkflow.em.data import SetOfCTF
-from pyworkflow.tests import BaseTest, setupTestProject
-from pyworkflow.em.protocol import ProtCreateStreamData, ProtMonitorSystem
-from pyworkflow.em.protocol.monitors.pynvml import nvmlInit, NVMLError
-from pyworkflow.protocol import getProtocolFromDb
-from pyworkflow.em.protocol.protocol_create_stream_data import \
-    SET_OF_RANDOM_MICROGRAPHS
-from pyworkflow.utils import importFromPlugin
 
-XmippProtCTFMicrographs = importFromPlugin('xmipp3.protocols.protocol_ctf_micrographs',
-                                           'XmippProtCTFMicrographs', doRaise=True)
-ProtCTFFind = importFromPlugin('grigoriefflab.protocols', 'ProtCTFFind', doRaise=True)
-ProtGctf = importFromPlugin('gctf.protocols', 'ProtGctf', doRaise=True)
+import pyworkflow.tests as pwtests
+import pyworkflow.protocol as pwprot
 
+import pwem.objects as emobj
+import pwem.protocols as emprot
 
 # Load the number of movies for the simulation, by default equal 5, but
 # can be modified in the environment
+from pwem import Domain
+
 MICS = os.environ.get('SCIPION_TEST_MICS', 6)
 CTF_SQLITE = "ctfs.sqlite"
 
 
-class TestCtfStreaming(BaseTest):
+class TestCtfStreaming(pwtests.BaseTest):
     @classmethod
     def setUpClass(cls):
-        setupTestProject(cls)
+        pwtests.setupTestProject(cls)
 
     def _updateProtocol(self, prot):
-        prot2 = getProtocolFromDb(prot.getProject().path,
+        prot2 = pwprot.getProtocolFromDb(prot.getProject().path,
                                   prot.getDbPath(),
                                   prot.getObjId())
         # Close DB connections
@@ -83,7 +77,7 @@ class TestCtfStreaming(BaseTest):
                     continue
 
                 if prot.hasAttribute("outputCTF"):
-                    ctfSet = SetOfCTF(filename=prot._getPath(CTF_SQLITE))
+                    ctfSet = emobj.SetOfCTF(filename=prot._getPath(CTF_SQLITE))
                     baseFn = prot._getPath(CTF_SQLITE)
                     self.assertTrue(os.path.isfile(baseFn))
                     counter = 0
@@ -110,14 +104,17 @@ class TestCtfStreaming(BaseTest):
                   'samplingRate': 1.25,
                   'creationInterval': 15,
                   'delay': 0,
-                  'setof': SET_OF_RANDOM_MICROGRAPHS}  # SetOfMicrographs
+                  'setof': emprot.SET_OF_RANDOM_MICROGRAPHS}  # SetOfMicrographs
 
         # create mic in streaming mode
-        protStream = self.newProtocol(ProtCreateStreamData, **kwargs)
+        protStream = self.newProtocol(emprot.ProtCreateStreamData, **kwargs)
         protStream.setObjLabel('create Stream Mic')
         self.proj.launchProtocol(protStream, wait=False)
 
         # 1st ctf - ctffind4 in streaming
+
+        ProtCTFFind = Domain.importFromPlugin('grigoriefflab.protocols',
+                                              'ProtCTFFind', doRaise=True)
         protCTF = ProtCTFFind(useCftfind4=True)
 
         protCTF.inputMicrographs.set(protStream)
@@ -134,6 +131,11 @@ class TestCtfStreaming(BaseTest):
         kwargs = {'ctfDownFactor': 2,
                   'numberOfThreads': 4
                   }
+
+        XmippProtCTFMicrographs = Domain.importFromPlugin(
+            'xmipp3.protocols.protocol_ctf_micrographs',
+            'XmippProtCTFMicrographs', doRaise=True)
+
         protCTF2 = self.newProtocol(XmippProtCTFMicrographs, **kwargs)
         protCTF2.inputMicrographs.set(protStream)
         protCTF2.inputMicrographs.setExtended('outputMicrographs')
@@ -144,14 +146,16 @@ class TestCtfStreaming(BaseTest):
         protCTF3 = None
         try:
             # check if box has nvidia cuda libs.
-            nvmlInit()  # fails if not GPU attached
+            emprot.nvmlInit()  # fails if not GPU attached
+            ProtGctf = Domain.importFromPlugin('gctf.protocols', 'ProtGctf',
+                                               doRaise=True)
             protCTF3 = ProtGctf()
             protCTF3.inputMicrographs.set(protStream)
             protCTF3.inputMicrographs.setExtended('outputMicrographs')
             protCTF3.ctfDownFactor.set(2)
             self.proj.scheduleProtocol(protCTF3)
 
-        except NVMLError as err:
+        except emprot.NVMLError as err:
             print("Cannot find GPU."
                   "I assume that no GPU is connected to this machine")
 

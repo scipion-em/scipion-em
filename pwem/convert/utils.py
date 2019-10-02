@@ -23,11 +23,10 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-import os
-import sys
 
 import os
 import sys
+
 
 def getSubsetByDefocus(inputCTFs, inputMics, nMics):
     """ Return a subset of inputMics that covers the whole range of defocus
@@ -59,12 +58,12 @@ def getSubsetByDefocus(inputCTFs, inputMics, nMics):
 
 # TODO: use biopython
 def downloadPdb(pdbId, pdbFile, log=None):
-    print """use AtomicStructHandler()
+    print("""use AtomicStructHandler()
 
     aSH = AtomicStructHandler()
     pdbFileName = aSH.readFromPDBDatabase(pdbId, type='mmCif',
                                           dir=os.getcwd())
-"""
+     """)
     pdbGz = pdbFile + ".gz"
     result = (__downloadPdb(pdbId, pdbGz, log) and
               __unzipPdb(pdbGz, pdbFile, log))
@@ -126,7 +125,7 @@ def __unzipPdb(pdbGz, pdbFile, log, cleanFile=True):
         g.writelines(f.readlines())
         f.close()
         g.close()
-    except:
+    except Exception as ex:
         e = sys.exc_info()[0]
         if log:
             log.error('ERROR opening gzipped file %s: %s' % (pdbGz, e))
@@ -135,7 +134,7 @@ def __unzipPdb(pdbGz, pdbFile, log, cleanFile=True):
     try:
         if success:
             os.remove(pdbGz)
-    except:
+    except Exception as ex:
         e = sys.exc_info()[0]
         if log:
             log.error('ERROR deleting gzipped file: %s' % e)

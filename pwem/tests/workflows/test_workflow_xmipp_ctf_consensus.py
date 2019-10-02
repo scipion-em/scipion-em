@@ -22,26 +22,21 @@
 # *
 # ***************************************************************************/
 
-from pyworkflow.tests import BaseTest, DataSet, setupTestProject
-from pyworkflow.em.protocol import ProtImportMicrographs, ProtCreateStreamData
-from pyworkflow.utils import importFromPlugin
+import pyworkflow.tests as pwtests
 
-ProtCTFFind = importFromPlugin('grigoriefflab.protocols', 'ProtCTFFind', doRaise=True)
-XmippProtCTFMicrographs = importFromPlugin('xmipp3.protocols',
-                                           'XmippProtCTFMicrographs', doRaise=True)
-XmippProtCTFConsensus = importFromPlugin('xmipp3.protocols',
-                                         'XmippProtCTFConsensus', doRaise=True)
+from pwem import Domain
+import pwem.protocols as emprot
 
 
-class TestCtfConsensus(BaseTest):
+class TestCtfConsensus(pwtests.BaseTest):
     """ Check if the Xmipp-CTFconsensus rejects CTFs (and the coorrespondig mics)
         when two CTF estimations give different results,
         and accept when the two estimations give similar results.
     """
     @classmethod
     def setUpClass(cls):
-        setupTestProject(cls)
-        cls.dataset = DataSet.getDataSet('xmipp_tutorial')
+        pwtests.setupTestProject(cls)
+        cls.dataset = pwtests.DataSet.getDataSet('xmipp_tutorial')
         cls.micsFn = cls.dataset.getFile('allMics')
 
     def checkCTFs(self, protConsensus, refCTFs, refMics, label=''):
@@ -70,7 +65,7 @@ class TestCtfConsensus(BaseTest):
 
     def test1(self):
         # Import a set of micrographs
-        protImport = self.newProtocol(ProtImportMicrographs,
+        protImport = self.newProtocol(emprot.ProtImportMicrographs,
                                       filesPath=self.micsFn,
                                       samplingRate=1.237, voltage=300)
         self.launchProtocol(protImport)
@@ -78,7 +73,7 @@ class TestCtfConsensus(BaseTest):
                              "There was a problem with the import")
 
         # Create pure noise micrographs (to force a Discarded consensus set)
-        protStream = self.newProtocol(ProtCreateStreamData,
+        protStream = self.newProtocol(emprot.ProtCreateStreamData,
                                       xDim=9216,
                                       yDim=9441,
                                       nDim=3,
@@ -88,11 +83,16 @@ class TestCtfConsensus(BaseTest):
         self.proj.launchProtocol(protStream, wait=False)
 
         # Computes the CTF with Xmipp
+        XmippProtCTFMicrographs = Domain.importFromPlugin('xmipp3.protocols',
+                                                             'XmippProtCTFMicrographs',
+                                                             doRaise=True)
         protCTF1 = self.newProtocol(XmippProtCTFMicrographs)
         protCTF1.inputMicrographs.set(protImport.outputMicrographs)
         self.proj.launchProtocol(protCTF1, wait=False)
 
         # Computes the CTF with CTFFind4
+        ProtCTFFind = Domain.importFromPlugin('grigoriefflab.protocols',
+                                              'ProtCTFFind', doRaise=True)
         protCTF2 = self.newProtocol(ProtCTFFind)
         protCTF2.inputMicrographs.set(protImport.outputMicrographs)
         self.proj.launchProtocol(protCTF2, wait=False)
@@ -107,6 +107,9 @@ class TestCtfConsensus(BaseTest):
         # Computes the Consensus of GOOD CTFs
         self._waitOutput(protCTF1, "outputCTF")
         self._waitOutput(protCTF2, "outputCTF")
+        XmippProtCTFConsensus = Domain.importFromPlugin('xmipp3.protocols',
+                                                           'XmippProtCTFConsensus',
+                                                           doRaise=True)
         protCTFcons = self.newProtocol(XmippProtCTFConsensus,
                                        useDefocus=False,
                                        useAstigmatism=False,

@@ -24,29 +24,22 @@
 # *
 # **************************************************************************
 
+import pyworkflow.tests as pwtests
 
-from pyworkflow.em.protocol import ProtImportPdb, ProtImportVolumes, ProtImportParticles
-from pyworkflow.tests import setupTestProject, DataSet
-from pyworkflow.utils import importFromPlugin
-from test_workflow import TestWorkflow
+from pwem import Domain
+import pwem.protocols as emprot
 
-XmippProtNMA = importFromPlugin('xmipp3.protocols', 'XmippProtNMA', doRaise=True)
-XmippProtAlignmentNMA = importFromPlugin('xmipp3.protocols', 'XmippProtAlignmentNMA')
-XmippProtDimredNMA = importFromPlugin('xmipp3.protocols', 'XmippProtDimredNMA')
-NMA_CUTOFF_ABS = importFromPlugin('xmipp3.protocols', 'NMA_CUTOFF_ABS')
-XmippProtConvertToPseudoAtoms = importFromPlugin('xmipp3.protocols',
-                                                 'XmippProtConvertToPseudoAtoms')
-   
-   
-   
+from .test_workflow import TestWorkflow
+
+
 class TestNMA(TestWorkflow):
     """ Check the images are converted properly to spider format. """
     
     @classmethod
     def setUpClass(cls):    
         # Create a new project
-        setupTestProject(cls)
-        cls.ds = DataSet.getDataSet('nma')
+        pwtests.setupTestProject(cls)
+        cls.ds = pwtests.DataSet.getDataSet('nma')
     
     def test_nma1(self):
         """ Run NMA simple workflow for both Atomic and Pseudoatoms. """
@@ -56,11 +49,16 @@ class TestNMA(TestWorkflow):
         #------------------------------------------------
         
         # Import a PDB
-        protImportPdb = self.newProtocol(ProtImportPdb, inputPdbData=1,
+        protImportPdb = self.newProtocol(emprot.ProtImportPdb, inputPdbData=1,
                                          pdbFile=self.ds.getFile('pdb'))
         self.launchProtocol(protImportPdb)
         
         # Launch NMA for PDB imported
+        XmippProtNMA = Domain.importFromPlugin('xmipp3.protocols',
+                                               'XmippProtNMA',
+                                               doRaise=True)
+        NMA_CUTOFF_ABS = Domain.importFromPlugin('xmipp3.protocols',
+                                                 'NMA_CUTOFF_ABS')
         protNMA1 = self.newProtocol(XmippProtNMA,
                                     cutoffMode=NMA_CUTOFF_ABS)
         protNMA1.inputStructure.set(protImportPdb.outputPdb)
@@ -68,12 +66,14 @@ class TestNMA(TestWorkflow):
         
         # Import the set of particles 
         # (in this order just to be in the middle in the tree)
-        protImportParts = self.newProtocol(ProtImportParticles,
+        protImportParts = self.newProtocol(emprot.ProtImportParticles,
                                            filesPath=self.ds.getFile('particles'),
                                            samplingRate=1.0)
         self.launchProtocol(protImportParts) 
 
         # Launch NMA alignment, but just reading result from a previous metadata
+        XmippProtAlignmentNMA = Domain.importFromPlugin('xmipp3.protocols',
+                                                        'XmippProtAlignmentNMA')
         protAlignment = self.newProtocol(XmippProtAlignmentNMA,
                                          modeList='7-9',
                                          copyDeformations=self.ds.getFile('gold/pseudo_run1_images.xmd'))
@@ -81,7 +81,9 @@ class TestNMA(TestWorkflow):
         protAlignment.inputParticles.set(protImportParts.outputParticles)
         self.launchProtocol(protAlignment)       
         
-        # Launch Dimred after NMA alignment 
+        # Launch Dimred after NMA alignment
+        XmippProtDimredNMA = Domain.importFromPlugin('xmipp3.protocols',
+                                                     'XmippProtDimredNMA')
         protDimRed = self.newProtocol(XmippProtDimredNMA,
                                       dimredMethod=0, # PCA
                                       reducedDim=2)
@@ -94,20 +96,23 @@ class TestNMA(TestWorkflow):
         #------------------------------------------------
         # Import the set of particles 
         # (in this order just to be in the middle in the tree)
-        protImportParts = self.newProtocol(ProtImportParticles,
+        protImportParts = self.newProtocol(emprot.ProtImportParticles,
                                            filesPath=self.ds.getFile('particles'),
                                            samplingRate=1.0)
         self.launchProtocol(protImportParts) 
         
         # Import a Volume
-        protImportVol = self.newProtocol(ProtImportVolumes,
+        protImportVol = self.newProtocol(emprot.ProtImportVolumes,
                                          filesPath=self.ds.getFile('vol'),
                                          samplingRate=1.0)
         self.launchProtocol(protImportVol)
         
         # Convert the Volume to Pdb
-        NMA_MASK_THRE = importFromPlugin('xmipp3.protocols.pdb.protocol_pseudoatoms_base',
-                                         'NMA_MASK_THRE')
+        NMA_MASK_THRE = Domain.importFromPlugin('xmipp3.protocols.pdb.protocol_pseudoatoms_base',
+                                                'NMA_MASK_THRE')
+        XmippProtConvertToPseudoAtoms = Domain.importFromPlugin(
+            'xmipp3.protocols',
+            'XmippProtConvertToPseudoAtoms')
         protConvertVol = self.newProtocol(XmippProtConvertToPseudoAtoms)
         protConvertVol.inputStructure.set(protImportVol.outputVolume)
         protConvertVol.maskMode.set(NMA_MASK_THRE)
@@ -116,12 +121,19 @@ class TestNMA(TestWorkflow):
         self.launchProtocol(protConvertVol)
         
         # Launch NMA with Pseudoatoms
+        XmippProtNMA = Domain.importFromPlugin('xmipp3.protocols',
+                                               'XmippProtNMA',
+                                               doRaise=True)
+        NMA_CUTOFF_ABS = Domain.importFromPlugin('xmipp3.protocols',
+                                                 'NMA_CUTOFF_ABS')
         protNMA2 = self.newProtocol(XmippProtNMA,
                                     cutoffMode=NMA_CUTOFF_ABS)
         protNMA2.inputStructure.set(protConvertVol.outputPdb)
         self.launchProtocol(protNMA2)
                                           
         # Launch NMA alignment, but just reading result from a previous metadata
+        XmippProtAlignmentNMA = Domain.importFromPlugin('xmipp3.protocols',
+                                                        'XmippProtAlignmentNMA')
         protAlignment = self.newProtocol(XmippProtAlignmentNMA,
                                          modeList='7-9',
                                          copyDeformations=self.ds.getFile('gold/pseudo_run1_images.xmd'))
@@ -129,7 +141,9 @@ class TestNMA(TestWorkflow):
         protAlignment.inputParticles.set(protImportParts.outputParticles)
         self.launchProtocol(protAlignment)       
         
-        # Launch Dimred after NMA alignment 
+        # Launch Dimred after NMA alignment
+        XmippProtDimredNMA = Domain.importFromPlugin('xmipp3.protocols',
+                                                     'XmippProtDimredNMA')
         protDimRed = self.newProtocol(XmippProtDimredNMA,
                                       dimredMethod=0, # PCA
                                       reducedDim=2)

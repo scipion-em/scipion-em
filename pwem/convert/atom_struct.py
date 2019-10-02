@@ -33,7 +33,7 @@
 
 from __future__ import print_function
 import os
-import numpy
+import numpy as np
 from collections import defaultdict
 
 from Bio.PDB.Dice import ChainSelector
@@ -179,7 +179,6 @@ class scipionMMCIFIO(MMCIFIO):
             super(scipionMMCIFIO, self)._save_structure(out_file,
                                                         select,
                                                         preserve_atom_numbering)
-
 
 
 class AtomicStructHandler:
@@ -374,7 +373,6 @@ class AtomicStructHandler:
             label = label + "_%s" % str(chain_id)
         return label
 
-
     def readLowLevel(self, fileName):
         """ Return a dictionary with all mmcif fields. you should parse them
             Example: get the list of the y coordinates of all atoms
@@ -383,7 +381,7 @@ class AtomicStructHandler:
         """
 
         if fileName.endswith(".pdb"):
-            print ("Low level access to PDB is not implemented")
+            print("Low level access to PDB is not implemented")
         else:
             dict = MMCIF2Dict(fileName)
         return dict
@@ -408,7 +406,7 @@ class AtomicStructHandler:
         """
 
         if fileName.endswith(".pdb"):
-            print ("Low level access to PDB is not implemented")
+            print("Low level access to PDB is not implemented")
         else:
             if self.ioCIF is None:
                 self.ioCIF = MMCIFIO()
@@ -574,7 +572,7 @@ class AtomicStructHandler:
         :return: no return, new data overwrites entity
         """
         # bioPhython and Scipion conventions do not match
-        rotation_matrix = numpy.transpose(transformation_matrix[:3, :3])
+        rotation_matrix = np.transpose(transformation_matrix[:3, :3])
         # from geometry get euler angles and recreate matrix
         translation = translation_from_matrix(transformation_matrix)
         translation = [x * sampling for x in translation]

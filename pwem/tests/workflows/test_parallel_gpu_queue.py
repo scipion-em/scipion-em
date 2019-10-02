@@ -23,27 +23,14 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-
-from os.path import exists
+import json
 import subprocess
 
 from pyworkflow.tests import *
-from pyworkflow.em.protocol import *
-from pyworkflow.protocol.launch import schedule
 import pyworkflow.utils as pwutils
-from pyworkflow.utils.path import *
 
-try:
-    from relion.protocols import *
-    from relion.convert import *
-except:
-    pwutils.pluginNotFound('relion')
-
-try:
-    from xmipp3.protocols import *
-    from xmipp3.convert import *
-except:
-    pwutils.pluginNotFound('xmipp')
+from pwem import Domain
+import pwem.protocols as emprot
 
 # --- Set this to match with your queue system ---
 #  json params to fill the queue form, see SCIPION_HOME/config/host.conf
@@ -64,7 +51,7 @@ class TestQueueBase(BaseTest):
     @classmethod
     def runImportParticles(cls, pattern, samplingRate, checkStack=False):
         """ Run an Import particles protocol. """
-        protImport = cls.newProtocol(ProtImportParticles, 
+        protImport = cls.newProtocol(emprot.ProtImportParticles, 
                                      filesPath=pattern,
                                      samplingRate=samplingRate,
                                      checkStack=checkStack)
@@ -78,7 +65,9 @@ class TestQueueBase(BaseTest):
     @classmethod
     def runNormalizeParticles(cls, particles):
         """ Run normalize particles protocol """
-        protPreproc = cls.newProtocol(ProtRelionPreprocessParticles,
+        relionProtocols = Domain.importFromPlugin('relion.protocols',
+                                                     doRaise=True)
+        protPreproc = cls.newProtocol(relionProtocols.ProtRelionPreprocessParticles,
                                       doNormalize=True)
         protPreproc.inputParticles.set(particles)
         cls.launchProtocol(protPreproc)
@@ -144,11 +133,12 @@ class TestQueueBase(BaseTest):
                 return  # I don't know why, but we cannot retrieve the output, permissions???
             else:
                 # Check that job files have been created
-                jobFilesPath = join(getParentFolder(prot.getLogPaths()[0]),
+                jobFilesPath = join(pwutils.getParentFolder(prot.getLogPaths()[0]),
                             str(prot.getObjId()))
 
-                self.assertTrue(exists(jobFilesPath + "-0-1.out") and exists(
-                jobFilesPath + "-0-1.err") and exists(jobFilesPath + "-0-1.job"),
+                self.assertTrue(
+                    pwutils.exists(jobFilesPath + "-0-1.out") and pwutils.exists(
+                jobFilesPath + "-0-1.err") and pwutils.exists(jobFilesPath + "-0-1.job"),
                                 "Job queue files not found in log folder, job did not make it to the queue.")
 
         self.assertIsNotNone(prot.outputClasses,
@@ -173,7 +163,9 @@ class TestQueueBase(BaseTest):
             :param useQueue: Use the queue system or not
             :return: the launched protocol
         """
-        prot2D = self.newProtocol(ProtRelionClassify2D,
+        relionProtocols = Domain.importFromPlugin('relion.protocols',
+                                                   doRaise=True)
+        prot2D = self.newProtocol(relionProtocols.ProtRelionClassify2D,
                                   doCTF=False, maskDiameterA=340,
                                   numberOfMpi=MPI, numberOfThreads=threads)
         prot2D.numberOfClasses.set(4)
@@ -358,8 +350,9 @@ class TestQueueSteps(TestQueueBase):
         cls.protImport = cls.runImportParticles(cls.particlesFn, 3.5)
 
     def testStepsNoGPU(self):
-
-        protXmippPreproc = self.newProtocol(XmippProtPreprocessParticles,
+        xmipp3Protocols = Domain.importFromPlugin('xmipp3.protocols',
+                                                     doRaise=True)
+        protXmippPreproc = self.newProtocol(xmipp3Protocols.XmippProtPreprocessParticles,
                                     doNormalize=True, doRemoveDust=True)
 
         protXmippPreproc.inputParticles.set(self.protImport.outputParticles)
@@ -376,11 +369,16 @@ class TestQueueSteps(TestQueueBase):
 
         # Check that job files have been created
 
-        jobFilesPath = join(getParentFolder(protXmippPreproc.getLogPaths()[0]), str(protXmippPreproc.getObjId()))
+        jobFilesPath = join(pwutils.getParentFolder(protXmippPreproc.getLogPaths()[0]), str(protXmippPreproc.getObjId()))
 
-        self.assertTrue(exists(jobFilesPath + "-0-1.out") and exists(jobFilesPath + "-0-1.err") and exists(jobFilesPath + "-0-1.job") \
-                    and exists(jobFilesPath + "-0-2.out") and exists(jobFilesPath + "-0-2.err") and exists(jobFilesPath + "-0-2.job")
-                        , "Job queue files not found on log folder, job did not make it to the queue.")
+        self.assertTrue(pwutils.exists(jobFilesPath + "-0-1.out") and
+                        pwutils.exists(jobFilesPath + "-0-1.err") and
+                        pwutils.exists(jobFilesPath + "-0-1.job") and
+                        pwutils.exists(jobFilesPath + "-0-2.out") and
+                        pwutils.exists(jobFilesPath + "-0-2.err") and
+                        pwutils.exists(jobFilesPath + "-0-2.job"),
+                        "Job queue files not found on log folder, job did "
+                        "not make it to the queue.")
 
         # Check that results have been produced
         self.assertIsNotNone(protXmippPreproc.outputParticles,

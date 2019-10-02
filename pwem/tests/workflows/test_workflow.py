@@ -1,8 +1,8 @@
 
-from pyworkflow.tests import BaseTest
+import pyworkflow.tests as pwtest
     
     
-class TestWorkflow(BaseTest):
+class TestWorkflow(pwtest.BaseTest):
     
     protDict = {}
         
@@ -33,7 +33,7 @@ class TestWorkflow(BaseTest):
         """ Convert list to set and replace the key
         in the filename by the protocol working dir. 
         """
-        for k, v in self.protDict.iteritems():
+        for k, v in self.protDict.items():
             if filename.startswith(k):
                 return filename.replace(k, v.getWorkingDir())
         return filename

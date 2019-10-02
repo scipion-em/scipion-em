@@ -25,10 +25,14 @@
 # **************************************************************************
 
 from math import radians
-from itertools import izip
+try:
+    from itertools import izip
+except ImportError:
+    izip = zip
 
 from pyworkflow.gui.plotter import Plotter, plt
-import pyworkflow.em.metadata as md
+
+import pwem.metadata as md
 
 
 class EmPlotter(Plotter):
@@ -185,7 +189,7 @@ class PlotData:
             setClassName = db.getProperty('self') # get the set class name
 
         # FIXME: Check why the import is here
-        from pyworkflow.em import Domain
+        from pwem import Domain
         setObj = Domain.getObjects()[setClassName](filename=dbName, prefix=dbPreffix)
         return setObj
     

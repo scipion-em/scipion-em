@@ -29,20 +29,16 @@ from glob import glob
 import threading
 
 import pyworkflow.utils as pwutils
-from pyworkflow.utils import importFromPlugin
-from pyworkflow.tests import BaseTest, setupTestProject, DataSet, getProtocolFromDb
-from pyworkflow.em import ImageHandler
-from pyworkflow.em.protocol import (ProtImportMovies, ProtMonitorSummary,
-                                    ProtImportMicrographs, ProtImportAverages)
+import pyworkflow.tests as pwtests
 
-XmippProtMovieCorr = importFromPlugin('xmipp3.protocols', 'XmippProtMovieCorr', doRaise=True)
-ProtCTFFind = importFromPlugin('grigoriefflab.protocols', 'ProtCTFFind', doRaise=True)
-ProtRelionExtractParticles = importFromPlugin('relion.protocols', 'ProtRelionExtractParticles', doRaise=True)
-ProtRelion2Autopick = importFromPlugin('relion.protocols', 'ProtRelion2Autopick')
+from pwem import Domain
+import pwem.convert as emconv
+import pwem.protocols as emprot
 
 
 # Load the number of movies for the simulation, by default equal 5, but
 # can be modified in the environement
+
 def _getVar(varSuffix, varType, default=None):
     return varType(os.environ.get('SCIPION_TEST_STREAM_%s' % varSuffix, default))
 
@@ -53,11 +49,11 @@ DELAY = _getVar('DELAY', int, 10)  # in seconds
 TIMEOUT = _getVar('TIMEOUT', int, 60)
 
 
-class TestStreamingWorkflow(BaseTest):
+class TestStreamingWorkflow(pwtests.BaseTest):
     @classmethod
     def setUpClass(cls):
-        setupTestProject(cls)
-        cls.ds = DataSet.getDataSet('movies')
+        pwtests.setupTestProject(cls)
+        cls.ds = pwtests.DataSet.getDataSet('movies')
         cls.importThread = threading.Thread(name="createInputLinks",
                                             target=cls._createInputLinks)
         cls.importThread.start()
@@ -92,7 +88,7 @@ class TestStreamingWorkflow(BaseTest):
 
         def _loadProt(prot):
             # Load the last version of the protocol from its own database
-            prot2 = getProtocolFromDb(prot.getProject().path,
+            prot2 = pwtests.getProtocolFromDb(prot.getProject().path,
                                       prot.getDbPath(),
                                       prot.getObjId())
             # Close DB connections
@@ -145,9 +141,9 @@ class TestStreamingWorkflow(BaseTest):
     def test_pattern(self):
         protocols = []  # append here all protocols to make final checks
         # ----------- IMPORT MOVIES -------------------
-        protImport = self.newProtocol(ProtImportMovies,
+        protImport = self.newProtocol(emprot.ProtImportMovies,
                                       objLabel='import movies',
-                                      importFrom=ProtImportMovies.IMPORT_FROM_FILES,
+                                      importFrom=emprot.ProtImportMovies.IMPORT_FROM_FILES,
                                       filesPath=os.path.abspath(self.proj.getTmpPath()),
                                       filesPattern="movie*%s" % self.ext,
                                       amplitudConstrast=0.1,
@@ -161,6 +157,9 @@ class TestStreamingWorkflow(BaseTest):
         protocols.append(protImport)
 
         # ----------- ALIGNMENT --------------------------
+        XmippProtMovieCorr = Domain.importFromPlugin('xmipp3.protocols',
+                                                        'XmippProtMovieCorr',
+                                                        doRaise=True)
         protOF = self.newProtocol(XmippProtMovieCorr,
                                   objLabel='Movie alignment',
                                   doSaveMovie=False,
@@ -177,6 +176,8 @@ class TestStreamingWorkflow(BaseTest):
         protocols.append(protOF)
 
         # --------- CTF ESTIMATION ---------------------------
+        ProtCTFFind = Domain.importFromPlugin('grigoriefflab.protocols',
+                                                 'ProtCTFFind', doRaise=True)
         protCTF = self.newProtocol(ProtCTFFind,
                                    objLabel='ctffind4')
         protCTF.inputMicrographs.set(protOF)
@@ -186,7 +187,7 @@ class TestStreamingWorkflow(BaseTest):
         protocols.append(protCTF)
 
         # --------- SUMMARY MONITOR --------------------------
-        protMonitor = self.newProtocol(ProtMonitorSummary,
+        protMonitor = self.newProtocol(emprot.ProtMonitorSummary,
                                        objLabel='summary')
         protMonitor.inputProtocols.append(protImport)
         protMonitor.inputProtocols.append(protOF)
@@ -198,11 +199,11 @@ class TestStreamingWorkflow(BaseTest):
         self.finalChecks(protImport.outputMovies, protocols)
 
 
-class TestBaseRelionStreaming(BaseTest):
+class TestBaseRelionStreaming(pwtests.BaseTest):
     @classmethod
     def setUpClass(cls):
-        setupTestProject(cls)
-        cls.ds = DataSet.getDataSet('relion_tutorial')
+        pwtests.setupTestProject(cls)
+        cls.ds = pwtests.DataSet.getDataSet('relion_tutorial')
         cls.importThread = threading.Thread(name="createInputLinksR",
                                             target=cls._createInputLinks)
         cls.importThread.start()
@@ -238,7 +239,7 @@ class TestRelionExtractStreaming(TestBaseRelionStreaming):
     def testRisosome(self):
         # First, import a set of micrographs
         print("Importing a set of micrographs...")
-        protImport = self.newProtocol(ProtImportMicrographs,
+        protImport = self.newProtocol(emprot.ProtImportMicrographs,
                                       filesPath=os.path.abspath(self.proj.getTmpPath()),
                                       filesPattern="*%s" % self.ext,
                                       samplingRateMode=1,
@@ -254,6 +255,8 @@ class TestRelionExtractStreaming(TestBaseRelionStreaming):
 
         # Now estimate CTF on the micrographs with ctffind
         print("Performing CTFfind...")
+        ProtCTFFind = Domain.importFromPlugin('grigoriefflab.protocols',
+                                                 'ProtCTFFind', doRaise=True)
         protCTF = self.newProtocol(ProtCTFFind,
                                    useCtffind4=True,
                                    lowRes=0.02, highRes=0.45,
@@ -267,6 +270,9 @@ class TestRelionExtractStreaming(TestBaseRelionStreaming):
         
         # Now pick particles on the micrographs with Relion
         print("Performing Relion Autopicking (LoG)...")
+
+        ProtRelion2Autopick = Domain.importFromPlugin('relion.protocols',
+                                                         'ProtRelion2Autopick')
         protPick = self.newProtocol(ProtRelion2Autopick,
                                     runType=1,
                                     referencesType=1,
@@ -279,7 +285,10 @@ class TestRelionExtractStreaming(TestBaseRelionStreaming):
         self.proj.launchProtocol(protPick, wait=False)
         self._waitOutput(protPick, 'outputCoordinates')
 
-        
+        ProtRelionExtractParticles = Domain.importFromPlugin(
+            'relion.protocols',
+            'ProtRelionExtractParticles',
+            doRaise=True)
         protExtract = self.newProtocol(ProtRelionExtractParticles,
                                        objLabel='extract box=64',
                                        boxSize=64,
@@ -298,7 +307,7 @@ class TestRelionExtractStreaming(TestBaseRelionStreaming):
 class TestRelionPickStreaming(TestBaseRelionStreaming):
     def testRisosome(self):
         print("Importing 2D averages (subset of 4)")
-        ih = ImageHandler()
+        ih = emconv.ImageHandler()
         classesFn = self.ds.getFile('import/classify2d/extra/'
                                     'relion_it015_classes.mrcs')
     
@@ -309,7 +318,7 @@ class TestRelionPickStreaming(TestBaseRelionStreaming):
         for i, index in enumerate([5, 16, 17, 18, 24]):
             ih.convert((index, classesFn), (i + 1, outputFn))
     
-        protAvgs = self.newProtocol(ProtImportAverages,
+        protAvgs = self.newProtocol(emprot.ProtImportAverages,
                                     objLabel='avgs - 5',
                                     filesPath=inputTmp,
                                     filesPattern=outputName,
@@ -319,7 +328,7 @@ class TestRelionPickStreaming(TestBaseRelionStreaming):
         
         # First, import a set of micrographs
         print("Importing a set of micrographs...")
-        protImport = self.newProtocol(ProtImportMicrographs,
+        protImport = self.newProtocol(emprot.ProtImportMicrographs,
                                       filesPath=os.path.abspath(self.proj.getTmpPath()),
                                       filesPattern="*%s" % self.ext,
                                       samplingRateMode=1,
@@ -335,6 +344,8 @@ class TestRelionPickStreaming(TestBaseRelionStreaming):
         
         # Now estimate CTF on the micrographs with ctffind
         print("Performing CTFfind...")
+        ProtCTFFind = Domain.importFromPlugin('grigoriefflab.protocols',
+                                                 'ProtCTFFind', doRaise=True)
         protCTF = self.newProtocol(ProtCTFFind,
                                    useCtffind4=True,
                                    lowRes=0.02, highRes=0.45,
@@ -349,6 +360,9 @@ class TestRelionPickStreaming(TestBaseRelionStreaming):
         self._waitUntilMinSize(protCTF.outputCTF)
 
         # Select some good averages from the iterations mrcs a
+
+        ProtRelion2Autopick = Domain.importFromPlugin('relion.protocols',
+                                                         'ProtRelion2Autopick')
         protPick = self.newProtocol(ProtRelion2Autopick,
                                     objLabel='autopick refs',
                                     runType=0,
@@ -366,14 +380,14 @@ class TestRelionPickStreaming(TestBaseRelionStreaming):
         self.launchProtocol(protPick)
 
 
-class TestFrameStacking(BaseTest):
+class TestFrameStacking(pwtests.BaseTest):
     """ Test the cases where the input movies are input as individual frames.
     """
 
     @classmethod
     def setUpClass(cls):
-        setupTestProject(cls)
-        cls.ds = DataSet.getDataSet('movies')
+        pwtests.setupTestProject(cls)
+        cls.ds = pwtests.DataSet.getDataSet('movies')
 
     @classmethod
     def _createFrames(cls, delay=0):
@@ -383,7 +397,7 @@ class TestFrameStacking(BaseTest):
 
         nFiles = len(files)
         nMovies = MOVS
-        ih = ImageHandler()
+        ih = emconv.ImageHandler()
 
         for i in range(nMovies):
             # Loop over the number of input movies if we want more for testing
@@ -403,9 +417,9 @@ class TestFrameStacking(BaseTest):
         self._createFrames()
 
         # ----------- IMPORT MOVIES -------------------
-        protImport = self.newProtocol(ProtImportMovies,
+        protImport = self.newProtocol(emprot.ProtImportMovies,
                                       objLabel='import stack no stream',
-                                      importFrom=ProtImportMovies.IMPORT_FROM_FILES,
+                                      importFrom=emprot.ProtImportMovies.IMPORT_FROM_FILES,
                                       filesPath=os.path.abspath(self.proj.getTmpPath()),
                                       filesPattern="movie*.mrc",
                                       amplitudConstrast=0.1,
@@ -431,9 +445,9 @@ class TestFrameStacking(BaseTest):
         time.sleep(5)
 
         # ----------- IMPORT MOVIES -------------------
-        protImport = self.newProtocol(ProtImportMovies,
+        protImport = self.newProtocol(emprot.ProtImportMovies,
                                       objLabel='import stack streaming',
-                                      importFrom=ProtImportMovies.IMPORT_FROM_FILES,
+                                      importFrom=emprot.ProtImportMovies.IMPORT_FROM_FILES,
                                       filesPath=os.path.abspath(self.proj.getTmpPath()),
                                       filesPattern="movie*.mrc",
                                       amplitudConstrast=0.1,

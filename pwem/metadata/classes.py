@@ -32,6 +32,7 @@ Add functions related to metadata
 from collections import OrderedDict
 
 from pyworkflow.object import ObjectWrap
+
 from xmippLib import MetaData, MetaDataInfo, label2Str, str2Label, MD_APPEND
 
 
@@ -52,7 +53,7 @@ class Row():
     
     def containsLabel(self, label):
         # Allow getValue using the label string
-        if isinstance(label, basestring):
+        if isinstance(label, str):
             label = str2Label(label)
         return label in self._labelDict
     
@@ -64,14 +65,14 @@ class Row():
         """args: this list should contains tuples with 
         MetaData Label and the desired value"""
         # Allow setValue using the label string
-        if isinstance(label, basestring):
+        if isinstance(label, str):
             label = str2Label(label)
         self._labelDict[label] = value
             
     def getValue(self, label, default=None):
         """ Return the value of the row for a given label. """
         # Allow getValue using the label string
-        if isinstance(label, basestring):
+        if isinstance(label, str):
             label = str2Label(label)
         return self._labelDict.get(label, default)
     
@@ -92,10 +93,10 @@ class Row():
         
     def writeToMd(self, md, objId):
         """ Set back row values to a metadata row. """
-        for label, value in self._labelDict.iteritems():
+        for label, value in self._labelDict.items():
             # TODO: Check how to handle correctly unicode type
             # in Xmipp and Scipion
-            if type(value) is unicode:
+            if type(value) is str:
                 value = str(value)
             try:
                 md.setValue(label, value, objId)
@@ -116,7 +117,7 @@ class Row():
         md.write(fn)
         
     def copyFromRow(self, other):
-        for label, value in other._labelDict.iteritems():
+        for label, value in other._labelDict.items():
             self.setValue(label, value)
             
     def clone(self):
@@ -131,12 +132,12 @@ class Row():
         
     def __str__(self):
         s = '{'
-        for k, v in self._labelDict.iteritems():
+        for k, v in self._labelDict.items():
             s += '  %s = %s\n' % (label2Str(k), v)
         return s + '}'
     
     def __iter__(self):
-        return self._labelDict.iteritems()
+        return self._labelDict.items()
         
     def containsAll(self, labels):
         """ Check if all labels are present in the row.
@@ -160,7 +161,7 @@ class Row():
             
     def printDict(self):
         """ Fancy printing of the row, mainly for debugging. """
-        print (str(self))
+        print(str(self))
         
         
 class RowMetaData():

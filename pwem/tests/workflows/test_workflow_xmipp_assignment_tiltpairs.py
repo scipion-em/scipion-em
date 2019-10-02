@@ -22,29 +22,27 @@
 # *
 # **************************************************************************
 
-from pyworkflow.tests import *
-from test_workflow import TestWorkflow
-from pyworkflow.utils import importFromPlugin
-from pyworkflow.em import ProtImportMicrographsTiltPairs, ProtImportMicrographs, \
-    ProtImportCoordinates
+import pyworkflow.tests as pwtests
 
-XmippProtAssignmentTiltPair = importFromPlugin('xmipp3.protocols',
-                                               'XmippProtAssignmentTiltPair', doRaise=True)
+from pwem import Domain
+import pwem.protocols as emprot
+
+from .test_workflow import TestWorkflow
 
 
 # update this test when RCT workflow are implemented
 class TestXmippAssignmentTiltPairsWorkflow(TestWorkflow):
     @classmethod
     def setUpClass(cls):    
-        setupTestProject(cls)
-        cls.dataset = DataSet.getDataSet('rct')
+        pwtests.setupTestProject(cls)
+        cls.dataset = pwtests.DataSet.getDataSet('rct')
         cls.allCrdsDir = cls.dataset.getFile('positions')
         cls.micsUFn = cls.dataset.getFile('untilted')
         cls.micsTFn = cls.dataset.getFile('tilted')
         
     def test1(self):
         #First, import a set of micrographs
-        protImport = self.newProtocol(ProtImportMicrographsTiltPairs, 
+        protImport = self.newProtocol(emprot.ProtImportMicrographsTiltPairs,
                                       patternUntilted=self.micsUFn,
                                       patternTilted=self.micsTFn,
                                       samplingRate=2.28, voltage=100,
@@ -53,8 +51,8 @@ class TestXmippAssignmentTiltPairsWorkflow(TestWorkflow):
         self.assertIsNotNone(protImport.outputMicrographsTiltPair,
                              "There was a problem with the import")
         
-        protImportCoorU = self.newProtocol(ProtImportCoordinates,
-                         importFrom=ProtImportCoordinates.IMPORT_FROM_XMIPP,
+        protImportCoorU = self.newProtocol(emprot.ProtImportCoordinates,
+                         importFrom=emprot.ProtImportCoordinates.IMPORT_FROM_XMIPP,
                          filesPath=self.allCrdsDir,
                          filesPattern='F_rct_u_*.pos', boxSize=100)
         uMics = protImport.outputMicrographsTiltPair.getUntilted()
@@ -62,28 +60,33 @@ class TestXmippAssignmentTiltPairsWorkflow(TestWorkflow):
         self.launchProtocol(protImportCoorU)
 
         tMics = protImport.outputMicrographsTiltPair.getTilted()
-        protImportCoorT = self.newProtocol(ProtImportCoordinates,
-                         importFrom=ProtImportCoordinates.IMPORT_FROM_XMIPP,
+        protImportCoorT = self.newProtocol(emprot.ProtImportCoordinates,
+                         importFrom=emprot.ProtImportCoordinates.IMPORT_FROM_XMIPP,
                          filesPath=self.allCrdsDir,
                          filesPattern='F_rct_t_*.pos', boxSize=100)
         protImportCoorT.inputMicrographs.set(tMics)
         self.launchProtocol(protImportCoorT)
                 
         # Then simulate a particle picking
-        print "Running tilt pairs assignment..."   
+        print("Running tilt pairs assignment...")
+
+        XmippProtAssignmentTiltPair = Domain.importFromPlugin(
+                                                'xmipp3.protocols',
+                                                'XmippProtAssignmentTiltPair',
+                                                doRaise=True)
         protAssigning = self.newProtocol(XmippProtAssignmentTiltPair)
         micsTiltPair = protImport.outputMicrographsTiltPair
         protAssigning.inputMicrographsTiltedPair.set(micsTiltPair)
-        print self.micsUFn
-        print self.micsTFn
+        print(self.micsUFn)
+        print(self.micsTFn)
         protAssigning.untiltedSet.set(protImportCoorU.outputCoordinates)
         protAssigning.tiltedSet.set(protImportCoorT.outputCoordinates)
         self.launchProtocol(protAssigning)
         self.assertIsNotNone(protAssigning.outputCoordinatesTiltPair,
                              "There was a problem with the protocol assignment tilt pairs")
-        print '-----------------------------------------------------------'
+        print('-----------------------------------------------------------')
         num_particles = protAssigning.outputCoordinatesTiltPair.getUntilted().getSize()
-        print num_particles
+        print(num_particles)
         if (num_particles>1000):
             out_ = True
         else:

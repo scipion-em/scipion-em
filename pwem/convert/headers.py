@@ -35,6 +35,7 @@ import struct
 from math import isnan
 
 from pyworkflow.utils import getExt
+
 from .image_handler import ImageHandler
 
 
@@ -286,7 +287,7 @@ class Ccp4Header:
 
     def __str__(self):
         s = ""
-        for k, v in self._header.iteritems():
+        for k, v in self._header.items():
             s += "%s: %s\n" % (str(k), str(v))
         return s
 

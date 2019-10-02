@@ -25,9 +25,17 @@
 # **************************************************************************
 
 import os
-from itertools import izip
+import sys
+try:
+    from itertools import izip
+except ImportError:
+    izip = zip
 import PIL
 
+import pyworkflow.utils as pwutils
+
+import pwem.objects as emobj
+import pwem.constants as emcts
 try:
   import xmippLib
 except Exception as e:
@@ -36,9 +44,6 @@ except Exception as e:
   print("\n  > Please, remove the Xmipp installation (usually 'rm software/em/xmipp') "
         "and re-install it\n")
   sys.exit(-1)
-
-import pyworkflow.utils as pwutils
-from pyworkflow.em.constants import *
 
 
 class ImageHandler(object):
@@ -78,12 +83,11 @@ class ImageHandler(object):
         """
         # We can not import Volume from top level since
         # data depends on this module
-        from pyworkflow.em.data import Volume, Movie
         fn = image.getFileName()
-        if isinstance(image, Volume):
+        if isinstance(image, emobj.Volume):
             if fn.endswith('.mrc') or fn.endswith('.map'):
                 fn += ':mrc'
-        elif isinstance(image, Movie):
+        elif isinstance(image, emobj.Movie):
             if fn.endswith('.mrc'):
                 fn += ':mrcs'
             elif fn.endswith('.em'):
@@ -97,7 +101,7 @@ class ImageHandler(object):
         to a string with @ as expected in Xmipp.
         """
         index, filename = cls._convertToLocation(location)
-        if index != NO_INDEX:
+        if index != emcts.NO_INDEX:
             return "%06d@%s" % (index, filename)
         return filename
     
@@ -112,8 +116,8 @@ class ImageHandler(object):
         if isinstance(location, tuple):
             outLocation = location
         
-        elif isinstance(location, basestring):
-            outLocation = (NO_INDEX, location)
+        elif isinstance(location, str):
+            outLocation = (emcts.NO_INDEX, location)
         
         elif hasattr(location, 'getLocation'):
             # This case includes Image and its subclasses
@@ -134,7 +138,7 @@ class ImageHandler(object):
             fn = None
         elif isinstance(locationObj, tuple):
             fn = locationObj[1]
-        elif isinstance(locationObj, basestring):
+        elif isinstance(locationObj, str):
             fn = locationObj
         elif hasattr(locationObj, 'getLocation'):
             # This case includes Image and its subclasses
@@ -177,7 +181,8 @@ class ImageHandler(object):
         if outputLoc[1].lower().endswith('.img'):
             # FIXME Since now we can not read dm4 format in Scipion natively
             # we are opening an Eman2 process to read the dm4 file
-            convertImage = pwutils.importFromPlugin('eman2.convert',
+            from pwem import Domain
+            convertImage = Domain.importFromPlugin('eman2.convert',
                                                     'convertImage')
             convertImage(inputLoc, outputLoc)
         else:
@@ -209,7 +214,8 @@ class ImageHandler(object):
                 # FIXME Since now we can not read dm4 format in Scipion natively
                 # or writing recent .img format
                 # we are opening an Eman2 process to read the dm4 file
-                convertImage = pwutils.importFromPlugin('eman2.convert',
+                from pwem import Domain
+                convertImage = Domain.importFromPlugin('eman2.convert',
                                                         'convertImage')
                 convertImage(inputFn, outputFn)
             else:
@@ -264,7 +270,8 @@ class ImageHandler(object):
                 # FIXME Since now we can not read dm4 format in Scipion natively
                 # or recent .img format
                 # we are opening an Eman2 process to read the dm4 file
-                getImageDimensions = pwutils.importFromPlugin(
+                from pwem import Domain
+                getImageDimensions = Domain.importFromPlugin(
                                         'eman2.convert', 'getImageDimensions')
                 return getImageDimensions(fn) # we are ignoring index here
             else:
@@ -312,7 +319,7 @@ class ImageHandler(object):
         If inputSet is a SetOfImages subclass, we will iterate
         and compute the average from all images.
         """
-        if isinstance(inputSet, basestring):
+        if isinstance(inputSet, str):
             _, _, _, n = self.getDimensions(inputSet)
             if n:
                 avgImage = self.read((1, inputSet))
@@ -362,13 +369,15 @@ class ImageHandler(object):
     @classmethod
     def __runXmippProgram(cls, program, args):
         """ Internal shortcut function to launch a Xmipp program. """
-        xmipp3 = pwutils.importFromPlugin('xmipp3')
+        from pwem import Domain
+        xmipp3 = Domain.importFromPlugin('xmipp3')
         xmipp3.Plugin.runXmippProgram(program, args)
 
     @classmethod
     def __runEman2Program(cls, program, args):
         """ Internal workaround to launch an EMAN2 program. """
-        eman2 = pwutils.importFromPlugin('eman2')
+        from pwem import Domain
+        eman2 = Domain.importFromPlugin('eman2')
         from pyworkflow.utils.process import runJob
         runJob(None, eman2.Plugin.getProgram(program), args,
                env=eman2.Plugin.getEnviron())
@@ -463,7 +472,7 @@ class ImageHandler(object):
     def getVolFileName(cls, location):
         if isinstance(location, tuple):
             fn = location[1]
-        elif isinstance(location, basestring):
+        elif isinstance(location, str):
             fn = location
         elif hasattr(location, 'getLocation'):
             fn = location.getLocation()[1]
@@ -490,6 +499,15 @@ class ImageHandler(object):
         cls.__runXmippProgram("xmipp_transform_downsample",
                               "-i %s -o %s --step %f --method fourier"
                               % (inputFn, outputFn, scaleFactor))
+
+    @classmethod
+    def scaleSplines(cls, inputFn, outputFn, scaleFactor):
+        """ Scale an image using splines. """
+        I = xmippLib.Image(inputFn)
+        x, y, z, _ = I.getDimensions()
+        I.scale(int(x * scaleFactor), int(y * scaleFactor),
+                int(z * scaleFactor))
+        I.write(outputFn)
 
 
 DT_FLOAT = ImageHandler.DT_FLOAT

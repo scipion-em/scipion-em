@@ -25,7 +25,7 @@
 # **************************************************************************
 
 import sys
-import Tkinter as tk
+import tkinter as tk
 from matplotlib import animation
 
 from pyworkflow.gui.plotter import plt
@@ -34,19 +34,17 @@ from pyworkflow.gui.widgets import Button, HotButton
 import pyworkflow.gui as pwgui
 import pyworkflow.gui.text as text
 import pyworkflow.utils as pwutils
+import pyworkflow.viewer as pwviewer
 
-from pyworkflow.viewer import DESKTOP_TKINTER, WEB_DJANGO, Viewer
-from pyworkflow.em.protocol import (
-    ProtMonitorCTF, ProtMonitorMovieGain, ProtMonitorSystem,
-    ProtMonitorSummary, SummaryProvider)
+import pwem.protocols as emprot
 
 from .plotter import EmPlotter
 
 
-class ProtMonitorCTFViewer(Viewer):
-    _environments = [DESKTOP_TKINTER]
+class ProtMonitorCTFViewer(pwviewer.Viewer):
+    _environments = [pwviewer.DESKTOP_TKINTER]
     _label = 'ctf monitor'
-    _targets = [ProtMonitorCTF]
+    _targets = [emprot.ProtMonitorCTF]
 
     def _visualize(self, obj, **kwargs):
         return [CtfMonitorPlotter(obj.createMonitor())]
@@ -115,7 +113,7 @@ class CtfMonitorPlotter(EmPlotter):
 
         data = self.monitor.getData()
         self.x = data['idValues']
-        for k,v in self.lines.iteritems():
+        for k,v in self.lines.items():
             self.y = data[k]
 
             lenght = len(self.x)
@@ -153,10 +151,10 @@ class CtfMonitorPlotter(EmPlotter):
         EmPlotter.show(self)
 
 
-class ProtMonitorMovieGainViewer(Viewer):
-    _environments = [DESKTOP_TKINTER]
+class ProtMonitorMovieGainViewer(pwviewer.Viewer):
+    _environments = [pwviewer.DESKTOP_TKINTER]
     _label = 'movie gain monitor'
-    _targets = [ProtMonitorMovieGain]
+    _targets = [emprot.ProtMonitorMovieGain]
 
     def _visualize(self, obj, **kwargs):
         return [MovieGainMonitorPlotter(obj.createMonitor())]
@@ -225,7 +223,7 @@ class MovieGainMonitorPlotter(EmPlotter):
 
         data = self.monitor.getData()
         self.x = data['idValues']
-        for k,v in self.lines.iteritems():
+        for k,v in self.lines.items():
             self.y = data[k]
 
             lenght = len(self.x)
@@ -286,13 +284,13 @@ class MovieGainMonitorPlotter(EmPlotter):
 
 
 
-class ProtMonitorSystemViewer(Viewer):
-    _environments = [DESKTOP_TKINTER, WEB_DJANGO]
+class ProtMonitorSystemViewer(pwviewer.Viewer):
+    _environments = [pwviewer.DESKTOP_TKINTER,pwviewer.WEB_DJANGO]
     _label = 'system monitor'
-    _targets = [ProtMonitorSystem]
+    _targets = [emprot.ProtMonitorSystem]
 
     def __init__(self, **args):
-        Viewer.__init__(self, **args)
+        pwviewer.Viewer.__init__(self, **args)
 
     def _visualize(self, obj, **kwargs):
         return [SystemMonitorPlotter(obj.createMonitor(),
@@ -301,9 +299,9 @@ class ProtMonitorSystemViewer(Viewer):
 
 
 class SystemMonitorPlotter(EmPlotter):
-    _environments = [DESKTOP_TKINTER, WEB_DJANGO]
+    _environments = [pwviewer.DESKTOP_TKINTER, pwviewer.WEB_DJANGO]
     _label = 'System Monitor'
-    _targets = [ProtMonitorSystem]
+    _targets = [emprot.ProtMonitorSystem]
 
     def __init__(self, monitor, nifName=None):
         EmPlotter.__init__(self, windowTitle="system Monitor")
@@ -448,7 +446,7 @@ class SystemMonitorPlotter(EmPlotter):
 
         data = self.monitor.getData()
         self.x = data['idValues']
-        for k, v in self.lines.iteritems():
+        for k, v in self.lines.items():
             self.y = data[k]
 
             lenght = len(self.x)
@@ -491,10 +489,10 @@ class SystemMonitorPlotter(EmPlotter):
         self.paint(self.monitor.getLabels())
 
 
-class ViewerMonitorSummary(Viewer):
+class ViewerMonitorSummary(pwviewer.Viewer):
     """ Wrapper to visualize PDF objects. """
-    _environments = [DESKTOP_TKINTER]
-    _targets = [ProtMonitorSummary]
+    _environments = [pwviewer.DESKTOP_TKINTER]
+    _targets = [emprot.ProtMonitorSummary]
 
     def visualize(self, obj, **kwargs):
         self.summaryWindow = self.tkWindow(SummaryWindow,
@@ -511,7 +509,7 @@ class SummaryWindow(pwgui.Window):
 
         self.protocol = kwargs.get('protocol')
         self.refresh = self.protocol.samplingInterval.get()
-        self.provider = SummaryProvider(self.protocol)
+        self.provider = emprot.SummaryProvider(self.protocol)
 
         content = tk.Frame(self.root)
         self._createContent(content)

@@ -3,7 +3,7 @@
 This scripts seems to be execute with the Python and libraries from Chimera.
 """
 
-
+import sys
 from __future__ import print_function
 from multiprocessing.connection import Listener, Client
 from VolumeData import Array_Grid_Data
@@ -14,11 +14,11 @@ import chimera
 from time import sleep
 from threading import Thread
 
-from chimera import runCommand
+from pwem import Domain
+
 
 #from time import gmtime, strftime
 #from datetime import datetime
-import sys
 #import socket
 
 class ChimeraServer:
@@ -48,6 +48,8 @@ class ChimeraServer:
 
     def openVolume(self):
         try:
+            runCommand = Domain.importFromPlugin('chimera', 'Plugin',
+                                                    doRaise=True)
             while True:
                 if self.vol_conn.poll():
                     
@@ -74,11 +76,13 @@ class ChimeraServer:
                 else:
                     sleep(0.01)
         except EOFError:
-            print ('Lost connection to client')
+            print('Lost connection to client')
             #should close app??
 
     def answer(self, msg):
         #print msg
+        runCommand = Domain.importFromPlugin('chimera', 'Plugin',
+                                                doRaise=True)
         if msg == 'open_volume':
             data = self.vol_conn.recv()#objects are serialized by default
             #print data
@@ -141,7 +145,7 @@ class ChimeraServer:
                     else:
                         sleep(0.01)
         except EOFError:
-            print ('Lost connection to client')
+            print('Lost connection to client')
             #should close app??
 
     
@@ -187,6 +191,8 @@ class ChimeraVirusServer(ChimeraServer):
     def answer(self, msg):
         """execute a single command and return values"""
         ChimeraServer.answer(msg)
+        runCommand = Domain.importFromPlugin('chimera', 'Plugin',
+                                                doRaise=True)
         if msg == 'hk_icosahedron_lattice':
             from IcosahedralCage import cages
             h,k,radius,shellRadius,spheRadius,sym,sphere,color = \

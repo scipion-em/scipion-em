@@ -28,11 +28,15 @@ import os
 
 import pyworkflow.viewer as pwviewer
 import pyworkflow.utils as pwutils
-import pyworkflow.em as em
-from pyworkflow.em.convert import ImageHandler
 
-import views
-import showj
+import pwem as em
+import pwem.protocols as emprot
+import pwem.convert as emconv
+
+from .views import (ObjectView, MicrographsView, CoordinatesObjectView,
+                    ClassesView, Classes3DView, CtfView, DataView)
+from .showj import (RENDER, SAMPLINGRATE, ORDER, VISIBLE, MODE, MODE_MD,
+                    SORT_BY, getJvmMaxMemory, launchTiltPairPickerGUI)
 
 
 class DataViewer(pwviewer.Viewer):
@@ -50,8 +54,8 @@ class DataViewer(pwviewer.Viewer):
         em.SetOfMovies,
         em.SetOfNormalModes,
         em.SetOfPDBs,
-        em.ProtParticlePicking,
-        em.ProtImportMovies,
+        emprot.ProtParticlePicking,
+        emprot.ProtImportMovies,
         # TiltPairs related data
         em.CoordinatesTiltPair,
         em.MicrographsTiltPair,
@@ -63,7 +67,7 @@ class DataViewer(pwviewer.Viewer):
         self._views = []
 
     def _addObjView(self, obj, fn, viewParams={}):
-        objView = views.ObjectView(self._project, obj.strId(), fn,
+        objView = ObjectView(self._project, obj.strId(), fn,
                                    viewParams=viewParams)
         self._views.append(objView)
         return objView
@@ -72,57 +76,57 @@ class DataViewer(pwviewer.Viewer):
         cls = type(obj)
 
         if issubclass(cls, em.Volume):
-            fn = ImageHandler.locationToXmipp(obj)
+            fn = emconv.ImageHandler.locationToXmipp(obj)
             self._addObjView(obj, fn,
-                             {showj.RENDER: 'image',
-                              showj.SAMPLINGRATE: obj.getSamplingRate()})
+                             {RENDER: 'image',
+                              SAMPLINGRATE: obj.getSamplingRate()})
 
         elif issubclass(cls, em.Image):
-            fn = ImageHandler.locationToXmipp(obj)
+            fn = emconv.ImageHandler.locationToXmipp(obj)
             self._addObjView(obj, fn)
 
         elif issubclass(cls, em.SetOfPDBs):
             fn = obj.getFileName()
             labels = 'id _filename '
-            self._addObjView(obj, fn, {showj.ORDER: labels,
-                                       showj.VISIBLE: labels,
-                                       showj.MODE: showj.MODE_MD,
-                                       showj.RENDER: "no"})
+            self._addObjView(obj, fn, {ORDER: labels,
+                                       VISIBLE: labels,
+                                       MODE: MODE_MD,
+                                       RENDER: "no"})
 
         elif issubclass(cls, em.SetOfMovies):
             fn = obj.getFileName()
             # Enabled for the future has to be available
             labels = ('id _filename _samplingRate _acquisition._dosePerFrame '
                       '_acquisition._doseInitial ')
-            moviesView = self._addObjView(obj, fn, {showj.ORDER: labels,
-                                                    showj.VISIBLE: labels,
-                                                    showj.MODE: showj.MODE_MD,
-                                                    showj.RENDER: "no"})
+            moviesView = self._addObjView(obj, fn, {ORDER: labels,
+                                                    VISIBLE: labels,
+                                                    MODE: MODE_MD,
+                                                    RENDER: "no"})
             # For movies increase the JVM memory by 1 GB, just in case
-            moviesView.setMemory(showj.getJvmMaxMemory() + 1)
+            moviesView.setMemory(getJvmMaxMemory() + 1)
 
         elif issubclass(cls, em.SetOfMicrographs):
-            self._views.append(views.MicrographsView(self._project, obj, **kwargs))
+            self._views.append(MicrographsView(self._project, obj, **kwargs))
 
         elif issubclass(cls, em.MicrographsTiltPair):
             labels = 'id enabled _untilted._filename _tilted._filename'
             renderLabels = '_untilted._filename _tilted._filename'
-            self._addObjView(obj, obj.getFileName(), {showj.ORDER: labels,
-                                                      showj.VISIBLE: labels,
-                                                      showj.MODE: showj.MODE_MD,
-                                                      showj.RENDER: renderLabels})
+            self._addObjView(obj, obj.getFileName(), {ORDER: labels,
+                                                      VISIBLE: labels,
+                                                      MODE: MODE_MD,
+                                                      RENDER: renderLabels})
 
         elif issubclass(cls, em.ParticlesTiltPair):
             labels = 'id enabled _untilted._filename _tilted._filename'
             renderLabels = '_untilted._filename _tilted._filename'
-            self._addObjView(obj, obj.getFileName(), {showj.ORDER: labels,
-                                                      showj.VISIBLE: labels,
-                                                      showj.RENDER: renderLabels,
-                                                      showj.MODE: showj.MODE_MD})
+            self._addObjView(obj, obj.getFileName(), {ORDER: labels,
+                                                      VISIBLE: labels,
+                                                      RENDER: renderLabels,
+                                                      MODE: MODE_MD})
 
         elif issubclass(cls, em.SetOfCoordinates):
             # FIXME: Remove dependency on xmipp3 plugin to visualize coordinates
-            xmipp3 = pwutils.importFromPlugin('xmipp3',
+            xmipp3 = em.Domain.importFromPlugin('xmipp3',
                                               errorMsg="xmipp3 plugin is required "
                                                        "now to visualize coordinates.")
             micSet = obj.getMicrographs()  # accessing mics to provide metadata file
@@ -146,7 +150,7 @@ class DataViewer(pwviewer.Viewer):
             # written during modification of tmpDir or create a new Xmipp picking
             # protocol to continue picking later without loosing the coordinates.
             xmipp3.convert.writeSetOfCoordinates(tmpDir, obj)
-            self._views.append(views.CoordinatesObjectView(self._project, fn,
+            self._views.append(CoordinatesObjectView(self._project, fn,
                                                            tmpDir, self.protocol,
                                                            inTmpFolder=True))
 
@@ -156,37 +160,37 @@ class DataViewer(pwviewer.Viewer):
                       '_sampling _xmipp_scoreByVariance _xmipp_scoreEmptiness '
                       '_ctfModel._defocusU _ctfModel._defocusV _ctfModel._defocusAngle '
                       '_transform._matrix')
-            self._addObjView(obj, fn, {showj.ORDER: labels,
-                                       showj.VISIBLE: labels,
-                                       showj.SORT_BY: '_xmipp_zScore asc',
-                                       showj.RENDER: '_filename'})
+            self._addObjView(obj, fn, {ORDER: labels,
+                                       VISIBLE: labels,
+                                       SORT_BY: '_xmipp_zScore asc',
+                                       RENDER: '_filename'})
 
         elif issubclass(cls, em.SetOfVolumes):
             fn = obj.getFileName()
             labels = 'id enabled comment _filename '
-            self._addObjView(obj, fn, {showj.MODE: showj.MODE_MD,
-                                       showj.ORDER: labels,
-                                       showj.VISIBLE: labels,
-                                       showj.RENDER: '_filename'})
+            self._addObjView(obj, fn, {MODE: MODE_MD,
+                                       ORDER: labels,
+                                       VISIBLE: labels,
+                                       RENDER: '_filename'})
 
         elif issubclass(cls, em.SetOfClasses2D):
-            self._views.append(views.ClassesView(self._project, obj.strId(),
+            self._views.append(ClassesView(self._project, obj.strId(),
                                                  obj.getFileName(), **kwargs))
 
         elif issubclass(cls, em.SetOfClasses3D):
-            self._views.append(views.Classes3DView(self._project, obj.strId(),
+            self._views.append(Classes3DView(self._project, obj.strId(),
                                                    obj.getFileName()))
 
         elif issubclass(cls, em.SetOfImages):
-            self._views.append(views.ObjectView(self._project, obj.strId(),
+            self._views.append(ObjectView(self._project, obj.strId(),
                                                 obj.getFileName(), **kwargs))
 
         elif issubclass(cls, em.SetOfCTF):
-            self._views.append(views.CtfView(self._project, obj))
+            self._views.append(CtfView(self._project, obj))
 
         elif issubclass(cls, em.CoordinatesTiltPair):
             # FIXME: Remove dependency on xmipp3 plugin to visualize coordinates
-            xmipp3 = pwutils.importFromPlugin('xmipp3',
+            xmipp3 = em.Domain.importFromPlugin('xmipp3',
                                               errorMsg="xmipp3 plugin is required "
                                                        "now to visualize coordinates.")
             tmpDir = self._getTmpPath(obj.getName())
@@ -204,19 +208,19 @@ class DataViewer(pwviewer.Viewer):
             # TODO: Review this if ever a non Xmipp CoordinatesTiltPair is available
             xmipp3.convert.writeSetOfCoordinates(tmpDir, obj.getUntilted())
             xmipp3.convert.writeSetOfCoordinates(tmpDir, obj.getTilted())
-            showj.launchTiltPairPickerGUI(mdFn, tmpDir, self.protocol)
+            launchTiltPairPickerGUI(mdFn, tmpDir, self.protocol)
 
-        elif issubclass(cls, em.ProtParticlePicking):
+        elif issubclass(cls, emprot.ProtParticlePicking):
             if obj.getOutputsSize() >= 1:
                 self._visualize(obj.getCoords())
 
-        elif issubclass(cls, em.ProtImportMovies):
+        elif issubclass(cls, emprot.ProtImportMovies):
             movs = obj.outputMovies
             self._visualize(movs)
             gainFn = movs.getGain()
             if gainFn is not None:
                 if os.path.exists(gainFn):
-                    self._views.append(views.DataView(gainFn))
+                    self._views.append(DataView(gainFn))
 
         return self._views
 

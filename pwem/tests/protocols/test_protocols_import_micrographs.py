@@ -23,20 +23,24 @@
 
 import os
 import tempfile
-from itertools import izip
+try:
+    from itertools import izip
+except ImportError:
+    izip = zip
 
-from pyworkflow.tests import BaseTest, setupTestProject, DataSet
-from pyworkflow.em.protocol import ProtImportMicrographs
-from pyworkflow.em.data import SetOfMicrographs
+import pyworkflow.tests as pwtests
+
+import pwem.protocols as emprot
+import pwem.objects as emobj
 
 
-class TestImportBase(BaseTest):
+class TestImportBase(pwtests.BaseTest):
     @classmethod
     def setUpClass(cls):
-        setupTestProject(cls)
-        cls.dsXmipp = DataSet.getDataSet('xmipp_tutorial')
-        cls.dsEmx = DataSet.getDataSet('emx')
-        cls.dsMda = DataSet.getDataSet('mda')
+        pwtests.setupTestProject(cls)
+        cls.dsXmipp = pwtests.DataSet.getDataSet('xmipp_tutorial')
+        cls.dsEmx = pwtests.DataSet.getDataSet('emx')
+        cls.dsMda = pwtests.DataSet.getDataSet('mda')
 
 
 class TestImportMicrographs(TestImportBase):
@@ -45,7 +49,7 @@ class TestImportMicrographs(TestImportBase):
         """ Compare micrographs of micSet with the 
         ones in the goldFn. Maybe except the full path.
         """
-        goldSet = SetOfMicrographs(filename=goldFn)
+        goldSet = emobj.SetOfMicrographs(filename=goldFn)
 
         for mic1, mic2 in izip(goldSet, micSet):
             # Remove the absolute path in the micrographs to
@@ -58,7 +62,7 @@ class TestImportMicrographs(TestImportBase):
     def test_pattern(self):
         """ Import several micrographs from a given pattern.
         """
-        args = {'importFrom': ProtImportMicrographs.IMPORT_FROM_FILES,
+        args = {'importFrom': emprot.ProtImportMicrographs.IMPORT_FROM_FILES,
                 'filesPath': self.dsXmipp.getFile('micrographs'),
                 'filesPattern': '*.mrc',
                 'amplitudConstrast': 0.1,
@@ -80,21 +84,21 @@ class TestImportMicrographs(TestImportBase):
 
         # Id's should be set increasing from 1 if ### is not in the 
         # pattern
-        protMicImport = self.newProtocol(ProtImportMicrographs, **args)
+        protMicImport = self.newProtocol(emprot.ProtImportMicrographs, **args)
         protMicImport.setObjLabel('from files')
         self.launchProtocol(protMicImport)
         _checkOutput(protMicImport, [1, 2, 3], size=3)
 
         # Id's should be taken from filename
         args['filesPattern'] = 'BPV_####.mrc'
-        protMicImport = self.newProtocol(ProtImportMicrographs, **args)
+        protMicImport = self.newProtocol(emprot.ProtImportMicrographs, **args)
         protMicImport.setObjLabel('from files (with id)')
         self.launchProtocol(protMicImport)
         _checkOutput(protMicImport, [1386, 1387, 1388], size=3)
 
         # Combine * and #
         args['filesPattern'] = '*_####.mrc'
-        protMicImport = self.newProtocol(ProtImportMicrographs, **args)
+        protMicImport = self.newProtocol(emprot.ProtImportMicrographs, **args)
         protMicImport.setObjLabel('from files (* with id)')
         self.launchProtocol(protMicImport)
         _checkOutput(protMicImport, [1386, 1387, 1388], size=3)
@@ -106,16 +110,16 @@ class TestImportMicrographs(TestImportBase):
             os.symlink(args['filesPath'], symlinkFolder)
         args['filesPath'] = os.path.join(parentFolder, 'testId#')
         args['filesPattern'] = '*_?387.mrc'
-        protMicImport = self.newProtocol(ProtImportMicrographs, **args)
+        protMicImport = self.newProtocol(emprot.ProtImportMicrographs, **args)
         protMicImport.setObjLabel('from files (id from folder)')
         self.launchProtocol(protMicImport)
         _checkOutput(protMicImport, [4], size=1)
 
         # Import some micrographs from EMX        
         emxFn = self.dsEmx.getFile('coordinatesT1')
-        args['importFrom'] = ProtImportMicrographs.IMPORT_FROM_EMX
+        args['importFrom'] = emprot.ProtImportMicrographs.IMPORT_FROM_EMX
         args['emxFile'] = emxFn
-        protEmxImport = self.newProtocol(ProtImportMicrographs, **args)
+        protEmxImport = self.newProtocol(emprot.ProtImportMicrographs, **args)
         protEmxImport.setObjLabel('from emx (with coords)')
         self.launchProtocol(protEmxImport)
         _checkOutput(protEmxImport, [], size=1)
@@ -124,8 +128,8 @@ class TestImportMicrographs(TestImportBase):
         """ Import an EMX file with micrographs and defocus
         """
         emxFn = self.dsEmx.getFile('emxMicrographCtf1')
-        protEmxImport = self.newProtocol(ProtImportMicrographs,
-                                         importFrom=ProtImportMicrographs.IMPORT_FROM_EMX,
+        protEmxImport = self.newProtocol(emprot.ProtImportMicrographs,
+                                         importFrom=emprot.ProtImportMicrographs.IMPORT_FROM_EMX,
                                          emxFile=emxFn,
                                          magnification=10000,
                                          samplingRate=2.46
@@ -141,8 +145,8 @@ class TestImportMicrographs(TestImportBase):
         """
         micsRoot = 'xmipp_project/Micrographs/Imported/run_001/%s'
         micsMd = self.dsXmipp.getFile(micsRoot % 'micrographs.xmd')
-        prot1 = self.newProtocol(ProtImportMicrographs,
-                                 importFrom=ProtImportMicrographs.IMPORT_FROM_XMIPP3,
+        prot1 = self.newProtocol(emprot.ProtImportMicrographs,
+                                 importFrom=emprot.ProtImportMicrographs.IMPORT_FROM_XMIPP3,
                                  mdFile=micsMd,
                                  magnification=10000,
                                  samplingRate=1.237,
@@ -156,8 +160,8 @@ class TestImportMicrographs(TestImportBase):
 
         micsRoot = 'xmipp_project/Micrographs/Screen/run_001/%s'
         micsMd = self.dsXmipp.getFile(micsRoot % 'micrographs.xmd')
-        prot2 = self.newProtocol(ProtImportMicrographs,
-                                 importFrom=ProtImportMicrographs.IMPORT_FROM_XMIPP3,
+        prot2 = self.newProtocol(emprot.ProtImportMicrographs,
+                                 importFrom=emprot.ProtImportMicrographs.IMPORT_FROM_XMIPP3,
                                  mdFile=micsMd,
                                  magnification=10000,
                                  samplingRate=1.237,
@@ -173,19 +177,19 @@ class TestImportMicrographs(TestImportBase):
         """ Import an EMX file with micrographs and defocus
         """
         micsSqlite = self.dsXmipp.getFile('micrographs/micrographs.sqlite')
-        print "Importing from sqlite: ", micsSqlite
+        print("Importing from sqlite: ", micsSqlite)
 
-        micSet = SetOfMicrographs(filename=micsSqlite)
+        micSet = emobj.SetOfMicrographs(filename=micsSqlite)
         # Gold values
         # _samplingRate -> 1.237
         # _acquisition._voltage -> 300.0
         # _acquisition._magnification -> 50000.0
 
         for k in ['_samplingRate', '_acquisition._voltage', '_acquisition._magnification']:
-            print k, "->", micSet.getProperty(k)
-        prot = self.newProtocol(ProtImportMicrographs,
+            print(k, "->", micSet.getProperty(k))
+        prot = self.newProtocol(emprot.ProtImportMicrographs,
                                 objLabel='from scipion',
-                                importFrom=ProtImportMicrographs.IMPORT_FROM_SCIPION,
+                                importFrom=emprot.ProtImportMicrographs.IMPORT_FROM_SCIPION,
                                 sqliteFile=micsSqlite,
                                 samplingRate=float(micSet.getProperty('_samplingRate')),
                                 voltage=float(micSet.getProperty('_acquisition._voltage')),

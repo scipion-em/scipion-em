@@ -25,9 +25,11 @@
 # **************************************************************************
 
 # Expose many basic views
+from pyworkflow.gui.browser import FileTreeProvider, STANDARD_IMAGE_EXTENSIONS
 from .views import (DataView, ObjectView, MicrographsView, CtfView,
-                           ClassesView, Classes3DView, CoordinatesObjectView,
-                           ImageView, TableView)
+                    ClassesView, Classes3DView, CoordinatesObjectView,
+                    ImageView, TableView)
+from .viewer_base import EmProtocolViewer
 from .plotter import EmPlotter
 from .viewers_data import DataViewer
 
@@ -42,3 +44,16 @@ from .viewer_monitors import (ProtMonitorCTFViewer, ProtMonitorSystemViewer,
                               ProtMonitorMovieGainViewer, ViewerMonitorSummary)
 from .viewer_sequence import SequenceViewer
 from .viewer_volumes import viewerProtImportVolumes
+from .showj import *
+
+## register file handlers to preview info in the Filebrowser....
+from .filehandlers import *
+register = FileTreeProvider.registerFileHandler
+register(MdFileHandler(), '.xmd', '.star', '.pos', '.ctfparam', '.doc')
+register(ParticleFileHandler(),
+         '.xmp', '.tif', '.tiff', '.spi', '.mrc', '.map', '.raw',
+         '.inf', '.dm3', '.em', '.pif', '.psd', '.spe', '.ser', '.img',
+         '.hed', *STANDARD_IMAGE_EXTENSIONS)
+register(VolFileHandler(), '.vol')
+register(StackHandler(), '.stk', '.mrcs', '.st', '.pif', '.dm4')
+register(ChimeraHandler(), '.bild')

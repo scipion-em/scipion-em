@@ -33,24 +33,26 @@ for input volumes.
 
 import os
 from distutils.spawn import find_executable
-from tkMessageBox import showerror
-from pyworkflow.em import Volume
+from tkinter.messagebox import showerror
 
 import pyworkflow.protocol.params as params
-from pyworkflow.em.convert import ImageHandler
-from pyworkflow.em.protocol.protocol_import.volumes import ProtImportVolumes
-from pyworkflow.viewer import DESKTOP_TKINTER, WEB_DJANGO, ProtocolViewer
-from pyworkflow.em.viewers.viewer_chimera import Chimera, ChimeraView
+import pyworkflow.viewer as pwviewer
+
+import pwem.objects as emobj
+import pwem.convert as emconv
+import pwem.protocols as emprot
+from pwem.viewers import Chimera, ChimeraView
+
 VOLUME_SLICES = 1
 VOLUME_CHIMERA = 0
 
-class viewerProtImportVolumes(ProtocolViewer):
+class viewerProtImportVolumes(pwviewer.ProtocolViewer):
     """ Wrapper to visualize different type of objects
     with the Xmipp program xmipp_showj. """
 
     _label = 'viewer input volume'
-    _targets = [ProtImportVolumes]
-    _environments = [DESKTOP_TKINTER, WEB_DJANGO]
+    _targets = [emprot.ProtImportVolumes]
+    _environments = [pwviewer.DESKTOP_TKINTER, pwviewer.WEB_DJANGO]
 
     def _defineParams(self, form):
         form.addSection(label='Visualization of input volumes')
@@ -92,7 +94,7 @@ class viewerProtImportVolumes(ProtocolViewer):
         try:
             setOfVolumes = self.protocol.outputVolumes
             sampling = self.protocol.outputVolumes.getSamplingRate()
-        except:
+        except Exception as ex:
             setOfVolumes = self.protocol._createSetOfVolumes()
             setOfVolumes.append(self.protocol.outputVolume)
             sampling = self.protocol.outputVolume.getSamplingRate()
@@ -124,7 +126,7 @@ class viewerProtImportVolumes(ProtocolViewer):
             count = 1  # skip first model because is not a 3D map
 
         for vol in _setOfVolumes:
-            localVol = os.path.abspath(ImageHandler.removeFileType(
+            localVol = os.path.abspath(emconv.ImageHandler.removeFileType(
                 vol.getFileName()))
             if localVol.endswith("stk"):
                 errorWindow(None, "Extension .stk is not supported")
@@ -159,12 +161,12 @@ class viewerProtImportVolumes(ProtocolViewer):
         if len(setOfVolumes) == 1:
             if self.protocol.outputVolume.getHalfMaps():
                 setOfVolumes = self.protocol._createSetOfVolumes(suffix='tmp')
-                vol = Volume()
+                vol = emobj.Volume()
                 vol.setFileName(self.protocol.outputVolume.getFileName())
                 vol.setSamplingRate(sampling)
                 setOfVolumes.append(vol)
                 for halfMap in self.protocol.outputVolume.getHalfMaps().split(','):
-                    volHalf = Volume()
+                    volHalf = emobj.Volume()
                     volHalf.setSamplingRate(sampling)
                     if not halfMap.endswith(".mrc"):
                         volHalf.setFileName(halfMap.split(".")[0] + ".mrc")
@@ -183,6 +185,6 @@ def errorWindow(tkParent, msg):
         showerror("Error",  # bar title
                   msg,  # message
                   parent=tkParent)
-    except:
+    except Exception as ex:
         print("Error:", msg)
 

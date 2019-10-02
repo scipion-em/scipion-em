@@ -1,0 +1,3 @@
+scipion-pyworkflow
+biopython
+nvidia-ml-py3

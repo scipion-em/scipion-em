@@ -22,37 +22,30 @@
 # *
 # **************************************************************************
 
-from pyworkflow.tests import DataSet, setupTestProject
-from pyworkflow.utils import importFromPlugin
-from test_workflow import TestWorkflow
-from pyworkflow.em.protocol.protocol_import import ProtImportCoordinates, \
-                                                   ProtImportMicrographs, \
-                                                   ProtImportVolumes
+import pyworkflow.tests as pwtests
 
-XmippProtPreprocessMicrographs = importFromPlugin('xmipp3.protocols', 'XmippProtPreprocessMicrographs', doRaise=True)
-XmippProtExtractParticles = importFromPlugin('xmipp3.protocols', 'XmippProtExtractParticles')
-XmippProtCropResizeParticles = importFromPlugin('xmipp3.protocols', 'XmippProtCropResizeParticles')
-XmippProtML2D = importFromPlugin('xmipp3.protocols', 'XmippProtML2D')
-SAME_AS_PICKING = importFromPlugin('xmipp3.constants', 'SAME_AS_PICKING')
-OTHER = importFromPlugin('xmipp3.constants', 'OTHER')
-ProtCTFFind = importFromPlugin('grigoriefflab.protocols', 'ProtCTFFind', doRaise=True)
-ProtFrealign = importFromPlugin('grigoriefflab.protocols', 'ProtFrealign')
-EmanProtInitModel = importFromPlugin('eman2.protocols', 'EmanProtInitModel', doRaise=True)
+from pwem import Domain
+import pwem.protocols as emprot
+
+from .test_workflow import TestWorkflow
 
 
 class TestMixedBPV(TestWorkflow):
     @classmethod
     def setUpClass(cls):
-        setupTestProject(cls)
-        cls.dataset = DataSet.getDataSet('xmipp_tutorial')
+        pwtests.setupTestProject(cls)
+        cls.dataset = pwtests.DataSet.getDataSet('xmipp_tutorial')
         cls.crdsDir = cls.dataset.getFile('boxingDir')
         cls.micsFn = cls.dataset.getFile('allMics')
         cls.vol1 = cls.dataset.getFile('vol1')
         
     def test_workflow(self):
-        from itertools import izip
+        try:
+            from itertools import izip
+        except ImportError:
+            izip = zip
         #First, import a set of micrographs
-        protImport = self.newProtocol(ProtImportMicrographs,
+        protImport = self.newProtocol(emprot.ProtImportMicrographs,
                                       filesPath=self.micsFn,
                                       samplingRate=1.237, voltage=300)
         self.launchProtocol(protImport)
@@ -61,8 +54,8 @@ class TestMixedBPV(TestWorkflow):
 #         self.validateFiles('protImport', protImport) 
         
         #Import a set of volumes        
-        print "Import Volume"
-        protImportVol = self.newProtocol(ProtImportVolumes, filesPath=self.vol1,
+        print("Import Volume")
+        protImportVol = self.newProtocol(emprot.ProtImportVolumes, filesPath=self.vol1,
                                          samplingRate=9.896)
         self.launchProtocol(protImportVol)
         self.assertIsNotNone(protImportVol.getFiles(),
@@ -70,7 +63,10 @@ class TestMixedBPV(TestWorkflow):
 #        self.validateFiles('protImportVol', protImportVol)
         
         # Perform a downsampling on the micrographs
-        print "Downsampling..."
+        print("Downsampling...")
+        XmippProtPreprocessMicrographs = Domain.importFromPlugin('xmipp3.protocols',
+                                                'XmippProtPreprocessMicrographs',
+                                                doRaise=True)
         protDownsampling = self.newProtocol(XmippProtPreprocessMicrographs,
                                             doDownsample=True, downFactor=5,
                                             doCrop=False, runMode=1)
@@ -81,7 +77,9 @@ class TestMixedBPV(TestWorkflow):
 #         self.validateFiles('protDownsampling', protDownsampling)
         
         # Estimate CTF on the downsampled micrographs
-        print "Performing CTFfind..."   
+        print("Performing CTFfind...")
+        ProtCTFFind = Domain.importFromPlugin('grigoriefflab.protocols',
+                                                 'ProtCTFFind', doRaise=True)
         protCTF = self.newProtocol(ProtCTFFind, numberOfThreads=4,
                                    minDefocus=2.2, maxDefocus=2.5)
         protCTF.inputMicrographs.set(protDownsampling.outputMicrographs)        
@@ -98,9 +96,9 @@ class TestMixedBPV(TestWorkflow):
 
 #         self.validateFiles('protCTF', protCTF)
 
-        print "Running Eman import coordinates..."
-        protPP = self.newProtocol(ProtImportCoordinates,
-                                 importFrom=ProtImportCoordinates.IMPORT_FROM_EMAN,
+        print("Running Eman import coordinates...")
+        protPP = self.newProtocol(emprot.ProtImportCoordinates,
+                                 importFrom=emprot.ProtImportCoordinates.IMPORT_FROM_EMAN,
                                  filesPath=self.crdsDir,
                                  filesPattern='*_info.json', boxSize=110)
         protPP.inputMicrographs.set(protDownsampling.outputMicrographs)
@@ -110,7 +108,11 @@ class TestMixedBPV(TestWorkflow):
 
 
         # Extract the SetOfParticles.
-        print "Run extract particles with other downsampling factor"
+        print("Run extract particles with other downsampling factor")
+        XmippProtExtractParticles = Domain.importFromPlugin(
+                                                    'xmipp3.protocols',
+                                                    'XmippProtExtractParticles')
+        OTHER = Domain.importFromPlugin('xmipp3.constants', 'OTHER')
         protExtract = self.newProtocol(XmippProtExtractParticles,
                                        boxSize=64,
                                        downsampleType=OTHER,
@@ -125,7 +127,9 @@ class TestMixedBPV(TestWorkflow):
 #         self.validateFiles('protExtract', protExtract)
         
         # Refine the SetOfParticles and reconstruct a refined volume.
-        print "Running Frealign..."
+        print("Running Frealign...")
+        ProtFrealign = Domain.importFromPlugin('grigoriefflab.protocols',
+                                                  'ProtFrealign')
         protFrealign = self.newProtocol(ProtFrealign, doInvert=False,
                                         angStepSize=15,
                                         numberOfIterations=2, mode=1,
@@ -149,15 +153,15 @@ class TestMixedBPV2(TestWorkflow):
 
     @classmethod
     def setUpClass(cls):
-        setupTestProject(cls)
-        cls.dataset = DataSet.getDataSet('xmipp_tutorial')
+        pwtests.setupTestProject(cls)
+        cls.dataset = pwtests.DataSet.getDataSet('xmipp_tutorial')
         cls.crdsDir = cls.dataset.getFile('boxingDir')
         cls.micsFn = cls.dataset.getFile('allMics')
         cls.vol1 = cls.dataset.getFile('vol1')
         
     def test_workflow(self):
         #First, import a set of micrographs
-        protImport = self.newProtocol(ProtImportMicrographs,
+        protImport = self.newProtocol(emprot.ProtImportMicrographs,
                                       filesPath=self.micsFn,
                                       samplingRate=1.237, voltage=300)
         self.launchProtocol(protImport)
@@ -166,8 +170,8 @@ class TestMixedBPV2(TestWorkflow):
 #         self.validateFiles('protImport', protImport) 
         
         #Import a set of volumes        
-        print "Import Volume"
-        protImportVol = self.newProtocol(ProtImportVolumes, filesPath=self.vol1,
+        print("Import Volume")
+        protImportVol = self.newProtocol(emprot.ProtImportVolumes, filesPath=self.vol1,
                                          samplingRate=9.896)
         self.launchProtocol(protImportVol)
         self.assertIsNotNone(protImportVol.getFiles(),
@@ -175,7 +179,11 @@ class TestMixedBPV2(TestWorkflow):
 #        self.validateFiles('protImportVol', protImportVol)
         
         # Perform a downsampling on the micrographs
-        print "Downsampling..."
+        print("Downsampling...")
+        XmippProtPreprocessMicrographs = Domain.importFromPlugin(
+                                                'xmipp3.protocols',
+                                                'XmippProtPreprocessMicrographs',
+                                                doRaise=True)
         protDownsampling = self.newProtocol(XmippProtPreprocessMicrographs,
                                             doDownsample=True, downFactor=5,
                                             doCrop=False, runMode=1)
@@ -186,7 +194,9 @@ class TestMixedBPV2(TestWorkflow):
 #         self.validateFiles('protDownsampling', protDownsampling)
         
         # Estimate CTF on the downsampled micrographs
-        print "Performing CTFfind..."   
+        print("Performing CTFfind...")
+        ProtCTFFind = Domain.importFromPlugin('grigoriefflab.protocols',
+                                                 'ProtCTFFind', doRaise=True)
         protCTF = self.newProtocol(ProtCTFFind, numberOfThreads=4,
                                    minDefocus=2.2, maxDefocus=2.5)
         protCTF.inputMicrographs.set(protImport.outputMicrographs)        
@@ -195,9 +205,9 @@ class TestMixedBPV2(TestWorkflow):
                              "There was a problem with the CTF estimation")
 #         self.validateFiles('protCTF', protCTF)
 
-        print "Running Eman import coordinates..."
-        protPP = self.newProtocol(ProtImportCoordinates,
-                                 importFrom=ProtImportCoordinates.IMPORT_FROM_EMAN,
+        print("Running Eman import coordinates...")
+        protPP = self.newProtocol(emprot.ProtImportCoordinates,
+                                 importFrom=emprot.ProtImportCoordinates.IMPORT_FROM_EMAN,
                                  filesPath=self.crdsDir,
                                  filesPattern='*_info.json', boxSize=110)
         protPP.inputMicrographs.set(protDownsampling.outputMicrographs)
@@ -206,7 +216,13 @@ class TestMixedBPV2(TestWorkflow):
                              "There was a problem with the Eman import coordinates")
 
 
-        print "<Run extract particles with Same as picking>"
+        print("<Run extract particles with Same as picking>")
+        XmippProtExtractParticles = Domain.importFromPlugin(
+                                                    'xmipp3.protocols',
+                                                    'XmippProtExtractParticles')
+
+        SAME_AS_PICKING = Domain.importFromPlugin('xmipp3.constants',
+                                                     'SAME_AS_PICKING')
         protExtract = self.newProtocol(XmippProtExtractParticles, boxSize=110,
                                        downsampleType=SAME_AS_PICKING,
                                        doFlip=True, doInvert=True, runMode=1)
@@ -217,7 +233,10 @@ class TestMixedBPV2(TestWorkflow):
                              "There was a problem with the extract particles")
         #self.validateFiles('protExtract', protExtract)
         
-        print "Run Preprocess particles"
+        print("Run Preprocess particles")
+        XmippProtCropResizeParticles = Domain.importFromPlugin(
+                                                'xmipp3.protocols',
+                                                'XmippProtCropResizeParticles')
         protCropResize = self.newProtocol(XmippProtCropResizeParticles,
                                           doResize=True, resizeOption=1,
                                           resizeDim=110)
@@ -227,7 +246,9 @@ class TestMixedBPV2(TestWorkflow):
         self.assertIsNotNone(protCropResize.outputParticles,
                              "There was a problem with resize/crop the particles")
         
-        print "Run ML2D"
+        print("Run ML2D")
+        XmippProtML2D = Domain.importFromPlugin('xmipp3.protocols',
+                                                   'XmippProtML2D')
         protML2D = self.newProtocol(XmippProtML2D, numberOfClasses=8, maxIters=2,
                                  numberOfMpi=2, numberOfThreads=2)
         protML2D.inputParticles.set(protCropResize.outputParticles)
@@ -239,7 +260,11 @@ class TestMixedBPV2(TestWorkflow):
 #         #FIXME: Check the initial model with EMAn and restore the next step
 #         return
         
-        print "Run Initial Model"
+        print("Run Initial Model")
+
+        EmanProtInitModel = Domain.importFromPlugin('eman2.protocols',
+                                                       'EmanProtInitModel',
+                                                       doRaise=True)
         protIniModel = self.newProtocol(EmanProtInitModel, numberOfIterations=1,
                                         numberOfModels=2,
                                         shrink=5, symmetry='icos',
