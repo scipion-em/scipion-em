@@ -24,6 +24,8 @@
 
 import os
 
+from pyworkflow.gui import getDefaultFont
+
 try:  # python 2
     import tkinter as tk
     import tkFont
@@ -336,8 +338,7 @@ class TableView(pwviewer.View):
     def __init__(self, headerList, dataList,
                  mesg=None, title=None,
                  height=10, width=400,
-                 fontSize=16, padding=10,
-                 fontFamily='monospace'):
+                 padding=10):
         # get new widget that has as parent the top level window and set title
         win = tk.Toplevel()
         if title:
@@ -346,9 +347,7 @@ class TableView(pwviewer.View):
         # frame to place all other widgets
         frame = tk.Frame(win)
 
-        # make font a little bigger
-        # TODO: font size should be general
-        font = tkFont.Font(family=fontFamily, size=fontSize)
+        font = getDefaultFont()
         font.metrics()
         fontheight = font.metrics()['linespace']
         style = ttk.Style()

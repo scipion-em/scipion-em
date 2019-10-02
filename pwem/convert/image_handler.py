@@ -36,7 +36,6 @@ import pyworkflow.utils as pwutils
 
 import pwem.objects as emobj
 import pwem.constants as emcts
-
 try:
   import xmippLib
 except Exception as e:
@@ -500,6 +499,15 @@ class ImageHandler(object):
         cls.__runXmippProgram("xmipp_transform_downsample",
                               "-i %s -o %s --step %f --method fourier"
                               % (inputFn, outputFn, scaleFactor))
+
+    @classmethod
+    def scaleSplines(cls, inputFn, outputFn, scaleFactor):
+        """ Scale an image using splines. """
+        I = xmippLib.Image(inputFn)
+        x, y, z, _ = I.getDimensions()
+        I.scale(int(x * scaleFactor), int(y * scaleFactor),
+                int(z * scaleFactor))
+        I.write(outputFn)
 
 
 DT_FLOAT = ImageHandler.DT_FLOAT
