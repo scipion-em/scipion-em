@@ -37,8 +37,6 @@ except ImportError:  # Python 3
 
 import pyworkflow.viewer as pwviewer
 
-
-import pwem as em
 import pwem.convert as emconv
 
 from .showj import (getJvmMaxMemory, MODE, VISIBLE, ZOOM, ORDER, RENDER,
@@ -196,6 +194,7 @@ class CtfView(ObjectView):
                    ]
 
     def __init__(self, project, ctfSet, other='', **kwargs):
+        from pwem import Domain
         first = ctfSet.getFirstItem()
 
         def existingLabels(labelList):
@@ -228,11 +227,11 @@ class CtfView(ObjectView):
                        for attrName, _ in obj.getAttributesToStore())
 
         if _anyAttrStartsBy(first, '_ctffind4_ctfResolution'):
-            gviewer = em.Domain.importFromPlugin('grigoriefflab.viewers', '')
+            gviewer = Domain.importFromPlugin('grigoriefflab.viewers', '')
             viewParams[OBJCMDS] = "'%s'" % gviewer.OBJCMD_CTFFIND4
 
         elif _anyAttrStartsBy(first, '_gctf'):
-            OBJCMD_GCTF = em.Domain.importFromPlugin('gctf.viewers', 'OBJCMD_GCTF')
+            OBJCMD_GCTF = Domain.importFromPlugin('gctf.viewers', 'OBJCMD_GCTF')
             viewParams[OBJCMDS] = "'%s'" % OBJCMD_GCTF
 
         inputId = ctfSet.getObjId() or ctfSet.getFileName()

@@ -30,7 +30,6 @@ import pyworkflow.tests as pwtests
 import pwem.metadata as md
 
 
-
 class TestMetaData(pwtests.unittest.TestCase):
     
     _labels = [pwtests.WEEKLY]

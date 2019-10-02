@@ -27,7 +27,7 @@
 # **************************************************************************
 
 import os
-import numpy
+import numpy as np
 import time
 from datetime import datetime
 
@@ -145,7 +145,6 @@ class ProtExtractCoords(ProtParticlePickingAuto):
         outputCoords.close()
         print("write time: %fs" % (time.time()-t0))
 
-
     def extractCoordinates(self, partsIds=None):
         inPart = self.getInputParticles()
         inMics = self.getInputMicrographs()
@@ -190,7 +189,6 @@ class ProtExtractCoords(ProtParticlePickingAuto):
         outputCoords.setBoxSize(boxSize)
 
         return outputCoords
-
 
     def _checkNewOutput(self):
         if getattr(self, 'finished', False):
@@ -319,7 +317,7 @@ class ProtExtractCoords(ProtParticlePickingAuto):
         matrix = transform.getMatrix()
         if alignType == emcts.ALIGN_2D:
             # get 2x2 matrix and check if negative
-            flip = bool(numpy.linalg.det(matrix[0:2, 0:2]) < 0)
+            flip = bool(np.linalg.det(matrix[0:2, 0:2]) < 0)
             if flip:
                 matrix[0, :2] *= -1.  # invert only the first two columns keep x
                 matrix[2, 2] = 1.  # set 3D rot
@@ -327,7 +325,7 @@ class ProtExtractCoords(ProtParticlePickingAuto):
                 pass
 
         elif alignType == emcts.ALIGN_3D:
-            flip = bool(numpy.linalg.det(matrix[0:3, 0:3]) < 0)
+            flip = bool(np.linalg.det(matrix[0:3, 0:3]) < 0)
             if flip:
                 matrix[0, :4] *= -1.  # now, invert first line including x
                 matrix[3, 3] = 1.  # set 3D rot
@@ -346,7 +344,7 @@ class ProtExtractCoords(ProtParticlePickingAuto):
     def geometryFromMatrix(self, matrix, inverseTransform):
         from pwem.convert.transformations import translation_from_matrix
         if inverseTransform:
-            matrix = numpy.linalg.inv(matrix)
+            matrix = np.linalg.inv(matrix)
             shifts = -translation_from_matrix(matrix)
         else:
             shifts = translation_from_matrix(matrix)

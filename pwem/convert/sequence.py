@@ -49,7 +49,7 @@ UNAMBIGOUS_RNA_ALPHABET = 4
 from Bio.Seq import Seq
 from Bio.Alphabet import IUPAC
 from Bio import Entrez, SeqIO
-import urllib, sys
+import sys
 from Bio.SeqRecord import SeqRecord
 from Bio.Align.Applications import ClustalOmegaCommandline, MuscleCommandline
 from Bio import pairwise2
@@ -143,7 +143,7 @@ def cleanSequence(alphabet, sequence):
     for item in sequence.upper():
         if item in alphabet.letters:
             str_list.append(item)
-    value =  ''.join(str_list)
+    value = ''.join(str_list)
     return ''.join(str_list)
 
 def indexToAlphabet(isAminoacid, iUPACAlphabet):

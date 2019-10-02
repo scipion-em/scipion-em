@@ -402,7 +402,7 @@ class ProtAlignMovies(ProtProcessMovies):
 
         framesRange.setFirstFrameIndex(firstFrameIndex)
         alignment = emobj.MovieAlignment(first=first, last=last, xshifts=xshifts,
-                                   yshifts=yshifts)
+                                         yshifts=yshifts)
 
         roiList = [self.getAttributeValue(s, 0) for s in
                    ['cropOffsetX', 'cropOffsetY', 'cropDimX', 'cropDimY']]

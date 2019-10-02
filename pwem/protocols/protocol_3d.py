@@ -36,6 +36,7 @@ from pwem.protocols import EMProtocol
 class Prot3D(EMProtocol):
     pass
 
+
 class ProtPreprocessVolumes(Prot3D):
     """ This class will serve as a base for all protocol
     that performs some operation on Volumes (i.e. filters, mask, resize, etc)
@@ -103,6 +104,7 @@ class ProtInitialVolume(Prot3D):
 
 class ProtAnalysis3D(Prot3D):
     pass
+
 
 class ProtFitting3D(Prot3D):
     pass

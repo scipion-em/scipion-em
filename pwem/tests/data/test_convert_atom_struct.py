@@ -257,7 +257,6 @@ class TestAtomicStructHandler(unittest.TestCase):
         if False or doAll:  # set to False if you aready have the 3dmap file
             url = 'ftp://ftp.ebi.ac.uk/pub/databases/emdb/structures/EMD-%s/map/emd_%s.map.gz' % \
                   (EMDBID, EMDBID)
-            import urllib
             urlretrieve(url, 'emd_%s.map.gz' % EMDBID)
             os.system("gunzip emd_%s.map.gz" % EMDBID)  # file is gzipped
         if False or doAll:  # set to False if you aready have the PDB file

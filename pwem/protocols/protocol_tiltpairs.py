@@ -164,9 +164,13 @@ class ProtImportMicrographsTiltPairs(ProtImportFiles):
         
         micsTiltPair = emobj.MicrographsTiltPair(filename=self.micsPairsSqlite)
         micsU = self.importMicrographs(self.patternUntilted.get(), 'Untilted',
-                                 self.voltage.get(), self.sphericalAberration.get(), self.ampContrast.get())
+                                       self.voltage.get(),
+                                       self.sphericalAberration.get(),
+                                       self.ampContrast.get())
         micsT = self.importMicrographs(self.patternTilted.get(), 'Tilted',
-                                 self.voltage.get(), self.sphericalAberration.get(), self.ampContrast.get())
+                                       self.voltage.get(),
+                                       self.sphericalAberration.get(),
+                                       self.ampContrast.get())
         
         micsTiltPair.setUntilted(micsU)
         micsTiltPair.setTilted(micsT)
@@ -230,7 +234,7 @@ class ProtImportMicrographsTiltPairs(ProtImportFiles):
             micSet.setScannedPixelSize(self.scannedPixelSize.get())
             
     def _fillMicName(self, img, filename, pattern):
-        from pwem import Micrograph
+        from pwem.objects import Micrograph
         if isinstance(img, Micrograph):
             filePaths = self.getMatchFiles(pattern=pattern)
             commPath = pwutils.commonPath(filePaths)

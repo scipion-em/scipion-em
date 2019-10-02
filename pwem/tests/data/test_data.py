@@ -21,13 +21,6 @@ import pwem.convert as emconv
 import pwem.objects as emobj
 import pwem.metadata as md
 
-# try:
-#     from xmipp3.convert import *
-# except:
-#     Domain._pluginNotFound('xmipp', doRaise=True)
-
-#xmippConvert = Domain.importFromPlugin('xmipp3.convert', doRaise=True)
-
 # set to true if you want to check how fast is the access to
 # the database
 SPEEDTEST = True

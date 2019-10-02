@@ -41,8 +41,6 @@ from pwem.constants import ALIGN_NONE
 from pwem.objects import (MicrographsTiltPair, ParticlesTiltPair)
 
 
-
-
 class BatchProtocol(EMProtocol):
     """ Base class to all protocols that are launched
     through other GUIs (such as showj) and that
@@ -132,7 +130,8 @@ class ProtUserSubSet(BatchProtocol):
     def _createSimpleSubset(self, inputObj):
         className = inputObj.getClassName()
         createFunc = getattr(self, '_create' + className)
-        modifiedSet = inputObj.getClass()(filename=self._dbName, prefix=self._dbPrefix)
+        modifiedSet = inputObj.getClass()(filename=self._dbName,
+                                          prefix=self._dbPrefix)
 
         output = createFunc()
         for item in modifiedSet:
@@ -179,7 +178,8 @@ class ProtUserSubSet(BatchProtocol):
         sizeOut = output.getSize()
         sizeDiff = sizeIn - sizeOut
         msg = 'A subset of _%s_ was created, ' % output.getClassName()
-        msg += 'discarding *%d* items (%0.1f %%) from the input set.' % (sizeDiff, sizeDiff*100./sizeIn)
+        msg += ('discarding *%d* items (%0.1f %%) from the input set.' %
+                (sizeDiff, sizeDiff*100./sizeIn))
         self.summaryVar.set(msg)
 
         return output
@@ -225,7 +225,8 @@ class ProtUserSubSet(BatchProtocol):
                             'this SetOfCTF, the micrographs were not set.')
         outputMics.copyInfo(setOfMics)
 
-        modifiedSet = emobj.SetOfCTF(filename=self._dbName, prefix=self._dbPrefix)
+        modifiedSet = emobj.SetOfCTF(filename=self._dbName,
+                                     prefix=self._dbPrefix)
 
         count = 0
         for ctf in modifiedSet:
@@ -254,7 +255,8 @@ class ProtUserSubSet(BatchProtocol):
         inputImages = inputClasses.getImages()
         createFunc = getattr(self, '_create' + outputClassName)
         modifiedSet = inputClasses.getClass()(filename=self._dbName, prefix=self._dbPrefix)
-        self.info("Creating REPRESENTATIVES of images from classes, sqlite file: %s" % self._dbName)
+        self.info("Creating REPRESENTATIVES of images from classes, "
+                  "sqlite file: %s" % self._dbName)
 
         count = 0
         output = createFunc()

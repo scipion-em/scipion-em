@@ -118,7 +118,7 @@ def get_network_interfaces():
                 family, addr = getfamaddr(ifa.ifa_addr.contents)
                 if addr:
                     i.addresses[family] = addr
-        except ValueError :
+        except ValueError:
                 del retval[name]
                 print("get_network_interfaces: Can not connect to NIC %s" % name)
         except Exception as ex:
