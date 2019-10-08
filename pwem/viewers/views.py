@@ -24,6 +24,7 @@
 
 import os
 
+from pwem import Domain
 from pyworkflow.gui import getDefaultFont
 
 try:  # python 2
@@ -36,6 +37,7 @@ except ImportError:  # Python 3
     import tkinter.ttk as ttk
 
 import pyworkflow.viewer as pwviewer
+
 
 import pwem.convert as emconv
 

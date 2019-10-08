@@ -46,7 +46,6 @@ from pwem.viewers import Chimera, ChimeraView
 VOLUME_SLICES = 1
 VOLUME_CHIMERA = 0
 
-
 class viewerProtImportVolumes(pwviewer.ProtocolViewer):
     """ Wrapper to visualize different type of objects
     with the Xmipp program xmipp_showj. """

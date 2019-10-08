@@ -33,7 +33,6 @@ This modules contains data classes related to Random Connical Tilt workflow.
 
 from .data import *
 
-
 class TiltPair(EMObject):
     def __init__(self, untilted=None, tilted=None, **kwargs):
         EMObject.__init__(self, **kwargs)

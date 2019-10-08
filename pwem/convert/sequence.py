@@ -143,7 +143,7 @@ def cleanSequence(alphabet, sequence):
     for item in sequence.upper():
         if item in alphabet.letters:
             str_list.append(item)
-    value = ''.join(str_list)
+    value =  ''.join(str_list)
     return ''.join(str_list)
 
 def indexToAlphabet(isAminoacid, iUPACAlphabet):

@@ -32,6 +32,7 @@ import pyworkflow.utils as pwutils
 import pwem.objects as emobj
 import pwem.protocols as emprot
 import pwem.convert as emconv
+from pwem import Domain
 
 from .views import (ObjectView, MicrographsView, CoordinatesObjectView,
                     ClassesView, Classes3DView, CtfView, DataView)
@@ -126,8 +127,7 @@ class DataViewer(pwviewer.Viewer):
 
         elif issubclass(cls, emobj.SetOfCoordinates):
             # FIXME: Remove dependency on xmipp3 plugin to visualize coordinates
-            from pwem import Domain
-            xmipp3 = Domain.importFromPlugin('xmipp3',
+            xmipp3 = emobj.Domain.importFromPlugin('xmipp3',
                                               errorMsg="xmipp3 plugin is required "
                                                        "now to visualize coordinates.")
             micSet = obj.getMicrographs()  # accessing mics to provide metadata file
@@ -191,10 +191,9 @@ class DataViewer(pwviewer.Viewer):
 
         elif issubclass(cls, emobj.CoordinatesTiltPair):
             # FIXME: Remove dependency on xmipp3 plugin to visualize coordinates
-            from pwem import Domain
             xmipp3 = Domain.importFromPlugin('xmipp3',
-                                             errorMsg="xmipp3 plugin is required "
-                                             "now to visualize coordinates.")
+                                              errorMsg="xmipp3 plugin is required "
+                                                       "now to visualize coordinates.")
             tmpDir = self._getTmpPath(obj.getName())
             pwutils.makePath(tmpDir)
 

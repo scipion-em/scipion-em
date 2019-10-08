@@ -17,6 +17,10 @@ from threading import Thread
 from pwem import Domain
 
 
+#from time import gmtime, strftime
+#from datetime import datetime
+#import socket
+
 class ChimeraServer:
     
     def __init__(self,centerVolume=True):
@@ -130,8 +134,7 @@ class ChimeraServer:
                     if msg == 'rotate':
 
                         matrix1 = self.vol_conn.recv()
-                        # undo last rotation and put new one. #Traslation is not
-                        # undone, if user moves volume wrong translation applied
+                        #undo last rotation and put new one. #Traslation is not undone, if user moves volume wrong translation applied
                         matrix = dot(matrix1, inv(self.rotation))
 
                         xform = chimera.Xform.xform(matrix[0][0], matrix[0][1],

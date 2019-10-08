@@ -41,6 +41,8 @@ from pwem.constants import ALIGN_NONE
 from pwem.objects import (MicrographsTiltPair, ParticlesTiltPair)
 
 
+
+
 class BatchProtocol(EMProtocol):
     """ Base class to all protocols that are launched
     through other GUIs (such as showj) and that
