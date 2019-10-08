@@ -130,8 +130,7 @@ class ProtCTFAssign(ProtCTFMicrographs):
         self._defineOutputs(outputParticles=outputParts)
         self._defineSourceRelation(self.inputSet, outputParts)
         self._defineSourceRelation(self.inputCTF, outputParts)
-    
-    
+
     def __findCTF(self, inputSet, outputSet, ctfDict, keyFunc):
         for mic in inputSet:
             micKey = keyFunc(mic)

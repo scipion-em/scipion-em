@@ -41,7 +41,6 @@ import pwem.protocols as emprot
 import pwem.objects as emobj
 
 
-
 class ImportAcquisitionWizard(EmWizard):
     _targets = [(emprot.ProtImportImages, ['acquisitionWizard'])]
 
@@ -186,7 +185,7 @@ class GetStructureChainsWizard(pwizard.Wizard):
         try:
             models = self.getModelsChainsStep(protocol)
         except Exception as e:
-            print("ERROR: ", e.message)
+            print("ERROR: ", e)
             return
 
         self.editionListOfChains(models)

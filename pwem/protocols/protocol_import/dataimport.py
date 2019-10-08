@@ -33,7 +33,7 @@ import pwem.objects as emobj
 import pwem.constants as emcts
 
 
-class ScipionImport():
+class ScipionImport:
     """ Import 
     """
     def __init__(self, protocol, sqliteFile):

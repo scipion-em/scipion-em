@@ -318,7 +318,7 @@ class TestSets(pwtests.BaseTest):
                 p_union.inputSets.append(setRandom)
             self.proj.launchProtocol(p_union, wait=True)
 
-            output = self.outputs(p_union).next()  # first (and only!) output
+            output = next(self.outputs(p_union))  # first (and only!) output
             self.assertEqual(len(output), sum(len(x) for x in setsIds))
             # We might be able to do more interesting tests, using the
             # collected setsIds.

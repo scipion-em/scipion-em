@@ -149,7 +149,7 @@ class ProtCreateStreamData(EMProtocol):
             self.nDims = int(min(self.nDim, len(self.inputParticles.get())))
             self.group = int(min(self.nDims, self.groups.get()))
             for mic in range(1, (self.nDims / self.group) +
-                    (self.nDims % self.group > 0) + 1):
+                             (self.nDims % self.group > 0) + 1):
                 self._insertFunctionStep(step, prerequisites=deps)
         else:
             for mic in range(1, self.nDim.get() + 1):
@@ -324,7 +324,8 @@ class ProtCreateStreamData(EMProtocol):
     def createRandomMicStep(self, mic):
         from pwem import Domain
         time.sleep(self.creationInterval.get())
-        getEnviron = Domain.importFromPlugin('xmipp3', 'Plugin').getEnviron
+        getEnviron = Domain.importFromPlugin('xmipp3', 'Plugin',
+                                             doRaise=True).getEnviron
 
         # create image
         img = xmippLib.Image()

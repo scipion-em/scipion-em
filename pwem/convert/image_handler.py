@@ -334,7 +334,7 @@ class ImageHandler(object):
             n = inputSet.getSize()
             if n:
                 imageIter = iter(inputSet)
-                img = imageIter.next()
+                img = next(imageIter)
                 avgImage = self.read(img)
                 
                 for img in imageIter:

@@ -49,7 +49,7 @@ UNAMBIGOUS_RNA_ALPHABET = 4
 from Bio.Seq import Seq
 from Bio.Alphabet import IUPAC
 from Bio import Entrez, SeqIO
-import urllib, sys
+import sys
 from Bio.SeqRecord import SeqRecord
 from Bio.Align.Applications import ClustalOmegaCommandline, MuscleCommandline
 from Bio import pairwise2

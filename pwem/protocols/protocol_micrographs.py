@@ -742,5 +742,6 @@ class ProtCTFMicrographs(ProtMicrographs):
 
         return failedList
 
+
 class ProtPreprocessMicrographs(ProtMicrographs):
     pass

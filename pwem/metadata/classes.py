@@ -37,7 +37,7 @@ from xmippLib import MetaData, MetaDataInfo, label2Str, str2Label, MD_APPEND
 
 
 
-class Row():
+class Row:
     """ Support Xmipp class to store label and value pairs 
     corresponding to a Metadata row. 
     """
@@ -164,7 +164,7 @@ class Row():
         print(str(self))
         
         
-class RowMetaData():
+class RowMetaData:
     """ This class is a wrapper for MetaData in row mode.
     Where only one object is used.
     """

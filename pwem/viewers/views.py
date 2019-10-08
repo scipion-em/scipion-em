@@ -196,6 +196,7 @@ class CtfView(ObjectView):
                    ]
 
     def __init__(self, project, ctfSet, other='', **kwargs):
+        from pwem import Domain
         first = ctfSet.getFirstItem()
 
         def existingLabels(labelList):
