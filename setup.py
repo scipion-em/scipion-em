@@ -27,7 +27,7 @@ with open('requirements.txt') as f:
 
 setup(
     name='scipion-em',  # Required
-    version='1.0.0',  # Required
+    version='1.a',  # Required
     description='This modules contains classes related with EM',  # Required
     long_description=long_description,  # Optional
     url='https://github.com/scipion-em/scipion-em',  # Optional
