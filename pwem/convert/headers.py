@@ -116,7 +116,7 @@ class Ccp4Header:
     80-character 'lines' and the 'lines' do not terminate in a ``*``).
     """
     def __init__(self, fileName, readHeader=False):
-        self._name = fileName.replace(':mrc', '')  # remove mrc ending
+        self._name = self.cleanFileNameAnnotation(fileName)  # remove mrc ending
         self._header = collections.OrderedDict()
         self.chain = "< 3i i 3i 3i 3f 36s i 104s 3f"
 
@@ -125,6 +125,10 @@ class Ccp4Header:
             self.readHeader()
         else:
             self.loaded = False
+
+    @staticmethod
+    def cleanFileNameAnnotation(fileName):
+        return fileName.replace(':mrc', '')
 
     def setOrigin(self, originTransformShift):
         # TODO: should we use originX,Y,Z and set this to 0
@@ -264,9 +268,9 @@ class Ccp4Header:
         self._header['Xlength'] = a[10]
         self._header['Ylength'] = a[11]
         self._header['Zlength'] = a[12]
-        self._header['dummy1'] = a[13] + "\n"  # "< 3i i 3i 3i 3f 36s"
+        self._header['dummy1'] = a[13] + b"\n"  # "< 3i i 3i 3i 3f 36s"
         self._header['ISPG'] = a[14]
-        self._header['dummy2'] = a[15] + "\n"  # "< 3i i 3i 3i 3f 36s i 104s"
+        self._header['dummy2'] = a[15] + b"\n"  # "< 3i i 3i 3i 3f 36s i 104s"
         self._header['originX'] = a[16]
         self._header['originY'] = a[17]
         self._header['originZ'] = a[18]
@@ -331,7 +335,7 @@ class Ccp4Header:
     @classmethod
     def getFileFormat(cls, fileName):
 
-        ext = getExt(fileName)
+        ext = getExt(cls.cleanFileNameAnnotation(fileName))
         if (ext == '.mrc') or (ext == '.map'):
             return cls.MRC
         elif (ext == '.spi') or (ext == '.vol'):

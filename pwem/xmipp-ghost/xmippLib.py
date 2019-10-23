@@ -1061,14 +1061,27 @@ def MetaData():
 
 MetaDataInfo = None
 
-def Image():
-    pass
+HEADER = None
 
+class Image:
+    def __init__(self):
+        pass
+    def read(self, *args, **kwargs):
+        print ("GHOST in place, read call ignored!.")
+    def getDimensions(self):
+        return None, None, None, None
 def Euler_angles2matrix():
     pass
 
-def FileName(arg):
-    pass
+class FileName:
+    """ Try to implement some basic code to reach further without xmipp"""
+    imageExtentions = []
+
+    def __init__(self, path):
+        self.path = path
+
+    def isImage(self):
+        return True
 
 def getBlocksInMetaDataFile():
     pass
