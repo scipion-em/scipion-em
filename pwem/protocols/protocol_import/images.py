@@ -489,13 +489,13 @@ class ProtImportImages(ProtImportFiles):
                 yield fileName, uniqueFn, fileId
 
     def _fillImportedFiles(self, imgSet):
-        from pwem import SetOfMicrographsBase
+        from pwem.objects import SetOfMicrographsBase
         if isinstance(imgSet, SetOfMicrographsBase):
             for img in imgSet:
                 self.importedFiles.add(img.getMicName())
 
     def _fillMicName(self, img, uniqueFn):
-        from pwem import Micrograph
+        from pwem.objects import Micrograph
         if isinstance(img, Micrograph):
             img.setMicName(uniqueFn)
             

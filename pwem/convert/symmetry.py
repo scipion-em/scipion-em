@@ -29,7 +29,7 @@ point symmetries. Code based on chiomera file sym.py
 """
 
 from math import sin, cos, pi, acos, sqrt, asin
-from numpy import array, zeros, float, transpose, add
+import numpy as np
 from numpy.linalg import inv as matrix_inverse
 from numpy import dot as matrix_multiply
 import operator
@@ -41,9 +41,9 @@ def _applyMatrix(tf, points):
     """
     Args:multiply point by a matrice list """
 
-    tf = array(tf)
-    r = matrix_multiply(points, transpose(tf[:, :3]))
-    add(r, tf[:, 3], r)
+    tf = np.array(tf)
+    r = matrix_multiply(points, np.transpose(tf[:, :3]))
+    np.add(r, tf[:, 3], r)
     return r
 
 
@@ -80,7 +80,7 @@ def _rotationTransform(axis, angle, center = (0, 0, 0)):
 
 def _translationMatrix(shift):
 
-  tf = array(((1.0, 0, 0, shift[0]),
+  tf = np.array(((1.0, 0, 0, shift[0]),
               (0, 1.0, 0, shift[1]),
               (0, 0, 1.0, shift[2])))
   return tf
@@ -93,10 +93,10 @@ def _identityMatrix():
 
 def _invertMatrix(tf):
 
-    tf = array(tf)
+    tf = np.array(tf)
     r = tf[:,:3]
     t = tf[:,3]
-    tfinv = zeros((3,4), float)
+    tfinv = np.zeros((3,4), np.float)
     rinv = tfinv[:,:3]
     tinv = tfinv[:,3]
     rinv[:,:] = matrix_inverse(r)
@@ -165,7 +165,7 @@ def getSymmetryMatrices(sym=cts.SYM_CYCLIC, n=1, center = (0,0,0)):
     elif sym == cts.SYM_OCTAHEDRAL:
         matrices = __octahedralSymmetryMatrices(center)
     elif sym == cts.SYM_TETRAHEDRAL or sym == cts.SYM_TETRAHEDRAL_Z3:
-        matrices = __tetrahedralSymmetryMatrices(sym, center)
+        matrices = __tetrahedralSymmetryMatrices(cts.SYM_TETRAHEDRAL_Z3, center)
     elif (sym == cts.SYM_I222 or sym == cts.SYM_I222r or
           sym == cts.SYM_In25 or sym == cts.SYM_In25r):
         matrices = __icosahedralSymmetryMatrices(sym, center)
@@ -175,7 +175,7 @@ def getSymmetryMatrices(sym=cts.SYM_CYCLIC, n=1, center = (0,0,0)):
     for i in range(len(matrices)):
         matrices[i] += (extraRow,)
     # convert from sets to lists Scipion standard
-    return array(matrices)
+    return np.array(matrices)
 
 
 def __cyclicSymmetrySatrices(n, center = (0, 0, 0)):
@@ -184,7 +184,7 @@ def __cyclicSymmetrySatrices(n, center = (0, 0, 0)):
     """
     tflist = []
     for k in range(n):
-        a = 2*pi * float(k) / n
+        a = 2*pi * np.float32(k) / n
         c = cos(a)
         s = sin(a)
         tf = ((c, -s, 0, 0),
@@ -356,16 +356,22 @@ class Icosahedron(object):
         tlist = []
         while len(transform) > len(tlist):
 
-            tlist = transform.keys()
+            tlist = list(transform.keys())
 
             # Add inverse transforms
-            for f, t in tlist:
+            for key in tlist:
+                f = key[0]
+                t = key[1]
                 if not (t, f) in transform:
                     transform[(t, f)] = _transposeMatrix(transform[(f, t)])
 
             # Use transitivity
-            for f1, t1 in tlist:
-                for f2, t2 in tlist:
+            for key1 in tlist:
+                f1 = key1[0]
+                t1 = key1[1]
+                for key2 in tlist:
+                    f2 = key2[0]
+                    t2 = key2[1]
                     if f2 == t1 and f1 != t2 and not (f1, t2) in transform:
                         transform[(f1, t2)] = _multiplyMatrices(transform[(
                             f2, t2)], transform[(f1, t1)])
