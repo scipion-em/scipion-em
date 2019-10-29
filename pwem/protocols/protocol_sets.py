@@ -363,6 +363,12 @@ class ProtSplitSet(ProtSets):
                       help='Put the elements at random in the different '
                            'subsets.')
 
+    # Overwrite SetOfCoordinates creation
+    def _createSetOfCoordinates(self, suffix=''):
+        coordSet = self.inputSet.get()
+        micSet = coordSet.getMicrographs()
+        return ProtSets._createSetOfCoordinates(self, micSet, suffix)
+
     # -------------------------- INSERT steps functions -----------------------
     def _insertAllSteps(self):
         self._insertFunctionStep('createOutputStep')
