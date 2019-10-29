@@ -16,3 +16,5 @@
 
 ### pip package files
 *.egg-info
+
+dist/*
