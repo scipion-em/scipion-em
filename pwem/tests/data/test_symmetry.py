@@ -29,6 +29,10 @@ import pyworkflow.tests as pwtests
 
 import pwem.constants as emcts
 import pwem.convert as emconv
+try:
+ from itertools import izip
+except:
+    izip = zip
 
 
 class TestSymmetry(pwtests.unittest.TestCase):
@@ -571,5 +575,5 @@ class TestSymmetry(pwtests.unittest.TestCase):
              [ 0.,          0.,          0.,         1.]]
             ]
 
-        for m1, m2 in zip(matrices[:len(refMatrices)],refMatrices):
+        for m1, m2 in izip(matrices[:len(refMatrices)],refMatrices):
             self.assertArrayAlmostEqual(m1, m2)

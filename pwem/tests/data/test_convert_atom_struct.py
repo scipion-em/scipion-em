@@ -529,7 +529,7 @@ ATOM      4  O   PRO B   1       9.466  21.457  19.005  1.00 17.44           O
 ATOM      5  CB  PRO B   1       6.460  21.723  20.211  1.00 22.26           C
 END"""
         f = NamedTemporaryFile(delete=False, suffix=".pdb")
-        f.write(PDBString)
+        f.write(PDBString.encode('utf8'))
         f.close()
         cls.PDBFileName = f.name
         CIFString = """data_1A3I
@@ -953,6 +953,6 @@ HETATM 4 O O  . PRO B 1 . 1 ? 9.466 21.457 19.005 1.00 17.44 ? ? ? ? ? ? ? 1 PRO
 HETATM 5 C CB . PRO B 1 . 1 ? 6.460 21.723 20.211 1.00 22.26 ? ? ? ? ? ? ? 1 PRO B CB 1 PRO B CB 1
 #"""
         f = NamedTemporaryFile(delete=False, suffix=".cif")
-        f.write(CIFString)
+        f.write(CIFString.encode('utf8'))
         f.close()
         cls.CIFFileName = f.name
