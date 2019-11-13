@@ -26,6 +26,9 @@
 
 import os
 import sys
+
+from PIL import Image
+
 try:
     from itertools import izip
 except ImportError:
@@ -183,7 +186,8 @@ class ImageHandler(object):
             # we are opening an Eman2 process to read the dm4 file
             from pwem import Domain
             convertImage = Domain.importFromPlugin('eman2.convert',
-                                                    'convertImage')
+                                                    'convertImage',
+                                                   doRaise=True)
             convertImage(inputLoc, outputLoc)
         else:
             # Read from input
@@ -266,7 +270,7 @@ class ImageHandler(object):
             from pwem.convert import Ccp4Header
 
             if ext == '.png' or ext == '.jpg':
-                im = PIL.Image.open(fn)
+                im = Image.open(fn)
                 x, y = im.size # (width,height) tuple
                 return x, y, 1, 1
 
@@ -281,7 +285,8 @@ class ImageHandler(object):
                 # we are opening an Eman2 process to read the dm4 file
                 from pwem import Domain
                 getImageDimensions = Domain.importFromPlugin(
-                                        'eman2.convert', 'getImageDimensions')
+                                        'eman2.convert', 'getImageDimensions',
+                    doRaise=True)
                 return getImageDimensions(fn) # we are ignoring index here
             else:
                 self._img.read(location, xmippLib.HEADER)
@@ -386,7 +391,7 @@ class ImageHandler(object):
     def __runEman2Program(cls, program, args):
         """ Internal workaround to launch an EMAN2 program. """
         from pwem import Domain
-        eman2 = Domain.importFromPlugin('eman2')
+        eman2 = Domain.importFromPlugin('eman2', doRaise=True)
         from pyworkflow.utils.process import runJob
         runJob(None, eman2.Plugin.getProgram(program), args,
                env=eman2.Plugin.getEnviron())
