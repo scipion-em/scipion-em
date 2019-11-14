@@ -27,6 +27,7 @@
 import sys
 import tkinter as tk
 from matplotlib import animation
+from pwem.protocols.monitors.protocol_monitor_system import MonitorSystem
 
 from pyworkflow.gui.plotter import plt
 from pyworkflow.gui.tree import BoundTree
@@ -293,7 +294,7 @@ class ProtMonitorSystemViewer(pwviewer.Viewer):
 
     def _visualize(self, obj, **kwargs):
         return [SystemMonitorPlotter(obj.createMonitor(),
-                                     nifName=self.protocol.nifsNameList[
+                                     nifName=MonitorSystem.getNifsNameList()[
                                          self.protocol.netInterfaces.get()])]
 
 
@@ -603,7 +604,7 @@ class SummaryWindow(pwgui.Window):
         MovieGainMonitorPlotter(self.protocol.createMovieGainMonitor()).show()
 
     def _monitorSystem(self, e=None):
-        nifName = self.protocol.nifsNameList[self.protocol.netInterfaces.get()]
+        nifName = MonitorSystem.getNifsNameList()[self.protocol.netInterfaces.get()]
         SystemMonitorPlotter(self.protocol.createSystemMonitor(),
                              nifName).show()
 

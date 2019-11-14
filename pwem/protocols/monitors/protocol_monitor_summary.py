@@ -31,7 +31,6 @@ from pyworkflow import VERSION_1_1
 
 from pwem.protocols import ProtCTFMicrographs, ProtAlignMovies
 from .report_html import ReportHtml
-from .protocol_monitor_system import getnifs
 from .protocol_monitor import ProtMonitor, Monitor
 from .protocol_monitor_ctf import MonitorCTF
 from .protocol_monitor_movie_gain import MonitorMovieGain
@@ -47,8 +46,6 @@ class ProtMonitorSummary(ProtMonitor):
     """
     _label = 'monitor summary'
     _lastUpdateVersion = VERSION_1_1
-    nifs = getnifs.get_network_interfaces()
-    nifsNameList = [nif.getName() for nif in nifs]
 
     def __init__(self, **kwargs):
         ProtMonitor.__init__(self, **kwargs)
@@ -122,7 +119,7 @@ class ProtMonitorSummary(ProtMonitor):
                        label="Check Network",
                        help="Set to true if you want to monitor the Network")
         group.addParam('netInterfaces', params.EnumParam,
-                       choices=self.nifsNameList,
+                       choices=MonitorSystem.getNifsNameList(),
                        default=1,  # usually 0 is the loopback
                        label="Interface", condition='doNetwork',
                        help="Name of the network interface to be checked")
@@ -289,7 +286,7 @@ class ProtMonitorSummary(ProtMonitor):
                                gpusToUse=self.gpusToUse.get(),
                                doNetwork=self.doNetwork.get(),
                                doDiskIO=self.doDiskIO.get(),
-                               nif=self.nifsNameList[
+                               nif=MonitorSystem.getNifsNameList()[
                                    self.netInterfaces.get()])
 
         return sysMon
