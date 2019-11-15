@@ -41,12 +41,12 @@ import pyworkflow.viewer as pwviewer
 import pwem.objects as emobj
 import pwem.convert as emconv
 import pwem.protocols as emprot
-from pwem.viewers import Chimera, ChimeraView
+from pwem.viewers import Chimera, ChimeraView, EmProtocolViewer
 
 VOLUME_SLICES = 1
 VOLUME_CHIMERA = 0
 
-class viewerProtImportVolumes(pwviewer.ProtocolViewer):
+class viewerProtImportVolumes(EmProtocolViewer):
     """ Wrapper to visualize different type of objects
     with the Xmipp program xmipp_showj. """
 
