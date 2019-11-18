@@ -36,6 +36,7 @@ from collections import OrderedDict
 import subprocess
 
 from pwem import Domain
+from pyworkflow import Config
 from pyworkflow.utils import getFreePort
 import threading
 import shlex
@@ -272,7 +273,7 @@ def getJavaIJappArguments(memory, appName, appArgs):
 
     import subprocess
     version = subprocess.check_output(['java', '-version'], stderr=subprocess.STDOUT)
-    majorVersion = int(version.split('"')[1].split('.')[0])
+    majorVersion = int(version.decode("utf-8").split('"')[1].split('.')[0])
     if majorVersion > 9:
         args = "-Xmx%(memory)sg -Djava.library.path=%(lib)s -Dplugins.dir=%(plugins_dir)s -cp %(jdkLib)s/*:%(imagej_home)s/*:%(javaLib)s/* %(appName)s %(appArgs)s" % locals()
     else:
@@ -282,9 +283,9 @@ def getJavaIJappArguments(memory, appName, appArgs):
 
 
 def runJavaIJapp(memory, appName, args, env=None):
-    xmipp3 = Domain.importFromPlugin('xmipp3', doRaise=True)
+    xmipp3 = Config.getDomain().importFromPlugin('xmipp3', doRaise=True)
     env = env or {}
-    getEnviron = Domain.importFromPlugin('xmipp3', 'Plugin').getEnviron
+    getEnviron = Config.getDomain().importFromPlugin('xmipp3', 'Plugin').getEnviron
     env.update(getEnviron(xmippFirst=False))
 
     args = getJavaIJappArguments(memory, appName, args)
