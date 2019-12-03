@@ -285,7 +285,9 @@ class Ccp4Header:
         ss = struct.Struct(self.chain)
         t = tuple(self._header.values())
         packed_data = ss.pack(*t)
-        f = open(self._name, 'r+')
+        # Python 3 will fail writing bytes in a text file unless it's open
+        # as rb or wb for reading and writing binaries, respectively.
+        f = open(self._name, 'rb+')
         f.write(packed_data)
         f.close()
 
