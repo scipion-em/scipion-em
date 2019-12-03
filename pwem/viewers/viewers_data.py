@@ -127,7 +127,7 @@ class DataViewer(pwviewer.Viewer):
 
         elif issubclass(cls, emobj.SetOfCoordinates):
             # FIXME: Remove dependency on xmipp3 plugin to visualize coordinates
-            xmipp3 = emobj.Domain.importFromPlugin('xmipp3',
+            xmipp3 = Domain.importFromPlugin('xmipp3',
                                               errorMsg="xmipp3 plugin is required "
                                                        "now to visualize coordinates.")
             micSet = obj.getMicrographs()  # accessing mics to provide metadata file
