@@ -31,6 +31,7 @@ from pyworkflow.protocol import Protocol
 from pyworkflow.viewer import Viewer
 from pyworkflow.wizard import Wizard
 import pyworkflow.plugin
+import os
 
 from .constants import *
 from pwem.objects import EMObject
@@ -47,7 +48,30 @@ class Domain(pyworkflow.plugin.Domain):
 
 
 class Plugin(pyworkflow.plugin.Plugin):
-    pass
+
+    @classmethod
+    def getMaxitHome(cls):
+        return cls.getVar(MAXIT_HOME)
+
+    @classmethod
+    def getMaxitBin(cls):
+        return os.path.join(cls.getMaxitHome(), 'bin', MAXIT)
+
+    @classmethod
+    def _defineVariables(cls):
+        cls._defineEmVar(MAXIT_HOME, 'maxit-10.1')
+
+    @classmethod
+    def defineBinaries(cls, env):
+        MAXIT_URL = 'https://sw-tools.rcsb.org/apps/MAXIT/maxit-v10.100-prod-src.tar.gz'
+        MAXIT_TAR = 'maxit-v10.100-prod-src.tar.gz'
+        maxit_commands = [('make -j 1 binary ' , ['bin/maxit'])]
+        env.addPackage(MAXIT, version='10.1',
+                       tar=MAXIT_TAR,
+                       url=MAXIT_URL,
+                       commands=maxit_commands,
+                       default=False)  # scipion installb maxit
+                                       # requirements bison, flex, gcc
 
 
 Domain.registerPlugin(__name__)
