@@ -63,7 +63,7 @@ class ImportAcquisitionWizard(EmWizard):
                 If None, show an error.
         """
         msg = ''
-        for k, v in acquisitionInfo.iteritems():
+        for k, v in acquisitionInfo.items():
             msg += '%s = %s\n' % (k, v)
         msg += '\n*Do you want to use detected acquisition values?*'
         response = dialog.askYesNo("Import acquisition",
@@ -72,7 +72,7 @@ class ImportAcquisitionWizard(EmWizard):
             prot = form.protocol
             comment = ''
 
-            for k, v in acquisitionInfo.iteritems():
+            for k, v in acquisitionInfo.items():
                 if prot.hasAttribute(k):
                     form.setVar(k, v)
                 else:
@@ -173,8 +173,8 @@ class GetStructureChainsWizard(pwizard.Wizard):
 
     def editionListOfChains(self, models):
         self.chainList = []
-        for model, chainDic in models.iteritems():
-            for chainID, lenResidues in chainDic.iteritems():
+        for model, chainDic in models.items():
+            for chainID, lenResidues in chainDic.items():
 
                 self.chainList.append(
                     '{"model": %d, "chain": "%s", "residues": %d}' %

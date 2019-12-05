@@ -420,7 +420,7 @@ class ProtExtractParticles(ProtParticles):
         #         ...
         #     ...
 
-        for micKey, mic in micDict.iteritems():
+        for micKey, mic in micDict.items():
             if counter % 50 == 0:
                 b = datetime.now()
                 print(b-a, 'reading coordinates for mic number', "%06d" % counter)
