@@ -63,6 +63,10 @@ class Plugin(pyworkflow.plugin.Plugin):
 
     @classmethod
     def defineBinaries(cls, env):
+        cls.defineBinariesMaxit(False, env)
+
+    @classmethod
+    def defineBinariesMaxit(cls, default, env):
         MAXIT_URL = 'https://sw-tools.rcsb.org/apps/MAXIT/maxit-v10.100-prod-src.tar.gz'
         MAXIT_TAR = 'maxit-v10.100-prod-src.tar.gz'
         maxit_commands = [('make -j 1 binary ' , ['bin/maxit'])]
@@ -70,8 +74,8 @@ class Plugin(pyworkflow.plugin.Plugin):
                        tar=MAXIT_TAR,
                        url=MAXIT_URL,
                        commands=maxit_commands,
-                       default=False)  # scipion installb maxit
-                                       # requirements bison, flex, gcc
+                       default=default)  # scipion installb maxit
+                                         # requirements bison, flex, gcc
 
 
 Domain.registerPlugin(__name__)
