@@ -24,8 +24,7 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-
-
+from os.path import join
 import pyworkflow.utils as pwutils
 
 
@@ -56,3 +55,7 @@ def runProgram(program, params):
         env = bsoft.getEnviron()
 
     pwutils.runJob(None, program, params, env=env)
+
+
+def getTemplatePath(*paths):
+    return join('templates', *paths)

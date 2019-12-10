@@ -28,7 +28,7 @@ This module is a Wrapper to the underlying xmipp module
 to the functions related to metadata.
 """
 
-from .constants import *
+from .constants2 import *
 from .functions import *
 from .classes import MetaData, Row, RowMetaData, MetaDataInfo
 from .utils import *

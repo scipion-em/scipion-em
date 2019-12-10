@@ -32,9 +32,10 @@ from pyworkflow.viewer import Viewer
 from pyworkflow.wizard import Wizard
 import pyworkflow.plugin
 
-from .constants import *
+from pwem.constants import *
 from pwem.objects import EMObject
 from .utils import *
+from .metadata import *
 
 
 class Domain(pyworkflow.plugin.Domain):
