@@ -33,10 +33,12 @@ import pyworkflow.protocol.params as params
 
 import pwem.objects as emobj
 import pwem.convert as emconv
+from pwem.convert.atom_struct import fromPDBToCIF
 
 from .base import ProtImportFiles
 from .images import ProtImportImages
 
+from pyworkflow.utils.path import copyFile
 
 class ProtImportVolumes(ProtImportImages):
     """Protocol to import a set of volumes to the project"""
@@ -297,14 +299,16 @@ Format may be PDB or MMCIF"""
         localPath = abspath(self._getExtraPath(baseName))
 
         if str(atomStructPath) != str(localPath): # from local file
-            if atomStructPath.endswith(".pdb") or \
-                    atomStructPath.endswith(".ent"):
-                localPath = localPath.replace(".pdb", ".cif").\
-                    replace(".ent", ".cif")
-            # normalize input format
-            aSH = emconv.AtomicStructHandler()
-            aSH.read(atomStructPath)
-            aSH.write(localPath)
+            if atomStructPath.endswith(".pdb"):
+                # convert pdb to cif by using maxit program
+                log = self._log
+                localPath = localPath.replace(".pdb", ".cif")
+                fromPDBToCIF(atomStructPath, localPath, log)
+            elif atomStructPath.endswith(".cif"):
+                copyFile(atomStructPath, localPath)
+
+        localPath = relpath(localPath)
+
         pdb = emobj.AtomStruct()
         volume = self.inputVolume.get()
 
