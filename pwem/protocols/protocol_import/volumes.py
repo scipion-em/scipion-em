@@ -303,7 +303,8 @@ Format may be PDB or MMCIF"""
                 # convert pdb to cif by using maxit program
                 log = self._log
                 localPath = localPath.replace(".pdb", ".cif")
-                fromPDBToCIF(atomStructPath, localPath, log)
+                fromPDBToCIF('"' + atomStructPath + '"',
+                             '"' + localPath + '"', log)
             elif atomStructPath.endswith(".cif"):
                 copyFile(atomStructPath, localPath)
 

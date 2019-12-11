@@ -44,7 +44,7 @@ from collections import OrderedDict
 from Bio.PDB.Polypeptide import is_aa
 from Bio.PDB.Polypeptide import three_to_one
 from Bio.Seq import Seq
-from pwem import Plugin
+from pwem import Plugin, MAXIT_HOME
 from pwem.convert.transformations import translation_from_matrix
 import mmap
 import re
@@ -741,7 +741,7 @@ def _frombase(inFileName, outFileName, log, oParam=1):
         # show error message
         print(pwutils.redStr("Please, install maxit with the command 'scipion installb maxit'"))
         print(pwutils.redStr("and restart scipion. Packages bison and flex are needed."))
-        print(pwutils.redStr("If maxit is installed check %s in scipion.conf" % MAXIT_HOME_LABEL))
+        print(pwutils.redStr("If maxit is installed check %s in scipion.conf" % MAXIT_HOME))
 
 
 def fromPDBToCIF(inFileName, outFileName, log):
