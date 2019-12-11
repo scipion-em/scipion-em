@@ -33,9 +33,10 @@ from pyworkflow.wizard import Wizard
 import pyworkflow.plugin
 import os
 
-from .constants import *
+from pwem.constants import *
 from pwem.objects import EMObject
 from .utils import *
+from .metadata import *
 
 
 class Domain(pyworkflow.plugin.Domain):

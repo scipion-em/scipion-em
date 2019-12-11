@@ -34,11 +34,10 @@ import multiprocessing
 from datetime import datetime
 
 from pyworkflow.protocol import getUpdatedProtocol
-from pyworkflow import getTemplatePath, getConfigPath
 import pyworkflow.utils as pwutils
 
 from pwem.convert import ImageHandler
-
+from pwem.utils import getTemplatePath
 from .summary_provider import SummaryProvider
 
 ####################### CONSTANTS ##########################
@@ -95,7 +94,7 @@ class ReportHtml:
         """ Returns the path of the customized template at
         config/execution.summary.html or the standard scipion HTML template"""
         # Try if there is a customized template
-        template = getConfigPath('execution.summary.html')
+        template = os.path.join(basename(pwutils.Config.SCIPION_CONFIG), 'execution.summary.html')
 
         if not os.path.exists(template):
             template = getTemplatePath('execution.summary.template.html')
