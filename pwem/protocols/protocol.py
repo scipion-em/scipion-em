@@ -25,6 +25,7 @@
 # **************************************************************************
 
 import time
+
 try:
     from itertools import izip
 except ImportError:
@@ -45,32 +46,32 @@ class EMProtocol(pwprot.Protocol):
     It will contains some common functionalities. 
     """
     _base = True
-    
+
     def __init__(self, **kwargs):
         pwprot.Protocol.__init__(self, **kwargs)
-        
+
     def __createSet(self, SetClass, template, suffix, **kwargs):
-        """ Create a set and set the filename using the suffix. 
+        """ Create a set and set the filename using the suffix.
         If the file exists, it will be delete. """
         setFn = self._getPath(template % suffix)
         # Close the connection to the database if
         # it is open before deleting the file
         pwutils.cleanPath(setFn)
-        
+
         pwmapper.SqliteDb.closeConnection(setFn)
         setObj = SetClass(filename=setFn, **kwargs)
         return setObj
-    
+
     def _createSetOfMicrographs(self, suffix=''):
         return self.__createSet(emobj.SetOfMicrographs,
                                 'micrographs%s.sqlite', suffix,
                                 indexes=['_index'])
-    
+
     def _createSetOfCoordinates(self, micSet, suffix=''):
         coordSet = self.__createSet(emobj.SetOfCoordinates,
                                     'coordinates%s.sqlite', suffix,
                                     indexes=['_micId'])
-        coordSet.setMicrographs(micSet)       
+        coordSet.setMicrographs(micSet)
         return coordSet
 
     def _createCoordinatesTiltPair(self, micTiltPairs, uCoords, tCoords,
@@ -88,12 +89,12 @@ class EMProtocol(pwprot.Protocol):
             coordTiltPairs.append(emobj.TiltPair(coordU, coordT))
 
         return coordTiltPairs
-    
+
     def _createSetFromName(self, className, suffix=''):
         """ Create a new set from the given className. """
         _createSetFunc = getattr(self, '_create%s' % className)
         return _createSetFunc(suffix)
-        
+
     def _createSetOfImages(self, suffix=''):
         return self.__createSet(emobj.SetOfImages, 'images%s.sqlite', suffix)
 
@@ -103,67 +104,67 @@ class EMProtocol(pwprot.Protocol):
 
     def _createSetOfAverages(self, suffix=''):
         return self.__createSet(emobj.SetOfAverages, 'averages%s.sqlite', suffix)
-        
+
     def _createSetOfMovieParticles(self, suffix=''):
         return self.__createSet(emobj.SetOfMovieParticles,
                                 'movie_particles%s.sqlite', suffix)
-    
+
     def _createSetOfClasses2D(self, imgSet, suffix=''):
         classes = self.__createSet(emobj.SetOfClasses2D,
                                    'classes2D%s.sqlite', suffix)
         classes.setImages(imgSet)
         return classes
-    
+
     def _createSetOfClasses3D(self, imgSet, suffix=''):
-        classes =  self.__createSet(emobj.SetOfClasses3D,
-                                    'classes3D%s.sqlite', suffix)
+        classes = self.__createSet(emobj.SetOfClasses3D,
+                                   'classes3D%s.sqlite', suffix)
         classes.setImages(imgSet)
         return classes
-    
+
     def _createSetOfClassesVol(self, suffix=''):
         return self.__createSet(emobj.SetOfClassesVol, 'classesVol%s.sqlite', suffix)
-    
+
     def _createSetOfVolumes(self, suffix=''):
         return self.__createSet(emobj.SetOfVolumes, 'volumes%s.sqlite', suffix)
-    
+
     def _createSetOfCTF(self, suffix=''):
         return self.__createSet(emobj.SetOfCTF, 'ctfs%s.sqlite', suffix)
-    
+
     def _createSetOfNormalModes(self, suffix=''):
         return self.__createSet(emobj.SetOfNormalModes, 'modes%s.sqlite', suffix)
-    
+
     def _createSetOfMovies(self, suffix=''):
         return self.__createSet(emobj.SetOfMovies, 'movies%s.sqlite', suffix)
-    
+
     def _createSetOfAngles(self, suffix=''):
         return self.__createSet(emobj.SetOfAngles,
                                 'tiltpairs_angles%s.sqlite', suffix)
 
     def _createSetOfFSCs(self, suffix=''):
         return self.__createSet(emobj.SetOfFSCs, 'fscs%s.sqlite', suffix)
-       
+
     def _createSetOfPDBs(self, suffix=''):
         return self.__createSet(emobj.SetOfAtomStructs, 'pdbs%s.sqlite', suffix)
 
     def _defineSourceRelation(self, srcObj, dstObj):
         """ Add a DATASOURCE relation between srcObj and dstObj """
         self._defineRelation(pwobj.RELATION_SOURCE, srcObj, dstObj)
-    
+
     def _defineTransformRelation(self, srcObj, dstObj):
         self._defineRelation(pwobj.RELATION_TRANSFORM, srcObj, dstObj)
         # A transform relation allways implies a source relation
         self._defineSourceRelation(srcObj, dstObj)
-        
+
     def _defineCtfRelation(self, micsObj, ctfsObj):
         self._defineRelation(emcts.RELATION_CTF, micsObj, ctfsObj)
         # A ctf relation allways implies a source relation
         self._defineSourceRelation(micsObj, ctfsObj)
-    
+
     def _insertChild(self, key, child):
         if isinstance(child, emobj.Set):
             child.write()
         pwprot.Protocol._insertChild(self, key, child)
-        
+
     def _validateDim(self, obj1, obj2, errors,
                      label1='Input 1', label2='Input 2'):
         """ Validate that obj1 and obj2 has the same dimensions.
@@ -184,16 +185,16 @@ class EMProtocol(pwprot.Protocol):
                 msg = '%s and %s have not the same dimensions, \n' % (label1, label2)
                 msg += 'which are %d and %d, respectively' % (d1, d2)
                 errors.append(msg)
-            
+
     def __str__(self):
         return self.getObjLabel()
-    
+
     def allowsDelete(self, obj):
         if (isinstance(obj, emobj.SetOfCoordinates) or
                 isinstance(obj, emobj.CoordinatesTiltPair)):
             return True
         return False
-        
+
     # ------ Methods for Streaming picking --------------
 
     def _defineStreamingParams(self, form):
@@ -253,7 +254,6 @@ class EMProtocol(pwprot.Protocol):
                       % sleepOnWait)
             time.sleep(sleepOnWait)
 
-
     def _insertNewMics(self, inputMics, getMicKeyFunc,
                        insertStepFunc, insertStepListFunc, *args):
         """ Insert steps of new micrographs taking into account the batch size.
@@ -291,7 +291,7 @@ class EMProtocol(pwprot.Protocol):
         # Now handle the steps depending on the streaming batch size
         batchSize = self._getStreamingBatchSize()
 
-        if batchSize == 1: # This is one by one, as before the batch size
+        if batchSize == 1:  # This is one by one, as before the batch size
             for mic in micList:
                 stepId = insertStepFunc(mic, self.initialIds, *args)
                 deps.append(stepId)
@@ -299,10 +299,10 @@ class EMProtocol(pwprot.Protocol):
             _insertSubset(micList)
         else:  # batchSize > 0, insert only batches of this size
             n = len(inputMics)
-            d = n / batchSize # number of batches to insert
+            d = int(n / batchSize)  # number of batches to insert
             nd = d * batchSize
             for i in range(d):
-                _insertSubset(micList[i*batchSize:(i+1)*batchSize])
+                _insertSubset(micList[i * batchSize:(i + 1) * batchSize])
 
             if n > nd and self.streamClosed:  # insert last ones
                 _insertSubset(micList[nd:])

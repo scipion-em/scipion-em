@@ -186,7 +186,7 @@ def alphabetToIndex(isAminoacid, alphabet):
 def saveFileSequencesToAlign(SeqDic, inFile, type="fasta"):
     # Write my sequences to a fasta file
     with open(inFile, "w") as output_handle:
-        for index, seq in SeqDic.iteritems():
+        for index, seq in SeqDic.items():
             record = SeqRecord(seq, id=str(index),
                            name="", description="")
             SeqIO.write(record, output_handle, type)

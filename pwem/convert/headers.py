@@ -135,9 +135,9 @@ class Ccp4Header:
         self._header['originX'] = originTransformShift[0]
         self._header['originY'] = originTransformShift[1]
         self._header['originZ'] = originTransformShift[2]
-        self._header['NCSTART'] = 0.
-        self._header['NRSTART'] = 0.
-        self._header['NSSTART'] = 0.
+        self._header['NCSTART'] = 0
+        self._header['NRSTART'] = 0
+        self._header['NSSTART'] = 0
 
     # def getOrigin(self):
     #     return self._header['originX'], \
@@ -285,7 +285,10 @@ class Ccp4Header:
         ss = struct.Struct(self.chain)
         t = tuple(self._header.values())
         packed_data = ss.pack(*t)
-        f = open(self._name, 'r+')
+
+        # Python 3 will fail writing bytes in a text file unless it's open
+        # as rb or wb for reading and writing binaries, respectively.
+        f = open(self._name, 'rb+')
         f.write(packed_data)
         f.close()
 
