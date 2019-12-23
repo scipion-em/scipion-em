@@ -24,9 +24,9 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-
-
+from os.path import join, dirname
 import pyworkflow.utils as pwutils
+import pwem
 
 
 def loadSetFromDb(dbName, dbPrefix=''):
@@ -56,3 +56,12 @@ def runProgram(program, params):
         env = bsoft.getEnviron()
 
     pwutils.runJob(None, program, params, env=env)
+
+
+def getPWEMPath(*paths):
+    return join(dirname(pwem.__file__), *paths)
+
+
+def getTemplatePath(*paths):
+    return join(getPWEMPath('templates'), *paths)
+
