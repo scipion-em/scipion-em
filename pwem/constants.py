@@ -139,7 +139,13 @@ SCIPION_SYM_NAME[SYM_I2n3r] = 'I2n3r'
 SCIPION_SYM_NAME[SYM_I2n5] = 'I2n5'
 SCIPION_SYM_NAME[SYM_I2n5r] = 'I2n5r'
 
+# Entry points names
+CONVERT_ENTRY_POINT = 'emconvert'
+CHIMERA_ENTRY_POINT = 'emchimera'
+CHIMERAV_ENTRY_POINT = 'emchimerav'
+EM_PROGRAM_ENTRY_POINT = 'emprogram'
 
 # maxit
 MAXIT_HOME = 'MAXIT_HOME'
 MAXIT = 'maxit'
+

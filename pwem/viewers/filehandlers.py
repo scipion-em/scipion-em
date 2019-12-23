@@ -28,6 +28,7 @@ This modules contains file handlers to be registered in the scipion file browser
 """
 import os
 from os.path import dirname
+import xmippLib
 
 from pyworkflow.gui.browser import FileHandler, isStandardImage
 from pyworkflow import gui
@@ -35,7 +36,6 @@ import pyworkflow.utils as pwutils
 
 
 class ImageFileHandler(FileHandler):
-    import xmippLib
     _image = xmippLib.Image()
     _index = ''
 
@@ -64,7 +64,7 @@ class ImageFileHandler(FileHandler):
                                       tkImage=True, maxheight=dim)
         else:
             fn = self._index + filename
-            self.tkImg = gui.getTkImage(self._image, fn, dim)
+            self.tkImg = getTkImage(self._image, fn, dim)
 
         return self.tkImg
 
@@ -115,7 +115,6 @@ class MdFileHandler(ImageFileHandler):
     def _getImgPath(self, mdFn, imgFn):
         """ Get ups and ups until finding the relative location to images. """
         path = dirname(mdFn)
-        import xmippLib
         index, fn = xmippLib.FileName(imgFn).decompose()
 
         while path and path != '/':
@@ -180,3 +179,36 @@ class MdFileHandler(ImageFileHandler):
             msg += self._getMdString(filename)
 
         return self._imgPreview, msg
+
+
+# Image methods for filehandlers
+def getPILImage(imageXmipp, dim=None, normalize=True):
+    """ Given an image read by Xmipp, convert it to PIL. """
+    from PIL import Image
+
+    if normalize:
+        imageXmipp.convert2DataType(xmippLib.DT_UCHAR, xmippLib.CW_ADJUST)
+
+    imageData = imageXmipp.getData()
+    image = Image.fromarray(imageData)
+    if dim:
+        size = int(dim), int(dim)
+        image.thumbnail(size, Image.ANTIALIAS)
+    return image
+
+
+def getTkImage(imageXmipp, filename, dim):
+    from PIL import ImageTk
+    imageXmipp.readPreview(filename, dim)
+    return ImageTk.PhotoImage(getPILImage(imageXmipp))
+
+def getImageFromPath(imagePath):
+    """ Read an image using Xmipp, convert to PIL
+    and then return as expected by Tk.
+    """
+    img = xmippLib.Image(imagePath)
+    imgPIL = getPILImage(img)
+    from PIL import ImageTk
+    imgTk = ImageTk.PhotoImage(imgPIL)
+
+    return imgTk
