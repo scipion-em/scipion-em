@@ -27,11 +27,14 @@
 This modules contains classes related with EM
 """
 
+import os
+import sys
+from os.path import dirname, join
+sys.path.append(join(dirname(__file__), "xmipp-ghost"))
 from pyworkflow.protocol import Protocol
 from pyworkflow.viewer import Viewer
 from pyworkflow.wizard import Wizard
 import pyworkflow.plugin
-import os
 
 from pwem.constants import *
 from pwem.objects import EMObject
