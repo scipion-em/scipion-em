@@ -496,7 +496,7 @@ class ProtSubSet(ProtSets):
         outputSet.copyInfo(inputFullSet)
 
         if self.chooseAtRandom:
-            chosen = random.sample(xrange(len(inputFullSet)),
+            chosen = random.sample(range(len(inputFullSet)),
                                    self.nElements.get())
             for i, elem in enumerate(inputFullSet):
                 if i in chosen:

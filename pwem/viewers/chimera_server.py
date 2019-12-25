@@ -3,8 +3,8 @@
 This scripts seems to be execute with the Python and libraries from Chimera.
 """
 
-import sys
 from __future__ import print_function
+import sys
 from multiprocessing.connection import Listener, Client
 from VolumeData import Array_Grid_Data
 from VolumeViewer import volume_from_grid_data
