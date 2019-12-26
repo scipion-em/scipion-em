@@ -176,8 +176,8 @@ class TestStreamingWorkflow(pwtests.BaseTest):
         protocols.append(protOF)
 
         # --------- CTF ESTIMATION ---------------------------
-        ProtCTFFind = Domain.importFromPlugin('grigoriefflab.protocols',
-                                                 'ProtCTFFind', doRaise=True)
+        ProtCTFFind = Domain.importFromPlugin('cistem.protocols',
+                                              'CistemProtCTFFind', doRaise=True)
         protCTF = self.newProtocol(ProtCTFFind,
                                    objLabel='ctffind4')
         protCTF.inputMicrographs.set(protOF)
@@ -255,8 +255,8 @@ class TestRelionExtractStreaming(TestBaseRelionStreaming):
 
         # Now estimate CTF on the micrographs with ctffind
         print("Performing CTFfind...")
-        ProtCTFFind = Domain.importFromPlugin('grigoriefflab.protocols',
-                                                 'ProtCTFFind', doRaise=True)
+        ProtCTFFind = Domain.importFromPlugin('cistem.protocols',
+                                              'CistemProtCTFFind', doRaise=True)
         protCTF = self.newProtocol(ProtCTFFind,
                                    useCtffind4=True,
                                    lowRes=0.02, highRes=0.45,
@@ -344,8 +344,8 @@ class TestRelionPickStreaming(TestBaseRelionStreaming):
         
         # Now estimate CTF on the micrographs with ctffind
         print("Performing CTFfind...")
-        ProtCTFFind = Domain.importFromPlugin('grigoriefflab.protocols',
-                                                 'ProtCTFFind', doRaise=True)
+        ProtCTFFind = Domain.importFromPlugin('cistem.protocols',
+                                              'CistemProtCTFFind', doRaise=True)
         protCTF = self.newProtocol(ProtCTFFind,
                                    useCtffind4=True,
                                    lowRes=0.02, highRes=0.45,

@@ -113,8 +113,8 @@ class TestCtfStreaming(pwtests.BaseTest):
 
         # 1st ctf - ctffind4 in streaming
 
-        ProtCTFFind = Domain.importFromPlugin('grigoriefflab.protocols',
-                                              'ProtCTFFind', doRaise=True)
+        ProtCTFFind = Domain.importFromPlugin('cistem.protocols',
+                                              'CistemProtCTFFind', doRaise=True)
         protCTF = ProtCTFFind(useCftfind4=True)
 
         protCTF.inputMicrographs.set(protStream)
