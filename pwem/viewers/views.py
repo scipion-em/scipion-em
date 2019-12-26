@@ -24,7 +24,6 @@
 
 import os
 
-from pwem import Domain
 from pyworkflow.gui import getDefaultFont
 
 try:  # python 2

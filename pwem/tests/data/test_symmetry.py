@@ -31,7 +31,7 @@ import pwem.constants as emcts
 import pwem.convert as emconv
 try:
  from itertools import izip
-except:
+except ImportError:
     izip = zip
 
 

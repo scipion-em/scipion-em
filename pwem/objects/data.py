@@ -371,7 +371,7 @@ class SetOfDefocusGroups():
 
     def __addNewGroup(self, ctf):
         group = DefocusGroup()
-        group.addCTf(ctf)
+        group.addCTF(ctf)
         count = len(self._groups) + 1
         defocusU = ctf.getDefocusU()
         groupName = 'ctfgroup_%06d_%05d' % (defocusU, count)
@@ -1311,22 +1311,22 @@ class SetOfDefocusGroup(EMSet):
         self._avgSet = False
 
     def getMinSet(self):
-        return self._minSet.get()
+        return self._minSet
 
     def setMinSet(self, value):
-        self._minSet.set(value)
+        self._minSet = value
 
     def getMaxSet(self):
-        return self._maxSet.get()
+        return self._maxSet
 
     def setMaxSet(self, value):
-        self._maxSet.set(value)
+        self._maxSet = value
 
     def getAvgSet(self):
-        return self._avgSet.get()
+        return self._avgSet
 
     def setAvgSet(self, value):
-        self._avgSet.set(value)
+        self._avgSet = value
 
 
 class SetOfAtomStructs(EMSet):
@@ -1411,7 +1411,8 @@ class Coordinate(EMObject):
         """ Copy information from other coordinate. """
         self.setPosition(*coord.getPosition())
         self.setObjId(coord.getObjId())
-        self.setBoxSize(coord.getBoxSize())
+        # setBoxSize does not exist for Coord
+        #self.setBoxSize(coord.getBoxSize())
 
     def getMicId(self):
         return self._micId.get()

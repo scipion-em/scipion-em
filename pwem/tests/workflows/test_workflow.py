@@ -24,7 +24,7 @@ class TestWorkflow(pwtest.BaseTest):
             print(i)
             
     def getProtocolFiles(self, key):
-        fileList = self.GOLD_FILES[key]
+        fileList = self.GOLD_FILES[key]  # FIXME: GOLD_FILES do not exist!
         fileSet = set([self.__replaceFilename(f) for f in fileList])
         
         return fileSet

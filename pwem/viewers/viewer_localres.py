@@ -121,5 +121,3 @@ class LocalResolutionViewer(pwviewer.ProtocolViewer):
             return emcts.COLOR_CHOICES[self.colorMap.get()]
         else:
             return self.otherColorMap.get()
-
-

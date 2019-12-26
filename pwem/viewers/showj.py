@@ -35,7 +35,6 @@ from os.path import join
 from collections import OrderedDict
 import subprocess
 
-from pwem import Domain
 from pyworkflow import Config
 from pyworkflow.utils import getFreePort
 import threading
@@ -161,7 +160,7 @@ class ColumnsConfig:
 
     def hasEnableColumn(self):
         for columnLayout in self._columnsDict.values():
-            if "enable" == columnLayout.label:
+            if "enable" == columnLayout.getLabel():
                 return True
         return False
 
@@ -219,7 +218,7 @@ class ColumnProperties:
         return self.columnType
 
     def allowsRenderable(self):
-        self.renderable or self.allowSetRenderable
+        return self.renderable or self.allowSetRenderable
 
     def isRenderable(self):
         return self.renderable or self.allowSetRenderable
