@@ -307,12 +307,15 @@ _extractNVMLErrorsAsClasses()
 
 
 def _nvmlCheckReturn(ret):
-    if (ret != NVML_SUCCESS):
+    if ret != NVML_SUCCESS:
         raise NVMLError(ret)
     return ret
 
+
 ## Function access ##
 _nvmlGetFunctionPointer_cache = dict() # function pointers are cached to prevent unnecessary libLoadLock locking
+
+
 def _nvmlGetFunctionPointer(name):
     global nvmlLib
 
@@ -322,7 +325,7 @@ def _nvmlGetFunctionPointer(name):
     libLoadLock.acquire()
     try:
         # ensure library was loaded
-        if (nvmlLib == None):
+        if nvmlLib is None:
             raise NVMLError(NVML_ERROR_UNINITIALIZED)
         try:
             _nvmlGetFunctionPointer_cache[name] = getattr(nvmlLib, name)
@@ -651,15 +654,15 @@ def _LoadNvmlLibrary():
     '''
     global nvmlLib
     
-    if (nvmlLib == None):
+    if nvmlLib is None:
         # lock to ensure only one caller loads the library
         libLoadLock.acquire()
         
         try:
             # ensure the library still isn't loaded
-            if (nvmlLib == None):
+            if nvmlLib is None:
                 try:
-                    if (sys.platform[:3] == "win"):
+                    if sys.platform[:3] == "win":
                         # cdecl calling convention
                         # load nvml.dll from %ProgramFiles%/NVIDIA Corporation/NVSMI/nvml.dll
                         nvmlLib = CDLL(os.path.join(os.getenv("ProgramFiles", "C:/Program Files"), "NVIDIA Corporation/NVSMI/nvml.dll"))
@@ -668,7 +671,7 @@ def _LoadNvmlLibrary():
                         nvmlLib = CDLL("libnvidia-ml.so.1")
                 except OSError as ose:
                     _nvmlCheckReturn(NVML_ERROR_LIBRARY_NOT_FOUND)
-                if (nvmlLib == None):
+                if nvmlLib is None:
                     _nvmlCheckReturn(NVML_ERROR_LIBRARY_NOT_FOUND)
         finally:
             # lock is always freed
@@ -686,7 +689,7 @@ def nvmlShutdown():
     # Atomically update refcount
     global _nvmlLib_refcount
     libLoadLock.acquire()
-    if (0 < _nvmlLib_refcount):
+    if 0 < _nvmlLib_refcount:
         _nvmlLib_refcount -= 1
     libLoadLock.release()
     return None
@@ -741,7 +744,7 @@ def nvmlSystemGetHicVersion():
         raise NVMLError(ret)
     
     # if there are no hics
-    if (c_count.value == 0):
+    if c_count.value == 0:
         return []
     
     hic_array = c_nvmlHwbcEntry_t * c_count.value
@@ -815,7 +818,7 @@ def nvmlUnitGetDeviceCount(unit):
     # query the unit to determine device count
     fn = _nvmlGetFunctionPointer("nvmlUnitGetDevices")
     ret = fn(unit, byref(c_count), None)
-    if (ret == NVML_ERROR_INSUFFICIENT_SIZE):
+    if ret == NVML_ERROR_INSUFFICIENT_SIZE:
         ret = NVML_SUCCESS
     _nvmlCheckReturn(ret)
     return c_count.value
@@ -1064,10 +1067,10 @@ def nvmlDeviceGetSupportedMemoryClocks(handle):
     fn = _nvmlGetFunctionPointer("nvmlDeviceGetSupportedMemoryClocks")
     ret = fn(handle, byref(c_count), None)
     
-    if (ret == NVML_SUCCESS):
+    if ret == NVML_SUCCESS:
         # special case, no clocks
         return []
-    elif (ret == NVML_ERROR_INSUFFICIENT_SIZE):
+    elif ret == NVML_ERROR_INSUFFICIENT_SIZE:
         # typical case
         clocks_array = c_uint * c_count.value
         c_clocks = clocks_array()
@@ -1093,10 +1096,10 @@ def nvmlDeviceGetSupportedGraphicsClocks(handle, memoryClockMHz):
     fn = _nvmlGetFunctionPointer("nvmlDeviceGetSupportedGraphicsClocks")
     ret = fn(handle, c_uint(memoryClockMHz), byref(c_count), None)
     
-    if (ret == NVML_SUCCESS):
+    if ret == NVML_SUCCESS:
         # special case, no clocks
         return []
-    elif (ret == NVML_ERROR_INSUFFICIENT_SIZE):
+    elif ret == NVML_ERROR_INSUFFICIENT_SIZE:
         # typical case
         clocks_array = c_uint * c_count.value
         c_clocks = clocks_array()
@@ -1371,10 +1374,10 @@ def nvmlDeviceGetComputeRunningProcesses(handle):
     fn = _nvmlGetFunctionPointer("nvmlDeviceGetComputeRunningProcesses")
     ret = fn(handle, byref(c_count), None)
     
-    if (ret == NVML_SUCCESS):
+    if ret == NVML_SUCCESS:
         # special case, no running processes
         return []
-    elif (ret == NVML_ERROR_INSUFFICIENT_SIZE):
+    elif ret == NVML_ERROR_INSUFFICIENT_SIZE:
         # typical case
         # oversize the array incase more processes are created
         c_count.value = c_count.value * 2 + 5
@@ -1389,7 +1392,7 @@ def nvmlDeviceGetComputeRunningProcesses(handle):
         for i in range(c_count.value):
             # use an alternative struct for this object
             obj = nvmlStructToFriendlyObject(c_procs[i])
-            if (obj.usedGpuMemory == NVML_VALUE_NOT_AVAILABLE_ulonglong.value):
+            if obj.usedGpuMemory == NVML_VALUE_NOT_AVAILABLE_ulonglong.value:
                 # special case for WDDM on Windows, see comment above
                 obj.usedGpuMemory = None
             procs.append(obj)
@@ -1406,10 +1409,10 @@ def nvmlDeviceGetGraphicsRunningProcesses(handle):
     fn = _nvmlGetFunctionPointer("nvmlDeviceGetGraphicsRunningProcesses")
     ret = fn(handle, byref(c_count), None)
 
-    if (ret == NVML_SUCCESS):
+    if ret == NVML_SUCCESS:
         # special case, no running processes
         return []
-    elif (ret == NVML_ERROR_INSUFFICIENT_SIZE):
+    elif ret == NVML_ERROR_INSUFFICIENT_SIZE:
         # typical case
         # oversize the array incase more processes are created
         c_count.value = c_count.value * 2 + 5
@@ -1424,7 +1427,7 @@ def nvmlDeviceGetGraphicsRunningProcesses(handle):
         for i in range(c_count.value):
             # use an alternative struct for this object
             obj = nvmlStructToFriendlyObject(c_procs[i])
-            if (obj.usedGpuMemory == NVML_VALUE_NOT_AVAILABLE_ulonglong.value):
+            if obj.usedGpuMemory == NVML_VALUE_NOT_AVAILABLE_ulonglong.value:
                 # special case for WDDM on Windows, see comment above
                 obj.usedGpuMemory = None
             procs.append(obj)
@@ -1586,7 +1589,7 @@ def nvmlDeviceOnSameBoard(handle1, handle2):
     onSameBoard = c_int()
     ret = fn(handle1, handle2, byref(onSameBoard))
     _nvmlCheckReturn(ret)
-    return (onSameBoard.value != 0)
+    return onSameBoard.value != 0
 
 
 # Added in 3.295
@@ -1680,7 +1683,7 @@ def nvmlDeviceGetAccountingStats(handle, pid):
     fn = _nvmlGetFunctionPointer("nvmlDeviceGetAccountingStats")
     ret = fn(handle, c_uint(pid), byref(stats))
     _nvmlCheckReturn(ret)
-    if (stats.maxMemoryUsage == NVML_VALUE_NOT_AVAILABLE_ulonglong.value):
+    if stats.maxMemoryUsage == NVML_VALUE_NOT_AVAILABLE_ulonglong.value:
         # special case for WDDM on Windows, see comment above
         stats.maxMemoryUsage = None
     return stats
@@ -1769,14 +1772,14 @@ def nvmlDeviceGetSamples(device, sampling_type, timeStamp):
     ret = fn(device, c_sampling_type, c_time_stamp, byref(c_sample_value_type), byref(c_sample_count), None)
 
     # Stop if this fails
-    if (ret != NVML_SUCCESS):
+    if ret != NVML_SUCCESS:
         raise NVMLError(ret)
 
     sampleArray = c_sample_count.value * c_nvmlSample_t
     c_samples = sampleArray()
     ret = fn(device, c_sampling_type, c_time_stamp,  byref(c_sample_value_type), byref(c_sample_count), c_samples)
     _nvmlCheckReturn(ret)
-    return (c_sample_value_type.value, c_samples[0:c_sample_count.value])
+    return c_sample_value_type.value, c_samples[0:c_sample_count.value]
 
 
 def nvmlDeviceGetViolationStatus(device, perfPolicyType):

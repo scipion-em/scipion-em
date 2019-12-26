@@ -470,7 +470,7 @@ class ProtCTFMicrographs(ProtMicrographs):
 
         for mic in inputMics:
             micFn = mic.getFileName()
-            yield (micFn, mic)
+            yield micFn, mic
 
     def _computeDefocusRange(self, ctfSet):
         """ Compute the minimum and maximu defoucs in a set of CTFs.

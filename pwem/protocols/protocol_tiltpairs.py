@@ -184,13 +184,13 @@ class ProtImportMicrographsTiltPairs(ProtImportFiles):
     #--------------------------- INFO functions ----------------------------------------------------
     def _validate(self):
         errors = []
-        if (not self.patternUntilted.get() or not self.patternTilted.get()):
+        if not self.patternUntilted.get() or not self.patternTilted.get():
             errors.append(pwutils.Message.ERROR_PATTERN_EMPTY)
         else:
             filePathsUntilted = glob(pwutils.expandPattern(self.patternUntilted.get()))
             filePathsTilted = glob(pwutils.expandPattern(self.patternTilted.get()))
         
-            if (len(filePathsUntilted) == 0 or len(filePathsTilted) == 0):
+            if len(filePathsUntilted) == 0 or len(filePathsTilted) == 0:
                 errors.append(pwutils.Message.ERROR_PATTERN_FILES)
 
         return errors

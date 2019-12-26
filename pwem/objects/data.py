@@ -331,11 +331,10 @@ class DefocusGroup(EMObject):
     def containsCTF(self, ctf):
         """ Return True if a CTF is inside the group defocus range. """
         defocusU = ctf.getDefocusU()
-        return (defocusU >= self.getDefocusMin() and
-                defocusU <= self.getDefocusMax())
+        return self.getDefocusMax() >= defocusU >= self.getDefocusMin()
 
 
-class SetOfDefocusGroups():
+class SetOfDefocusGroups:
     """ Store a set of several defocus groups."""
     def __init__(self, inputSet,
                  groupRange=1000,
@@ -516,7 +515,7 @@ class Image(EMObject):
         It will only differs from getFileName, when the image
         is contained in a stack and the index make sense.
         """
-        return (self.getIndex(), self.getFileName())
+        return self.getIndex(), self.getFileName()
 
     def setLocation(self, *args):
         """ Set the image location, see getLocation.

@@ -225,8 +225,8 @@ class ReportHtml:
 
                 psdPath = getMicPSDPath(mic)
                 psdThumb = None
-                if psdPath ==None:
-                    psdThumb = join(PSD_THUMBS, pwutils.replaceExt(basename(psdPath), ext))
+                if psdPath is None:
+                    psdThumb = join(PSD_THUMBS, pwutils.replaceExt(basename(str(psdPath)), ext))
                     self.thumbPaths[PSD_THUMBS].append(psdThumb)
                     self.thumbPaths[PSD_PATH].append(psdPath)
                 else:
@@ -307,7 +307,7 @@ class ReportHtml:
             elif v > maxDefocus:
                 aboveThresh += 1
         zipped = zip(values, labels)
-        zipped[:0] = [(belowThresh, "0-%0.1f" % (minDefocus))]
+        zipped[:0] = [(belowThresh, "0-%0.1f" % minDefocus)]
         # TODO unresolved method for class Iterator in python3
         #zipped.append((aboveThresh, "> %0.1f" % (maxDefocus)))
 

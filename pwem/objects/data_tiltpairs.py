@@ -158,7 +158,7 @@ class Angles(EMObject):
         self._angleTilt.set(angleTilt)
         
     def getAngles(self):
-        return (self._angleY.get(), self._angleY2.get(), self._angleTilt.get())
+        return self._angleY.get(), self._angleY2.get(), self._angleTilt.get()
     
     
 class SetOfAngles(EMSet):

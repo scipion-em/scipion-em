@@ -280,10 +280,10 @@ class ProtAlignMovies(ProtProcessMovies):
 
         # Only validate about cropDimensions if the protocol supports them
         if (hasattr(self, 'cropDimX') and hasattr(self, 'cropDimY')
-            and (self.cropDimX > 0 and self.cropDimY <= 0
-                 or self.cropDimY > 0 and self.cropDimX <= 0)):
-                errors.append("If you give cropDimX, you should also give "
-                              "cropDimY and vice versa")
+            and (self.cropDimX > 0 >= self.cropDimY
+                 or self.cropDimX <= 0 < self.cropDimY)):
+            errors.append("If you give cropDimX, you should also give "
+                          "cropDimY and vice versa")
 
         inputMovies = self.inputMovies.get()
 

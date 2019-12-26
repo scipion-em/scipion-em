@@ -296,7 +296,7 @@ class FilterWizard(EmWizard):
                 def setFormValue(flag, value, index):
                     if args.get(flag, True):
                         if unit == emcts.UNIT_ANGSTROM:
-                            value = d.samplingRate / (value)
+                            value = d.samplingRate / value
                         form.setVar(label[index], value)
 
                 setFormValue('showLowFreq', d.getLowFreq(), 0)

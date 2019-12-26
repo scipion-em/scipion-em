@@ -88,7 +88,7 @@ def _translationMatrix(shift):
 
 def _identityMatrix():
 
-  return ((1.0,0,0,0), (0,1.0,0,0), (0,0,1.0,0))
+  return (1.0,0,0,0), (0,1.0,0,0), (0,0,1.0,0)
 
 
 def _invertMatrix(tf):

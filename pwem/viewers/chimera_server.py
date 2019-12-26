@@ -23,7 +23,7 @@ from pwem import Domain
 
 class ChimeraServer:
     
-    def __init__(self,centerVolume=True):
+    def __init__(self, centerVolume=True):
         #print 'init'
         address = ''
         port = int(sys.argv[1])
@@ -39,12 +39,11 @@ class ChimeraServer:
         self.centerVolume = centerVolume
         self.initListenShowJ()
 
-
     def addHandlers(self):
         """ Override this methods to specify which Chimera triggers want
         to be handled.
         """
-        chimera.triggers.addHandler(chimera.MOTION_STOP, self.onMotionStop, None)####
+        chimera.triggers.addHandler(chimera.MOTION_STOP, self.onMotionStop, None)
 
     def openVolume(self):
         try:
@@ -55,7 +54,7 @@ class ChimeraServer:
                     
                     msg = self.vol_conn.recv()
                     if msg == 'open_volume':
-                        data = self.vol_conn.recv()#objects are serialized by default
+                        data = self.vol_conn.recv()  # objects are serialized by default
                         grid = Array_Grid_Data(data)
                         self.volume = volume_from_grid_data(grid)
                         
@@ -63,7 +62,6 @@ class ChimeraServer:
                         self.voxelSize = self.vol_conn.recv()
                         cmd = "volume #0 voxelSize %s"%self.voxelSize
                         runCommand(cmd)
-
 
                     elif msg == 'command_list':
                         commandList = self.vol_conn.recv()
@@ -89,7 +87,6 @@ class ChimeraServer:
             grid = Array_Grid_Data(data)
             self.volume = volume_from_grid_data(grid)
             self.centerVolume()
-
 
         elif msg == 'voxel_size':
             self.voxelSize = self.vol_conn.recv()

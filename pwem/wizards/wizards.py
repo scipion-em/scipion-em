@@ -155,7 +155,7 @@ class GetStructureChainsWizard(pwizard.Wizard):
                     response = requests.get(URL)
                 except:
                     raise Exception("Cannot connect to PDB server")
-                if ((response.status_code >= 400) and (response.status_code < 500)):
+                if (response.status_code >= 400) and (response.status_code < 500):
                     raise Exception("%s is a wrong PDB ID" % pdbID)
                 fileName = structureHandler.readFromPDBDatabase(
                     os.path.basename(pdbID), dir="/tmp/")

@@ -410,7 +410,7 @@ class TableView(pwviewer.View):
 
         # message placed at the window top
         msg = ttk.Label(wraplength=sumColWid, justify="left", anchor="n",
-                        padding=(10, 2, 10, 6), text=(mesg), master=win,
+                        padding=(10, 2, 10, 6), text=mesg, master=win,
                         font=font)
 
         # set mg in grid 0,0

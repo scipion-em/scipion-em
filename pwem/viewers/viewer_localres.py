@@ -35,10 +35,10 @@ class LocalResolutionViewer(pwviewer.ProtocolViewer):
     Visualization tools for local resolution results.
 
     """
-    binaryCondition = ('(colorMap == %d) ' % (emcts.COLOR_OTHER))
+    binaryCondition = ('(colorMap == %d) ' % emcts.COLOR_OTHER)
 
     def __init__(self, *args, **kwargs):
-        pwviewer.ProtocolViewer.__init__(self, *args, **kwargs)
+        pwviewer.ProtocolViewer.__init__(self, **kwargs)
 
     def getImgData(self, imgFile):
         import numpy as np
@@ -84,7 +84,7 @@ class LocalResolutionViewer(pwviewer.ProtocolViewer):
         fhCmd.write("background solid white\n")
 
         fhCmd.write("open %s\n" % fnVol)
-        fhCmd.write("open %s\n" % (imageFile))
+        fhCmd.write("open %s\n" % imageFile)
 
         fhCmd.write("volume #0 voxelSize %s\n" % (str(sampRate)))
         fhCmd.write("volume #1 voxelSize %s\n" % (str(sampRate)))
@@ -100,7 +100,7 @@ class LocalResolutionViewer(pwviewer.ProtocolViewer):
         scolorStr2 = ''
         for step, color in izip(stepColors, colorList):
             indx = stepColors.index(step)
-            if ((indx % 4) != 0):
+            if (indx % 4) != 0:
                 scolorStr2 += '" " %s ' % color
             else:
                 scolorStr2 += '%s %s ' % (step, color)
