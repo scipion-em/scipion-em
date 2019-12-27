@@ -91,7 +91,7 @@ class TestNotifier(pwtests.BaseTest):
         results = json.loads(urlopen(urlWork).read().decode('utf-8'))
 
         objects = results["objects"]
-        if (len(objects) != 0):
+        if len(objects) != 0:
             objects = results["objects"][0]
             project_workflowRemote = objects["project_workflow"]
         else:
@@ -136,7 +136,7 @@ class TestNotifier(pwtests.BaseTest):
         time.sleep(5)  # notifier runs in a thread so wait a bit
         results = json.loads(urlopen(urlProt).read().decode('utf-8'))
         objects = results["objects"]
-        if (len(objects) != 0):
+        if len(objects) != 0:
             objects = results["objects"][0]
             times_protocolRemote_2 = objects["timesUsed"]
         else:

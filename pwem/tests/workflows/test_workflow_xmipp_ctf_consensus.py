@@ -84,15 +84,15 @@ class TestCtfConsensus(pwtests.BaseTest):
 
         # Computes the CTF with Xmipp
         XmippProtCTFMicrographs = Domain.importFromPlugin('xmipp3.protocols',
-                                                             'XmippProtCTFMicrographs',
-                                                             doRaise=True)
+                                                          'XmippProtCTFMicrographs',
+                                                          doRaise=True)
         protCTF1 = self.newProtocol(XmippProtCTFMicrographs)
         protCTF1.inputMicrographs.set(protImport.outputMicrographs)
         self.proj.launchProtocol(protCTF1, wait=False)
 
         # Computes the CTF with CTFFind4
-        ProtCTFFind = Domain.importFromPlugin('grigoriefflab.protocols',
-                                              'ProtCTFFind', doRaise=True)
+        ProtCTFFind = Domain.importFromPlugin('cistem.protocols',
+                                              'CistemProtCTFFind', doRaise=True)
         protCTF2 = self.newProtocol(ProtCTFFind)
         protCTF2.inputMicrographs.set(protImport.outputMicrographs)
         self.proj.launchProtocol(protCTF2, wait=False)
@@ -108,8 +108,8 @@ class TestCtfConsensus(pwtests.BaseTest):
         self._waitOutput(protCTF1, "outputCTF")
         self._waitOutput(protCTF2, "outputCTF")
         XmippProtCTFConsensus = Domain.importFromPlugin('xmipp3.protocols',
-                                                           'XmippProtCTFConsensus',
-                                                           doRaise=True)
+                                                        'XmippProtCTFConsensus',
+                                                        doRaise=True)
         protCTFcons = self.newProtocol(XmippProtCTFConsensus,
                                        useDefocus=False,
                                        useAstigmatism=False,
@@ -128,10 +128,10 @@ class TestCtfConsensus(pwtests.BaseTest):
         # Computes the Consensus comparing a good CTF to a RANDOM one
         self._waitOutput(protCTF3, "outputCTF")
         protCTFcons2 = self.newProtocol(XmippProtCTFConsensus,
-                                       useDefocus=False,
-                                       useAstigmatism=False,
-                                       useResolution=False,
-                                       calculateConsensus=True)
+                                        useDefocus=False,
+                                        useAstigmatism=False,
+                                        useResolution=False,
+                                        calculateConsensus=True)
         protCTFcons2.inputCTF.set(protCTF1.outputCTF)
         protCTFcons2.inputCTF2.set(protCTF3.outputCTF)
         self.launchProtocol(protCTFcons2)

@@ -139,7 +139,7 @@ def joinBlocks(inputMd, blockPrefix=None):
     return mdAll
 
 
-class SetMdIterator():
+class SetMdIterator:
     """ Class to iterate over an input set and skip
     elements not present in metadata.
     This class can be used in copyItems when the number

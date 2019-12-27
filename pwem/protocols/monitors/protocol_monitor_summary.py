@@ -30,6 +30,7 @@ import pyworkflow.protocol.params as params
 from pyworkflow import VERSION_1_1
 
 from pwem.protocols import ProtCTFMicrographs, ProtAlignMovies
+from pwem import Domain
 from .report_html import ReportHtml
 from .protocol_monitor_system import getnifs
 from .protocol_monitor import ProtMonitor, Monitor
@@ -222,8 +223,8 @@ class ProtMonitorSummary(ProtMonitor):
         return None
 
     def _getMovieGainProtocol(self):
-        XmippProtMovieGain = pwutils.importFromPlugin('xmipp3.protocols',
-                                              'XmippProtMovieGain')
+        XmippProtMovieGain = Domain.importFromPlugin('xmipp3.protocols',
+                                                     'XmippProtMovieGain')
 
         if XmippProtMovieGain is None:
             return None

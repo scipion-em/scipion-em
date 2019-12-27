@@ -895,19 +895,3 @@ class TestCoordinatesTiltPair(BaseTest):
         # and two sets of coordinates but the person who
         # added that data type Should provide a clear test
         # when this is done then I will finish the test_mapper
-
-
-class TestCoordinatesTiltPair(BaseTest):
-    # TODO: A proper test for SetOfMovieParticles is missing
-    @classmethod
-    def setUpClass(cls):
-        setupTestOutput(cls)
-
-    def test_mapper(self):
-        """ test that indexes are created when a
-        SetOfMovieParticles is created """
-        # TODO I do not see any example on how to create
-        # a set of SetOfMovieParticles. The person who
-        # added that data type should provide a clear test
-        # when this is done then I will finish the test_mapper
-        pass

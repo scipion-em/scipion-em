@@ -212,7 +212,7 @@ class TestImportData(TestImportBase):
         else:
             writeLine = 'scipion_write()'
 
-        if (x != 0. or y != 0. or z != 0.):
+        if x != 0. or y != 0. or z != 0.:
             return """translate_molecule_by(0, %f, %f, %f)
 fit_molecule_to_map_by_random_jiggle(0,7000,2)
 %s

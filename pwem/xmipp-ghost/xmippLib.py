@@ -414,7 +414,6 @@ MDL_ZSCORE_SHAPE2 = None
 MDL_ZSCORE_SNR1 = None
 MDL_ZSCORE_SNR2 = None
 MDL_ZSIZE = None
-MDL_ZSIZE = None
 MDL_LAST_LABEL = None
 
 # ----- Label types ------
@@ -987,71 +986,72 @@ def getBlocksInMetaDataFile():
 def label2Str():
     pass
 
+
 def colorStr():
     pass
 
 
-def labelType ():
-     pass
+def labelType():
+    pass
 
 
-def labelHasTag ():
-     pass
+def labelHasTag():
+    pass
 
 
-def labelIsImage ():
-     pass
+def labelIsImage():
+    pass
 
 
-def str2Label ():
-     pass
+def str2Label():
+    pass
 
 
 def isValidLabel():
-     pass
+    pass
 
 
 def MDValueRelational():
-     pass
-
-
-def MDValueEQ ():
-     pass
-
-
-def MDValueNE ():
-     pass
-
-
-def MDValueLT ():
     pass
 
 
-def MDValueLE ():
+def MDValueEQ():
     pass
 
 
-def MDValueGT ():
-     pass
+def MDValueNE():
+    pass
 
 
-def MDValueGE ():
-     pass
+def MDValueLT():
+    pass
 
 
-def MDValueRange ():
-     pass
+def MDValueLE():
+    pass
+
+
+def MDValueGT():
+    pass
+
+
+def MDValueGE():
+    pass
+
+
+def MDValueRange():
+    pass
 
 
 def addLabelAlias():
-     pass
+    pass
 
 
 def activateMathExtensions():
-     pass
+    pass
+
 
 class SymList:
-
     def getSymmetryMatrices(self):
         pass
 
@@ -1059,19 +1059,26 @@ class SymList:
 def MetaData():
     print(ghostStr)
 
+
 MetaDataInfo = None
 
 HEADER = None
 
+
 class Image:
     def __init__(self):
         pass
+
     def read(self, *args, **kwargs):
-        print ("GHOST in place, read call ignored!.")
+        print("GHOST in place, read call ignored!.")
+
     def getDimensions(self):
         return None, None, None, None
+
+
 def Euler_angles2matrix():
     pass
+
 
 class FileName:
     """ Try to implement some basic code to reach further without xmipp"""
@@ -1082,6 +1089,3 @@ class FileName:
 
     def isImage(self):
         return True
-
-def getBlocksInMetaDataFile():
-    pass

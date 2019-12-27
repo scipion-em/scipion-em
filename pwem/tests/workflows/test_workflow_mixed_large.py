@@ -87,9 +87,9 @@ class TestMixedRelionTutorial(TestWorkflow):
         # Now estimate CTF on the micrographs with ctffind 
         print("Performing CTFfind...")
         grigorieffLabProtocols = Domain.importFromPlugin(
-            'grigoriefflab.protocols',
+            'cistem.protocols',
             doRaise=True)
-        protCTF = self.newProtocol(grigorieffLabProtocols.ProtCTFFind,
+        protCTF = self.newProtocol(grigorieffLabProtocols.CistemProtCTFFind,
                                    lowRes=0.04, highRes=0.45,
                                    minDefocus=1.2, maxDefocus=3,
                                    runMode=1, numberOfMpi=1, numberOfThreads=16)
@@ -238,9 +238,9 @@ class TestMixedFrealignClassify(TestWorkflow):
         # Now estimate CTF on the micrographs with ctffind 
         print("Performing CTFfind...")
         grigorieffLabProtocols = Domain.importFromPlugin(
-            'grigoriefflab.protocols',
+            'cistem.protocols',
             doRaise=True)
-        protCTF = self.newProtocol(grigorieffLabProtocols.ProtCTFFind,
+        protCTF = self.newProtocol(grigorieffLabProtocols.CistemProtCTFFind,
                                    lowRes=0.04, highRes=0.45,
                                    minDefocus=1.2, maxDefocus=3,
                                    runMode=1, numberOfMpi=1, numberOfThreads=16)
@@ -264,7 +264,9 @@ class TestMixedFrealignClassify(TestWorkflow):
         
         # Classify the SetOfParticles.
         print("Running Frealign Classification...")
-        protFrealign = self.newProtocol(grigorieffLabProtocols.ProtFrealignClassify,
+        ProtFrealignCls = Domain.importFromPlugin('grigoriefflab.protocols',
+                                                  'ProtFrealignClassify', doRaise=True)
+        protFrealign = self.newProtocol(ProtFrealignCls,
                                         doInvert=False,
                                         numberOfClasses=3, itRefineAngles=2,
                                         itRefineShifts=3, angStepSize=20,
@@ -280,4 +282,3 @@ class TestMixedFrealignClassify(TestWorkflow):
         self.launchProtocol(protFrealign)        
         self.assertIsNotNone(protFrealign.outputClasses,
                              "There was a problem with Frealign")
-

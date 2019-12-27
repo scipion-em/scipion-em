@@ -79,8 +79,8 @@ class TestCtfStream(pwtests.BaseTest):
         }
         from pwem import Domain
 
-        ProtCTFFind = Domain.importFromPlugin('grigoriefflab.protocols',
-                                              'ProtCTFFind', doRaise=True)
+        ProtCTFFind = Domain.importFromPlugin('cistem.protocols',
+                                              'CistemProtCTFFind', doRaise=True)
         protCTF = self.newProtocol(ProtCTFFind, **kwargs)
         protCTF.inputMicrographs.set(protStream.outputMicrographs)
         self.proj.launchProtocol(protCTF, wait=False)

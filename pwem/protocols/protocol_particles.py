@@ -72,7 +72,7 @@ class ProtProcessParticles(ProtParticles):
         """ Return the default value for thread and MPI
         for the parallel section definition.
         """
-        return (0, 0)
+        return 0, 0
 
 
 class ProtFilterParticles(ProtProcessParticles):

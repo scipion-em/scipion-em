@@ -82,7 +82,7 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
 
     def _doCorrectGain(self):
         gain, dark = self.getGainAndDark()
-        return (getattr(self, 'CORRECT_GAIN', False) and (gain or dark))
+        return getattr(self, 'CORRECT_GAIN', False) and (gain or dark)
 
     #--------------------------- DEFINE param functions ----------------------
     def _defineParams(self, form):
@@ -290,7 +290,7 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
         movieName = basename(movieFn)
         movieDoneFn = self._getMovieDone(movie)
 
-        if (self.isContinued() and os.path.exists(movieDoneFn)):
+        if self.isContinued() and os.path.exists(movieDoneFn):
             self.info("Skipping movie: %s, seems to be done" % movieFn)
             return
 

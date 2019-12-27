@@ -78,8 +78,8 @@ class TestMixedBPV(TestWorkflow):
         
         # Estimate CTF on the downsampled micrographs
         print("Performing CTFfind...")
-        ProtCTFFind = Domain.importFromPlugin('grigoriefflab.protocols',
-                                                 'ProtCTFFind', doRaise=True)
+        ProtCTFFind = Domain.importFromPlugin('cistem.protocols',
+                                              'CistemProtCTFFind', doRaise=True)
         protCTF = self.newProtocol(ProtCTFFind, numberOfThreads=4,
                                    minDefocus=2.2, maxDefocus=2.5)
         protCTF.inputMicrographs.set(protDownsampling.outputMicrographs)        
@@ -129,7 +129,7 @@ class TestMixedBPV(TestWorkflow):
         # Refine the SetOfParticles and reconstruct a refined volume.
         print("Running Frealign...")
         ProtFrealign = Domain.importFromPlugin('grigoriefflab.protocols',
-                                                  'ProtFrealign')
+                                               'ProtFrealign')
         protFrealign = self.newProtocol(ProtFrealign, doInvert=False,
                                         angStepSize=15,
                                         numberOfIterations=2, mode=1,
@@ -195,8 +195,8 @@ class TestMixedBPV2(TestWorkflow):
         
         # Estimate CTF on the downsampled micrographs
         print("Performing CTFfind...")
-        ProtCTFFind = Domain.importFromPlugin('grigoriefflab.protocols',
-                                                 'ProtCTFFind', doRaise=True)
+        ProtCTFFind = Domain.importFromPlugin('cistem.protocols',
+                                              'CistemProtCTFFind', doRaise=True)
         protCTF = self.newProtocol(ProtCTFFind, numberOfThreads=4,
                                    minDefocus=2.2, maxDefocus=2.5)
         protCTF.inputMicrographs.set(protImport.outputMicrographs)        

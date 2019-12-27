@@ -87,7 +87,7 @@ class TestXmippAssignmentTiltPairsWorkflow(TestWorkflow):
         print('-----------------------------------------------------------')
         num_particles = protAssigning.outputCoordinatesTiltPair.getUntilted().getSize()
         print(num_particles)
-        if (num_particles>1000):
+        if num_particles > 1000:
             out_ = True
         else:
             out_ = None

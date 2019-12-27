@@ -104,10 +104,10 @@ class ProtExportEMDB(EMProtocol):
             fo.write('<fsc title="FSC(%s)" xaxis="Resolution (A-1)" '
                      'yaxis="Correlation Coefficient">\n' %
                      os.path.join(dirName, self.VOLUMENAME))
-            for i in range(len(x)):
+            for k in range(len(x)):
                 fo.write("<coordinate>\n")
-                fo.write("<x>%f</x>\n"%x[i])
-                fo.write("<y>%f</y>\n" % y[i])
+                fo.write("<x>%f</x>\n" % x[k])
+                fo.write("<y>%f</y>\n" % y[k])
                 fo.write("</coordinate>\n")
 
             fo.write("</fsc>\n")

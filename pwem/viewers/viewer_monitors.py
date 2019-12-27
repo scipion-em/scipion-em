@@ -136,7 +136,7 @@ class CtfMonitorPlotter(EmPlotter):
 
     def paint(self, labels):
         for label in labels:
-            if (label == 'defocusU'):
+            if label == 'defocusU':
                 self.lines[label], = self.ax.plot([], [], '-o',
                                                   label=label, color='b')
             else:
@@ -256,17 +256,17 @@ class MovieGainMonitorPlotter(EmPlotter):
 
     def paint(self, labels):
         for label in labels:
-            if (label == 'standard_deviation'):
+            if label == 'standard_deviation':
                 self.lines[label], = \
                     self.ax2.plot([], [], '-o',
                                   label='Standard deviation',
                                   color='r')
-            if (label == 'ratio1'):
+            if label == 'ratio1':
                 self.lines[label], = \
                     self.ax.plot([], [], '-o',
                                  label='97.5/2.5 percentile',
                                  color='b')
-            if (label == 'ratio2'):
+            if label == 'ratio2':
                 self.lines[label], = \
                     self.ax.plot([], [], '-*',
                                  label='max/97.5 percentile',

@@ -291,7 +291,7 @@ class ProtUnionSet(ProtSets):
                 # Get the attribute and "call it" --> final ().
                 setValue = getattr(inputSet, attr)()
 
-                if refValue is '?':
+                if refValue == '?':
                     refValue = setValue
                 else:
                     if refValue != setValue:

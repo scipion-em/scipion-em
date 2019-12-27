@@ -90,12 +90,12 @@ class ProtImportCTF(ProtImportFiles):
 
         if importFrom == self.IMPORT_FROM_XMIPP3:
             XmippImport = Domain.importFromPlugin('xmipp3.convert', 'XmippImport',
-                                           doRaise=True)
+                                                  doRaise=True)
             return XmippImport(self, filesPath)
         elif importFrom == self.IMPORT_FROM_GRIGORIEFF:
-            GrigorieffLabImportCTF = Domain.importFromPlugin('grigoriefflab.convert',
-                                                      'GrigorieffLabImportCTF',
-                                                      doRaise=True)
+            GrigorieffLabImportCTF = Domain.importFromPlugin('cistem.convert',
+                                                             'GrigorieffLabImportCTF',
+                                                             doRaise=True)
             return GrigorieffLabImportCTF(self)
         elif importFrom == self.IMPORT_FROM_GCTF:
             GctfImportCTF = Domain.importFromPlugin('gctf.convert',

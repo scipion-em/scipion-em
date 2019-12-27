@@ -133,7 +133,7 @@ _entity_poly_seq.hetero\n#\n""")
                     counter_chain += 1
             for item in total_seqs:
                 item = list(item)
-                out_file.write(("""%s %s %s  %s\n""") % \
+                out_file.write("""%s %s %s  %s\n""" %
                                (str(item[0]), item[1], item[2], item[3]))
 
         for key, key_list in key_lists.items():
@@ -569,7 +569,7 @@ class AtomicStructHandler:
 
         :param entity: PDB biopython structure
         :param transformation_matrix -> 4x4 scipion matrix
-        :paramsampling: scipion transform matrix is applied to voxels so
+        :param sampling: scipion transform matrix is applied to voxels so
               length must be multiplied by samplingRate
 
         internal variables:

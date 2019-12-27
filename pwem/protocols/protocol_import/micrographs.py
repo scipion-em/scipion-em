@@ -673,7 +673,7 @@ class ProtImportMovies(ProtImportMicBase):
                     # By default we will write the movie stacks
                     # unless we are in continue mode and the file exists
                     writeMovie = True
-                    if (self.isContinued() and os.path.exists(movieFn)):
+                    if self.isContinued() and os.path.exists(movieFn):
                         self.info("Skipping movie stack: %s, seems to be done"
                                   % movieFn)
                         writeMovie = False

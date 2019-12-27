@@ -139,7 +139,7 @@ class ProtImportVolumes(ProtImportImages):
             x, y, z, n = imgh.getDimensions(fileName)
             if fileName.endswith('.mrc') or fileName.endswith('.map'):
                 fileName += ':mrc'
-                if (z == 1 and n != 1):
+                if z == 1 and n != 1:
                     zDim = n
                     n = 1
                 else:
