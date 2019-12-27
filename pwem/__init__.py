@@ -40,7 +40,7 @@ from pwem.constants import *
 from pwem.objects import EMObject
 from .utils import *
 from .metadata import *
-
+_references = ["delaRosaTrevin201693"]
 
 class Domain(pyworkflow.plugin.Domain):
     _name = __name__
