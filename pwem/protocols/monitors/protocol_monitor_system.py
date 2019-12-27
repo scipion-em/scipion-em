@@ -48,8 +48,6 @@ from pynvml import (nvmlInit, nvmlDeviceGetHandleByIndex,
                     NVMLError, nvmlDeviceGetTemperature, NVML_TEMPERATURE_GPU,
                     nvmlDeviceGetComputeRunningProcesses)
 
-from pwem.protocols.monitors import getnifs
-
 from .protocol_monitor import ProtMonitor, Monitor
 
 SYSTEM_LOG_SQLITE = 'system_log.sqlite'
@@ -64,10 +62,6 @@ class ProtMonitorSystem(ProtMonitor):
     """
     _label = 'system_monitor'
     _lastUpdateVersion = VERSION_1_1
-
-    # get list with network interfaces
-    nifs = getnifs.get_network_interfaces()
-    nifsNameList = [nif.getName() for nif in nifs]
 
     def __init__(self, **kwargs):
         ProtMonitor.__init__(self, **kwargs)
@@ -118,7 +112,7 @@ class ProtMonitorSystem(ProtMonitor):
                        label="Check Network",
                        help="Set to true if you want to monitor the Network")
         group.addParam('netInterfaces', params.EnumParam,
-                       choices=self.nifsNameList,
+                       choices=MonitorSystem.getNifsNameList(),
                        default=1,  # usually 0 is the loopback
                        label="Interface", condition='doNetwork',
                        help="Name of the network interface to be checked")
@@ -152,7 +146,7 @@ class ProtMonitorSystem(ProtMonitor):
                                doGpu=self.doGpu.get(),
                                doNetwork=self.doNetwork.get(),
                                doDiskIO=self.doDiskIO.get(),
-                               nif=self.nifsNameList[
+                               nif=MonitorSystem.getNifsNameList()[
                                    self.netInterfaces.get()],
                                gpusToUse=self.gpusToUse.get())
         return sysMon
@@ -192,6 +186,18 @@ class MonitorSystem(Monitor):
     system values.
     """
     mega = 1048576.
+
+    _nifsNameList = None
+
+    @classmethod
+    def getNifsNameList(cls):
+        from pwem.protocols.monitors import getnifs
+
+        if cls._nifsNameList is None:
+            # get list with network interfaces
+            nifs = getnifs.get_network_interfaces()
+            cls._nifsNameList = [nif.getName() for nif in nifs]
+        return cls._nifsNameList
 
     def __init__(self, protocols, **kwargs):
         Monitor.__init__(self, **kwargs)
