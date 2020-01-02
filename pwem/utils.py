@@ -65,3 +65,5 @@ def getPWEMPath(*paths):
 def getTemplatePath(*paths):
     return join(getPWEMPath('templates'), *paths)
 
+def getCmdPath(*paths):
+    return join(getPWEMPath('cmd'), *paths)

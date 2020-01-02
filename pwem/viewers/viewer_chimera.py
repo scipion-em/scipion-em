@@ -44,6 +44,7 @@ import pwem.constants as emcts
 import pwem.metadata as md
 import pwem.convert as emconv
 import pwem.objects as emobj
+from pwem import getCmdPath
 
 from .showj import (CHIMERA_PORT, MODE, MODE_MD, INVERTY)
 
@@ -195,7 +196,7 @@ class ChimeraClient:
         self.address = ''
         self.port = pwutils.getFreePort()
 
-        serverfile = pw.join('em', 'viewers', 'chimera_server.py')
+        serverfile = getCmdPath('chimera_server.py')
         command = pwviewer.CommandView("chimera --script '%s %s %s' &" %
                               (serverfile, self.port, serverName),
                               env=Chimera.getEnviron(),).show()
