@@ -40,15 +40,15 @@ class TestImportCTFs(pwtests.BaseTest):
         # First, import a set of micrographs that will be used
         # from all ctf test cases
         cls.protImport = cls.newProtocol(emprot.ProtImportMicrographs,
-                                      filesPath=cls.dsXmipp.getFile('allMics'),
-                                      samplingRate=1.237, voltage=300)
+                                         filesPath=cls.dsXmipp.getFile('allMics'),
+                                         samplingRate=1.237, voltage=300)
         cls.launchProtocol(cls.protImport)
 
     def testImportCTFFromXmipp(self):
         protCTF = self.newProtocol(emprot.ProtImportCTF,
-                                 importFrom=emprot.ProtImportCTF.IMPORT_FROM_XMIPP3,
-                                 filesPath=self.dsXmipp.getFile('ctfsDir'),
-                                 filesPattern='*.ctfparam')
+                                   importFrom=emprot.ProtImportCTF.IMPORT_FROM_XMIPP3,
+                                   filesPath=self.dsXmipp.getFile('ctfsDir'),
+                                   filesPattern='*.ctfparam')
         protCTF.inputMicrographs.set(self.protImport.outputMicrographs)
         protCTF.setObjLabel('import ctfs from xmipp ')
         self.launchProtocol(protCTF)
@@ -58,9 +58,9 @@ class TestImportCTFs(pwtests.BaseTest):
 
     def testImportCtffind3(self):
         protCTF = self.newProtocol(emprot.ProtImportCTF,
-                                 importFrom=emprot.ProtImportCTF.IMPORT_FROM_GRIGORIEFF,
-                                 filesPath=self.dsGrigorieff.getFile('ctffind3'),
-                                 filesPattern='BPV*/*txt')
+                                   importFrom=emprot.ProtImportCTF.IMPORT_FROM_GRIGORIEFF,
+                                   filesPath=self.dsGrigorieff.getFile('ctffind3'),
+                                   filesPattern='BPV*/*txt')
         protCTF.inputMicrographs.set(self.protImport.outputMicrographs)
         protCTF.setObjLabel('import from ctffind3')
         self.launchProtocol(protCTF)
@@ -70,9 +70,9 @@ class TestImportCTFs(pwtests.BaseTest):
         
     def testImportCtffind4(self):
         protCTF = self.newProtocol(emprot.ProtImportCTF,
-                                 importFrom=emprot.ProtImportCTF.IMPORT_FROM_GRIGORIEFF,
-                                 filesPath=self.dsGrigorieff.getFile('ctffind4'),
-                                 filesPattern='BPV*/*txt')
+                                   importFrom=emprot.ProtImportCTF.IMPORT_FROM_GRIGORIEFF,
+                                   filesPath=self.dsGrigorieff.getFile('ctffind4'),
+                                   filesPattern='BPV*/*txt')
         protCTF.inputMicrographs.set(self.protImport.outputMicrographs)
         protCTF.setObjLabel('import from ctffind4')
         self.launchProtocol(protCTF)
@@ -80,9 +80,8 @@ class TestImportCTFs(pwtests.BaseTest):
         self.assertIsNotNone(protCTF.outputCTF,
                              "There was a problem when importing ctfs.")
 
-
     def testImportFromScipion(self):
-        ctfSqlite =  self.dsGrigorieff.getFile('ctffind3/ctfs.sqlite')
+        ctfSqlite = self.dsGrigorieff.getFile('ctffind3/ctfs.sqlite')
 
         protCTF = self.newProtocol(emprot.ProtImportCTF,
                                    objLabel='import from scipion',
@@ -134,9 +133,9 @@ class TestImportCTFs(pwtests.BaseTest):
         self.launchProtocol(protImport2)
 
         protCTF2 = self.newProtocol(emprot.ProtImportCTF,
-                                   importFrom=emprot.ProtImportCTF.IMPORT_FROM_GRIGORIEFF,
-                                   filesPath=ctfsPath,
-                                   filesPattern='mic*/*txt')
+                                    importFrom=emprot.ProtImportCTF.IMPORT_FROM_GRIGORIEFF,
+                                    filesPath=ctfsPath,
+                                    filesPattern='mic*/*txt')
         protCTF2.inputMicrographs.set(protImport2.outputMicrographs)
         protCTF2.setObjLabel('import from ctffind3 - match')
         self.launchProtocol(protCTF2)

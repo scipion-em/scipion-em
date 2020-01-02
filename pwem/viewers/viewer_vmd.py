@@ -50,7 +50,7 @@ class VmdView(pwviewer.CommandView):
     """ View for calling an external command. """
     def __init__(self, vmdCommand, **kwargs):
         pwviewer.CommandView.__init__(self, 'vmd %s' % vmdCommand,
-                             env=Vmd.getEnviron(), **kwargs)
+                                      env=Vmd.getEnviron(), **kwargs)
 
     def show(self):
         pwutils.runJob(None, '', self._cmd, env=Vmd.getEnviron())

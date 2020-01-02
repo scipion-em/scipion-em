@@ -45,8 +45,8 @@ class TestCtfStreaming(pwtests.BaseTest):
 
     def _updateProtocol(self, prot):
         prot2 = pwprot.getProtocolFromDb(prot.getProject().path,
-                                  prot.getDbPath(),
-                                  prot.getObjId())
+                                         prot.getDbPath(),
+                                         prot.getObjId())
         # Close DB connections
         prot2.getProject().closeMapper()
         prot2.closeMappers()
@@ -62,7 +62,7 @@ class TestCtfStreaming(pwtests.BaseTest):
             while not (prot.isFinished() or prot.isFailed()):
 
                 # Time out 6 minutes, just in case
-                tdelta = time.time() -t0
+                tdelta = time.time() - t0
                 if tdelta > 6*60:
                     break
 
@@ -141,7 +141,6 @@ class TestCtfStreaming(pwtests.BaseTest):
         protCTF2.inputMicrographs.setExtended('outputMicrographs')
         self.proj.scheduleProtocol(protCTF2)
 
-        
         # 3rd ctf - Gctf
         protCTF3 = None
         try:

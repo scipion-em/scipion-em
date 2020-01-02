@@ -103,7 +103,6 @@ class TestCtfConsensus(pwtests.BaseTest):
         protCTF3.inputMicrographs.set(protStream.outputMicrographs)
         self.proj.launchProtocol(protCTF3, wait=False)
 
-
         # Computes the Consensus of GOOD CTFs
         self._waitOutput(protCTF1, "outputCTF")
         self._waitOutput(protCTF2, "outputCTF")
@@ -123,7 +122,6 @@ class TestCtfConsensus(pwtests.BaseTest):
         self.checkCTFs(protCTFcons,
                        refMics=protImport.outputMicrographs,
                        refCTFs=protCTF1.outputCTF)
-
 
         # Computes the Consensus comparing a good CTF to a RANDOM one
         self._waitOutput(protCTF3, "outputCTF")

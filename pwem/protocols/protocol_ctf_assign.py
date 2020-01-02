@@ -43,6 +43,7 @@ class ProtCTFAssign(ProtCTFMicrographs):
         # We need to trace the changes of 'inputType' to 
         # dynamically modify the property of pointerClass
         # of the 'inputSets' parameter
+
         def onChangeInputType():
             pointerClass = 'SetOf' + self.getEnumText('inputType')
             self.inputSetsParam.setPointerClass(pointerClass)
@@ -51,11 +52,11 @@ class ProtCTFAssign(ProtCTFMicrographs):
         # Now keep track of changes and update
         self.inputType.trace(onChangeInputType)
     
-    #--------------------------- DEFINE param functions -----------------------
+    # --------------------------- DEFINE param functions ----------------------
     def _defineParams(self, form):
         form.addSection(label='Input')
         form.addParam('inputType', params.EnumParam, choices=self._unionTypes,
-                      default=0, # Micrographs
+                      default=0,  # Micrographs
                       label='Input type:',
                       help='Select the type of objects that you want to assign'
                            ' the CTF.')
@@ -72,14 +73,14 @@ class ProtCTFAssign(ProtCTFMicrographs):
                            'particles.')  
         form.addParallelSection(threads=0, mpi=0) 
     
-    #--------------------------- INSERT steps functions -----------------------
+    # --------------------------- INSERT steps functions ----------------------
                                 
     def _insertAllSteps(self):
         """for each ctf insert the steps to compare it
         """
         self._insertFunctionStep('createOutputStep')
     
-    #--------------------------- STEPS functions ------------------------------
+    # --------------------------- STEPS functions -----------------------------
     def createOutputStep(self):
         inputSet = self.inputSet.get()
         inputCTF = self.inputCTF.get()
@@ -106,7 +107,7 @@ class ProtCTFAssign(ProtCTFMicrographs):
 #             print("ctf: ", ctf.printAll(), ctfName)
             ctfDict[ctfName] = ctf.clone()
         
-        missingSet = set() # Report missing micrographs only once
+        missingSet = set()  # Report missing micrographs only once
         
         for particle in inputSet:
             if particle.hasCoordinate():
@@ -163,7 +164,7 @@ class ProtCTFAssign(ProtCTFMicrographs):
         self._defineSourceRelation(self.inputSet, outputMics)
         self._defineCtfRelation(outputMics, self.inputCTF)
     
-    #--------------------------- INFO functions -------------------------------
+    # --------------------------- INFO functions ------------------------------
     def _summary(self):
         summary = []
         return summary    
@@ -184,10 +185,9 @@ class ProtCTFAssign(ProtCTFMicrographs):
             if not part.hasMicId():
                 errors.append("The input particles doesn't have any micrograph"
                               " assigned.")
-        #same micrographs in both CTF??
+        # same micrographs in both CTF??
         return errors
     
-    #--------------------------- UTILS functions ------------------------------
+    # --------------------------- UTILS functions -----------------------------
     def _stepsCheck(self):
         pass
-    

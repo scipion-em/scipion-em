@@ -19,9 +19,9 @@ from time import sleep
 from threading import Thread
 
 
-#from time import gmtime, strftime
-#from datetime import datetime
-#import socket
+# from time import gmtime, strftime
+# from datetime import datetime
+# import socket
 
 class Logger:
     # Toggle logging for debugging purposes
@@ -72,7 +72,7 @@ class ChimeraServer:
                         
                     elif msg == 'voxel_size':
                         self.voxelSize = self.vol_conn.recv()
-                        cmd = "volume #0 voxelSize %s"%self.voxelSize
+                        cmd = "volume #0 voxelSize %s" % self.voxelSize
                         runCommand(cmd)
 
                     elif msg == 'command_list':
@@ -80,31 +80,31 @@ class ChimeraServer:
                         for command in commandList:
                             runCommand(command)
 
-                    elif msg == 'end':#if you don't break cicle volume is never shown
+                    elif msg == 'end':  # if you don't break cicle volume is never shown
                         break
 
                 else:
                     sleep(0.01)
         except EOFError:
             print('Lost connection to client')
-            #should close app??
+            # should close app??
 
     def answer(self, msg):
 
         if msg == 'open_volume':
-            data = self.vol_conn.recv()#objects are serialized by default
-            #print data
+            data = self.vol_conn.recv()  # objects are serialized by default
+            # print data
             grid = Array_Grid_Data(data)
             self.volume = volume_from_grid_data(grid)
             self.centerVolume()
 
         elif msg == 'voxel_size':
             self.voxelSize = self.vol_conn.recv()
-            cmd = "volume #0 voxelSize %s"%self.voxelSize
-            #print cmd
+            cmd = "volume #0 voxelSize %s" % self.voxelSize
+            # print cmd
             runCommand(cmd)
             runCommand("focus")
-            #end debug
+            # end debug
 
         elif msg == 'command_list':
             commandList = self.vol_conn.recv()
@@ -121,15 +121,15 @@ class ChimeraServer:
     def centerVolume(self):
         om = chimera.openModels
         mlist = om.list()
-        #assume that volume is 0 may be dangerous
-        #this should be in init but it does not work there
+        # assume that volume is 0 may be dangerous
+        # this should be in init but it does not work there
         self.model = mlist[0]
         centerVec = self.model.bbox()[1].center().toVector()
         xform = chimera.Xform.xform(1, 0, 0, -centerVec[0],
                                     0, 1, 0, -centerVec[1],
                                     0, 0, 1, -centerVec[2], orthogonalize=True)
         self.model.openState.globalXform(xform)
-        #end of this
+        # end of this
 
     def listenShowJ(self):
         try:
@@ -137,11 +137,11 @@ class ChimeraServer:
                 if self.vol_conn.poll():
 
                     msg = self.vol_conn.recv()
-                    #this rotate should not be generic
+                    # this rotate should not be generic
                     if msg == 'rotate':
 
                         matrix1 = self.vol_conn.recv()
-                        #undo last rotation and put new one. #Traslation is not undone, if user moves volume wrong translation applied
+                        # undo last rotation and put new one. #Traslation is not undone, if user moves volume wrong translation applied
                         matrix = dot(matrix1, inv(self.rotation))
 
                         xform = chimera.Xform.xform(matrix[0][0], matrix[0][1],
@@ -157,16 +157,14 @@ class ChimeraServer:
                         sleep(0.01)
         except EOFError:
             print('Lost connection to client')
-            #should close app??
+            # should close app??
 
-    
     def onMotionStop(self, trigger, extra, userdata):
         rx, ry, rz, t = self.volume.openState.xform.getCoordFrame()
         self.rotation = array([[rx[0], ry[0], rz[0]], [rx[1], ry[1], rz[1]], [rx[2], ry[2], rz[2]]])
 
         self.vol_conn.send('motion_stop')
-        self.vol_conn.send(self.rotation)#send serialized motion
-
+        self.vol_conn.send(self.rotation)  # send serialized motion
 
     def onAppQuit(self, trigger, extra, userdata):
         self.vol_conn.send('exit_server')
@@ -190,64 +188,64 @@ class ChimeraVirusServer(ChimeraServer):
         to be handled.
         """
         pass
-        #chimera.triggers.addHandler(chimera.MOTION_STOP, self.onMotionStop, None)####
-        chimera.triggers.addHandler('selection changed', self.onselectionChanged, None)####
+        # chimera.triggers.addHandler(chimera.MOTION_STOP, self.onMotionStop, None)####
+        chimera.triggers.addHandler('selection changed', self.onselectionChanged, None)
 
     def onselectionChanged(self, trigName, myData, trigData):
         sel = chimera.selection.currentGraphs()
         self.vol_conn.send('id')
-        self.vol_conn.send(sel[0].id)#send serialized motion
+        self.vol_conn.send(sel[0].id)  # send serialized motion
 
-    #not sure if  next function is answer or hanfleInit def handleInitMessage(self, msg):
+    # not sure if  next function is answer or hanfleInit def handleInitMessage(self, msg):
     def answer(self, msg):
         """execute a single command and return values"""
         ChimeraServer.answer(msg)
         if msg == 'hk_icosahedron_lattice':
             from IcosahedralCage import cages
-            h,k,radius,shellRadius,spheRadius,sym,sphere,color = \
-                                      self.vol_conn.recv()
+            h, k, radius, shellRadius, spheRadius, sym, sphere, color = \
+                self.vol_conn.recv()
             ###
-            #get vertexes of canonical triangle (20 per icosahedron)
-            #get triangles defined by h k for canonical triangle
+            # get vertexes of canonical triangle (20 per icosahedron)
+            # get triangles defined by h k for canonical triangle
             corners, triangles, t_hex_edges = cages.hk_triangle(h, k)
 
-            #get vertex for icosahedron
-            #get vertex for each face
+            # get vertex for icosahedron
+            # get vertex for each face
             from Icosahedron import icosahedron_geometry
             ivarray, itarray = icosahedron_geometry(sym)
 
             tlist = []
-            #for a single face
-            #map triangles to a single face in the given orientation
-            for i0,i1,i2 in itarray:
+            # for a single face
+            # map triangles to a single face in the given orientation
+            for i0, i1, i2 in itarray:
                 face = ivarray[i0], ivarray[i1], ivarray[i2]
                 tmap = cages.triangle_map(corners, face)
                 tlist.extend(cages.map_triangles(tmap, triangles))
-                break#!!!!!!!!!!!!!!!!!!!!!!!!!
-            va, ta = cages.surface_geometry(tlist, tolerance = 1e-5)
+                break  # !!!!!!!!!!!!!!!!!!!!!!!!!
+            va, ta = cages.surface_geometry(tlist, tolerance=1e-5)
 
             from numpy import multiply
             multiply(va, shellRadius, va)    # Scale to requested radius            for point in va:
             for point in va:
-                command = 'shape sphere radius %s center %s,%s,%s color %s '%\
-                                                (spheRadius,
-                                                 point[0],
-                                                 point[1],
-                                                 point[2],
-                                                 color
-                                                 )
+                command = 'shape sphere radius %s center %s,%s,%s color %s ' %\
+                          (spheRadius,
+                           point[0],
+                           point[1],
+                           point[2],
+                           color
+                           )
                 runCommand(command)
             self.vol_conn.send('axis')
-            self.vol_conn.send(va)#send serialized motion
-            ###!!!!hex_edges = array(t_hex_edges * len(itarray), intc)
+            self.vol_conn.send(va)  # send serialized motion
+            # !!!!hex_edges = array(t_hex_edges * len(itarray), intc)
 
-            #show va spheres
+            # show va spheres
 
-if len(sys.argv)> 1:
+
+if len(sys.argv) > 1:
    serverName = sys.argv[2]
 else:
    serverName = 'ChimeraServer'
 
 serverClass = globals().get(serverName, None)
 serverClass()
-

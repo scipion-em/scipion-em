@@ -145,7 +145,7 @@ class CTFModel(EMObject):
                       self._fitQuality.get()
                       )
         else:   # TODO; remove eventually,
-                # compatibility with old ctfmodel
+            # compatibility with old ctfmodel
             ctfStr = "defocus(U,V,a) = " \
                      "(%0.2f,%0.2f,%0.2f)" % (self._defocusU.get(),
                                               self._defocusV.get(),
@@ -614,7 +614,7 @@ class Image(EMObject):
 
     def setShiftsInOrigin(self, x, y, z):
         origin = self.getOrigin(force=True)
-        origin.setShifts(x, y, z )
+        origin.setShifts(x, y, z)
 
     def setOrigin(self, newOrigin):
         """shifts in A"""
@@ -635,6 +635,7 @@ class Image(EMObject):
         dimStr = str(ImageDim(*dim)) if dim else 'No-Dim'
         return ("%s (%s, %0.2f Å/px)" % (self.getClassName(), dimStr,
                                          self.getSamplingRate() or 99999.))
+
     def getFiles(self):
         filePaths = set()
         filePaths.add(self.getFileName())
@@ -837,7 +838,7 @@ class Sequence(EMObject):
         return self._isAminoacids
 
     def __str__(self):
-         return "Sequence (name = {})\n".format(self.getSeqName())
+        return "Sequence (name = {})\n".format(self.getSeqName())
 
 
 class AtomStruct(EMFile):
@@ -893,6 +894,7 @@ class AtomStruct(EMFile):
 
     def setOrigin(self, newOrigin):
         self._origin = newOrigin
+
 
 class PdbFile(AtomStruct):
     def __init__(self, filename=None, pseudoatoms=False, **kwargs):
@@ -1411,7 +1413,7 @@ class Coordinate(EMObject):
         self.setPosition(*coord.getPosition())
         self.setObjId(coord.getObjId())
         # setBoxSize does not exist for Coord
-        #self.setBoxSize(coord.getBoxSize())
+        # self.setBoxSize(coord.getBoxSize())
 
     def getMicId(self):
         return self._micId.get()
@@ -1616,7 +1618,7 @@ class Transform(EMObject):
         self.setShifts(shifts[0], shifts[1], shifts[2])
 
     def composeTransform(self, matrix):
-        '''Apply a transformation matrix to the current matrix '''
+        """Apply a transformation matrix to the current matrix """
         new_matrix = matrix * self.getMatrix()
         self._matrix.setMatrix(new_matrix)
 

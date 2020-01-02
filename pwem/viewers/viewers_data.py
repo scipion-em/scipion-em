@@ -69,7 +69,7 @@ class DataViewer(pwviewer.Viewer):
 
     def _addObjView(self, obj, fn, viewParams={}):
         objView = ObjectView(self._project, obj.strId(), fn,
-                                   viewParams=viewParams)
+                             viewParams=viewParams)
         self._views.append(objView)
         return objView
 
@@ -128,8 +128,8 @@ class DataViewer(pwviewer.Viewer):
         elif issubclass(cls, emobj.SetOfCoordinates):
             # FIXME: Remove dependency on xmipp3 plugin to visualize coordinates
             xmipp3 = Domain.importFromPlugin('xmipp3',
-                                              errorMsg="xmipp3 plugin is required "
-                                                       "now to visualize coordinates.")
+                                             errorMsg="xmipp3 plugin is required "
+                                                      "now to visualize coordinates.")
             micSet = obj.getMicrographs()  # accessing mics to provide metadata file
             if micSet is None:
                 raise Exception('visualize: SetOfCoordinates has no micrographs set.')
@@ -152,8 +152,8 @@ class DataViewer(pwviewer.Viewer):
             # protocol to continue picking later without loosing the coordinates.
             xmipp3.convert.writeSetOfCoordinates(tmpDir, obj)
             self._views.append(CoordinatesObjectView(self._project, fn,
-                                                           tmpDir, self.protocol,
-                                                           inTmpFolder=True))
+                                                     tmpDir, self.protocol,
+                                                     inTmpFolder=True))
 
         elif issubclass(cls, emobj.SetOfParticles):
             fn = obj.getFileName()
@@ -176,15 +176,15 @@ class DataViewer(pwviewer.Viewer):
 
         elif issubclass(cls, emobj.SetOfClasses2D):
             self._views.append(ClassesView(self._project, obj.strId(),
-                                                 obj.getFileName(), **kwargs))
+                                           obj.getFileName(), **kwargs))
 
         elif issubclass(cls, emobj.SetOfClasses3D):
             self._views.append(Classes3DView(self._project, obj.strId(),
-                                                   obj.getFileName()))
+                                             obj.getFileName()))
 
         elif issubclass(cls, emobj.SetOfImages):
             self._views.append(ObjectView(self._project, obj.strId(),
-                                                obj.getFileName(), **kwargs))
+                                          obj.getFileName(), **kwargs))
 
         elif issubclass(cls, emobj.SetOfCTF):
             self._views.append(CtfView(self._project, obj))
@@ -192,8 +192,8 @@ class DataViewer(pwviewer.Viewer):
         elif issubclass(cls, emobj.CoordinatesTiltPair):
             # FIXME: Remove dependency on xmipp3 plugin to visualize coordinates
             xmipp3 = Domain.importFromPlugin('xmipp3',
-                                              errorMsg="xmipp3 plugin is required "
-                                                       "now to visualize coordinates.")
+                                             errorMsg="xmipp3 plugin is required "
+                                                      "now to visualize coordinates.")
             tmpDir = self._getTmpPath(obj.getName())
             pwutils.makePath(tmpDir)
 
@@ -224,4 +224,3 @@ class DataViewer(pwviewer.Viewer):
                     self._views.append(DataView(gainFn))
 
         return self._views
-

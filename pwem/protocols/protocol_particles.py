@@ -156,7 +156,7 @@ class ProtExtractParticles(ProtParticles):
         specific parameters """
         pass
     
-    #--------------------------- INSERT steps functions ------------------------
+    # --------------------------- INSERT steps functions ----------------------
     def _insertAllSteps(self):
         # Let's load input data for the already existing micrographs
         # before the streaming
@@ -205,7 +205,6 @@ class ProtExtractParticles(ProtParticles):
         return micStepId
     
     # -------------------------- STEPS functions ------------------------------
-
 
     def extractMicrographStep(self, micKey, *args):
         """ Step function that will be common for all extraction protocols.
@@ -344,11 +343,11 @@ class ProtExtractParticles(ProtParticles):
 
         def _loadMics(micSet):
             return _loadSet(micSet, emobj.SetOfMicrographs,
-                             lambda mic: mic.getMicName())
+                            lambda mic: mic.getMicName())
 
         def _loadCTFs(ctfSet):
             return _loadSet(ctfSet, emobj.SetOfCTF,
-                             lambda ctf: ctf.getMicrograph().getMicName())
+                            lambda ctf: ctf.getMicrograph().getMicName())
 
         # Load new micrographs coming from the coordinates
         self.debug("Loading Mics from Coords.")
@@ -633,7 +632,7 @@ class ProtExtractParticles(ProtParticles):
 
     def createOutputStep(self):
         pass  # Nothing to do now
-        #self._createOutput(self._getExtraPath())
+        # self._createOutput(self._getExtraPath())
 
 
 class ProtExtractParticlesPair(ProtParticles):

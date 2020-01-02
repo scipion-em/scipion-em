@@ -48,18 +48,18 @@ def _applyMatrix(tf, points):
 
 
 def __length(v):
-  d = sqrt(sum([e*e for e in v]))
-  return d
+    d = sqrt(sum([e*e for e in v]))
+    return d
 
 
 def _normalizeVector(v):
-  d = __length(v)
-  if d == 0:
-    d = 1
-  return tuple([e/d for e in v])
+    d = __length(v)
+    if d == 0:
+        d = 1
+    return tuple([e/d for e in v])
 
 
-def _rotationTransform(axis, angle, center = (0, 0, 0)):
+def _rotationTransform(axis, angle, center=(0, 0, 0)):
     """ Angle is in degrees. """
     axis = _normalizeVector(axis)
 
@@ -72,87 +72,87 @@ def _rotationTransform(axis, angle, center = (0, 0, 0)):
           (az*sa+k*ax*ay, 1 + k*(ay*ay-1), -ax*sa+k*ay*az, 0),
           (-ay*sa+k*ax*az, ax*sa+k*ay*az, 1 + k*(az*az-1), 0))
     cx, cy, cz = center
-    c_tf = ((1,0,0,cx), (0,1,0,cy), (0,0,1,cz))
-    inv_c_tf = ((1,0,0,-cx), (0,1,0,-cy), (0,0,1,-cz))
+    c_tf = ((1, 0, 0, cx), (0, 1, 0, cy), (0, 0, 1,cz))
+    inv_c_tf = ((1, 0, 0, -cx), (0, 1, 0, -cy), (0, 0, 1, -cz))
     rtf = _multiplyMatrices(c_tf, tf, inv_c_tf)
     return rtf
 
 
 def _translationMatrix(shift):
 
-  tf = np.array(((1.0, 0, 0, shift[0]),
-              (0, 1.0, 0, shift[1]),
-              (0, 0, 1.0, shift[2])))
-  return tf
+    tf = np.array(((1.0, 0, 0, shift[0]),
+                   (0, 1.0, 0, shift[1]),
+                   (0, 0, 1.0, shift[2])))
+    return tf
 
 
 def _identityMatrix():
 
-  return (1.0,0,0,0), (0,1.0,0,0), (0,0,1.0,0)
+    return (1.0, 0, 0, 0), (0, 1.0, 0, 0), (0, 0, 1.0, 0)
 
 
 def _invertMatrix(tf):
 
     tf = np.array(tf)
-    r = tf[:,:3]
-    t = tf[:,3]
-    tfinv = np.zeros((3,4), np.float)
-    rinv = tfinv[:,:3]
-    tinv = tfinv[:,3]
-    rinv[:,:] = matrix_inverse(r)
+    r = tf[:, :3]
+    t = tf[:, 3]
+    tfinv = np.zeros((3, 4), np.float)
+    rinv = tfinv[:, :3]
+    tinv = tfinv[:, 3]
+    rinv[:, :] = matrix_inverse(r)
     tinv[:] = matrix_multiply(rinv, -t)
     return tfinv
 
 
 def _multiplyMatrices(*mlist):
 
-  if len(mlist) == 2:
-    m1, m2 = mlist
-    p = [[0,0,0,0],
-         [0,0,0,0],
-         [0,0,0,0]]
-    for r in range(3):
-      for c in range(4):
-        p[r][c] = m1[r][0]*m2[0][c] + m1[r][1]*m2[1][c] + m1[r][2]*m2[2][c]
-        p[r][3] += m1[r][3]
-    p = tuple(map(tuple, p))
-  else:
-    p = _multiplyMatrices(*mlist[1:])
-    p = _multiplyMatrices(mlist[0], p)
-  return p
+    if len(mlist) == 2:
+        m1, m2 = mlist
+        p = [[0, 0, 0, 0],
+             [0, 0, 0, 0],
+             [0, 0, 0, 0]]
+        for r in range(3):
+            for c in range(4):
+                p[r][c] = m1[r][0]*m2[0][c] + m1[r][1]*m2[1][c] + m1[r][2]*m2[2][c]
+            p[r][3] += m1[r][3]
+        p = tuple(map(tuple, p))
+    else:
+        p = _multiplyMatrices(*mlist[1:])
+        p = _multiplyMatrices(mlist[0], p)
+    return p
 
 
 def _matrixProducts(mlist1, mlist2):
-  plist = []
-  for m1 in mlist1:
-    for m2 in mlist2:
-      m1xm2 = _multiplyMatrices(m1, m2)
-      plist.append(m1xm2)
-  return plist
+    plist = []
+    for m1 in mlist1:
+        for m2 in mlist2:
+            m1xm2 = _multiplyMatrices(m1, m2)
+            plist.append(m1xm2)
+    return plist
 
 
 def _coordinateTransformList(tflist, ctf):
 
-  ctfinv = _invertMatrix(ctf)
-  return [_multiplyMatrices(ctfinv, tf, ctf) for tf in tflist]
+    ctfinv = _invertMatrix(ctf)
+    return [_multiplyMatrices(ctfinv, tf, ctf) for tf in tflist]
 
 
 def _recenterSymmetries(tflist, center):
 
-    if center == (0,0,0):
-      return tflist
+    if center == (0, 0, 0):
+        return tflist
     ctf = _translationMatrix([-x for x in center])
     return _coordinateTransformList(tflist, ctf)
 
 
 def _transposeMatrix(tf):
 
-  return ((tf[0][0], tf[1][0], tf[2][0], tf[0][3]),
-          (tf[0][1], tf[1][1], tf[2][1], tf[1][3]),
-          (tf[0][2], tf[1][2], tf[2][2], tf[2][3]))
+    return ((tf[0][0], tf[1][0], tf[2][0], tf[0][3]),
+            (tf[0][1], tf[1][1], tf[2][1], tf[1][3]),
+            (tf[0][2], tf[1][2], tf[2][2], tf[2][3]))
 
 
-def getSymmetryMatrices(sym=cts.SYM_CYCLIC, n=1, center = (0,0,0)):
+def getSymmetryMatrices(sym=cts.SYM_CYCLIC, n=1, center=(0, 0, 0)):
     """ interface between scipion and chimera code
         chimera code uses tuples of tuples as matrices
         but scipion uses np.arrays (lists of lists)
@@ -178,7 +178,7 @@ def getSymmetryMatrices(sym=cts.SYM_CYCLIC, n=1, center = (0,0,0)):
     return np.array(matrices)
 
 
-def __cyclicSymmetrySatrices(n, center = (0, 0, 0)):
+def __cyclicSymmetrySatrices(n, center=(0, 0, 0)):
     """ Rotation about z axis.
     This is a local method. do not access directly to it
     """
@@ -189,17 +189,17 @@ def __cyclicSymmetrySatrices(n, center = (0, 0, 0)):
         s = sin(a)
         tf = ((c, -s, 0, 0),
               (s, c, 0, 0),
-              (0,0,1,0))
+              (0, 0, 1, 0))
         tflist.append(tf)
     tflist = _recenterSymmetries(tflist, center)
     return tflist
 
 
-def __octahedralSymmetryMatrices(center = (0, 0, 0)):
+def __octahedralSymmetryMatrices(center=(0, 0, 0)):
     """ 4-folds along x, y, z axes. """
-    c4 = (((0,0,1),0), ((0,0,1),90), ((0,0,1),180), ((0,0,1),270))
-    cube = (((1,0,0),0), ((1,0,0),90), ((1,0,0),180), ((1,0,0),270),
-            ((0,1,0),90), ((0,1,0),270))
+    c4 = (((0, 0, 1), 0), ((0, 0, 1), 90), ((0, 0, 1), 180), ((0, 0, 1), 270))
+    cube = (((1, 0, 0), 0), ((1, 0, 0), 90), ((1, 0, 0), 180), ((1, 0, 0), 270),
+            ((0, 1, 0), 90), ((0, 1, 0), 270))
     c4syms = [_rotationTransform(axis, angle) for axis, angle in c4]
     cubesyms = [_rotationTransform(axis, angle) for axis, angle in cube]
     syms = _matrixProducts(cubesyms, c4syms)
@@ -207,17 +207,17 @@ def __octahedralSymmetryMatrices(center = (0, 0, 0)):
     return syms
 
 
-def __dihedralSymmetryMatrices(n, center = (0, 0, 0)):
+def __dihedralSymmetryMatrices(n, center=(0, 0, 0)):
     """ Rotation about z axis, reflection about x axis. """
     clist = __cyclicSymmetrySatrices(n)
-    reflect = ((1,0,0,0),(0,-1,0,0),(0,0,-1,0))
+    reflect = ((1, 0, 0, 0), (0, -1, 0, 0), (0, 0, -1, 0))
     tflist = _matrixProducts([_identityMatrix(), reflect], clist)
     tflist = _recenterSymmetries(tflist, center)
     return tflist
 
 
-def __tetrahedralSymmetryMatrices(orientation = cts.SYM_TETRAHEDRAL,
-                                  center = (0,0,0)):
+def __tetrahedralSymmetryMatrices(orientation=cts.SYM_TETRAHEDRAL,
+                                  center=(0, 0, 0)):
     """
     identity
     4 * rotation by 120 clockwise (seen from a vertex):
@@ -225,10 +225,10 @@ def __tetrahedralSymmetryMatrices(orientation = cts.SYM_TETRAHEDRAL,
     4 * rotation by 120 counterclockwise (ditto)
     3 * rotation by 180
     """
-    aa = (((0,0,1),0), ((1,0,0),180), ((0,1,0),180), ((0,0,1),180),
-          ((1,1,1),120), ((1,1,1),240), ((-1,-1,1),120), ((-1,-1,1),240),
-          ((-1,1,-1),120), ((-1,1,-1),240), ((1,-1,-1),120),
-          ((1,-1,-1),240))
+    aa = (((0, 0, 1), 0), ((1, 0, 0), 180), ((0, 1, 0), 180), ((0, 0, 1), 180),
+          ((1, 1, 1), 120), ((1, 1, 1), 240), ((-1, -1, 1), 120), ((-1, -1, 1), 240),
+          ((-1, 1, -1), 120), ((-1, 1, -1), 240), ((1, -1, -1), 120),
+          ((1, -1, -1), 240))
     syms = [_rotationTransform(axis, angle) for axis, angle in aa]
 
     if orientation == cts.SYM_TETRAHEDRAL_Z3:
@@ -257,21 +257,23 @@ def __icosahedralSymmetryMatrices(orientation=cts.SYM_I222, center=(0, 0, 0)):
 
 
 icos_matrices = {}  # Maps orientation name to 60 matrices.
+
+
 class Icosahedron(object):
 
-    def __init__(self, circumscribed_radius = 1, orientation = '222', center=(
+    def __init__(self, circumscribed_radius=1, orientation='222', center=(
             0, 0, 0)):
         """point = np.array([0, 1, PHI]"""
         self.circumscribed_radius = circumscribed_radius
         self.orientation = orientation
-        self.center=center
+        self.center = center
         # Triangle edge length of unit icosahedron.
-        self.e= sqrt(2 - 2 / sqrt(5))
+        self.e = sqrt(2 - 2 / sqrt(5))
         self.vertices = None  # icosahedron vertices
-        self.triangles = None # icosahedron faces
-        self._3foldAxis = [] #
-        self._2foldAxis = [] #
-        self.edges = None # icosahedron edges
+        self.triangles = None  # icosahedron faces
+        self._3foldAxis = []
+        self._2foldAxis = []
+        self.edges = None  # icosahedron edges
         # ---------------------------------------------------------------------------------------------
         # Coordinates systems.
         # '222'         2-fold symmetry along x, y, and z axes.
@@ -298,7 +300,6 @@ class Icosahedron(object):
         tflist = _recenterSymmetries(t.get(self.orientation, None),
                                      self.center)
         return tflist
-
 
     # -------------------------------------------------------------------------
     # Edge length of icosahedron with a certain radio of the circumscribed
@@ -697,16 +698,16 @@ class Icosahedron(object):
             #                     7
         # 20 triangles composing icosahedron.
         #
-        self.triangles = ((0,1,2), (0,2,3), (0,3,4), (0,4,5), (0,5,1),
-                         (6,7,8), (6,8,9), (6,9,10), (6,10,11), (6,11,7),
-                         (1,9,2), (2,9,8), (2,8,3), (3,8,7), (3,7,4),
-                         (4,7,11), (4,11,5), (5,11,10), (5,10,1), (1,10,9))
+        self.triangles = ((0, 1, 2), (0, 2, 3), (0, 3, 4), (0, 4, 5), (0, 5, 1),
+                          (6, 7, 8), (6, 8, 9), (6, 9, 10), (6, 10, 11), (6, 11, 7),
+                          (1, 9, 2), (2, 9, 8), (2, 8, 3), (3, 8, 7), (3, 7, 4),
+                          (4, 7, 11), (4, 11, 5), (5, 11, 10), (5, 10, 1), (1, 10, 9))
 
         for triangle in self.triangles:
-            self._3foldAxis.append( [(item1 + item2 + item3) /3. \
-                for item1,  item2,  item3 in zip(self.vertices[triangle[0]],
-                                                 self.vertices[triangle[1]],
-                                                 self.vertices[triangle[2]])])
+            self._3foldAxis.append([(item1 + item2 + item3) / 3.
+                                    for item1,  item2,  item3 in zip(self.vertices[triangle[0]],
+                                                                     self.vertices[triangle[1]],
+                                                                     self.vertices[triangle[2]])])
 
         self.edges = ((0, 1), (0, 2), (0, 3), (0, 4), (0, 5),
                       (1, 2), (2, 3), (3, 4), (4, 5), (5, 1),
@@ -716,9 +717,9 @@ class Icosahedron(object):
                       (4, 7), (4, 11), (5, 10), (5, 11), (1, 10))
 
         for edge in self.edges:
-            self._2foldAxis.append([(item1 + item2 ) / 2. \
-                for item1, item2 in zip(self.vertices[edge[0]],
-                                        self.vertices[edge[1]])])
+            self._2foldAxis.append([(item1 + item2) / 2.
+                                    for item1, item2 in zip(self.vertices[edge[0]],
+                                                            self.vertices[edge[1]])])
 
     def getVertices(self):
         return self.vertices

@@ -66,11 +66,12 @@ class ProtCreateMask2D(Prot2D):
 class ProtClassify2D(Prot2D):
     pass
 
+
 class ProtAnalysis2D(Prot2D):
     pass
 
 
-#------------ Some testing protocols ------------------
+# ------------ Some testing protocols -----------------------------------------
 
 class ProtEvenClassify2D:  # ProtClassify2D):
     """ This is a simple classification protocol for testing purposes.
@@ -109,5 +110,3 @@ class ProtEvenClassify2D:  # ProtClassify2D):
         classes.write()
             
         self._defineOutputs(outputClasses=classes)
-            
-            

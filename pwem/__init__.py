@@ -42,6 +42,7 @@ from .utils import *
 from .metadata import *
 _references = ["delaRosaTrevin201693"]
 
+
 class Domain(pyworkflow.plugin.Domain):
     _name = __name__
     _objectClass = EMObject
@@ -73,13 +74,13 @@ class Plugin(pyworkflow.plugin.Plugin):
     def defineBinariesMaxit(cls, default, env):
         MAXIT_URL = 'https://sw-tools.rcsb.org/apps/MAXIT/maxit-v10.100-prod-src.tar.gz'
         MAXIT_TAR = 'maxit-v10.100-prod-src.tar.gz'
-        maxit_commands = [('make -j 1 binary ' , ['bin/maxit'])]
+        maxit_commands = [('make -j 1 binary ', ['bin/maxit'])]
         env.addPackage(MAXIT, version='10.1',
                        tar=MAXIT_TAR,
                        url=MAXIT_URL,
                        commands=maxit_commands,
                        default=default)  # scipion installb maxit
-                                         # requirements bison, flex, gcc
+        # requirements bison, flex, gcc
 
 
 Domain.registerPlugin(__name__)

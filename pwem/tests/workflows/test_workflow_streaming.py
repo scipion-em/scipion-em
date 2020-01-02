@@ -42,6 +42,7 @@ import pwem.protocols as emprot
 def _getVar(varSuffix, varType, default=None):
     return varType(os.environ.get('SCIPION_TEST_STREAM_%s' % varSuffix, default))
 
+
 MOVS = _getVar('MOVS', int, 10)
 PATTERN = _getVar('PATTERN', str, '')
 DELAY = _getVar('DELAY', int, 10)  # in seconds
@@ -72,7 +73,7 @@ class TestStreamingWorkflow(pwtests.BaseTest):
             # Loop over the number of input movies if we want more for testing
             f = files[i % nFiles]
             _, cls.ext = os.path.splitext(f)
-            moviePath = cls.proj.getTmpPath('movie%06d%s' % (i+1, cls.ext))
+            moviePath = cls.proj.getTmpPath('movie%06d%s' % (i + 1, cls.ext))
             pwutils.createAbsLink(f, moviePath)
             time.sleep(DELAY)
 
@@ -89,8 +90,8 @@ class TestStreamingWorkflow(pwtests.BaseTest):
         def _loadProt(prot):
             # Load the last version of the protocol from its own database
             prot2 = pwtests.getProtocolFromDb(prot.getProject().path,
-                                      prot.getDbPath(),
-                                      prot.getObjId())
+                                              prot.getDbPath(),
+                                              prot.getObjId())
             # Close DB connections
             prot2.getProject().closeMapper()
             prot2.closeMappers()
@@ -158,8 +159,8 @@ class TestStreamingWorkflow(pwtests.BaseTest):
 
         # ----------- ALIGNMENT --------------------------
         XmippProtMovieCorr = Domain.importFromPlugin('xmipp3.protocols',
-                                                        'XmippProtMovieCorr',
-                                                        doRaise=True)
+                                                     'XmippProtMovieCorr',
+                                                     doRaise=True)
         protOF = self.newProtocol(XmippProtMovieCorr,
                                   objLabel='Movie alignment',
                                   doSaveMovie=False,
@@ -209,14 +210,14 @@ class TestBaseRelionStreaming(pwtests.BaseTest):
         cls.importThread.start()
         # Wait until the first link is created
         time.sleep(5)
-    
+
     @classmethod
     def _createInputLinks(cls):
         # Create a test folder path
         pattern = cls.ds.getFile('allMics')
         files = glob(pattern)
         nFiles = len(files)
-        
+
         for i in range(nFiles):
             # Loop over the number of input movies if we want more for testing
             f = files[i % nFiles]
@@ -224,7 +225,7 @@ class TestBaseRelionStreaming(pwtests.BaseTest):
             moviePath = cls.proj.getTmpPath('movie%06d%s' % (i + 1, cls.ext))
             pwutils.createAbsLink(f, moviePath)
             time.sleep(10)
-    
+
     def _waitUntilMinSize(self, emSet, size=5):
         counter = 0
         while not emSet.getSize() >= size:
@@ -233,8 +234,8 @@ class TestBaseRelionStreaming(pwtests.BaseTest):
             if counter > 1000:
                 break
             counter += 1
-    
-    
+
+
 class TestRelionExtractStreaming(TestBaseRelionStreaming):
     def testRisosome(self):
         # First, import a set of micrographs
@@ -267,12 +268,12 @@ class TestRelionExtractStreaming(TestBaseRelionStreaming):
         protCTF.setObjLabel('CTF ctffind')
         self.proj.launchProtocol(protCTF, wait=False)
         self._waitOutput(protCTF, 'outputCTF')
-        
+
         # Now pick particles on the micrographs with Relion
         print("Performing Relion Autopicking (LoG)...")
 
         ProtRelion2Autopick = Domain.importFromPlugin('relion.protocols',
-                                                         'ProtRelion2Autopick')
+                                                      'ProtRelion2Autopick')
         protPick = self.newProtocol(ProtRelion2Autopick,
                                     runType=1,
                                     referencesType=1,
@@ -297,7 +298,7 @@ class TestRelionExtractStreaming(TestBaseRelionStreaming):
         protExtract.inputCoordinates.set(protPick.outputCoordinates)
         protExtract.ctfRelations.set(protCTF.outputCTF)
         self.launchProtocol(protExtract)
-        
+
         x, y, _ = protExtract.outputParticles.getDim()
         self.assertEqual(protExtract.outputParticles.getDim(), (64, 64, 1),
                          "Dimension of the particles should be 64 x 64 and it "
@@ -310,14 +311,14 @@ class TestRelionPickStreaming(TestBaseRelionStreaming):
         ih = emconv.ImageHandler()
         classesFn = self.ds.getFile('import/classify2d/extra/'
                                     'relion_it015_classes.mrcs')
-    
+
         outputName = 'input_averages.mrcs'
         inputTmp = os.path.abspath(self.proj.getTmpPath())
         outputFn = self.proj.getTmpPath(outputName)
-    
+
         for i, index in enumerate([5, 16, 17, 18, 24]):
             ih.convert((index, classesFn), (i + 1, outputFn))
-    
+
         protAvgs = self.newProtocol(emprot.ProtImportAverages,
                                     objLabel='avgs - 5',
                                     filesPath=inputTmp,
@@ -325,7 +326,7 @@ class TestRelionPickStreaming(TestBaseRelionStreaming):
                                     samplingRate=7.08
                                     )
         self.launchProtocol(protAvgs)
-        
+
         # First, import a set of micrographs
         print("Importing a set of micrographs...")
         protImport = self.newProtocol(emprot.ProtImportMicrographs,
@@ -341,7 +342,7 @@ class TestRelionPickStreaming(TestBaseRelionStreaming):
         protImport.setObjLabel('import 20 mics (streaming)')
         self.proj.launchProtocol(protImport, wait=False)
         self._waitOutput(protImport, 'outputMicrographs')
-        
+
         # Now estimate CTF on the micrographs with ctffind
         print("Performing CTFfind...")
         ProtCTFFind = Domain.importFromPlugin('cistem.protocols',
@@ -356,13 +357,13 @@ class TestRelionPickStreaming(TestBaseRelionStreaming):
         protCTF.setObjLabel('CTF ctffind')
         self.proj.launchProtocol(protCTF, wait=False)
         self._waitOutput(protCTF, 'outputCTF')
-        
+
         self._waitUntilMinSize(protCTF.outputCTF)
 
         # Select some good averages from the iterations mrcs a
 
         ProtRelion2Autopick = Domain.importFromPlugin('relion.protocols',
-                                                         'ProtRelion2Autopick')
+                                                      'ProtRelion2Autopick')
         protPick = self.newProtocol(ProtRelion2Autopick,
                                     objLabel='autopick refs',
                                     runType=0,
@@ -375,7 +376,7 @@ class TestRelionPickStreaming(TestBaseRelionStreaming):
         protPick.ctfRelations.set(protCTF.outputCTF)
         protPick.inputReferences.set(protAvgs.outputAverages)
         self.launchProtocol(protPick)
-        
+
         protPick.runType.set(1)
         self.launchProtocol(protPick)
 
@@ -406,7 +407,7 @@ class TestFrameStacking(pwtests.BaseTest):
 
             for j in range(1, nFrames + 1):
                 outputFramePath = cls.proj.getTmpPath('movie%06d_%03d.mrc'
-                                                      % (i+1, j))
+                                                      % (i + 1, j))
                 ih.convert((j, f), outputFramePath)
                 time.sleep(delay)
 
@@ -434,7 +435,6 @@ class TestFrameStacking(pwtests.BaseTest):
                                       deleteFrames=True)
         self.launchProtocol(protImport)
         self.assertSetSize(protImport.outputMovies, MOVS, msg="Wrong output set size!!")
-
 
     def test_Stream(self):
         # Create a separated thread to simulate real streaming with

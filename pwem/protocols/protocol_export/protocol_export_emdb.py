@@ -49,7 +49,7 @@ class ProtExportEMDB(EMProtocol):
     def __init__(self, **kwargs):
         EMProtocol.__init__(self, **kwargs)
 
-        #--------------------------- DEFINE param functions ----------------------
+    # --------------------------- DEFINE param functions ----------------------
     def _defineParams(self, form):
         form.addSection(label='Input')
 
@@ -67,16 +67,16 @@ class ProtExportEMDB(EMProtocol):
                       label="Export to directory",
                       help="Directory where the files will be generated.")
 
-    #--------------------------- INSERT steps functions --------------------------------------------
+    # --------------------------- INSERT steps functions ----------------------
     def _insertAllSteps(self):
         self._insertFunctionStep('exportVolumeStep')
         self._insertFunctionStep('exportFSCStep')
         self._insertFunctionStep('exportAtomStructStep')
 
-    #--------------------------- STEPS functions --------------------------------------------
+    # --------------------------- STEPS functions -----------------------------
 
     def exportVolumeStep(self):
-        #create directory if needed
+        # create directory if needed
         dirName = self.filesPath.get()
         try:
             os.makedirs(dirName)
@@ -98,7 +98,7 @@ class ProtExportEMDB(EMProtocol):
         dirName = self.filesPath.get()
         for i, exportFSC in enumerate(fscSet):
 
-            x,y = exportFSC.getData()
+            x, y = exportFSC.getData()
             fnFSC = os.path.join(dirName, "fsc_%02d.xml" % i)
             fo = open(fnFSC, "w")
             fo.write('<fsc title="FSC(%s)" xaxis="Resolution (A-1)" '
@@ -125,8 +125,7 @@ class ProtExportEMDB(EMProtocol):
         else:
             toCIF(originStructPath, destinyStructPath)
 
-
-    #--------------------------- INFO functions --------------------------------------------
+    # --------------------------- INFO functions ------------------------------
     def _validate(self):
         message = []
         fnPath = self.filesPath.get()
@@ -135,13 +134,13 @@ class ProtExportEMDB(EMProtocol):
         return message
 
     def _summary(self):
-        message = "Data Available at : *%s*"% self.filesPath.get()
+        message = "Data Available at : *%s*" % self.filesPath.get()
         return [message]
 
     def _methods(self):
         return []
 
-#--------------------------- UTILS functions ---------------------------------------------------
+# --------------------------- UTILS functions ---------------------------------
 
     def getFnPath(self, label='volume'):
         return os.path.join(self.filesPath.get(),

@@ -40,13 +40,13 @@ import pyworkflow.utils as pwutils
 import pwem.objects as emobj
 import pwem.constants as emcts
 try:
-  import xmippLib
+    import xmippLib
 except Exception as e:
-  print("\nXmipp installation have failed or xmipp's C++ binnding have some problem:")
-  print(e)
-  print("\n  > Please, remove the Xmipp installation (usually 'rm software/em/xmipp') "
-        "and re-install it\n")
-  sys.exit(-1)
+    print("\nXmipp installation have failed or xmipp's C++ binnding have some problem:")
+    print(e)
+    print("\n  > Please, remove the Xmipp installation (usually 'rm software/em/xmipp') "
+          "and re-install it\n")
+    sys.exit(-1)
 
 
 class ImageHandler(object):
@@ -186,7 +186,7 @@ class ImageHandler(object):
             # we are opening an Eman2 process to read the dm4 file
             from pwem import Domain
             convertImage = Domain.importFromPlugin('eman2.convert',
-                                                    'convertImage',
+                                                   'convertImage',
                                                    doRaise=True)
             convertImage(inputLoc, outputLoc)
         else:
@@ -271,7 +271,7 @@ class ImageHandler(object):
 
             if ext == '.png' or ext == '.jpg':
                 im = Image.open(fn)
-                x, y = im.size # (width,height) tuple
+                x, y = im.size  # (width,height) tuple
                 return x, y, 1, 1
 
             elif Ccp4Header.getFileFormat(fn) != Ccp4Header.UNKNOWNFORMAT:
@@ -285,9 +285,9 @@ class ImageHandler(object):
                 # we are opening an Eman2 process to read the dm4 file
                 from pwem import Domain
                 getImageDimensions = Domain.importFromPlugin(
-                                        'eman2.convert', 'getImageDimensions',
+                    'eman2.convert', 'getImageDimensions',
                     doRaise=True)
-                return getImageDimensions(fn) # we are ignoring index here
+                return getImageDimensions(fn)  # we are ignoring index here
             else:
                 self._img.read(location, xmippLib.HEADER)
                 return self._img.getDimensions()

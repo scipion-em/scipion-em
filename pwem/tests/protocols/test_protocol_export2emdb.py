@@ -41,7 +41,7 @@ class TestExport2EMDB(pwtest.BaseTest):
                                          objLabel=label,
                                          filesPath=pattern,
                                          samplingRate=samplingRate
-                                        )
+                                         )
         cls.launchProtocol(cls.protImport)
         return cls.protImport
 
@@ -56,10 +56,10 @@ class TestExport2EMDB(pwtest.BaseTest):
     def setUpClass(cls):
         pwtest.setupTestProject(cls)
         cls.setData()
-        cls.protImportHalf1  = cls.runImportVolumes(cls.half1, 3.54,
-                                                    'import half1')
-        cls.protImportHalf2  = cls.runImportVolumes(cls.half2, 3.54,
-                                                    'import half2')
+        cls.protImportHalf1 = cls.runImportVolumes(cls.half1, 3.54,
+                                                   'import half1')
+        cls.protImportHalf2 = cls.runImportVolumes(cls.half2, 3.54,
+                                                   'import half2')
 
     @classmethod
     def _importAtomStructCIF(self):
@@ -94,7 +94,7 @@ class TestExport2EMDB(pwtest.BaseTest):
         self.launchProtocol(protExp)
 
         # Check the files were generated properly.
-        #protExp._createFileNamesTemplates()
+        # protExp._createFileNamesTemplates()
         nameVolume = protExp.VOLUMENAME
         dirName = protExp.filesPath.get()
         nameFsc = os.path.join(dirName, "fsc_%02d.xml" % 0)
@@ -103,17 +103,17 @@ class TestExport2EMDB(pwtest.BaseTest):
         self.assertTrue(os.path.exists(nameFsc))
         self.assertTrue(os.path.exists(nameAtomStruct))
 
-        #Chek if the files have the correct data
+        # Check if the files have the correct data
         orig_list_x, orig_list_y = protExp.exportFSC.get().getData()
         fo = open(nameFsc, "rU")
-        saved_x=[]
-        orig_x=[]
-        count=0
+        saved_x = []
+        orig_x = []
+        count = 0
         for line in fo:
-            if line[0:3]=='<x>':
+            if line[0:3] == '<x>':
                 saved_x.append(int(float(line[3:-5])*1000))
                 orig_x.append(int(orig_list_x[count]*1000))
-                count=count+1
+                count = count+1
 
         self.assertListEqual(orig_x, saved_x)
 
@@ -155,7 +155,7 @@ class TestExport2EMDB(pwtest.BaseTest):
         self.launchProtocol(protExp)
 
         # Check the files were generated properly.
-        #protExp._createFileNamesTemplates()
+        # protExp._createFileNamesTemplates()
         nameVolume = protExp.VOLUMENAME
         dirName = protExp.filesPath.get()
         nameFsc = os.path.join(dirName, "fsc_%02d.xml" % 0)
@@ -164,16 +164,16 @@ class TestExport2EMDB(pwtest.BaseTest):
         self.assertTrue(os.path.exists(nameFsc))
         self.assertTrue(os.path.exists(nameAtomStruct))
 
-        #Chek if the files have the correct data
+        # Check if the files have the correct data
         orig_list_x, orig_list_y = protExp.exportFSC.get().getData()
         fo = open(nameFsc, "rU")
-        saved_x=[]
-        orig_x=[]
-        count=0
+        saved_x = []
+        orig_x = []
+        count = 0
         for line in fo:
-            if line[0:3]=='<x>':
+            if line[0:3] == '<x>':
                 saved_x.append(int(float(line[3:-5])*1000))
                 orig_x.append(int(orig_list_x[count]*1000))
-                count=count+1
+                count = count+1
 
         self.assertListEqual(orig_x, saved_x)

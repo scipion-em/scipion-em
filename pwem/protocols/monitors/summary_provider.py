@@ -85,7 +85,7 @@ class SummaryProvider(TreeProvider):
                                         ("Magnification: ",
                                          prot.magnification.get()),
                                         (u"Pixel Size (Å/px): ",
-                                         round(outSet.getSamplingRate(),2))
+                                         round(outSet.getSamplingRate(), 2))
                                         ]
                     if prot.dosePerFrame.get() is not None:
                         self.acquisition.append((u"Dose per frame (e/Å²):",
@@ -99,6 +99,6 @@ class SummaryProvider(TreeProvider):
                 'text': obj.name,
                 'values': (obj.output, obj.outSize),
                 'open': True
-               }
+                }
 
         return info

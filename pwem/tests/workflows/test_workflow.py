@@ -12,7 +12,7 @@ class TestWorkflow(pwtest.BaseTest):
             prot: the protocol to validate. 
             filesSet: the known files that should be produced (set)
         """
-        #FIXME: This is disabled until changes of CTF and Relations
+        # FIXME: This is disabled until changes of CTF and Relations
         return True
         self.protDict[key] = prot
         filesSet = self.getProtocolFiles(key)

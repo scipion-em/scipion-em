@@ -80,7 +80,7 @@ class ProtCreateStreamData(EMProtocol):
                       label='set Of',
                       help='create set of')
         form.addParam('inputMovies', params.PointerParam, pointerClass='SetOfMovies',
-                      condition="setof==%d"%SET_OF_MOVIES,
+                      condition="setof==%d" % SET_OF_MOVIES,
                       label="movie",
                       help='This movie will be copied "number of items" times')
         form.addParam('inputMics', params.PointerParam,
@@ -99,7 +99,7 @@ class ProtCreateStreamData(EMProtocol):
                       help="Y dim ")
         form.addParam('inputParticles', params.PointerParam,
                       pointerClass='SetOfParticles',
-                      condition="setof==%d"%SET_OF_PARTICLES,
+                      condition="setof==%d" % SET_OF_PARTICLES,
                       label="SetOfParticles",
                       help='These particles will be written in streaming')
         form.addParam('groups', params.IntParam, default=50,
@@ -209,7 +209,6 @@ class ProtCreateStreamData(EMProtocol):
                 else:
                     objSet.setSamplingRate(self.samplingRate.get())
 
-
         if self.setof == SET_OF_MOVIES:
             obj = emobj.Movie()
         elif self.setof == SET_OF_MICROGRAPHS:
@@ -292,7 +291,7 @@ class ProtCreateStreamData(EMProtocol):
             elif self.setof == SET_OF_MICROGRAPHS:
                 setDim = self.inputMics.get().getSize()
                 for idx, mic in enumerate(self.inputMics.get()):
-                    if idx == (counter-1)%setDim:
+                    if idx == (counter-1) % setDim:
                         newMic = mic.clone()
                         break
                 ProtCreateStreamData.object = \
@@ -319,7 +318,6 @@ class ProtCreateStreamData(EMProtocol):
                 ProtCreateStreamData.object.write(destFn)
                 self.dictObj[destFn] = True
         self._checkProcessedData()
-
 
     def createRandomMicStep(self, mic):
         from pwem import Domain

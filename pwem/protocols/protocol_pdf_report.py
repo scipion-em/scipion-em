@@ -52,7 +52,7 @@ class ProtPDFReport(EMProtocol):
     """    
     _label = 'pdf report'
     _lastUpdateVersion = pw.VERSION_1_1
-    #--------------------------- DEFINE param functions ------------------------
+    # --------------------------- DEFINE param functions ----------------------
     
     def _defineParams(self, form):
         form.addSection(label='Input')
@@ -61,16 +61,16 @@ class ProtPDFReport(EMProtocol):
                       help="Directory with the input files. \n"
                            "Check protocol help for more details.")
     
-    #--------------------------- INSERT steps functions ------------------------
+    # --------------------------- INSERT steps functions ----------------------
     
     def _insertAllSteps(self):
         self._insertFunctionStep('createReport')        
 
-    #--------------------------- STEPS functions -------------------------------
+    # --------------------------- STEPS functions -----------------------------
     def createReport(self):
         fnTex = "report.tex"
         fhTex = open(self._getExtraPath(fnTex), "w")
-        template ="""
+        template = """
 \\documentclass[12pt]{article}
 \\usepackage{amsmath,amsthm,amssymb,amsfonts} 
 \\usepackage{graphicx}
@@ -90,9 +90,9 @@ class ProtPDFReport(EMProtocol):
 
         for fileName in sorted(glob.glob(os.path.join(fnDir,"*"))):
             fnDest = os.path.basename(fileName).lower()
-            fnDest = fnDest.replace(" ","_")
-            fnDest = fnDest.replace(":","_")
-            fnDest = fnDest.replace(";","_")
+            fnDest = fnDest.replace(" ", "_")
+            fnDest = fnDest.replace(":", "_")
+            fnDest = fnDest.replace(";", "_")
             pwutils.copyFile(fileName, self._getExtraPath(fnDest))
 
             if fnDest.endswith(".tex") or fnDest.endswith(".txt"):
@@ -120,11 +120,11 @@ class ProtPDFReport(EMProtocol):
         fnPDF = self._getExtraPath("report.pdf")
 
         if os.path.exists(fnPDF):
-            pwutils.moveFile(fnPDF,self._getPath("report.pdf"))
+            pwutils.moveFile(fnPDF, self._getPath("report.pdf"))
         else:
             raise Exception("PDF file was not produced.")
 
-    #--------------------------- INFO functions --------------------------------
+    # --------------------------- INFO functions ------------------------------
     def _summary(self):
         summary = []
         summary.append("Input directory: %s" % self.filesPath.get())
@@ -143,5 +143,4 @@ class ProtPDFReport(EMProtocol):
         if missingPaths:
             return ["Missing variables:"] + missingPaths
         else:
-            return [] # No errors
-
+            return []  # No errors

@@ -28,10 +28,11 @@
 This modules contains data classes related to Random Connical Tilt workflow.
 """
 
-#NOTE: Some of this importS are needed by the mapper,
+# NOTE: Some of this importS are needed by the mapper,
 # not directly in the code
 
 from .data import *
+
 
 class TiltPair(EMObject):
     def __init__(self, untilted=None, tilted=None, **kwargs):
@@ -187,5 +188,4 @@ class ParticlesTiltPair(TiltPairSet):
         filePaths = TiltPairSet.getFiles(self)
         filePaths.update(self.getCoordsPair().getFiles())
         
-        return filePaths    
-        
+        return filePaths

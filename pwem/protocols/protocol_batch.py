@@ -41,8 +41,6 @@ from pwem.constants import ALIGN_NONE
 from pwem.objects import (MicrographsTiltPair, ParticlesTiltPair)
 
 
-
-
 class BatchProtocol(EMProtocol):
     """ Base class to all protocols that are launched
     through other GUIs (such as showj) and that
@@ -86,7 +84,7 @@ class ProtUserSubSet(BatchProtocol):
             self._defineOutputs(outputVolume=output)
 
         elif isinstance(inputObj, emobj.SetOfImages):
-                output = self._createSubSetFromImages(inputObj)
+            output = self._createSubSetFromImages(inputObj)
 
         elif isinstance(inputObj, emobj.SetOfClasses):
             output = self._createSubSetFromClasses(inputObj)
@@ -105,7 +103,7 @@ class ProtUserSubSet(BatchProtocol):
         elif isinstance(inputObj, ParticlesTiltPair):
             output = self._createSubSetFromParticlesTiltPair(inputObj)
 
-        elif isinstance(inputObj, EMProtocol) :
+        elif isinstance(inputObj, EMProtocol):
             if self.other.hasValue():
                 otherid = self.other.get()
                 otherObj = self.getProject().mapper.selectById(int(otherid))
@@ -191,7 +189,7 @@ class ProtUserSubSet(BatchProtocol):
 
         if (outputClassName.startswith('SetOfAverages') or
             outputClassName.startswith('SetOfVolumes') or
-            outputClassName.startswith('SetOfParticles')):
+                outputClassName.startswith('SetOfParticles')):
             # We need to distinguish two cases:
             # a) when we want to create images by grouping class images
             # b) create a subset from a particular class images
@@ -243,8 +241,8 @@ class ProtUserSubSet(BatchProtocol):
         self._defineOutputs(outputMicrographs=outputMics, outputCTF=outputCtfs)
         self._defineTransformRelation(setOfMics, outputMics)
         self._defineCtfRelation(outputMics, outputCtfs)
-        msg = 'From input %s of size %s created output '% (inputCTFs.getClassName(),
-                                                           inputCTFs.getSize())
+        msg = 'From input %s of size %s created output ' % (inputCTFs.getClassName(),
+                                                            inputCTFs.getSize())
         msg += 'SetOfMicrographs and SetOfCTF of size %d' % count
         self.summaryVar.set(msg)
 
@@ -287,7 +285,6 @@ class ProtUserSubSet(BatchProtocol):
                                                                    output.getClassName())
         self.summaryVar.set(msg)
         return output
-
 
     def _copyInfoAndSetAlignment(self, inputClasses, output):
         """ This method is used when creating subset of images from classes.
@@ -333,7 +330,7 @@ class ProtUserSubSet(BatchProtocol):
         """ Create a new set of images joining all images
         assigned to each class.
         """
-        #inputImages = inputClasses.getImages()
+        # inputImages = inputClasses.getImages()
         className = inputClasses.getClassName()
         createFunc = getattr(self, '_create' + className)
         modifiedSet = inputClasses.getClass()(filename=self._dbName, prefix=self._dbPrefix)
@@ -445,7 +442,7 @@ class ProtUserSubSet(BatchProtocol):
     def _summary(self):
         summary = []
         msg = self.summaryVar.get()
-        if  msg is None:
+        if msg is None:
             msg = self.getDefaultSummary()
         summary.append(msg)
         return summary
@@ -486,7 +483,7 @@ class ProtCreateMask(BatchProtocol):
 
     def createMaskStep(self):
         inputObj = self.inputObj.get()
-        maskSrc=self.maskFile.get()
+        maskSrc = self.maskFile.get()
         basename = os.path.basename(maskSrc)
         maskDst = self._getPath(basename)
         moveFile(maskSrc, maskDst)
@@ -556,7 +553,7 @@ class ProtCreateFSC(BatchProtocol):
         for fsc, label in zip(dataStringList, labelStringList):
             _fsc = emobj.FSC(objLabel=loads(label))
             freq, value = loads(fsc)
-            _fsc.setData(freq,value)
+            _fsc.setData(freq, value)
             fscSet.append(_fsc)
         self._defineOutputs(outputFSCs=fscSet)
 

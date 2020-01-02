@@ -40,7 +40,7 @@ from pwem.convert import ImageHandler
 from pwem.utils import getTemplatePath
 from .summary_provider import SummaryProvider
 
-####################### CONSTANTS ##########################
+# --------------------- CONSTANTS -----------------------------------
 # These constants are the keys used in the ctfMonitor function
 # getData() to store paths to micrographs, psd files and shift plots
 MIC_PATH = 'imgMicPath'
@@ -86,10 +86,11 @@ class ReportHtml:
 
         # Get the html template to be used, by default use the one
         # in scipion/config/templates
-        self.template= self._getHTMLTemplatePath()
+        self.template = self._getHTMLTemplatePath()
 
         self.publishCmd = publishCmd
         self.refreshSecs = kwargs.get('refreshSecs', 60)
+
     def _getHTMLTemplatePath(self):
         """ Returns the path of the customized template at
         config/execution.summary.html or the standard scipion HTML template"""
@@ -101,7 +102,6 @@ class ReportHtml:
         else:
             print("Customized HTML template found at %s." % template)
         return template
-
 
     def getHTMLReportText(self):
         if exists(self.template):
@@ -141,7 +141,7 @@ class ReportHtml:
                          join(self.reportDir, SHIFT_THUMBS))
         # check if align protocol already has thumbnails
         if (hasattr(self.alignProtocol, 'doComputeMicThumbnail')
-            and self.alignProtocol._doComputeMicThumbnail()):
+                and self.alignProtocol._doComputeMicThumbnail()):
             self.micThumbSymlinks = True
 
     def getThumbPaths(self, thumbsDone=0, ctfData=None, ext='png', micIdSet=None):
@@ -202,7 +202,8 @@ class ReportHtml:
             shiftPlot = (getattr(mic, 'plotCart', None) or getattr(mic, 'plotGlobal', None))
             if shiftPlot is not None:
                 shiftPath = "" if shiftPlot is None else abspath(shiftPlot.getFileName())
-                shiftCopy = "" if shiftPlot is None else join(SHIFT_THUMBS, pwutils.replaceExt(basename(shiftPath), ext))
+                shiftCopy = "" if shiftPlot is None else join(SHIFT_THUMBS,
+                                                              pwutils.replaceExt(basename(shiftPath), ext))
                 self.thumbPaths[SHIFT_PATH].append(shiftPath)
                 self.thumbPaths[SHIFT_THUMBS].append(shiftCopy)
             else:
@@ -218,7 +219,7 @@ class ReportHtml:
                 def getMicPSDPath(mic):
                     if hasattr(mic, 'psdJpeg'):
                         return mic.psdJpeg.getFileName()
-                    elif hasattr(mic,'psdCorr'):
+                    elif hasattr(mic, 'psdCorr'):
                         return mic.psdCorr.getFileName()
                     else:
                         return None
@@ -309,7 +310,7 @@ class ReportHtml:
         zipped = zip(values, labels)
         zipped[:0] = [(belowThresh, "0-%0.1f" % minDefocus)]
         # TODO unresolved method for class Iterator in python3
-        #zipped.append((aboveThresh, "> %0.1f" % (maxDefocus)))
+        # zipped.append((aboveThresh, "> %0.1f" % (maxDefocus)))
 
         return zipped
 
@@ -328,7 +329,7 @@ class ReportHtml:
         phaseShiftSerie = data[PHASE_SHIFT]
         phaseShiftSerie = zip(ts, phaseShiftSerie)
         # Add it to the series
-        timeSeries[PHASE_SHIFT]= phaseShiftSerie
+        timeSeries[PHASE_SHIFT] = phaseShiftSerie
 
         # Get defocusU is comming in Å, reduce it to μm
         defocusSerie = data[DEFOCUS_U]
@@ -380,10 +381,12 @@ class ReportHtml:
             isProtocol = True if obj.name else False
 
             if isProtocol:
-                if runLines != '': runLines += ']},'
+                if runLines != '':
+                    runLines += ']},'
                 runLines += '{protocolName: "%s", output:[' % obj.name
             else:
-                if not wasProtocol: runLines += ','
+                if not wasProtocol:
+                    runLines += ','
                 runLines += '{name: "%s",  size:"%s"}' % (obj.output,
                                                           obj.outSize)
 

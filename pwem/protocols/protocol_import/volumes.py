@@ -40,6 +40,7 @@ from .images import ProtImportImages
 
 from pyworkflow.utils.path import copyFile
 
+
 class ProtImportVolumes(ProtImportImages):
     """Protocol to import a set of volumes to the project"""
     _outputClassName = 'SetOfVolumes'
@@ -78,7 +79,7 @@ class ProtImportVolumes(ProtImportImages):
                            "selecting "
                            "0, 0, 0 as x, y, z coordinates, the volume will be "
                            "placed at the upper right-hand corner.\n\n"
-                           "Option NO:\nThe ORIGIN of coordinates will be " 
+                           "Option NO:\nThe ORIGIN of coordinates will be "
                            "placed at the center of the whole volume ("
                            "coordinates n(x)/2, n(y)/2, n(z)/2 by default). "
                            "This "
@@ -93,14 +94,14 @@ class ProtImportVolumes(ProtImportImages):
                            "fragments/subunits of the whole volume.\n",
                       default=False)
         line = form.addLine('Offset',
-                            help= "A wizard will suggest you possible "
-                                  "coordinates for the ORIGIN. In MRC volume "
-                                  "files, the ORIGIN coordinates will be "
-                                  "obtained from the file header.\n "
-                                  "In case you prefer set your own ORIGIN "
-                                  "coordinates, write them here. You have to "
-                                  "provide the map center coordinates in "
-                                  "Angstroms (pixels x sampling).\n",
+                            help="A wizard will suggest you possible "
+                                 "coordinates for the ORIGIN. In MRC volume "
+                                 "files, the ORIGIN coordinates will be "
+                                 "obtained from the file header.\n "
+                                 "In case you prefer set your own ORIGIN "
+                                 "coordinates, write them here. You have to "
+                                 "provide the map center coordinates in "
+                                 "Angstroms (pixels x sampling).\n",
                             condition='setOrigCoord')
         # line.addParam would produce a nicer looking form
         # but them the wizard icon is drawn outside the visible
@@ -150,23 +151,23 @@ class ProtImportVolumes(ProtImportImages):
             if setOrigCoord:
                 origin.setShiftsTuple(self._getOrigCoord())
             else:
-                origin.setShifts(x/-2. * samplingRate,
-                            y/-2. * samplingRate,
-                            zDim/-2. * samplingRate)
+                origin.setShifts(x / -2. * samplingRate,
+                                 y / -2. * samplingRate,
+                                 zDim / -2. * samplingRate)
 
             vol.setOrigin(origin)  # read origin from form
 
             if self.copyFiles or setOrigCoord:
                 newFileName = abspath(self._getVolumeFileName(fileName, "mrc"))
                 emconv.Ccp4Header.fixFile(fileName, newFileName, origin.getShifts(),
-                                   samplingRate, emconv.Ccp4Header.ORIGIN)
+                                          samplingRate, emconv.Ccp4Header.ORIGIN)
                 if self.setHalfMaps.get():
                     newFileName1 = abspath(self._getVolumeFileName(self.half1map.get(), "mrc"))
                     emconv.Ccp4Header.fixFile(fileName, newFileName1, origin.getShifts(),
-                                       samplingRate, emconv.Ccp4Header.ORIGIN)
+                                              samplingRate, emconv.Ccp4Header.ORIGIN)
                     newFileName2 = abspath(self._getVolumeFileName(self.half2map.get(), "mrc"))
                     emconv.Ccp4Header.fixFile(fileName, newFileName2, origin.getShifts(),
-                                       samplingRate, emconv.Ccp4Header.ORIGIN)
+                                              samplingRate, emconv.Ccp4Header.ORIGIN)
             else:
                 newFileName = abspath(self._getVolumeFileName(fileName))
 
@@ -176,9 +177,9 @@ class ProtImportVolumes(ProtImportImages):
                 pwutils.createAbsLink(fileName, newFileName)
                 if self.setHalfMaps.get():
                     pwutils.createAbsLink(self.half1map.get(),
-                                  abspath(self._getVolumeFileName(self.half1map.get())))
+                                          abspath(self._getVolumeFileName(self.half1map.get())))
                     pwutils.createAbsLink(self.half2map.get(),
-                                  abspath(self._getVolumeFileName(self.half2map.get())))
+                                          abspath(self._getVolumeFileName(self.half2map.get())))
 
             # Make newFileName relative
             # https://github.com/I2PC/scipion/issues/1935
@@ -188,7 +189,7 @@ class ProtImportVolumes(ProtImportImages):
                 vol.setFileName(newFileName)
                 volSet.append(vol)
             else:
-                for index in range(1, n+1):
+                for index in range(1, n + 1):
                     vol.cleanObjId()
                     vol.setLocation(index, newFileName)
                     volSet.append(vol)
@@ -201,7 +202,6 @@ class ProtImportVolumes(ProtImportImages):
             self._defineOutputs(outputVolumes=volSet)
         else:
             self._defineOutputs(outputVolume=vol)
-
 
     # --------------------------- INFO functions ------------------------------
 
@@ -216,7 +216,7 @@ class ProtImportVolumes(ProtImportImages):
         if self.hasAttribute('outputVolume') or \
                 self.hasAttribute('outputVolumes'):
             summary.append("%s imported from:\n%s" % (self._getVolMessage(),
-                           self.getPattern()))
+                                                      self.getPattern()))
 
             summary.append(u"Sampling rate: *%0.2f* (Å/px)" %
                            self.samplingRate.get())
@@ -227,19 +227,19 @@ class ProtImportVolumes(ProtImportImages):
         if self.hasAttribute('outputVolume') or \
                 self.hasAttribute('outputVolumes'):
             methods.append(" %s imported with a sampling rate *%0.2f*" %
-                           (self._getVolMessage(), self.samplingRate.get()),)
+                           (self._getVolMessage(), self.samplingRate.get()), )
         return methods
 
     def _getVolumeFileName(self, fileName, extension=None):
         if extension is not None:
-            baseFileName="import_" + basename(fileName).split(".")[0] + ".%s"%extension
+            baseFileName = "import_" + basename(fileName).split(".")[0] + ".%s" % extension
         else:
-            baseFileName="import_" + basename(fileName).split(":")[0]
+            baseFileName = "import_" + basename(fileName).split(":")[0]
 
         return self._getExtraPath(baseFileName)
 
     def _getOrigCoord(self):
-        return -1.*self.x.get(), -1.*self.y.get(), -1.*self.z.get()
+        return -1. * self.x.get(), -1. * self.y.get(), -1. * self.z.get()
 
 
 class ProtImportPdb(ProtImportFiles):
@@ -284,10 +284,11 @@ Format may be PDB or MMCIF"""
         aSH = emconv.AtomicStructHandler()
         print("retriving PDB file %s" % self.pdbId.get())
         pdbPath = aSH.readFromPDBDatabase(self.pdbId.get(),
-                                              type='mmCif',
-                                              dir=self._getExtraPath())
+                                          type='mmCif',
+                                          dir=self._getExtraPath())
         self.createOutputStep(pdbPath)
-#        downloadPdb(self.pdbId.get(), pdbPath, self._log)
+
+    #        downloadPdb(self.pdbId.get(), pdbPath, self._log)
 
     def createOutputStep(self, atomStructPath):
         """ Copy the PDB structure and register the output object.
@@ -298,7 +299,7 @@ Format may be PDB or MMCIF"""
         baseName = basename(atomStructPath)
         localPath = abspath(self._getExtraPath(baseName))
 
-        if str(atomStructPath) != str(localPath): # from local file
+        if str(atomStructPath) != str(localPath):  # from local file
             if atomStructPath.endswith(".pdb"):
                 # convert pdb to cif by using maxit program
                 log = self._log

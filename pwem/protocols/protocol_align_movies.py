@@ -118,10 +118,10 @@ class ProtAlignMovies(ProtProcessMovies):
 
         if output.getSize() == 0 and len(self.listOfMovies) != 0:
             raise Exception(pwutils.redStr("All movies failed, didn't create outputMicrographs."
-                                   "Please review movie processing steps above."))
+                                           "Please review movie processing steps above."))
         elif output.getSize() < len(self.listOfMovies):
             self.warning(pwutils.yellowStr("WARNING - Failed to align %d movies."
-                                   % (len(self.listOfMovies) - output.getSize())))
+                                           % (len(self.listOfMovies) - output.getSize())))
 
     def _loadOutputSet(self, SetClass, baseName, fixSampling=True):
         """
@@ -204,14 +204,14 @@ class ProtAlignMovies(ProtProcessMovies):
                         movieSet.append(newMovie)
                     else:
                         print(pwutils.yellowStr("WARNING: Movie %s has empty alignment "
-                                        "data, can't add it to output set."
-                                        % movie.getFileName()))
+                                                "data, can't add it to output set."
+                                                % movie.getFileName()))
 
                 # Warn about any exception creating the movie
                 except Exception as e:
                     print(pwutils.redStr("ERROR: Movie %s couldn't be "
-                                 "added to the output set.\n%s"
-                                 % (movie.getFileName(), e)))
+                                         "added to the output set.\n%s"
+                                         % (movie.getFileName(), e)))
 
             self._updateOutputSet('outputMovies', movieSet, streamMode)
 
@@ -240,7 +240,7 @@ class ProtAlignMovies(ProtProcessMovies):
                 mic.setFileName(extraMicFn)
                 if not os.path.exists(extraMicFn):
                     print(pwutils.yellowStr("WARNING: Micrograph %s was not generated, "
-                                    "can't add it to output set." % extraMicFn))
+                                            "can't add it to output set." % extraMicFn))
                     doneFailed.append(movie)
                     continue
                 self._preprocessOutputMicrograph(mic, movie)
@@ -565,7 +565,7 @@ class ProtAlignMovies(ProtProcessMovies):
 
         self.__runXmippProgram('xmipp_movie_alignment_correlation', args)
 
-    def computePSD(self, inputMic, oroot, dim=384, # 384 = 128 + 256, which should be fast for any Fourier Transformer
+    def computePSD(self, inputMic, oroot, dim=384,  # 384 = 128 + 256, which should be fast for any Fourier Transformer
                    overlap=0.4):
         warnings.warn("Use psd = image.computePSD(overlap=0.4, xdim=384, ydim=384, fftthreads=1) instead",
                       DeprecationWarning)
@@ -575,17 +575,17 @@ class ProtAlignMovies(ProtProcessMovies):
         res.write(oroot+".psd")
 
     def composePSDImages(self, psdImg1, psdImg2, outputFn,
-                   outputFnUncorrected=None, outputFnCorrected=None):
+                         outputFnUncorrected=None, outputFnCorrected=None):
         """ Compose a single PSD image:
          left part from psd1 (uncorrected PSD),
          right-part from psd2 (corrected PSD)
         """
-        data1 = psdImg1.getData() # get the data now, as conversion would change them
+        data1 = psdImg1.getData()  # get the data now, as conversion would change them
         if outputFnUncorrected is not None:
             psdImg1.convertPSD()
             psdImg1.write(outputFnUncorrected)
 
-        data2 = psdImg2.getData() # get the data now, as conversion would change them
+        data2 = psdImg2.getData()  # get the data now, as conversion would change them
         if outputFnCorrected is not None:
             psdImg2.convertPSD()
             psdImg2.write(outputFnCorrected)
@@ -610,7 +610,7 @@ class ProtAlignMovies(ProtProcessMovies):
                               outputFnUncorrected, outputFnCorrected)
 
     def computePSDImages(self, movie, fnUncorrected, fnCorrected,
-                    outputFnUncorrected=None, outputFnCorrected=None):
+                         outputFnUncorrected=None, outputFnCorrected=None):
         self.composePSDImages(
             emconv.ImageHandler().read(fnUncorrected).computePSD(),
             emconv.ImageHandler().read(fnCorrected).computePSD(),
@@ -639,7 +639,7 @@ class ProtAlignMovies(ProtProcessMovies):
         """correct a movie with both gain and dark images"""
         ih = emconv.ImageHandler()
         _, _, z, n = ih.getDimensions(movieFn)
-        numberOfFrames = max(z, n) # in case of wrong mrc stacks as volumes
+        numberOfFrames = max(z, n)  # in case of wrong mrc stacks as volumes
 
         def _readImgFloat(fn):
             img = None

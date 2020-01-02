@@ -15,7 +15,6 @@ from .protocol_monitor_2d_streamer import ProtMonitor2dStreamer
 from .report_html import ReportHtml
 try:
     from .getnifs import *
-except:
+except ImportError:
     print("System monitor functionality compromised.")
 from .pynvml import nvmlInit, NVMLError
-

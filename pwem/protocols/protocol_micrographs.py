@@ -79,7 +79,7 @@ class ProtCTFMicrographs(ProtMicrographs):
 
         form.addParam('ctfDownFactor', params.FloatParam, default=1.,
                       label='Manual CTF Downsampling factor',
-                      condition='not AutoDownsampling',    #'not recalculate',
+                      condition='not AutoDownsampling',    # 'not recalculate',
                       help='Set to 1 for no downsampling. Non-integer downsample '
                            'factors are possible. This downsampling is only used '
                            'for estimating the CTF and it does not affect any '
@@ -106,7 +106,7 @@ class ProtCTFMicrographs(ProtMicrographs):
                                  'your micrographs extend further than 0.35, '
                                  'you should consider sampling them at a finer '
                                  'rate.')
-        line.addParam('lowRes', params.FloatParam, default=0.05, label='Lowest' )
+        line.addParam('lowRes', params.FloatParam, default=0.05, label='Lowest')
         line.addParam('highRes', params.FloatParam, default=0.35, label='Highest')
         line = form.addLine('Defocus search range (microns)',
                             condition='not recalculate',
@@ -114,7 +114,7 @@ class ProtCTFMicrographs(ProtMicrographs):
                             help='Select _minimum_ and _maximum_ values for '
                                  'defocus search range (in microns). Underfocus'
                                  ' is represented by a positive number.')
-        line.addParam('minDefocus',params.FloatParam, default=0.25,
+        line.addParam('minDefocus', params.FloatParam, default=0.25,
                       label='Min')
         line.addParam('maxDefocus', params.FloatParam, default=4.,
                       label='Max')
@@ -188,7 +188,7 @@ class ProtCTFMicrographs(ProtMicrographs):
         recalDeps = []
         # For each psd insert the steps to process it
         self.recalculateSet = emobj.SetOfCTF(filename=self.sqliteFile.get(),
-                                       objDoStore=False)
+                                             objDoStore=False)
         inputMics = self.getInputMicrographs()
         for ctf in self.recalculateSet:
             line = ctf.getObjComment()
@@ -345,7 +345,7 @@ class ProtCTFMicrographs(ProtMicrographs):
                 # We suppose this is reading the ctf selection
                 # (with enabled/disabled) to only consider the enabled ones
                 # in the final SetOfCTF
-                #TODO: maybe we can remove the need of the extra text file
+                # TODO: maybe we can remove the need of the extra text file
                 # with the recalculate parameters
                 newCount = 0
                 for ctfModel in self.recalculateSet:
@@ -531,8 +531,8 @@ class ProtCTFMicrographs(ProtMicrographs):
         self.lastCheck = getattr(self, 'lastCheck', now)
         mTime = datetime.fromtimestamp(getmtime(localFile))
         self.debug('Last check: %s, modification: %s'
-                  % (pwutils.prettyTime(self.lastCheck),
-                     pwutils.prettyTime(mTime)))
+                   % (pwutils.prettyTime(self.lastCheck),
+                      pwutils.prettyTime(mTime)))
         # If the input micrographs.sqlite have not changed since our last check,
         # it does not make sense to check for new input data
         if self.lastCheck > mTime and hasattr(self, 'listOfMics'):

@@ -39,12 +39,11 @@ from pwem.convert import ImageHandler
 from .base import ProtImport
 
 
-
 class ProtImportMask(ProtImport):
     """ Class for import masks from existing files. """
     _label = 'import mask'
     
-    #--------------------------- DEFINE param functions --------------------------------------------
+    # --------------------------- DEFINE param functions ----------------------
     def _defineParams(self, form):
         
         form.addSection(label='Import')
@@ -53,12 +52,13 @@ class ProtImportMask(ProtImport):
                       label="Mask path",
                       help="Select the file path of the mask\n")
         form.addParam('samplingRate', params.FloatParam, default=1.,
-                   label=pwutils.properties.Message.LABEL_SAMP_RATE)
+                      label=pwutils.properties.Message.LABEL_SAMP_RATE)
 
     def _insertAllSteps(self):
-        self._insertFunctionStep('importMaskStep', self.maskPath.get(), self.samplingRate.get())
+        self._insertFunctionStep('importMaskStep', self.maskPath.get(),
+                                 self.samplingRate.get())
 
-    #--------------------------- STEPS functions ---------------------------------------------------
+    # --------------------------- STEPS functions -----------------------------
 
     def importMaskStep(self, path, samplingRate):
         """ Copy mask from maskPath.
@@ -85,7 +85,7 @@ class ProtImportMask(ProtImport):
 
         self._defineOutputs(outputMask=mask)
 
-    #--------------------------- INFO functions ----------------------------------------------------
+    # --------------------------- INFO functions ------------------------------
     def _validate(self):
         errors = []
         if not self.maskPath.hasValue():

@@ -74,7 +74,7 @@ class ProtParticlePicking(ProtParticles):
         if self.getOutputsSize() >= 1:
             for key, output in self.iterOutputAttributes():
                 msg = self.getMethods(output)
-                methodsMsgs.append("%s: %s"%(self.getObjectTag(output), msg))
+                methodsMsgs.append("%s: %s" % (self.getObjectTag(output), msg))
         else:
             methodsMsgs.append(pwutils.Message.TEXT_NO_OUTPUT_CO)
 
@@ -144,10 +144,10 @@ class ProtParticlePicking(ProtParticles):
             try:
                 counter = int(suffix)
             except Exception as ex:
-                counter = 1 # when there is not number assume 1
+                counter = 1  # when there is not number assume 1
             maxCounter = max(counter, maxCounter)
 
-        return str(maxCounter+1) if maxCounter > 0 else '' # empty if not output
+        return str(maxCounter+1) if maxCounter > 0 else ''  # empty if not output
 
     def registerCoords(self, coordsDir):
         """ This method is usually inherited by all Pickers
@@ -335,11 +335,11 @@ class ProtParticlePickingAuto(ProtParticlePicking):
 
     def _loadMics(self, micSet):
         return self._loadSet(micSet, emobj.SetOfMicrographs,
-                        lambda mic: mic.getMicName())
+                             lambda mic: mic.getMicName())
 
     def _loadCTFs(self, ctfSet):
         return self._loadSet(ctfSet, emobj.SetOfCTF,
-                        lambda ctf: ctf.getMicrograph().getMicName())
+                             lambda ctf: ctf.getMicrograph().getMicName())
 
     def _loadInputList(self):
         """ Load the input set of micrographs that are ready to be picked. """
@@ -352,8 +352,8 @@ class ProtParticlePickingAuto(ProtParticlePicking):
         self.lastCheck = getattr(self, 'lastCheck', now)
         mTime = datetime.fromtimestamp(os.path.getmtime(localFile))
         self.debug('Last check: %s, modification: %s'
-                  % (pwutils.prettyTime(self.lastCheck),
-                     pwutils.prettyTime(mTime)))
+                   % (pwutils.prettyTime(self.lastCheck),
+                      pwutils.prettyTime(mTime)))
         # If the input micrographs.sqlite have not changed since our last check,
         # it does not make sense to check for new input data
         if self.lastCheck > mTime and hasattr(self, 'listOfMics'):
@@ -536,7 +536,7 @@ class ProtParticlePickingAuto(ProtParticlePicking):
 
     def createOutputStep(self):
         # Not really required now
-        #self._createOutput(self._getExtraPath())
+        # self._createOutput(self._getExtraPath())
         pass
 
 

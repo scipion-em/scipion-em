@@ -119,11 +119,11 @@ def get_network_interfaces():
                 if addr:
                     i.addresses[family] = addr
         except ValueError:
-                del retval[name]
-                print("get_network_interfaces: Can not connect to NIC %s" % name)
+            del retval[name]
+            print("get_network_interfaces: Can not connect to NIC %s" % name)
         except Exception as ex:
             print("Unexpected error:", sys.exc_info()[0])
-    #print retval.values()
+    # print retval.values()
     libc.freeifaddrs(ifap)
     return retval.values()
 

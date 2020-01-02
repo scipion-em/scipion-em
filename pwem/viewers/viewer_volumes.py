@@ -46,6 +46,7 @@ from pwem.viewers import Chimera, ChimeraView, EmProtocolViewer
 VOLUME_SLICES = 1
 VOLUME_CHIMERA = 0
 
+
 class viewerProtImportVolumes(EmProtocolViewer):
     """ Wrapper to visualize different type of objects
     with the Xmipp program xmipp_showj. """
@@ -119,8 +120,8 @@ class viewerProtImportVolumes(EmProtocolViewer):
             tmpFileNameBILD = os.path.abspath(self.protocol._getTmpPath(
                 "axis.bild"))
             Chimera.createCoordinateAxisFile(dim,
-                                     bildFileName=tmpFileNameBILD,
-                                     sampling=sampling)
+                                             bildFileName=tmpFileNameBILD,
+                                             sampling=sampling)
             f.write("open %s\n" % tmpFileNameBILD)
             f.write("cofr 0,0,0\n")  # set center of coordinates
             count = 1  # skip first model because is not a 3D map

@@ -42,7 +42,6 @@ from pwem.objects import Acquisition
 from .base import ProtImportFiles
 
 
-
 class ProtImportImages(ProtImportFiles):
     """ Common protocol to import a set of images into the project. """
     # The following class property should be set in each import subclass
@@ -54,7 +53,7 @@ class ProtImportImages(ProtImportFiles):
     # see if it is a binary stack containing more items
     _checkStacks = True
         
-    #--------------------------- DEFINE param functions ------------------------
+    # --------------------------- DEFINE param functions ----------------------
 
     def _defineAcquisitionParams(self, form):
         """ Define acquisition parameters, it can be overriden
@@ -63,9 +62,9 @@ class ProtImportImages(ProtImportFiles):
         group = form.addGroup('Acquisition info')
         group.addParam('haveDataBeenPhaseFlipped', params.BooleanParam,
                        default=False,
-                      label='Have data been phase-flipped?',
-                      help='Set this to Yes if the images have been ctf-phase '
-                           'corrected.')
+                       label='Have data been phase-flipped?',
+                       help='Set this to Yes if the images have been ctf-phase '
+                            'corrected.')
         group.addParam('acquisitionWizard', params.LabelParam, important=True,
                        condition=self._acquisitionWizardCondition(),
                        label='Use the wizard button to import acquisition.',
@@ -73,17 +72,17 @@ class ProtImportImages(ProtImportFiles):
                             'will try to import the acquisition values.\n'
                             'If not found, required ones should be provided.')
         group.addParam('voltage', params.FloatParam, default=300,
-                   label=pwutils.Message.LABEL_VOLTAGE,
-                   help=pwutils.Message.TEXT_VOLTAGE)
+                       label=pwutils.Message.LABEL_VOLTAGE,
+                       help=pwutils.Message.TEXT_VOLTAGE)
         group.addParam('sphericalAberration', params.FloatParam, default=2.7,
-                   label=pwutils.Message.LABEL_SPH_ABERRATION,
-                   help=pwutils.Message.TEXT_SPH_ABERRATION)
+                       label=pwutils.Message.LABEL_SPH_ABERRATION,
+                       help=pwutils.Message.TEXT_SPH_ABERRATION)
         group.addParam('amplitudeContrast', params.FloatParam, default=0.1,
-                      label=pwutils.Message.LABEL_AMPLITUDE,
-                      help=pwutils.Message.TEXT_AMPLITUDE)
+                       label=pwutils.Message.LABEL_AMPLITUDE,
+                       help=pwutils.Message.TEXT_AMPLITUDE)
         group.addParam('magnification', params.IntParam, default=50000,
-                   label=pwutils.Message.LABEL_MAGNI_RATE,
-                   help=pwutils.Message.TEXT_MAGNI_RATE)
+                       label=pwutils.Message.LABEL_MAGNI_RATE,
+                       help=pwutils.Message.TEXT_MAGNI_RATE)
         return group
 
     def _acquisitionWizardCondition(self):
@@ -92,7 +91,7 @@ class ProtImportImages(ProtImportFiles):
         But movie-import also can have a wizard to read from FEI xml files. """
         return 'importFrom != %d' % self.IMPORT_FROM_FILES
 
-    #--------------------------- INSERT functions ------------------------------
+    # --------------------------- INSERT functions ----------------------------
     def _insertAllSteps(self):
 
         # Only the import movies has property 'inputIndividualFrames'
@@ -110,7 +109,7 @@ class ProtImportImages(ProtImportFiles):
                                  self.amplitudeContrast.get(),
                                  self.magnification.get())
         
-    #--------------------------- STEPS functions -------------------------------
+    # --------------------------- STEPS functions -----------------------------
     def importImagesStep(self, pattern, voltage, sphericalAberration, 
                          amplitudeContrast, magnification):
         """ Copy images matching the filename pattern
@@ -134,7 +133,7 @@ class ProtImportImages(ProtImportFiles):
         img.setAcquisition(acquisition)
         n = 1
         copyOrLink = self.getCopyOrLink()
-        alreadyWarned = False # Use this flag to warn only once
+        alreadyWarned = False  # Use this flag to warn only once
 
         for i, (fileName, fileId) in enumerate(self.iterFiles()):
             if self.isBlacklisted(fileName):
@@ -184,7 +183,7 @@ class ProtImportImages(ProtImportFiles):
         return outFiles
 
     def importImagesStreamStep(self, pattern, voltage, sphericalAberration,
-                         amplitudeContrast, magnification):
+                               amplitudeContrast, magnification):
         """ Copy images matching the filename pattern
         Register other parameters.
         """
@@ -236,7 +235,7 @@ class ProtImportImages(ProtImportFiles):
             fileTimeout = timedelta(seconds=5)
 
         while not finished:
-            time.sleep(3) # wait 3 seconds before check for new files
+            time.sleep(3)  # wait 3 seconds before check for new files
             someNew = False
             someAdded = False
 
@@ -331,7 +330,7 @@ class ProtImportImages(ProtImportFiles):
             errors.append('  %s' % " ".join(badChars))
         return errors
 
-        #--------------------------- INFO functions ----------------------------
+    # --------------------------- INFO functions ------------------------------
     def _validateImages(self):
         errors = []
         ih = ImageHandler()
@@ -368,7 +367,7 @@ class ProtImportImages(ProtImportFiles):
         # files and not using streaming. In the later case we could
         # have partial files not completed.
         if (self.importFrom == self.IMPORT_FROM_FILES and
-            not self.dataStreaming):
+                not self.dataStreaming):
             errors += self._validateImages()
 
         return errors
@@ -407,7 +406,7 @@ class ProtImportImages(ProtImportFiles):
                               self.getObjectTag(self._getOutputName())))
         return methods
     
-    #--------------------------- UTILS functions -------------------------------
+    # --------------------------- UTILS functions -----------------------------
     def _cleanUp(self):
         """Empty method to override in child classes."""
         pass
@@ -457,7 +456,7 @@ class ProtImportImages(ProtImportFiles):
                 result = "Select import file first"
             elif not exists(self.importFilePath):
                 result = ("*Import file doesn't exist.*\n"
-                         "File:\n%s" % self.importFilePath)
+                          "File:\n%s" % self.importFilePath)
             else:
 
                 acq = ci.loadAcquisitionInfo()
@@ -534,7 +533,6 @@ class ProtImportImages(ProtImportFiles):
         """ Create the output set that will be populated as more data is
         imported. """
 
-
     def processImportDict(self, importDict, importDir):
         """
         This function is used when we import a workflow from a json.
@@ -581,4 +579,3 @@ class ProtImportImages(ProtImportFiles):
 
     def streamingHasFinished(self):
         return os.path.exists(self._getStopStreamingFilename())
-    

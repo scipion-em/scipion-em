@@ -43,8 +43,8 @@ class SequenceViewer(pwviewer.Viewer):
         pwviewer.Viewer.__init__(self, **kwargs)
 
     # def visualize(self, obj, **kwargs):
-        # fn = obj.getFileName()
-        # openTextFileEditor(fn)
+    # fn = obj.getFileName()
+    # openTextFileEditor(fn)
     def visualize(self, obj, **kwargs):
         # The sequence object is visualized in a tmp file;
         # To build this tmp file we use a method (saveFile) from the class

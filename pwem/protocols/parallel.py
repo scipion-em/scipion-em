@@ -37,7 +37,7 @@ class ProtTestParallel(Protocol):
         Protocol.__init__(self, **args)        
         self.stepsExecutionMode = params.STEPS_PARALLEL
         
-    #--------------------------- DEFINE param functions ------------------------
+    # --------------------------- DEFINE param functions ----------------------
     def _defineParams(self, form):
         form.addSection(label='Input')
         form.addParam('numberOfIterations', params.IntParam, default=2,
@@ -54,8 +54,7 @@ class ProtTestParallel(Protocol):
         
         form.addParallelSection(threads=4, mpi=1)
             
-         
-    #--------------------------- INSERT steps functions ------------------------
+    # --------------------------- INSERT steps functions ----------------------
     def _insertAllSteps(self):
         n = self.numberOfIterations.get()
         m = self.numberOfParallelSleeps.get()
@@ -76,9 +75,7 @@ class ProtTestParallel(Protocol):
             endId = self._insertFunctionStep('endStep', i, prerequisites=deps)
             deps = [endId]
             
-            
-    #--------------------------- STEPS functions -------------------------------
-
+    # --------------------------- STEPS functions -----------------------------
     def initStep(self, iterN):
         """ All subsequent sleep steps should depend on this. """
         self._log.info("Starting iteration: %d" % iterN)
@@ -97,4 +94,3 @@ class ProtTestParallel(Protocol):
         
     def endStep(self, iterN):
         self._log.info("Ending iteration: %d" % iterN)
-        

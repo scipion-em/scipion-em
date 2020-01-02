@@ -69,7 +69,7 @@ class ProtUnionSet(ProtSets):
         def onChangeInputType():
             inputText = self.getEnumText('inputType')
 
-            if  inputText == 'All':
+            if inputText == 'All':
                 pointerClass = 'EMSet'
             # elif inputText == 'CTFs + Micrographs':
             #     pointerClass = 'SetOfCTF'
@@ -79,7 +79,7 @@ class ProtUnionSet(ProtSets):
             # the single element type, this will allow, for example
             # to union SetOfVolumes and Volumes in the final set
             if inputText in ['Volumes']:
-                pointerClass += ',%s' % inputText[:-1] # remove last 's'
+                pointerClass += ',%s' % inputText[:-1]  # remove last 's'
             elif inputText in ['CTFs']:
                 # remove last 's'
                 pointerClass = '%s,CTFModel' % pointerClass[:-1]
@@ -98,12 +98,12 @@ class ProtUnionSet(ProtSets):
                       help='Select the type of objects that you want to union.\n'
                            'Special case All will allow you to select any type.')
         self.inputSetsParam = form.addParam('inputSets', pwprot.params.MultiPointerParam,
-                      label="Input set", important=True,
-                      pointerClass='EMSet', minNumObjects=2, maxNumObjects=0,
-                      help='Select two or more sets (of micrographs, particles,'
-                           ' volumes, etc.) to be united. If you select 3 sets '
-                           'with 100, 200, 200 elements, the final set will '
-                           'contain a total of 500 elements.')
+                                            label="Input set", important=True,
+                                            pointerClass='EMSet', minNumObjects=2, maxNumObjects=0,
+                                            help='Select two or more sets (of micrographs, particles,'
+                                                 ' volumes, etc.) to be united. If you select 3 sets '
+                                                 'with 100, 200, 200 elements, the final set will '
+                                                 'contain a total of 500 elements.')
         form.addParam('ignoreDuplicates', pwprot.params.BooleanParam,
                       default=False,
                       label='Ignore duplicates?',
@@ -129,7 +129,7 @@ class ProtUnionSet(ProtSets):
         # TODO: See what kind of restrictions we add,
         # like "All sets should have the same sampling rate."
 
-    #-------------------------- INSERT steps functions ------------------------
+    # -------------------------- INSERT steps functions -----------------------
     def _insertAllSteps(self):
         self._insertFunctionStep('createOutputStep')
 
@@ -147,8 +147,8 @@ class ProtUnionSet(ProtSets):
         # or we find duplicated ids in the sets
         cleanIds = not self.ignoreDuplicates.get() and self.duplicatedIds()
 
-        #TODO ROB remove ignoreExtraAttributes condition
-        #or implement it. But this will be for Scipion 1.2
+        # TODO ROB remove ignoreExtraAttributes condition
+        # or implement it. But this will be for Scipion 1.2
         self.ignoreExtraAttributes = pwobj.Boolean(True)
         if self.ignoreExtraAttributes:
             _, commonAttrs = self.commonAttributes()
@@ -156,7 +156,7 @@ class ProtUnionSet(ProtSets):
             # Get the 1st level attributes to be used for the copyAttributes
             copyAttrs = list()
             for attr in commonAttrs:
-                if not "." in attr:
+                if "." not in attr:
                     copyAttrs.append(attr)
 
         idsList = []
@@ -201,13 +201,13 @@ class ProtUnionSet(ProtSets):
 
             prefixedAttribute = prefix + attr
 
-            if not prefixedAttribute in verifyAttrs:
+            if prefixedAttribute not in verifyAttrs:
                 value._objDoStore = False
                 print("INFO: %s will be lost." % attr)
 
             else:
                 self.cleanExtraAttributes(value, verifyAttrs,
-                                     prefixedAttribute + ".")
+                                          prefixedAttribute + ".")
 
     def getObjDict(self, includeClass=False):
         return super(ProtUnionSet, self).getObjDict(includeClass)
@@ -269,7 +269,7 @@ class ProtUnionSet(ProtSets):
         """ Check if all input sets have a minimum compatible attributes """
         # Attributes to check
         attrs = {'sampling rates': 'getSamplingRate',
-                'dimensions': 'getDimensions'}
+                 'dimensions': 'getDimensions'}
         errors = []
         # For each attribute
         for key, attr in attrs.items():
@@ -554,7 +554,6 @@ class ProtSubSet(ProtSets):
         if c1 in notImplentedClasses:
             return ["%s subset is not implemented." % c1]
 
-
         # First dispatch the easy case, where we choose elements at random.
         if self.chooseAtRandom:
             if self.nElements <= self.inputFullSet.get().getSize():
@@ -615,8 +614,8 @@ class ProtSubSet(ProtSets):
         else:
             if self.setOperation == self.SET_INTERSECTION:
                 return ["The elements of %s that also are referenced in %s" %
-                    (self.inputFullSet.getName(), self.inputSubSet.getName()),
-                    "are now in %s" % getattr(self, key).getName()]
+                        (self.inputFullSet.getName(), self.inputSubSet.getName()),
+                        "are now in %s" % getattr(self, key).getName()]
             else:
                 return ["%s has elements only present in %s." %
                         (getattr(self, key).getName(),
@@ -630,7 +629,7 @@ class ProtSubSetByMic(ProtSets):
     """
     _label = 'particles subset by micrograph'
 
-    #--------------------------- DEFINE param functions ------------------------
+    # --------------------------- DEFINE param functions ----------------------
     def _defineParams(self, form):
         form.addSection(label='Input')
 
@@ -642,13 +641,13 @@ class ProtSubSetByMic(ProtSets):
             pointerClass='SetOfMicrographs', label="Input micrographs",
             help='Only the particles in this set of micrographs will be output')
 
-    #--------------------------- INSERT steps functions ------------------------
+    # --------------------------- INSERT steps functions ----------------------
     def _insertAllSteps(self):
         self._insertFunctionStep('createOutputStep',
                                  self.inputParticles.getObjId(),
                                  self.inputMicrographs.getObjId())
 
-    #--------------------------- STEPS functions -------------------------------
+    # --------------------------- STEPS functions -----------------------------
     def createOutputStep(self, partsId, micsId):
         inputParticles = self.inputParticles.get()
         inputMicrographs = self.inputMicrographs.get()
@@ -668,7 +667,7 @@ class ProtSubSetByMic(ProtSets):
         self._defineOutputs(outputParticles=outputSet)
         self._defineTransformRelation(inputParticles, outputSet)
 
-    #--------------------------- INFO functions --------------------------------
+    # --------------------------- INFO functions ------------------------------
     def _validate(self):
         """Make sure the input data make sense, i.e. hasMicId.
         Thus they come from some Mic"""
@@ -682,5 +681,5 @@ class ProtSubSetByMic(ProtSets):
         else:
             summary = ['A subset of *%d* particles is made from a total of *%d*'
                        ' particles.' % (self.outputParticles.getSize(),
-                                    self.inputParticles.get().getSize())]
+                                        self.inputParticles.get().getSize())]
         return summary

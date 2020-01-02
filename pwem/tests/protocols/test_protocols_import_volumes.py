@@ -29,7 +29,6 @@ import pwem.constants as emcts
 import pwem.convert as emconv
 
 
-
 class TestImportBase(pwtests.BaseTest):
     @classmethod
     def setUpClass(cls):
@@ -93,7 +92,7 @@ class TestImportVolumes(TestImportBase):
 
         # Assert path is relative
         self.assertFalse(os.path.isabs(volume.getFileName()),
-                        "single volume path is not relative")
+                         "single volume path is not relative")
 
         # x, y, z in Angstroms
         # in Chimera we will see (x, y, z) divided by the samplingRate
@@ -155,7 +154,7 @@ class TestImportVolumes(TestImportBase):
             self.assertEqual(-67.2, z)
             # Assert path is relative
             self.assertFalse(os.path.isabs(volume.getFileName()),
-                            "volume path is not relative")
+                             "volume path is not relative")
 
         # """ 5) Import two volumes and set origin in userDefined position
         # """
@@ -211,8 +210,7 @@ class TestImportVolumes(TestImportBase):
         self.assertEqual(3, prot3.outputVolumes.getSize())
         self.assertEqual(60, prot3.outputVolumes.getDim()[0])
 
-
-        #  """ 8)To test old data where volumes have no origin at all"""
+        # """ 8)To test old data where volumes have no origin at all"""
         args = {'filesPath': self.dsXmipp.getFile('volumes/'),
                 'filesPattern': 'volume_1_iter_002.mrc',
                 'setHalfMaps': False,
@@ -237,7 +235,7 @@ class TestImportVolumes(TestImportBase):
         self.assertEqual(-67.2, y)
         self.assertEqual(-67.2, z)
 
-        ## TODO: associate origen coordinates from header file
+        # TODO: associate origen coordinates from header file
         # args = {'filesPath': self.dsModBuild.getFile('volumes/1ake_4-5A.mrc'),
         #         'samplingRate': 1.5,
         #         'setDefaultOrigin': False,
@@ -269,7 +267,7 @@ class TestImportVolumes(TestImportBase):
         """
         volFeatName = '/tmp/Icosahedron_map.txt'
         volMapNamefull = '/tmp/Icosahedron_map_full.mrc'
-        volMapNamehalf1 =  '/tmp/Icosahedron_map_half1.mrc'
+        volMapNamehalf1 = '/tmp/Icosahedron_map_half1.mrc'
         volMapNamehalf2 = '/tmp/Icosahedron_map_half2.mrc'
         self.createFeatVolume(volFeatName, volMapNamefull, sym=emcts.SYM_I222r)
         self.createFeatVolume(volFeatName, volMapNamehalf1, sym=emcts.SYM_I222r)
@@ -304,10 +302,9 @@ class TestImportVolumes(TestImportBase):
             from pwem import Domain
             xmipp3 = Domain.importFromPlugin('xmipp3', doRaise=True)
             xmipp3.Plugin.runXmippProgram(program, args)
-        except:
+        except ImportError:
             return False
         return True
-
 
     def createFeatVolume(self, volFeatName, volMapName, sym=emcts.SYM_I222r):
         f = open(volFeatName, "w")
@@ -319,8 +316,8 @@ class TestImportVolumes(TestImportBase):
 #Type  +/=  Density X_Center Y_Center Z_Center
 """)
         icosahedron = emconv.Icosahedron(orientation=emcts.SCIPION_SYM_NAME[sym][1:])
-        x = 0.;
-        y = 0.;
+        x = 0.
+        y = 0.
         z = 0.
         f.write("# large sphere at the center\n")
         f.write("sph  + 1. %.3f %.3f %.3f 36.\n" % (x, y, z))
@@ -330,8 +327,8 @@ class TestImportVolumes(TestImportBase):
             vertice = 55.0 * vertice
             f.write("sph  + 3 %.3f %.3f %.3f 8.25\n" %
                     (vertice[0], vertice[1], vertice[2]))
-            if i==0:
-                self.pentonDir =  "%.3f, %.3f, %.3f"%(vertice[0], vertice[1], vertice[2])
+            if i == 0:
+                self.pentonDir = "%.3f, %.3f, %.3f" % (vertice[0], vertice[1], vertice[2])
 
         # print 3fold points
         f.write("# 3-fold\n")
@@ -349,6 +346,6 @@ class TestImportVolumes(TestImportBase):
         f.close()
         #    map
         program = "xmipp_phantom_create"
-        args= '-i {featFile} -o {mapFile}'.format(
+        args = '-i {featFile} -o {mapFile}'.format(
             featFile=volFeatName, mapFile=volMapName)
         self.__runXmippProgram(program, args)

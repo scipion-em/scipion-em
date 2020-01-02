@@ -41,18 +41,18 @@ class HighThroughputTest(TestWorkflow):
         cls.crdsDir = cls.dataset.getFile('posAllDir')
 
     def test_workflow(self):
-        #First, import a set of movies
+        # First, import a set of movies
         print("Importing a set of movies...")
         protImport = emprot.ProtImportMovies(filesPath=self.movies, samplingRate=2.37, magnification=59000,
-                                      voltage=300, sphericalAberration=2.0)
+                                             voltage=300, sphericalAberration=2.0)
         protImport.setObjLabel('import movies - Day1')
         self.proj.launchProtocol(protImport, wait=True)
-        self.assertSetSize(protImport.outputMovies,msg="There was a problem importing movies")
+        self.assertSetSize(protImport.outputMovies, msg="There was a problem importing movies")
 
         print("Aligning the movies...")
         XmippProtOFAlignment = Domain.importFromPlugin('xmipp3.protocols',
-                                                          'XmippProtOFAlignment',
-                                                          doRaise=True)
+                                                       'XmippProtOFAlignment',
+                                                       doRaise=True)
         protAlignMov = XmippProtOFAlignment(useAlignment=False,
                                             alignFrame0=1, alignFrameN=7,
                                             doApplyDoseFilter=False)
@@ -74,7 +74,7 @@ class HighThroughputTest(TestWorkflow):
         # Now estimate CTF on the micrographs
         print("Performing CTF Micrographs...")
         XmippProtCTFMicrographs = Domain.importFromPlugin('xmipp3.protocols',
-                                                             'XmippProtCTFMicrographs')
+                                                          'XmippProtCTFMicrographs')
         protCTF = XmippProtCTFMicrographs(lowRes=0.04, highRes=0.31, runMode=1, numberOfMpi=1, numberOfThreads=3)
         protCTF.inputMicrographs.set(protPreprocess.outputMicrographs)
         protCTF.setObjLabel('ctf - Day1')
@@ -83,14 +83,13 @@ class HighThroughputTest(TestWorkflow):
 
         print("Running Xmipp Import Coordinates")
         protPP = self.newProtocol(emprot.ProtImportCoordinates,
-                                 importFrom=emprot.ProtImportCoordinates.IMPORT_FROM_XMIPP,
-                                 filesPath=self.crdsDir,
-                                 filesPattern='*.pos', boxSize=110)
+                                  importFrom=emprot.ProtImportCoordinates.IMPORT_FROM_XMIPP,
+                                  filesPath=self.crdsDir,
+                                  filesPattern='*.pos', boxSize=110)
         protPP.inputMicrographs.set(protPreprocess.outputMicrographs)
         protPP.setObjLabel('Picking - Day1')
         self.launchProtocol(protPP)
         self.assertSetSize(protPP.outputCoordinates, msg="There was a problem with the Xmipp import coordinates")
-
 
         print("Run extract particles with <Other> option")
         OTHER = Domain.importFromPlugin('xmipp3.constants', 'OTHER')
@@ -113,8 +112,8 @@ class HighThroughputTest(TestWorkflow):
         print("Running Spider Filter")
 
         SpiderProtFilter = Domain.importFromPlugin('spider.protocols',
-                                                      'SpiderProtFilter',
-                                                      doRaise=True)
+                                                   'SpiderProtFilter',
+                                                   doRaise=True)
         protFilter = SpiderProtFilter(lowFreq=0.07, highFreq=0.43)
         protFilter.inputParticles.set(protExtract.outputParticles)
         protFilter.setObjLabel('spi filter')
@@ -123,9 +122,9 @@ class HighThroughputTest(TestWorkflow):
 
         print("Run Only Align2d")
         XmippProtCL2DAlign = Domain.importFromPlugin('xmipp3.protocols',
-                                                        'XmippProtCL2DAlign')
+                                                     'XmippProtCL2DAlign')
         protOnlyAlign = XmippProtCL2DAlign(maximumShift=5, numberOfIterations=10,
-                                 numberOfMpi=8, numberOfThreads=1, useReferenceImage=False)
+                                           numberOfMpi=8, numberOfThreads=1, useReferenceImage=False)
         protOnlyAlign.inputParticles.set(protFilter.outputParticles)
         protOnlyAlign.setObjLabel('cl2d align')
         self.proj.launchProtocol(protOnlyAlign, wait=True)
@@ -133,7 +132,7 @@ class HighThroughputTest(TestWorkflow):
 
         print("Running Spider Dimension Reduction")
         SpiderProtCAPCA = Domain.importFromPlugin('spider.protocols',
-                                                     'SpiderProtCAPCA')
+                                                  'SpiderProtCAPCA')
         protCAPCA = SpiderProtCAPCA()
         protCAPCA.inputParticles.set(protOnlyAlign.outputParticles)
         protCAPCA.setObjLabel('spi PCA')
@@ -142,7 +141,7 @@ class HighThroughputTest(TestWorkflow):
 
         print("Running Spider Ward Classification")
         SpiderProtClassifyWard = Domain.importFromPlugin('spider.protocols',
-                                                            'SpiderProtClassifyWard')
+                                                         'SpiderProtClassifyWard')
         protWard = SpiderProtClassifyWard()
         protWard.pcaFile.set(protCAPCA.imcFile)
         protWard.inputParticles.set(protOnlyAlign.outputParticles)

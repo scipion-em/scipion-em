@@ -36,7 +36,7 @@ import pwem.protocols as emprot
 #  json params to fill the queue form, see SCIPION_HOME/config/host.conf
 QUEUE_PARAMS = (u'myslurmqueue', {u'JOB_TIME': u'1',        # in hours
                                   u'JOB_MEMORY': u'2048',   # in Mb
-                                  u'QUEUE_FOR_JOBS': u'N',})
+                                  u'QUEUE_FOR_JOBS': u'N', })
 #  command and args to list the queued jobs (to be used in a subprocess)
 #  the command's output must contain the jobID and the protocolID
 QUEUE_COMMAND = ["squeue"]
@@ -66,7 +66,7 @@ class TestQueueBase(BaseTest):
     def runNormalizeParticles(cls, particles):
         """ Run normalize particles protocol """
         relionProtocols = Domain.importFromPlugin('relion.protocols',
-                                                     doRaise=True)
+                                                  doRaise=True)
         protPreproc = cls.newProtocol(relionProtocols.ProtRelionPreprocessParticles,
                                       doNormalize=True)
         protPreproc.inputParticles.set(particles)
@@ -116,7 +116,7 @@ class TestQueueBase(BaseTest):
                             "The job %s corresponding to "
                             "the protocol %d has been not "
                             "attached to the system queue"
-                             % (jobId, protId))
+                            % (jobId, protId))
             print(pwutils.magentaStr(" > job %s of the protocol %d found in the "
                                      "queue, wait a sec..." % (jobId, protId)))
 
@@ -134,23 +134,22 @@ class TestQueueBase(BaseTest):
             else:
                 # Check that job files have been created
                 jobFilesPath = join(pwutils.getParentFolder(prot.getLogPaths()[0]),
-                            str(prot.getObjId()))
+                                    str(prot.getObjId()))
 
                 self.assertTrue(
                     pwutils.exists(jobFilesPath + "-0-1.out") and pwutils.exists(
-                jobFilesPath + "-0-1.err") and pwutils.exists(jobFilesPath + "-0-1.job"),
-                                "Job queue files not found in log folder, job did not make it to the queue.")
+                        jobFilesPath + "-0-1.err") and pwutils.exists(jobFilesPath + "-0-1.job"),
+                    "Job queue files not found in log folder, job did not make it to the queue.")
 
         self.assertIsNotNone(prot.outputClasses,
                              "There was a problem with Relion 2D classify")
 
         classsesPixSize = prot.outputClasses.getImages().getSamplingRate()
-        self.assertAlmostEquals(self.sampling, classsesPixSize,
-                                "There was a problem with the sampling rate "
-                                "of the particles")
+        self.assertAlmostEquals(self.sampling, classsesPixSize, delta=0.001,
+                                msg="There was a problem with the sampling rate "
+                                    "of the particles")
         for class2D in prot.outputClasses:
-                self.assertTrue(class2D.hasAlignment2D())
-
+            self.assertTrue(class2D.hasAlignment2D())
 
     def _runRelionClassify2D(self, previousRun, label='', threads=1, MPI=1,
                              doGpu=False, GPUs='', useQueue=False, steps=False):
@@ -271,6 +270,7 @@ class TestQueueSmall(TestQueueBase):
 
         self._checkAsserts(relionGpu12)
 
+
 class TestNoQueueALL(TestQueueBase):
     @classmethod
     def setUpClass(cls):
@@ -342,6 +342,7 @@ class TestNoQueueSmall(TestQueueBase):
                                                 doGpu=True, MPI=2)
         self._checkAsserts(relionGpu12)
 
+
 class TestQueueSteps(TestQueueBase):
     @classmethod
     def setUpClass(cls):
@@ -351,9 +352,9 @@ class TestQueueSteps(TestQueueBase):
 
     def testStepsNoGPU(self):
         xmipp3Protocols = Domain.importFromPlugin('xmipp3.protocols',
-                                                     doRaise=True)
+                                                  doRaise=True)
         protXmippPreproc = self.newProtocol(xmipp3Protocols.XmippProtPreprocessParticles,
-                                    doNormalize=True, doRemoveDust=True)
+                                            doNormalize=True, doRemoveDust=True)
 
         protXmippPreproc.inputParticles.set(self.protImport.outputParticles)
         protXmippPreproc.setObjLabel("Xmipp preprocess steps")
@@ -369,7 +370,8 @@ class TestQueueSteps(TestQueueBase):
 
         # Check that job files have been created
 
-        jobFilesPath = join(pwutils.getParentFolder(protXmippPreproc.getLogPaths()[0]), str(protXmippPreproc.getObjId()))
+        jobFilesPath = join(pwutils.getParentFolder(protXmippPreproc.getLogPaths()[0]),
+                            str(protXmippPreproc.getObjId()))
 
         self.assertTrue(pwutils.exists(jobFilesPath + "-0-1.out") and
                         pwutils.exists(jobFilesPath + "-0-1.err") and

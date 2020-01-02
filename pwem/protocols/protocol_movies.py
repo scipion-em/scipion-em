@@ -84,7 +84,7 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
         gain, dark = self.getGainAndDark()
         return getattr(self, 'CORRECT_GAIN', False) and (gain or dark)
 
-    #--------------------------- DEFINE param functions ----------------------
+    # --------------------------- DEFINE param functions ----------------------
     def _defineParams(self, form):
         form.addSection(label=pwutils.Message.LABEL_INPUT)
 
@@ -93,7 +93,7 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
                       label=pwutils.Message.LABEL_INPUT_MOVS,
                       help='Select a set of previously imported movies.')
 
-    #--------------------------- INSERT steps functions ---------------------
+    # --------------------------- INSERT steps functions ----------------------
     def _insertAllSteps(self):
         # Build the list of all processMovieStep ids by 
         # inserting each of the steps for each movie
@@ -103,7 +103,7 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
         # Gain and Dark conversion step
         self.convertCIStep = []
         convertStepId = self._insertFunctionStep('_convertInputStep',
-                                                  prerequisites=[])
+                                                 prerequisites=[])
         self.convertCIStep.append(convertStepId)
 
         # Conversion step is part of processMovieStep because of streaming.
@@ -175,7 +175,6 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
         else:
             return correctionImage
 
-
     def _insertFinalSteps(self, deps):
         """ This should be implemented in subclasses"""
         return deps
@@ -211,8 +210,8 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
         self.lastCheck = getattr(self, 'lastCheck', now)
         mTime = datetime.fromtimestamp(os.path.getmtime(localFile))
         self.debug('Last check: %s, modification: %s'
-                  % (pwutils.prettyTime(self.lastCheck),
-                     pwutils.prettyTime(mTime)))
+                   % (pwutils.prettyTime(self.lastCheck),
+                      pwutils.prettyTime(mTime)))
         # If the input movies.sqlite have not changed since our last check,
         # it does not make sense to check for new input data
         if self.lastCheck > mTime and hasattr(self, 'listOfMovies'):
@@ -233,7 +232,7 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
             self.updateSteps()
 
     def _checkNewOutput(self):
-        pass # To be implemented in sub-classes
+        pass  # To be implemented in sub-classes
 
     def _stepsCheck(self):
         # Input movie set can be loaded or None when checked for new inputs
@@ -270,7 +269,7 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
                                                prerequisites=self.convertCIStep)
         return movieStepId
 
-    #--------------------------- STEPS functions -----------------------------
+    # --------------------------- STEPS functions -----------------------------
     def convertInputStep(self):
         """ Should be implemented in sub-classes if needed. """
         pass
@@ -377,7 +376,7 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
         # Mark this movie as finished
         open(movieDoneFn, 'w').close()
 
-    #--------------------------- UTILS functions ----------------------------
+    # --------------------------- UTILS functions ----------------------------
     def _getOutputMovieFolder(self, movie):
         """ Create a Movie folder where to work with it. """
         return self._getTmpPath('movie_%06d' % movie.getObjId())
@@ -415,7 +414,7 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
             for movie in movieList:
                 f.write('%d\n' % movie.getObjId())
 
-    #--------------------------- OVERRIDE functions --------------------------
+    # --------------------------- OVERRIDE functions --------------------------
     def _filterMovie(self, movie):
         """ Check if process or not this movie.
         """
@@ -481,7 +480,7 @@ class ProtMovieAssignGain(ProtPreprocessMicrographs):
     def __init__(self, **kwargs):
         ProtPreprocessMicrographs.__init__(self, **kwargs)
 
-    #--------------------------- DEFINE param functions ------------------------
+    # --------------------------- DEFINE param functions ----------------------
     def _defineParams(self, form):
         form.addSection(label=pwutils.Message.LABEL_INPUT)
 
@@ -494,11 +493,11 @@ class ProtMovieAssignGain(ProtPreprocessMicrographs):
                       help="Select a gain image. The movie will be corrected "
                            "as newMovie=Movie/gain")
 
-    #--------------------------- INSERT steps functions ------------------------
+    # --------------------------- INSERT steps functions ----------------------
     def _insertAllSteps(self):
         self._insertFunctionStep('createOutputStep')
 
-    #--------------------------- STEPS functions -------------------------------
+    # --------------------------- STEPS functions -----------------------------
     def createOutputStep(self):
         moviesIn = self.inputMovies.get()
         moviesOut = self._createSetOfMovies()

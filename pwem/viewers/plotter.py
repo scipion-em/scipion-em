@@ -102,12 +102,12 @@ class EmPlotter(Plotter):
                           vmin=vminData, vmax=vmaxData)
         if xticksLablesMajor is not None:
             plt.xticks(range(len(xticksLablesMajor)),
-                                 xticksLablesMajor[:len(xticksLablesMajor)],
-                                 rotation=rotationX)
+                       xticksLablesMajor[:len(xticksLablesMajor)],
+                       rotation=rotationX)
         if yticksLablesMajor is not None:
             plt.yticks(range(len(yticksLablesMajor)),
-                                 yticksLablesMajor[:len(yticksLablesMajor)],
-                                 rotation=rotationY)
+                       yticksLablesMajor[:len(yticksLablesMajor)],
+                       rotation=rotationY)
         return plot
     
     def plotData(self, xValues, yValues, color='blue', **kwargs):
@@ -136,8 +136,8 @@ class EmPlotter(Plotter):
 
     @classmethod
     def createFromFile(cls, dbName, dbPreffix, plotType, columnsStr, colorsStr, linesStr,
-                 markersStr, xcolumn, ylabel, xlabel, title, bins, orderColumn,
-                 orderDirection):
+                       markersStr, xcolumn, ylabel, xlabel, title, bins, orderColumn,
+                       orderDirection):
         columns = columnsStr.split()
         colors = colorsStr.split()
         lines = linesStr.split()
@@ -175,7 +175,7 @@ class PlotData:
             self._table = self._loadSet(fileName, tableName)
             self.getColumnValues = self._getValuesFromSet
             self.getSize = self._table.getSize
-        else: # assume a metadata file
+        else:  # assume a metadata file
             self._table = self._loadMd(fileName, tableName)
             self.getColumnValues = self._getValuesFromMd
             self.getSize = self._table.size
@@ -186,7 +186,7 @@ class PlotData:
         if dbPreffix:
             setClassName = "SetOf%ss" % db.getSelfClassName()
         else:
-            setClassName = db.getProperty('self') # get the set class name
+            setClassName = db.getProperty('self')  # get the set class name
 
         # FIXME: Check why the import is here
         from pwem import Domain
@@ -195,14 +195,14 @@ class PlotData:
     
     def _getValuesFromSet(self, columnName):
         return [self._getValue(obj, columnName) 
-                  for obj in self._table.iterItems(orderBy=self._orderColumn, 
-                                                   direction=self._orderDirection)]
+                for obj in self._table.iterItems(orderBy=self._orderColumn,
+                                                 direction=self._orderDirection)]
         
     def _loadMd(self, fileName, tableName):
         label = md.str2Label(self._orderColumn)
         tableMd = md.MetaData('%s@%s' % (tableName, fileName))
-        tableMd.sort(label)#FIXME: use order direction 
-        #TODO: sort metadata by self._orderColumn
+        tableMd.sort(label)  # FIXME: use order direction
+        # TODO: sort metadata by self._orderColumn
         return tableMd
     
     def _getValuesFromMd(self, columnName):

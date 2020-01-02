@@ -36,14 +36,13 @@ from pyworkflow.object import ObjectWrap
 from xmippLib import MetaData, MetaDataInfo, label2Str, str2Label, MD_APPEND
 
 
-
 class Row:
     """ Support Xmipp class to store label and value pairs 
     corresponding to a Metadata row. 
     """
     def __init__(self):
         self._labelDict = OrderedDict() # Dictionary containing labels and values
-        self._objId = None # Set this id when reading from a metadata
+        self._objId = None  # Set this id when reading from a metadata
         
     def getObjId(self):
         return self._objId
@@ -104,7 +103,7 @@ class Row:
                 import sys
                 print("XmippMdRow.writeToMd: Error writing value to metadata.", file=sys.stderr)
                 print("                     label: %s, value: %s, type(value): %s" % (
-                label2Str(label), value, type(value)), file=sys.stderr)
+                    label2Str(label), value, type(value)), file=sys.stderr)
                 raise ex
             
     def readFromFile(self, fn):

@@ -62,20 +62,20 @@ class FscViewer(pwviewer.Viewer):
         self.plotter.show(block=block)
 
     def _plotButton(self):
-      if self._addButton:
-        axcreateFSC = plt.axes([0.75, 0.02, 0.2, 0.050])
-        # Button does not allow to define text color so
-        # I write it directly
-        axcreateFSC.text(0.5, 0.5, 'create FSC',
-                         verticalalignment='center',
-                         horizontalalignment='center',
-                         transform=axcreateFSC.transAxes, color='white')
-        bcreateFSC = Button(axcreateFSC, '',  # leave label empty
-                            color=pwutils.Color.RED_COLOR,
-                            hovercolor='maroon')
-        bcreateFSC.on_clicked(self.createFSCObject)
-        self._addButton = False
-        return  bcreateFSC
+        if self._addButton:
+            axcreateFSC = plt.axes([0.75, 0.02, 0.2, 0.050])
+            # Button does not allow to define text color so
+            # I write it directly
+            axcreateFSC.text(0.5, 0.5, 'create FSC',
+                             verticalalignment='center',
+                             horizontalalignment='center',
+                             transform=axcreateFSC.transAxes, color='white')
+            bcreateFSC = Button(axcreateFSC, '',  # leave label empty
+                                color=pwutils.Color.RED_COLOR,
+                                hovercolor='maroon')
+            bcreateFSC.on_clicked(self.createFSCObject)
+            self._addButton = False
+            return bcreateFSC
 
     def visualize(self, obj, **kwargs):
         # Keep input object in case we need to launch
@@ -90,11 +90,11 @@ class FscViewer(pwviewer.Viewer):
             self.plotFsc(obj, **kwargs)
             self.fscList.append(obj.clone())
 
-        bcreateFSC = self._plotButton()#if you do not asign the result
-                                       #to something it will be
-                                       #delete
+        bcreateFSC = self._plotButton()  # if you do not asign the result
+        # to something it will be
+        # delete
         self.show()
-        #return [self.plotter]
+        # return [self.plotter]
 
     def createFSCObject(self, event):
         self.project = self.getProject()
@@ -121,4 +121,4 @@ class FscViewer(pwviewer.Viewer):
         self.label = kwargs.get('label', self.protocol.getRunName())
         self.plotter.plotData(x, y, '-', label=self.label)
         self.plotter.legend()
-        #if I run this
+        # if I run this

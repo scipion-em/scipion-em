@@ -145,17 +145,19 @@ class Ccp4Header:
     #            self._header['originZ']
 
     def getOrigin(self, changeSign=False):
-        ''' Return in Angstroms'''
+        """ Return in Angstroms"""
         x = self._header['originX']
         y = self._header['originY']
         z = self._header['originZ']
-        if (x==0. and y==0. and z==0.) or isnan(x) or isnan(y) or isnan(z):
+        if (x == 0. and y == 0. and z == 0.) or isnan(x) or isnan(y) or isnan(z):
             sampling = self.computeSampling()
             x = self._header['NCSTART'] * sampling
             y = self._header['NRSTART'] * sampling
             z = self._header['NSSTART'] * sampling
         if changeSign:
-            x *= -1.; y *= -1.; z *= -1.;
+            x *= -1.
+            y *= -1.
+            z *= -1.
         return x, y, z
 
     def setSampling(self, sampling):
@@ -164,9 +166,9 @@ class Ccp4Header:
         self._header['Zlength'] = self._header['NZ'] * sampling
 
     def getSampling(self):
-        return  self._header['Xlength'] / self._header['NX'],\
-                self._header['Ylength'] / self._header['NY'],\
-                self._header['Zlength'] / self._header['NZ']
+        return self._header['Xlength'] / self._header['NX'],\
+               self._header['Ylength'] / self._header['NY'],\
+               self._header['Zlength'] / self._header['NZ']
 
     def setMode(self, mode):
         self._header['Mode'] = mode
@@ -221,7 +223,7 @@ class Ccp4Header:
         self._header['Zlength'] = z
 
     def getCellDimensions(self):
-        ''' Returns dimensions in Angstroms'''
+        """ Returns dimensions in Angstroms"""
         return self._header['Xlength'],\
                self._header['Ylength'],\
                self._header['Zlength']
