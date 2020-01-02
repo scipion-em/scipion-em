@@ -31,7 +31,7 @@ class TestImportBase(pwtests.BaseTest):
     def setUpClass(cls):
         pwtests.setupTestProject(cls)
         cls.dsXmipp = pwtests.DataSet.getDataSet('xmipp_tutorial')
-        #cls.dsRelion = DataSet.getDataSet('relion_tutorial')
+        # cls.dsRelion = DataSet.getDataSet('relion_tutorial')
         cls.dsGroel = pwtests.DataSet.getDataSet('groel')
         
     def checkOutput(self, prot, outputName, conditions=[]):
@@ -48,7 +48,7 @@ class TestImportBase(pwtests.BaseTest):
 class TestImportCoordinates(TestImportBase):
 
     def testImportCoordinates(self):
-        #First, import a set of micrographs
+        # First, import a set of micrographs
         protImport = self.newProtocol(emprot.ProtImportMicrographs,
                                       filesPath=self.dsXmipp.getFile('allMics'),
                                       samplingRate=1.237, voltage=300)
@@ -70,7 +70,7 @@ class TestImportCoordinates(TestImportBase):
         self.launchProtocol(prot1)
         
         # Make sure that all 264 coordinates where correctly imported
-        self.assertTrue(prot1.outputCoordinates.getSize()==264)
+        self.assertTrue(prot1.outputCoordinates.getSize() == 264)
 
         # prot2 = self.newProtocol(ProtImportCoordinates,
         #                          importFrom=ProtImportCoordinates.IMPORT_FROM_RELION,
@@ -96,7 +96,7 @@ class TestImportCoordinates(TestImportBase):
 
         self.launchProtocol(prot3)
 
-        #First, import a set of micrographs
+        # First, import a set of micrographs
         protImportGroel = self.newProtocol(emprot.ProtImportMicrographs,
                                            filesPath=self.dsGroel.getFile('mic1'),
                                            samplingRate=1)
@@ -106,10 +106,10 @@ class TestImportCoordinates(TestImportBase):
                              "There was a problem with the import")
 
         protPickGroel = self.newProtocol(emprot.ProtImportCoordinates,
-                                 importFrom=emprot.ProtImportCoordinates.IMPORT_FROM_DOGPICKER,
-                                 filesPath=self.dsGroel.getFile('pickingDogpicker'),
-                                 filesPattern='*.txt', boxSize=10,
-                                 threshold=0.7)
+                                         importFrom=emprot.ProtImportCoordinates.IMPORT_FROM_DOGPICKER,
+                                         filesPath=self.dsGroel.getFile('pickingDogpicker'),
+                                         filesPattern='*.txt', boxSize=10,
+                                         threshold=0.7)
         protPickGroel.inputMicrographs.set(protImportGroel.outputMicrographs)
         protPickGroel.setObjLabel('import coords from dogpicker ')
 

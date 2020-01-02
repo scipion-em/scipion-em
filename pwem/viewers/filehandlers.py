@@ -202,6 +202,7 @@ def getTkImage(imageXmipp, filename, dim):
     imageXmipp.readPreview(filename, dim)
     return ImageTk.PhotoImage(getPILImage(imageXmipp))
 
+
 def getImageFromPath(imagePath):
     """ Read an image using Xmipp, convert to PIL
     and then return as expected by Tk.

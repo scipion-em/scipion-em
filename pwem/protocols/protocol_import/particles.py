@@ -120,9 +120,9 @@ class ProtImportParticles(ProtImportImages):
                            "longer unique.")
         
         form.addParam('sqliteFile', params.FileParam,
-              condition='(importFrom == %d)' % self.IMPORT_FROM_SCIPION,
-              label='Particles sqlite file',
-              help="Select the particles sqlite file.\n")
+                      condition='(importFrom == %d)' % self.IMPORT_FROM_SCIPION,
+                      label='Particles sqlite file',
+                      help="Select the particles sqlite file.\n")
 
         form.addParam('frealignLabel', params.LabelParam,
                       condition='(importFrom == %d)' % self.IMPORT_FROM_FREALIGN,
@@ -140,12 +140,10 @@ class ProtImportParticles(ProtImportImages):
                       label='Lst file',
                       help='Select a *.lst set file from EMAN2 project.')
         
-        
     def _defineAcquisitionParams(self, form):
         group = ProtImportImages._defineAcquisitionParams(self, form)
         group.addParam('samplingRate', params.FloatParam,
-                   label=pwutils.Message.LABEL_SAMP_RATE)
-
+                       label=pwutils.Message.LABEL_SAMP_RATE)
 
     def _insertAllSteps(self):
         importFrom = self.importFrom.get()
@@ -161,23 +159,23 @@ class ProtImportParticles(ProtImportImages):
         """ Return the class in charge of importing the files. """
         if self.importFrom == self.IMPORT_FROM_EMX:
             EmxImport = Domain.importFromPlugin('emxlib.convert', 'EmxImport',
-                                  errorMsg='Emx is needed to import .emx files',
-                                  doRaise=True)
+                                                errorMsg='Emx is needed to import .emx files',
+                                                doRaise=True)
             self.importFilePath = abspath(self.emxFile.get('').strip())
             return EmxImport(self, self.importFilePath,
-                                   self.alignTypeList[self.alignType.get()])
+                             self.alignTypeList[self.alignType.get()])
 
         elif self.importFrom == self.IMPORT_FROM_XMIPP3:
             XmippImport = Domain.importFromPlugin('xmipp3.convert', 'XmippImport',
-                                           'Xmipp is needed to import .xmd files',
-                                           doRaise=True)
+                                                  'Xmipp is needed to import .xmd files',
+                                                  doRaise=True)
             self.importFilePath = self.mdFile.get('').strip()
             return XmippImport(self, self.mdFile.get())
 
         elif self.importFrom == self.IMPORT_FROM_RELION:
             RelionImport = Domain.importFromPlugin('relion.convert', 'RelionImport',
-                              errorMsg='Relion is needed to import .star files',
-                              doRaise=True)
+                                                   errorMsg='Relion is needed to import .star files',
+                                                   doRaise=True)
             self.importFilePath = self.starFile.get('').strip()
             return RelionImport(self, self.starFile.get())
         elif self.importFrom == self.IMPORT_FROM_SCIPION:
@@ -187,7 +185,7 @@ class ProtImportParticles(ProtImportImages):
         elif self.importFrom == self.IMPORT_FROM_FREALIGN:
             self.importFilePath = self.parFile.get('').strip()
             GrigorieffLabImportParticles = Domain.importFromPlugin(
-                     'grigoriefflab.convert', 'GrigorieffLabImportParticles',
+                'grigoriefflab.convert', 'GrigorieffLabImportParticles',
                      errorMsg='GrigorieffLab is needed to import .stk files',
                      doRaise=True)
             return GrigorieffLabImportParticles(self, self.parFile.get(),
@@ -195,7 +193,7 @@ class ProtImportParticles(ProtImportImages):
         elif self.importFrom == self.IMPORT_FROM_EMAN:
             self.importFilePath = self.lstFile.get('').strip()
             EmanImport = Domain.importFromPlugin('eman2.convert', 'EmanImport',
-                                          doRaise=True)
+                                                 doRaise=True)
             return EmanImport(self, self.lstFile.get())
         else:
             self.importFilePath = ''

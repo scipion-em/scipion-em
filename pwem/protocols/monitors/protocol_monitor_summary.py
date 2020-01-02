@@ -302,8 +302,8 @@ class ProtMonitorSummary(ProtMonitor):
         movieGainMonitor = movieGainMonitor or self.createMovieGainMonitor()
         self.createReportDir()
         htmlReport = ReportHtml(self, ctfMonitor, sysMonitor, movieGainMonitor,
-                          self.publishCmd.get(),
-                          refreshSecs=self.samplingInterval.get())
+                                self.publishCmd.get(),
+                                refreshSecs=self.samplingInterval.get())
         htmlReport.setUp()
 
         return htmlReport

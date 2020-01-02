@@ -79,9 +79,9 @@ class TestImportData(TestImportBase):
     def _importVolume3(self):
         args = {'filesPath': self.dsModBuild.getFile(
             'volumes/emd_4116.map'),
-                'samplingRate': 0.637,
-                'setOrigCoord': False
-                }
+            'samplingRate': 0.637,
+            'setOrigCoord': False
+        }
         protImportVol = self.newProtocol(emprot.ProtImportVolumes, **args)
         protImportVol.setObjLabel('import volume emd_4116\nwith default '
                                   'origin\n')
@@ -164,7 +164,7 @@ class TestImportData(TestImportBase):
     def _importCootStructureWoVol(self):
         args = {'inputPdbData': emprot.ProtImportPdb.IMPORT_FROM_FILES,
                 'pdbFile': self.dsModBuild.getFile(
-                        'PDBx_mmCIF/scipionOut0001.pdb')
+                    'PDBx_mmCIF/scipionOut0001.pdb')
                 }
         protImportPDB = self.newProtocol(emprot.ProtImportPdb, **args)
         protImportPDB.setObjLabel('import pdb\n coot')
@@ -629,7 +629,7 @@ class TestCootRefinement(TestImportData):
                                                       doRaise=True)
         protChimera = self.newProtocol(ChimeraProtRigidFit, **args)
         protChimera.setObjLabel('chimera fit\n volume and pdb\n '
-                             'save volume and model')
+                                'save volume and model')
         self.launchProtocol(protChimera)
 
         structure2_PDB = protChimera.outputPdb_01
@@ -687,7 +687,7 @@ class TestCootRefinement(TestImportData):
                                                       doRaise=True)
         protChimera = self.newProtocol(ChimeraProtRigidFit, **args)
         protChimera.setObjLabel('chimera fit\n volume and pdb\n '
-                             'save volume and model')
+                                'save volume and model')
         self.launchProtocol(protChimera)
 
         structure2_PDB = protChimera.outputPdb_01
@@ -798,7 +798,7 @@ class TestCootRefinement(TestImportData):
                                                       doRaise=True)
         protChimera = self.newProtocol(ChimeraProtRigidFit, **args)
         protChimera.setObjLabel('chimera fit\n pdb and volume associated\n '
-                             'save volume and model')
+                                'save volume and model')
         self.launchProtocol(protChimera)
 
         volume = protChimera.output3Dmap
@@ -854,13 +854,13 @@ class TestCootRefinement(TestImportData):
                                                       doRaise=True)
         protChimera = self.newProtocol(ChimeraProtRigidFit, **args)
         protChimera.setObjLabel('chimera fit\n pdb and associated volume\n '
-                             'save volume and model')
+                                'save volume and model')
         self.launchProtocol(protChimera)
 
         volume = protChimera.output3Dmap
         structure3_PDB = protChimera.outputPdb_01
 
-        #first coot
+        # first coot
         label = 'testLabel6'
         listVolCoot = [volume]
         args = {'extraCommands': self._createExtraCommandLine(0., 0., 0.,
@@ -886,7 +886,7 @@ class TestCootRefinement(TestImportData):
         self.assertTrue(
             os.path.exists(protCoot.output3DMap_0001.getFileName()))
 
-        #second coot (label=None)
+        # second coot (label=None)
         newExtraCommands = self._createExtraCommandLine(0., 0., 0.)
         protCoot.extraCommands.set(newExtraCommands)
 
@@ -900,7 +900,7 @@ class TestCootRefinement(TestImportData):
         self.assertTrue(
             os.path.exists(protCoot.output3DMap_0001.getFileName()))
 
-        #third coot
+        # third coot
         protCoot.doInteractive.set(False)
         label = 'lastTestLabel'
         lastExtraCommands = self._createExtraCommandLine(0., 0., 0., label)
@@ -914,6 +914,7 @@ class TestCootRefinement(TestImportData):
         self.assertTrue(os.path.exists(protCoot.lastTestLabel.getFileName()))
         self.assertTrue(
             os.path.exists(protCoot.output3DMap_0001.getFileName()))
+
 
 class TestRefmacRefinement(TestImportData):
     """ Test the flexible fitting of refmac refinement protocol
@@ -1092,7 +1093,7 @@ class TestRefmacRefinement(TestImportData):
                                                       doRaise=True)
         protChimera = self.newProtocol(ChimeraProtRigidFit, **args)
         protChimera.setObjLabel('chimera fit\n volume associated '
-                               'to pdb\n save volume and model')
+                                'to pdb\n save volume and model')
         self.launchProtocol(protChimera)
 
         volume = protChimera.output3Dmap
@@ -1149,6 +1150,7 @@ class TestRefmacRefinement(TestImportData):
 class TestEMRingerValidation(TestImportData):
     """ Test the protocol of EMRinger validation
     """
+
     def checkResults(self, optThresh, rotRatio, maxZscore, modLength,
                      EMScore, protEMRinger, places=2):
         # method to check EMRinger statistic results of the Final Results Table
@@ -1157,15 +1159,15 @@ class TestEMRingerValidation(TestImportData):
         with open(textFileName, "r") as f:
             self.resultsDict = json.loads(str(f.read()))
             self.assertAlmostEqual(self.resultsDict[
-                                'Optimal Threshold'], optThresh, delta=0.5)
+                                       'Optimal Threshold'], optThresh, delta=0.5)
             self.assertAlmostEqual(self.resultsDict[
-                                'Rotamer-Ratio'], rotRatio, delta=0.5)
+                                       'Rotamer-Ratio'], rotRatio, delta=0.5)
             self.assertAlmostEqual(self.resultsDict[
-                                'Max Zscore'], maxZscore, delta=0.5)
+                                       'Max Zscore'], maxZscore, delta=0.5)
             self.assertAlmostEqual(self.resultsDict[
-                                'Model Length'], modLength, places)
+                                       'Model Length'], modLength, places)
             self.assertAlmostEqual(self.resultsDict[
-                                'EMRinger Score'], EMScore, delta=0.5)
+                                       'EMRinger Score'], EMScore, delta=0.5)
 
     def testEMRingerValidationFromPDB(self):
         """ This test checks that EMRinger validation protocol runs with an
@@ -1258,12 +1260,12 @@ class TestEMRingerValidation(TestImportData):
         self.launchProtocol(protEMRinger)
 
         # check EMRinger results
-        self.checkResults(optThresh = 0.606299973426968,
-                          rotRatio = 0.8181818181818182,
-                          maxZscore = 5.521788316969326,
-                          modLength = 121,
-                          EMScore = 5.019807560881206,
-                          protEMRinger = protEMRinger)
+        self.checkResults(optThresh=0.606299973426968,
+                          rotRatio=0.8181818181818182,
+                          maxZscore=5.521788316969326,
+                          modLength=121,
+                          EMScore=5.019807560881206,
+                          protEMRinger=protEMRinger)
 
     def testEMRingerValidationAfterRefmacWithMask(self):
         """ This test checks that EMRinger validation protocol runs with a
@@ -1283,18 +1285,18 @@ class TestEMRingerValidation(TestImportData):
         label = 'testLabel2'
         listVolCoot = [volume]
         args = {
-                'extraCommands': self._createExtraCommandLine(-24.11, -45.76,
-                                                              -24.60, label),
-                'inputVolumes': listVolCoot,
-                'pdbFileToBeRefined': structure_PDB,
-                'doInteractive': False
-                }
+            'extraCommands': self._createExtraCommandLine(-24.11, -45.76,
+                                                          -24.60, label),
+            'inputVolumes': listVolCoot,
+            'pdbFileToBeRefined': structure_PDB,
+            'doInteractive': False
+        }
 
         CootRefine = Domain.importFromPlugin('ccp4.protocols', 'CootRefine',
                                              doRaise=True)
         protCoot = self.newProtocol(CootRefine, **args)
         protCoot.setObjLabel(
-                'coot refinement\n volume and pdb\n save model')
+            'coot refinement\n volume and pdb\n save model')
         self.launchProtocol(protCoot)
 
         # refmac with mask
@@ -1589,7 +1591,7 @@ class TestEMRingerValidation(TestImportData):
                                                       doRaise=True)
         protChimera = self.newProtocol(ChimeraProtRigidFit, **args)
         protChimera.setObjLabel('chimera fit\n volume associated '
-                               'to pdb\n save volume and model')
+                                'to pdb\n save volume and model')
         self.launchProtocol(protChimera)
 
         volume = protChimera.output3Dmap
@@ -1708,7 +1710,7 @@ class TestEMRingerValidation(TestImportData):
                                                       doRaise=True)
         protChimera = self.newProtocol(ChimeraProtRigidFit, **args)
         protChimera.setObjLabel('chimera fit\n volume associated '
-                                    'to pdb\n save volume and model')
+                                'to pdb\n save volume and model')
         self.launchProtocol(protChimera)
 
         volume = protChimera.output3Dmap
@@ -1834,9 +1836,11 @@ class TestEMRingerValidation(TestImportData):
                           EMScore=5.21530839370391,
                           protEMRinger=protEMRinger)
 
+
 class TestMolprobityValidation(TestImportData):
     """ Test the protocol of MolProbity validation
     """
+
     def checkResults(self, ramOutliers, ramFavored, rotOutliers, cbetaOutliers,
                      clashScore, overallScore, protMolProbity, places=0):
         # method to check MolProbity statistic results of the Final Results
@@ -1866,7 +1870,7 @@ class TestMolprobityValidation(TestImportData):
         self.assertTrue(structure_PDB.getFileName())
         self.assertFalse(structure_PDB.getVolume())
         args = {'inputStructure': structure_PDB
-               }
+                }
 
         PhenixProtRunMolprobity = Domain.importFromPlugin('phenix.protocols',
                                                           'PhenixProtRunMolprobity')
@@ -1898,13 +1902,13 @@ class TestMolprobityValidation(TestImportData):
 
         args = {'inputVolume': volume,
                 'resolution': 3.5
-               }
+                }
 
         PhenixProtRunMolprobity = Domain.importFromPlugin('phenix.protocols',
                                                           'PhenixProtRunMolprobity')
         protMolProbity = self.newProtocol(PhenixProtRunMolprobity, **args)
         protMolProbity.setObjLabel(
-        'PhenixProtRunMolprobity validation\n volume and no pdb\n')
+            'PhenixProtRunMolprobity validation\n volume and no pdb\n')
 
         try:
             self.launchProtocol(protMolProbity)
@@ -2045,7 +2049,8 @@ class TestMolprobityValidation(TestImportData):
 
         # check MolProbity results
         self.checkResults(ramOutliers=0.47,
-                          ramFavored=83.02,  # 83.49 TestMolprobityValidation.testMolProbityValidationAfterMultipleCootAndRefmacFitWithMask
+                          ramFavored=83.02,
+                          # 83.49 TestMolprobityValidation.testMolProbityValidationAfterMultipleCootAndRefmacFitWithMask
                           rotOutliers=5.68,
                           cbetaOutliers=0,
                           clashScore=4.47,
@@ -2310,7 +2315,7 @@ class TestMolprobityValidation(TestImportData):
                                                       doRaise=True)
         protChimera = self.newProtocol(ChimeraProtRigidFit, **args)
         protChimera.setObjLabel('chimera fit\n volume associated '
-                               'to pdb\n save volume and model')
+                                'to pdb\n save volume and model')
         self.launchProtocol(protChimera)
 
         volume = protChimera.output3Dmap
@@ -2432,7 +2437,7 @@ class TestMolprobityValidation(TestImportData):
                                                       doRaise=True)
         protChimera = self.newProtocol(ChimeraProtRigidFit, **args)
         protChimera.setObjLabel('chimera fit\n volume associated '
-                               'to pdb\n save volume and model')
+                                'to pdb\n save volume and model')
         self.launchProtocol(protChimera)
 
         volume = protChimera.output3Dmap
@@ -2574,8 +2579,8 @@ class TestMolprobityValidation(TestImportData):
 
         # MolProbity
         args = {
-                'inputStructure': structure6_PDB
-                }
+            'inputStructure': structure6_PDB
+        }
 
         PhenixProtRunMolprobity = Domain.importFromPlugin('phenix.protocols',
                                                           'PhenixProtRunMolprobity')
@@ -2598,7 +2603,7 @@ class TestMolprobityValidation(TestImportData):
         allows the comparison of results
             """
         print("Run MolProbity validation to compare an imported pdb "
-                  "files obtained in another project")
+              "files obtained in another project")
 
         # import second PDB (with higher number of Outliers)
         structure7_PDB = self._importStructureMolProbity2()
@@ -2622,4 +2627,3 @@ class TestMolprobityValidation(TestImportData):
                           clashScore=276.52,
                           overallScore=4.61,
                           protMolProbity=protMolProbity)
-

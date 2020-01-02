@@ -80,7 +80,6 @@ class ProtMonitorMovieGain(ProtMonitor):
     def monitorStep(self):
         self.createMonitor().loop()
 
-
     def createMonitor(self):
 
         movieGainProt = self.inputProtocol.get()
@@ -93,13 +92,13 @@ class ProtMonitorMovieGain(ProtMonitor):
                                             email=self.createEmailNotifier(),
                                             stdout=True,
                                             stddevValue=self.stddevValue.get(),
-                                            ratio1Value = self.ratio1Value.get(),
-                                            ratio2Value = self.ratio2Value.get())
+                                            ratio1Value=self.ratio1Value.get(),
+                                            ratio2Value=self.ratio2Value.get())
         return movieGainMonitor
 
     # -------------------------- INFO functions -------------------------------
     def _validate(self):
-        #TODO if less than 20 sec complain
+        # TODO if less than 20 sec complain
         return []  # no errors
 
     def _summary(self):
@@ -158,7 +157,7 @@ class MonitorMovieGain(Monitor):
             self.warning("Residual gain standard deviation is %f."
                          % stddev)
             fhWarning.write("%s: Residual gain standard deviation is %f.\n"
-                         % (movie_name, stddev))
+                            % (movie_name, stddev))
 
         if (perc975 / perc25) > self.ratio1Value:
             self.warning("The ratio between the 97.5 and 2.5 "
@@ -178,7 +177,6 @@ class MonitorMovieGain(Monitor):
         fhSummary.close()
         fhWarning.close()
         return prot.getStatus() != STATUS_RUNNING
-
 
     def getData(self):
         idValues = []

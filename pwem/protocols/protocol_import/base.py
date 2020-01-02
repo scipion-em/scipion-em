@@ -52,23 +52,23 @@ class ProtImportFiles(ProtImport):
     """
     IMPORT_FROM_FILES = 0
 
-    #--------------------------- DEFINE param functions ------------------------
+    # --------------------------- DEFINE param functions ----------------------
     def _defineParams(self, form):
         importChoices = self._getImportChoices()
         filesCondition = self._getFilesCondition()
 
         form.addSection(label='Import')
 
-        if len(importChoices) > 1: # not only from files
+        if len(importChoices) > 1:  # not only from files
             form.addParam('importFrom', params.EnumParam,
                           choices=importChoices, default=self._getDefaultChoice(),
                           label='Import from',
                           help='Select the type of import.')
         else:
             form.addHidden('importFrom', params.EnumParam,
-                          choices=importChoices, default=self.IMPORT_FROM_FILES,
-                          label='Import from',
-                          help='Select the type of import.')
+                           choices=importChoices, default=self.IMPORT_FROM_FILES,
+                           label='Import from',
+                           help='Select the type of import.')
         form.addParam('filesPath', params.PathParam,
                       condition=filesCondition,
                       label="Files directory",
@@ -112,33 +112,33 @@ class ProtImportFiles(ProtImport):
         form.addSection('Streaming')
 
         form.addParam('dataStreaming', params.BooleanParam, default=False,
-              label="Process data in streaming?",
-              help="Select this option if you want import data as it is "
-                   "generated and process on the fly by next protocols. "
-                   "In this case the protocol will keep running to check "
-                   "new files and will update the output Set, which can "
-                   "be used right away by next steps.")
+                      label="Process data in streaming?",
+                      help="Select this option if you want import data as it is "
+                           "generated and process on the fly by next protocols. "
+                           "In this case the protocol will keep running to check "
+                           "new files and will update the output Set, which can "
+                           "be used right away by next steps.")
 
         form.addParam('timeout', params.IntParam, default=43200,
-              condition='dataStreaming',
-              label="Timeout (secs)",
-              help="Interval of time (in seconds) after which, if no new file "
-                   "is detected, the protocol will end. When finished, "
-                   "the output Set will be closed and no more data will be "
-                   "added to it. \n"
-                    "Note 1:  The default value is  high (12 hours) to avoid "
-                   "the protocol finishes during the aqcuisition of the "
-                   "microscope. You can also stop it from right click and press "
-                   "STOP_STREAMING.\n"
-                   "Note 2: If you're using individual frames when importing "
-                   "movies, the timeout won't be refreshed until a whole "
-                   "movie is stacked.")
+                      condition='dataStreaming',
+                      label="Timeout (secs)",
+                      help="Interval of time (in seconds) after which, if no new file "
+                           "is detected, the protocol will end. When finished, "
+                           "the output Set will be closed and no more data will be "
+                           "added to it. \n"
+                           "Note 1:  The default value is  high (12 hours) to avoid "
+                           "the protocol finishes during the aqcuisition of the "
+                           "microscope. You can also stop it from right click and press "
+                           "STOP_STREAMING.\n"
+                           "Note 2: If you're using individual frames when importing "
+                           "movies, the timeout won't be refreshed until a whole "
+                           "movie is stacked.")
 
         form.addParam('fileTimeout', params.IntParam, default=30,
-              condition='dataStreaming',
-              label="File timeout (secs)",
-              help="Interval of time (in seconds) after which, if a file has "
-                   "not changed, we consider it as a new file. \n")
+                      condition='dataStreaming',
+                      label="File timeout (secs)",
+                      help="Interval of time (in seconds) after which, if a file has "
+                           "not changed, we consider it as a new file. \n")
 
         self._defineBlacklistParams(form)
 
@@ -159,9 +159,9 @@ class ProtImportFiles(ProtImport):
         pass
 
     def _getDefaultChoice(self):
-        return  self.IMPORT_FROM_FILES
+        return self.IMPORT_FROM_FILES
 
-    #--------------------------- INFO functions --------------------------------
+    # --------------------------- INFO functions ------------------------------
     def _validate(self):
         errors = []
         if self.importFrom == self.IMPORT_FROM_FILES:
@@ -176,7 +176,7 @@ class ProtImportFiles(ProtImport):
 
         return errors
 
-    #--------------------------- BASE methods to be overriden ------------------
+    # --------------------------- BASE methods to be overriden ----------------
     def _getImportChoices(self):
         """ Return a list of possible choices
         from which the import can be done.
@@ -191,7 +191,7 @@ class ProtImportFiles(ProtImport):
         """
         return '(importFrom == %d)' % self.IMPORT_FROM_FILES
 
-    #--------------------------- UTILS functions -------------------------------
+    # --------------------------- UTILS functions -----------------------------
     def getPattern(self):
         """ Expand the pattern using environ vars or username
         and also replacing special character # by digit matching.
@@ -213,7 +213,7 @@ class ProtImportFiles(ProtImport):
             n = len(g)
             # prepare regex pattern - place ids, handle *, handle ?
             idregex = pattern.replace(g, '(%s)' % ('[0-9]'*n))
-            idregex = idregex.replace('*','.*')
+            idregex = idregex.replace('*', '.*')
             idregex = idregex.replace('?', '.')
             self._idRegex = re.compile(idregex)
             pattern = pattern.replace(g, '[0-9]'*n)

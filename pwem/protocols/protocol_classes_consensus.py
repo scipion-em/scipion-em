@@ -92,7 +92,7 @@ class ProtClassesConsensus(ProtAlign2D):
         
         for clsId1, clsId2, inter, union, jaccardIndex in jaccardList:
             if clsId1 not in visitedClasses:
-                visitedClasses.add(clsId1) # mark as visited
+                visitedClasses.add(clsId1)  # mark as visited
                 cls1 = set1[clsId1]
                 cls2 = set2[clsId2]
                 o = pwobj.Object()
@@ -117,7 +117,5 @@ class ProtClassesConsensus(ProtAlign2D):
         return methods
 
     def _validate(self):
-        errors = [ ]
+        errors = []
         return errors
-    
-

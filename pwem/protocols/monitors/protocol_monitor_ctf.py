@@ -57,24 +57,24 @@ class ProtMonitorCTF(ProtMonitor):
                       label="Input protocols", important=True,
                       pointerClass='ProtCTFFind, XmippProtCTFMicrographs',
                       help="this protocol will be monitorized")
-        form.addParam('samplingInterval', params.IntParam,default=60,
+        form.addParam('samplingInterval', params.IntParam, default=60,
                       label="Sampling Interval (sec)",
                       pointerClass='EMProtocol',
                       help="Take one sample each SamplinInteval seconds")
 
-        form.addParam('maxDefocus', params.FloatParam,default=40000,
-              label="Raise Alarm if maximum defocus (A) >",
-              help="Raise alarm if defocus is greater than given value")
+        form.addParam('maxDefocus', params.FloatParam, default=40000,
+                      label="Raise Alarm if maximum defocus (A) >",
+                      help="Raise alarm if defocus is greater than given value")
         form.addParam('minDefocus', params.FloatParam,default=1000,
-              label="Raise Alarm if minimum defocus (A) <",
-              help="Raise alarm if defocus is smaller than given value")
+                      label="Raise Alarm if minimum defocus (A) <",
+                      help="Raise alarm if defocus is smaller than given value")
         form.addParam('astigmatism', params.FloatParam,default=2000,
-              label="Raise Alarm if astigmatism (A) >",
-              help="Raise alarm if astigmatism is greater than given value")
+                      label="Raise Alarm if astigmatism (A) >",
+                      help="Raise alarm if astigmatism is greater than given value")
 
         form.addParam('monitorTime', params.FloatParam, default=300,
-              label="Total Logging time (min)",
-              help="Log during this interval")
+                      label="Total Logging time (min)",
+                      help="Log during this interval")
 
         ProtMonitor._sendMailParams(self, form)
 
@@ -101,7 +101,7 @@ class ProtMonitorCTF(ProtMonitor):
 
     # -------------------------- INFO functions -------------------------------
     def _validate(self):
-        #TODO if less than 20 sec complain
+        # TODO if less than 20 sec complain
         return []  # no errors
 
     def _summary(self):
@@ -156,7 +156,7 @@ class MonitorCTF(Monitor):
 
             # Defocus angle
             defocusAngle = ctf.getDefocusAngle()
-            if defocusAngle > 360 or defocusAngle< -360:
+            if defocusAngle > 360 or defocusAngle < -360:
                 defocusAngle = 0
 
             # Astigmatism
@@ -196,9 +196,10 @@ class MonitorCTF(Monitor):
 
             # get CTFs with this ids a fill table
             # do not forget to compute astigmatism
-            sql = """INSERT INTO %s(timestamp, ctfID, defocusU,defocusV,astigmatism,ratio, resolution, fitQuality, phaseShift, micPath,psdPath,shiftPlotPath )
+            sql = """INSERT INTO %s(timestamp, ctfID, defocusU, defocusV, astigmatism, ratio, resolution, fitQuality, phaseShift, micPath, psdPath, shiftPlotPath)
                      VALUES("%s",%d,%f,%f,%f,%f,%f,%f,%f,"%s","%s","%s");""" % (self._tableName, ctfCreationTime, ctfID, defocusU,
-                     defocusV, astig, defocusU / defocusV, resolution, fitQuality, phaseShift,  micPath, psdPath, shiftPlotPath)
+                                                                                defocusV, astig, defocusU / defocusV, resolution,
+                                                                                fitQuality, phaseShift,  micPath, psdPath, shiftPlotPath)
             try:
                 self.cur.execute(sql)
             except Exception as e:

@@ -50,7 +50,7 @@ class ProtAlignmentAssign(ProtAlign2D):
 
         form.addParallelSection(threads=0, mpi=0)
 
-#--------------------------- INSERT steps functions --------------------------------------------
+# --------------------------- INSERT steps functions --------------------------
 
     def _insertAllSteps(self):
         """for each ctf insert the steps to compare it
@@ -67,7 +67,8 @@ class ProtAlignmentAssign(ProtAlign2D):
         scale = inputAlignment.getSamplingRate()/self.inputParticles.get().getSamplingRate()
 
         alignedParticle = inputAlignment[item.getObjId()]
-        # If alignment is found for this particle set the alignment info on the output particle, if not do not write that item
+        # If alignment is found for this particle set the alignment info
+        # on the output particle, if not do not write that item
         if alignedParticle is not None:
             alignment = alignedParticle.getTransform()
             alignment.scaleShifts(scale)
@@ -83,7 +84,7 @@ class ProtAlignmentAssign(ProtAlign2D):
         outputParticles.setAlignment(inputAlignment.getAlignment())
 
         outputParticles.copyItems(inputParticles,
-                            updateItemCallback=self._updateItem)
+                                  updateItemCallback=self._updateItem)
 
         self._defineOutputs(outputParticles=outputParticles)
         self._defineSourceRelation(self.inputParticles, outputParticles)
@@ -95,7 +96,8 @@ class ProtAlignmentAssign(ProtAlign2D):
             summary.append("Output particles not ready yet.")
         else:
             scale = self.inputAlignment.get().getSamplingRate()/self.inputParticles.get().getSamplingRate()
-            summary.append("Assigned alignment to %s particles from a total of %s." % (self.outputParticles.getSize(), self.inputParticles.get().getSize()))
+            summary.append("Assigned alignment to %s particles from a total of %s." % (
+                self.outputParticles.getSize(), self.inputParticles.get().getSize()))
             if scale != 1:
                 summary.append("Applied scale of %s." % scale)
         return summary
@@ -107,7 +109,8 @@ class ProtAlignmentAssign(ProtAlign2D):
         else:
             scale = self.inputAlignment.get().getSamplingRate()/self.inputParticles.get().getSamplingRate()
             methods.append("We assigned alignment to %s particles from %s and produced %s."
-                           % (self.outputParticles.getSize(), self.getObjectTag('inputParticles'), self.getObjectTag('outputParticles')))
+                           % (self.outputParticles.getSize(), self.getObjectTag('inputParticles'),
+                              self.getObjectTag('outputParticles')))
             if scale != 1:
                 methods.append("Applied scale factor of %s." % scale)
         return methods
@@ -117,7 +120,7 @@ class ProtAlignmentAssign(ProtAlign2D):
         is launched to be executed. It should return a list of errors. If the list is
         empty the protocol can be executed.
         """
-        #check that input set of aligned particles do have 2D alignment
+        # check that input set of aligned particles do have 2D alignment
         errors = []
         inputAlignmentSet = self.inputAlignment.get()
         if not inputAlignmentSet.hasAlignment():
@@ -128,7 +131,8 @@ class ProtAlignmentAssign(ProtAlign2D):
             alignment = first.getTransform()
             if alignment is None:
                 errors.append('Inconsistency detected in *Input alignment* !!!')
-                errors.append('It has alignment: _%s_, but the alignment is missing!!!' % inputAlignmentSet.getAlignment())
+                errors.append('It has alignment: _%s_, but the alignment is missing!!!' %
+                              inputAlignmentSet.getAlignment())
             
         # Add some errors if input is not valid
         return errors

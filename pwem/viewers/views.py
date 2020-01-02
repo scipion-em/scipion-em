@@ -37,7 +37,6 @@ except ImportError:  # Python 3
 
 import pyworkflow.viewer as pwviewer
 
-
 import pwem.convert as emconv
 
 from .showj import (getJvmMaxMemory, MODE, VISIBLE, ZOOM, ORDER, RENDER,
@@ -49,6 +48,7 @@ class DataView(pwviewer.View):
     """ Wrapper the arguments to showj (either web or desktop).
     Also useful to visualize images that are not objects,
     e.g.: dark or gain images"""
+
     def __init__(self, path, viewParams={}, **kwargs):
         pwviewer.View.__init__(self)
         self._memory = getJvmMaxMemory()
@@ -85,8 +85,8 @@ class DataView(pwviewer.View):
 
     def show(self):
         runJavaIJapp(self._memory,
-                           'xmipp.viewer.scipion.ScipionViewer',
-                           self.getShowJParams(), env=self._env)
+                     'xmipp.viewer.scipion.ScipionViewer',
+                     self.getShowJParams(), env=self._env)
 
     def getShowJParams(self):
         tableName = '%s@' % self._tableName if self._tableName else ''
@@ -97,7 +97,7 @@ class DataView(pwviewer.View):
         return params
 
     def getShowJWebParams(self):
-    
+
         parameters = {
             MODE,  # FOR MODE TABLE OR GALLERY
             VISIBLE,
@@ -106,7 +106,7 @@ class DataView(pwviewer.View):
             RENDER,
             SORT_BY
         }
-        
+
         params = {}
 
         for key, value in self._viewParams.items():
@@ -126,6 +126,7 @@ class DataView(pwviewer.View):
 
 class ObjectView(DataView):
     """ Wrapper to DataView but for displaying Scipion objects. """
+
     def __init__(self, project, inputid, path, other='', viewParams={},
                  **kwargs):
         DataView.__init__(self, path, viewParams, **kwargs)
@@ -141,7 +142,7 @@ class ObjectView(DataView):
 
     def show(self):
         runJavaIJapp(self._memory, 'xmipp.viewer.scipion.ScipionViewer',
-                           self.getShowJParams(), env=self._env)
+                     self.getShowJParams(), env=self._env)
 
 
 class MicrographsView(ObjectView):
@@ -155,7 +156,6 @@ class MicrographsView(ObjectView):
         first = micSet.getFirstItem()
 
         def existingLabels(labelList):
-
             return ' '.join([l for l in labelList if first.hasAttributeExt(l)])
 
         renderLabels = existingLabels(self.RENDER_LABELS)
@@ -183,16 +183,16 @@ class CtfView(ObjectView):
     PSD_LABELS = ['_micObj.thumbnail._filename', '_psdFile',
                   '_xmipp_enhanced_psd', '_xmipp_ctfmodel_quadrant',
                   '_xmipp_ctfmodel_halfplane', '_micObj.plotGlobal._filename'
-                 ]
+                  ]
     EXTRA_LABELS = ['_ctffind4_ctfResolution', '_gctf_ctfResolution',
                     '_ctffind4_ctfPhaseShift', '_gctf_ctfPhaseShift',
                     '_ctftilt_tiltAxis', '_ctftilt_tiltAngle',
                     '_xmipp_ctfCritFirstZero',
-                    '_xmipp_ctfCritCorr13', '_xmipp_ctfCritIceness','_xmipp_ctfCritFitting',
+                    '_xmipp_ctfCritCorr13', '_xmipp_ctfCritIceness', '_xmipp_ctfCritFitting',
                     '_xmipp_ctfCritNonAstigmaticValidty',
                     '_xmipp_ctfCritCtfMargin', '_xmipp_ctfCritMaxFreq',
                     '_xmipp_ctfCritPsdCorr90', '_xmipp_ctfVPPphaseshift'
-                   ]
+                    ]
 
     def __init__(self, project, ctfSet, other='', **kwargs):
         from pwem import Domain
@@ -203,7 +203,7 @@ class CtfView(ObjectView):
 
         psdLabels = existingLabels(self.PSD_LABELS)
         extraLabels = existingLabels(self.EXTRA_LABELS)
-        labels =  'id enabled %s _defocusU _defocusV ' % psdLabels
+        labels = 'id enabled %s _defocusU _defocusV ' % psdLabels
         labels += '_defocusAngle _defocusRatio '
         labels += '_phaseShift _resolution _fitQuality %s ' % extraLabels
         labels += ' _micObj._filename'
@@ -212,7 +212,7 @@ class CtfView(ObjectView):
                       ORDER: labels,
                       VISIBLE: labels,
                       ZOOM: 50
-                     }
+                      }
 
         if psdLabels:
             viewParams[RENDER] = psdLabels
@@ -243,6 +243,7 @@ class CtfView(ObjectView):
 
 class ClassesView(ObjectView):
     """ Customized ObjectView for SetOfClasses. """
+
     def __init__(self, project, inputid, path, other='',
                  viewParams={}, **kwargs):
         labels = 'enabled id _size _representative._filename'
@@ -259,6 +260,7 @@ class ClassesView(ObjectView):
 
 class Classes3DView(ClassesView):
     """ Customized ObjectView for SetOfClasses. """
+
     def __init__(self, project, inputid, path, other='',
                  viewParams={}, **kwargs):
         defaultViewParams = {ZOOM: '99',
@@ -284,13 +286,14 @@ class CoordinatesObjectView(DataView):
 
     def show(self):
         return launchSupervisedPickerGUI(self._path, self.outputdir,
-                                               self.protocol, mode=self.mode,
-                                               pickerProps=self.pickerProps,
-                                               inTmpFolder=self.inTmpFolder)
+                                         self.protocol, mode=self.mode,
+                                         pickerProps=self.pickerProps,
+                                         inTmpFolder=self.inTmpFolder)
 
 
 class ImageView(pwviewer.View):
     """ Customized ObjectView for SetOfClasses. """
+
     def __init__(self, imagePath, **kwargs):
         pwviewer.View.__init__(self)
         self._imagePath = os.path.abspath(imagePath)
@@ -398,11 +401,11 @@ class TableView(pwviewer.View):
         sumColWid = sum(colWidths) + 20
         if sumColWid < width:
             sumColWid = width
-            factor = int(width/sumColWid)+1
+            factor = int(width / sumColWid) + 1
             colWidths = [i * factor for i in colWidths]
 
         for col, colWidth in zip(headerList, colWidths):
-            tree.column(col, width=colWidth+padding)
+            tree.column(col, width=colWidth + padding)
 
         # color by rows
         tree.tag_configure('evenrow', background='white')

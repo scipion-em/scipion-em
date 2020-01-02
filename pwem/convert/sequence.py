@@ -30,7 +30,7 @@ from urllib.request import urlopen
 
 
 # sequence related stuff
-SEQ_TYPE=['aminoacids', 'nucleotides']
+SEQ_TYPE = ['aminoacids', 'nucleotides']
 SEQ_TYPE_AMINOACIDS = 0
 SEQ_TYPE_NUCLEOTIDES = 1
 IUPAC_PROTEIN_ALPHABET = ['Extended Protein', 'Protein']
@@ -64,7 +64,7 @@ class SequenceHandler:
         self.alphabet = indexToAlphabet(isAminoacid, iUPACAlphabet)
 
         if sequence is not None:
-            #sequence = cleanSequence(self.alphabet, sequence)
+            # sequence = cleanSequence(self.alphabet, sequence)
             self._sequence = Seq(sequence, alphabet=self.alphabet)
         else:
             self._sequence = None
@@ -90,7 +90,7 @@ class SequenceHandler:
         print("Connecting to dabase...")
         seqID = str(seqID)
         sys.stdout.flush()
-        counter=1
+        counter = 1
         retries = 5
         record = None
         error = ""
@@ -135,16 +135,19 @@ class SequenceHandler:
             print("read the sequence first")
             exit(0)
 
+
 def cleanSequenceScipion(isAminoacid, iUPACAlphabet, sequence):
     return cleanSequence(indexToAlphabet(isAminoacid, iUPACAlphabet), sequence)
+
 
 def cleanSequence(alphabet, sequence):
     str_list = []
     for item in sequence.upper():
         if item in alphabet.letters:
             str_list.append(item)
-    value =  ''.join(str_list)
+    value = ''.join(str_list)
     return ''.join(str_list)
+
 
 def indexToAlphabet(isAminoacid, iUPACAlphabet):
     if isAminoacid:
@@ -165,31 +168,34 @@ def indexToAlphabet(isAminoacid, iUPACAlphabet):
             alphabet = IUPAC.IUPACUnambiguousRNA
     return alphabet
 
+
 def alphabetToIndex(isAminoacid, alphabet):
     if isAminoacid:
-        if type(alphabet) is type(IUPAC.ExtendedIUPACProtein):
+        if isinstance(alphabet, IUPAC.ExtendedIUPACProtein):
             return EXTENDED_PROTEIN_ALPHABET
         else:
             return PROTEIN_ALPHABET
     else:
-        if type(alphabet) is type(IUPAC.ExtendedIUPACDNA):
+        if isinstance(alphabet, IUPAC.ExtendedIUPACDNA):
             return EXTENDED_DNA_ALPHABET
-        elif type(alphabet) is type(IUPAC.IUPACAmbiguousDNA):
+        elif isinstance(alphabet, IUPAC.IUPACAmbiguousDNA):
             return AMBIGOUS_DNA_ALPHABET
-        elif type(alphabet) is type(IUPAC.IUPACUnambiguousDNA):
+        elif isinstance(alphabet, IUPAC.IUPACUnambiguousDNA):
             return UNAMBIGOUS_DNA_ALPHABET
-        elif type(alphabet) is type(IUPAC.IUPACAmbiguousRNA):
+        elif isinstance(alphabet, IUPAC.IUPACAmbiguousRNA):
             return AMBIGOUS_RNA_ALPHABET
         else:
             return UNAMBIGOUS_RNA_ALPHABET
+
 
 def saveFileSequencesToAlign(SeqDic, inFile, type="fasta"):
     # Write my sequences to a fasta file
     with open(inFile, "w") as output_handle:
         for index, seq in SeqDic.items():
             record = SeqRecord(seq, id=str(index),
-                           name="", description="")
+                               name="", description="")
             SeqIO.write(record, output_handle, type)
+
 
 def alignClustalSequences(inFile, outFile):
     # Alignment of sequences with Clustal Omega program
@@ -199,25 +205,23 @@ def alignClustalSequences(inFile, outFile):
             verbose=True, auto=True)
     return clustalomega_cline
 
+
 def alignMuscleSequences(inFile, outFile):
     # Alignment of sequences with Muscle program
     muscle_cline = MuscleCommandline(input=inFile, out=outFile)
     return muscle_cline
 
+
 def alignBioPairwise2Sequences(structureSequenceId, structureSequence,
-              userSequenceId, userSequence,
-              outFileName):
-    "aligns two sequences and saves them to disk using fasta format"
+                               userSequenceId, userSequence,
+                               outFileName):
+    """aligns two sequences and saves them to disk using fasta format"""
     # see alignment_function for globalms parameters
     alignments = pairwise2.align.globalms(structureSequence,
-                                           userSequence,  3, -1, -3, -2)
+                                          userSequence,  3, -1, -3, -2)
     align1, align2, score, begin, end = alignments[0]
     with open(outFileName, "w") as handle:
         handle.write(">%s\n%s\n>%s\n%s\n" % (structureSequenceId,
                                              align1,
                                              userSequenceId,
                                              align2))
-
-
-
-

@@ -288,7 +288,7 @@ class ProtImportMicBase(ProtImportImages):
             if self.useRegexps.get():
                 if re.match(item2blacklist, fileName):
                     self.info("Blacklist warning: %s matched blacklist regexp %s"
-                          % (fileName, item2blacklist))
+                              % (fileName, item2blacklist))
                     blacklistedItems.add(fileName)
                     return True
             elif fileName in item2blacklist:
@@ -325,24 +325,24 @@ class ProtImportMicrographs(ProtImportMicBase):
         before the acquisition related parameters.
         """
         form.addParam('emxFile', params.FileParam,
-              condition = '(importFrom == %d)' % self.IMPORT_FROM_EMX,
+              condition='(importFrom == %d)' % self.IMPORT_FROM_EMX,
               label='Input EMX file',
-              help="Select the EMX file containing micrographs information.\n"
-                   "See more about [[http://i2pc.cnb.csic.es/emx][EMX format]]")
+                      help="Select the EMX file containing micrographs information.\n"
+                           "See more about [[http://i2pc.cnb.csic.es/emx][EMX format]]")
         
         form.addParam('mdFile', params.FileParam,
-                      condition = '(importFrom == %d)' % self.IMPORT_FROM_XMIPP3,
+                      condition='(importFrom == %d)' % self.IMPORT_FROM_XMIPP3,
                       label='Micrographs metadata file',
                       help="Select the micrographs Xmipp metadata file.\n"
                            "It is usually a _micrograph.xmd_ file result\n"
                            "from import, preprocess or downsample protocols.")
         
         form.addParam('sqliteFile', params.FileParam,
-                      condition = '(importFrom == %d)' % self.IMPORT_FROM_SCIPION,
+                      condition='(importFrom == %d)' % self.IMPORT_FROM_SCIPION,
                       label='Micrographs sqlite file',
                       help="Select the micrographs sqlite file.\n")
     
-    #--------------------------- INSERT functions ------------------------------
+    # --------------------------- INSERT functions ----------------------------
     def _insertAllSteps(self):
         importFrom = self.importFrom.get()
         ci = self.getImportClass()
@@ -353,7 +353,7 @@ class ProtImportMicrographs(ProtImportMicBase):
             self._insertFunctionStep('importMicrographsStep', importFrom,
                                      self.importFilePath)
     
-    #--------------------------- STEPS functions -------------------------------
+    # --------------------------- STEPS functions -----------------------------
     def importMicrographsStep(self, importFrom, *args):
         ci = self.getImportClass()
         ci.importMicrographs()
@@ -367,10 +367,10 @@ class ProtImportMicrographs(ProtImportMicBase):
                                                                         particles.hasCTF(),
                                                                         particles.getAlignment())
                                                                       
-        if self.hasAttribute('outputCoordinates'): # EMX files can contain only Coordinates information
+        if self.hasAttribute('outputCoordinates'):  # EMX files can contain only Coordinates information
             summary += '   Coordinates: *%d* \n' % (self.outputCoordinates.getSize())
             
-        if self.hasAttribute('outputMicrographs'): # EMX files can contain only Coordinates information
+        if self.hasAttribute('outputMicrographs'):  # EMX files can contain only Coordinates information
             summary += '   Micrographs: *%d* \n' % (self.outputMicrographs.getSize())
         
         if self.copyFiles:
@@ -379,7 +379,7 @@ class ProtImportMicrographs(ProtImportMicBase):
             
         self.summaryVar.set(summary)
     
-    #--------------------------- INFO functions --------------------------------
+    # --------------------------- INFO functions ------------------------------
     def _validate(self):
         from pwem.convert import ImageHandler
         ci = self.getImportClass()
@@ -411,7 +411,7 @@ class ProtImportMicrographs(ProtImportMicBase):
         else:
             return [self.summaryVar.get('No summary information.')]
     
-    #--------------------------- UTILS functions -------------------------------
+    # --------------------------- UTILS functions -----------------------------
     def getImportClass(self):
         """ Return the class in charge of importing the files. """
         if self.importFrom == self.IMPORT_FROM_EMX:
@@ -527,8 +527,7 @@ class ProtImportMovies(ProtImportMicBase):
                                        "imported that you want to exclude for "
                                        "this import.")
 
-
-    # --------------------------- INSERT functions -----------------------------
+    # --------------------------- INSERT functions ----------------------------
     def _insertAllSteps(self):
         # Only the import movies has property 'inputIndividualFrames'
         # so let's query in a non-intrusive manner
@@ -663,8 +662,8 @@ class ProtImportMovies(ProtImportMicBase):
                     movieFn = self._getExtraPath(os.path.basename(movieFn))
                 
                 if (movieFn not in self.importedFiles and
-                            movieFn not in self.createdStacks and
-                            len(v) == self.numberOfIndividualFrames):
+                        movieFn not in self.createdStacks and
+                        len(v) == self.numberOfIndividualFrames):
                     movieOut = movieFn
                     
                     if movieOut.endswith("mrc"):
@@ -684,7 +683,7 @@ class ProtImportMovies(ProtImportMicBase):
                         pwutils.cleanPath(movieFn)
                         
                         for i, frame in enumerate(sorted(v, key=lambda x: x[0])):
-                            frameFn = frame[1] # Frame name stored previously
+                            frameFn = frame[1]  # Frame name stored previously
                             ih.convert(frameFn, (i+1, movieOut))
                             
                             if self.deleteFrames:

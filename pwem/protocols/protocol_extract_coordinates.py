@@ -52,7 +52,7 @@ class ProtExtractCoords(ProtParticlePickingAuto):
     
     _label = 'extract coordinates'
 
-    #--------------------------- DEFINE param functions ------------------------
+    # --------------------------- DEFINE param functions ----------------------
     def _defineParams(self, form):
         form.addSection(label='Input')
 
@@ -76,7 +76,7 @@ class ProtExtractCoords(ProtParticlePickingAuto):
         
         form.addParallelSection(threads=0, mpi=0)
 
-    #--------------------------- INSERT steps functions ------------------------
+    # --------------------------- INSERT steps functions ----------------------
     def _insertAllSteps(self):
         self.streamingModeOn = self.getInputParticles().isStreamOpen()
 
@@ -145,7 +145,6 @@ class ProtExtractCoords(ProtParticlePickingAuto):
         outputCoords.close()
         print("write time: %fs" % (time.time()-t0))
 
-
     def extractCoordinates(self, partsIds=None):
         inPart = self.getInputParticles()
         inMics = self.getInputMicrographs()
@@ -185,12 +184,10 @@ class ProtExtractCoords(ProtParticlePickingAuto):
             for particle in inPart:
                 appendCoordFromParticle(particle)
 
-
         boxSize = inPart.getXDim() * scale
         outputCoords.setBoxSize(boxSize)
 
         return outputCoords
-
 
     def _checkNewOutput(self):
         if getattr(self, 'finished', False):
@@ -293,7 +290,7 @@ class ProtExtractCoords(ProtParticlePickingAuto):
             micKey = item.getCoordinate().getMicId()
             if micKey not in self.micsDone and micKey in availableMics:
                 newParts.append(item.getObjId())
-                if not micKey in self.micsDone:
+                if micKey not in self.micsDone:
                     newMics.append(micKey)
         self.micsDone += newMics
         self.inputSize = partsSet.getSize()
@@ -355,7 +352,7 @@ class ProtExtractCoords(ProtParticlePickingAuto):
     def getInputParticles(self):
         return self.inputParticles.get()
 
-    #--------------------------- INFO functions --------------------------------
+    # --------------------------- INFO functions ------------------------------
     def _summary(self):
         summary = []
         ps1 = self.getInputParticles().getSamplingRate()

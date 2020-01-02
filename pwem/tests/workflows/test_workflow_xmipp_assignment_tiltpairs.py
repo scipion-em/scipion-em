@@ -33,15 +33,15 @@ from .test_workflow import TestWorkflow
 # update this test when RCT workflow are implemented
 class TestXmippAssignmentTiltPairsWorkflow(TestWorkflow):
     @classmethod
-    def setUpClass(cls):    
+    def setUpClass(cls):
         pwtests.setupTestProject(cls)
         cls.dataset = pwtests.DataSet.getDataSet('rct')
         cls.allCrdsDir = cls.dataset.getFile('positions')
         cls.micsUFn = cls.dataset.getFile('untilted')
         cls.micsTFn = cls.dataset.getFile('tilted')
-        
+
     def test1(self):
-        #First, import a set of micrographs
+        # First, import a set of micrographs
         protImport = self.newProtocol(emprot.ProtImportMicrographsTiltPairs,
                                       patternUntilted=self.micsUFn,
                                       patternTilted=self.micsTFn,
@@ -50,30 +50,30 @@ class TestXmippAssignmentTiltPairsWorkflow(TestWorkflow):
         self.launchProtocol(protImport)
         self.assertIsNotNone(protImport.outputMicrographsTiltPair,
                              "There was a problem with the import")
-        
+
         protImportCoorU = self.newProtocol(emprot.ProtImportCoordinates,
-                         importFrom=emprot.ProtImportCoordinates.IMPORT_FROM_XMIPP,
-                         filesPath=self.allCrdsDir,
-                         filesPattern='F_rct_u_*.pos', boxSize=100)
+                                           importFrom=emprot.ProtImportCoordinates.IMPORT_FROM_XMIPP,
+                                           filesPath=self.allCrdsDir,
+                                           filesPattern='F_rct_u_*.pos', boxSize=100)
         uMics = protImport.outputMicrographsTiltPair.getUntilted()
         protImportCoorU.inputMicrographs.set(uMics)
         self.launchProtocol(protImportCoorU)
 
         tMics = protImport.outputMicrographsTiltPair.getTilted()
         protImportCoorT = self.newProtocol(emprot.ProtImportCoordinates,
-                         importFrom=emprot.ProtImportCoordinates.IMPORT_FROM_XMIPP,
-                         filesPath=self.allCrdsDir,
-                         filesPattern='F_rct_t_*.pos', boxSize=100)
+                                           importFrom=emprot.ProtImportCoordinates.IMPORT_FROM_XMIPP,
+                                           filesPath=self.allCrdsDir,
+                                           filesPattern='F_rct_t_*.pos', boxSize=100)
         protImportCoorT.inputMicrographs.set(tMics)
         self.launchProtocol(protImportCoorT)
-                
+
         # Then simulate a particle picking
         print("Running tilt pairs assignment...")
 
         XmippProtAssignmentTiltPair = Domain.importFromPlugin(
-                                                'xmipp3.protocols',
-                                                'XmippProtAssignmentTiltPair',
-                                                doRaise=True)
+            'xmipp3.protocols',
+            'XmippProtAssignmentTiltPair',
+            doRaise=True)
         protAssigning = self.newProtocol(XmippProtAssignmentTiltPair)
         micsTiltPair = protImport.outputMicrographsTiltPair
         protAssigning.inputMicrographsTiltedPair.set(micsTiltPair)
@@ -91,6 +91,6 @@ class TestXmippAssignmentTiltPairsWorkflow(TestWorkflow):
             out_ = True
         else:
             out_ = None
-        self.assertIsNotNone(out_, "There was a problem with the protocol assignment tilt pairs") 
-            
-        #self.validateFiles('protPicking', protPicking)  
+        self.assertIsNotNone(out_, "There was a problem with the protocol assignment tilt pairs")
+
+        # self.validateFiles('protPicking', protPicking)

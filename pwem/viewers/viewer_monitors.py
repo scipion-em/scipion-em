@@ -82,15 +82,15 @@ class CtfMonitorPlotter(EmPlotter):
         else:
             self.win -= self.step
             if self.win < self.step:
-               self.win = self.step
+                self.win = self.step
 
         if self.oldWin != self.win:
             self.ax.set_title(self._getTitle())
-            self.oldWin= self.win
+            self.oldWin = self.win
         self.animate()
         EmPlotter.show(self)
 
-    def press(self,event):
+    def press(self, event):
 
         sys.stdout.flush()
         if event.key == 'S':
@@ -102,26 +102,26 @@ class CtfMonitorPlotter(EmPlotter):
             self.animate()
         EmPlotter.show(self)
 
-    def has_been_closed(self,ax):
+    def has_been_closed(self, ax):
         fig = ax.figure.canvas.manager
         active_fig_managers = plt._pylab_helpers.Gcf.figs.values()
         return fig not in active_fig_managers
 
-    def animate(self, i=0): #do NOT remove i
-                           #FuncAnimation adds it as argument
+    def animate(self, i=0):  # do NOT remove i
+        # FuncAnimation adds it as argument
         if self.stop:
             return
 
         data = self.monitor.getData()
         self.x = data['idValues']
-        for k,v in self.lines.items():
+        for k, v in self.lines.items():
             self.y = data[k]
 
             lenght = len(self.x)
-            imin = max(0,len(self.x) - self.win)
+            imin = max(0, len(self.x) - self.win)
             xdata = self.x[imin:lenght]
             ydata = self.y[imin:lenght]
-            v.set_data(xdata,ydata)
+            v.set_data(xdata, ydata)
 
         self.ax.relim()
         self.ax.autoscale()
@@ -133,7 +133,7 @@ class CtfMonitorPlotter(EmPlotter):
                         linewidth=0.5, linestyle='dashed', zorder=0)
 
     def show(self):
-        self.paint(['defocusU','defocusV'])
+        self.paint(['defocusU', 'defocusV'])
 
     def paint(self, labels):
         for label in labels:
@@ -145,7 +145,7 @@ class CtfMonitorPlotter(EmPlotter):
                                                   label=label, color='r')
 
         anim = animation.FuncAnimation(self.fig, self.animate,
-                                       interval=self.monitor.samplingInterval*1000)  # miliseconds
+                                       interval=self.monitor.samplingInterval * 1000)  # miliseconds
 
         self.fig.canvas.mpl_connect('scroll_event', self.onscroll)
         self.fig.canvas.mpl_connect('key_press_event', self.press)
@@ -167,8 +167,8 @@ class MovieGainMonitorPlotter(EmPlotter):
         self.monitor = monitor
         self.y2 = 0.
         self.y1 = 100.
-        self.win = 250 # number of samples to be plotted
-        self.step = 50 # self.win will be modified in steps of this size
+        self.win = 250  # number of samples to be plotted
+        self.step = 50  # self.win will be modified in steps of this size
 
         self.createSubPlot(self._getTitle(), "", "")
         self.fig = self.getFigure()
@@ -192,15 +192,15 @@ class MovieGainMonitorPlotter(EmPlotter):
         else:
             self.win -= self.step
             if self.win < self.step:
-               self.win = self.step
+                self.win = self.step
 
         if self.oldWin != self.win:
             self.ax.set_title(self._getTitle())
-            self.oldWin= self.win
+            self.oldWin = self.win
         self.animate()
         EmPlotter.show(self)
 
-    def press(self,event):
+    def press(self, event):
 
         sys.stdout.flush()
         if event.key == 'S':
@@ -212,26 +212,26 @@ class MovieGainMonitorPlotter(EmPlotter):
             self.animate()
         EmPlotter.show(self)
 
-    def has_been_closed(self,ax):
+    def has_been_closed(self, ax):
         fig = ax.figure.canvas.manager
         active_fig_managers = plt._pylab_helpers.Gcf.figs.values()
         return fig not in active_fig_managers
 
-    def animate(self, i=0): #do NOT remove i
-                           #FuncAnimation adds it as argument
+    def animate(self, i=0):  # do NOT remove i
+        # FuncAnimation adds it as argument
         if self.stop:
             return
 
         data = self.monitor.getData()
         self.x = data['idValues']
-        for k,v in self.lines.items():
+        for k, v in self.lines.items():
             self.y = data[k]
 
             lenght = len(self.x)
-            imin = max(0,len(self.x) - self.win)
+            imin = max(0, len(self.x) - self.win)
             xdata = self.x[imin:lenght]
             ydata = self.y[imin:lenght]
-            v.set_data(xdata,ydata)
+            v.set_data(xdata, ydata)
 
         self.ax.set_ylabel('Ratios between specified percentiles',
                            color='b', size=10)
@@ -250,10 +250,10 @@ class MovieGainMonitorPlotter(EmPlotter):
         lines, labels = self.ax.get_legend_handles_labels()
         lines2, labels2 = self.ax2.get_legend_handles_labels()
         self.ax2.legend(lines + lines2, labels + labels2,
-                        loc=2, prop={'size':10}).get_frame().set_alpha(0.5)
+                        loc=2, prop={'size': 10}).get_frame().set_alpha(0.5)
 
     def show(self):
-        self.paint(['ratio1','ratio2','standard_deviation'])
+        self.paint(['ratio1', 'ratio2', 'standard_deviation'])
 
     def paint(self, labels):
         for label in labels:
@@ -274,7 +274,7 @@ class MovieGainMonitorPlotter(EmPlotter):
                                  color='b')
 
         anim = animation.FuncAnimation(self.fig, self.animate,
-                                       interval=self.monitor.samplingInterval*1000)#miliseconds
+                                       interval=self.monitor.samplingInterval * 1000)  # miliseconds
 
         self.fig.canvas.mpl_connect('scroll_event', self.onscroll)
         self.fig.canvas.mpl_connect('key_press_event', self.press)
@@ -285,7 +285,7 @@ class MovieGainMonitorPlotter(EmPlotter):
 
 
 class ProtMonitorSystemViewer(pwviewer.Viewer):
-    _environments = [pwviewer.DESKTOP_TKINTER,pwviewer.WEB_DJANGO]
+    _environments = [pwviewer.DESKTOP_TKINTER, pwviewer.WEB_DJANGO]
     _label = 'system monitor'
     _targets = [emprot.ProtMonitorSystem]
 
@@ -350,7 +350,7 @@ class SystemMonitorPlotter(EmPlotter):
         def numericKey(key):
             self.colorChanged = True
             number = int(key)
-            index = 3+number*3
+            index = 3 + number * 3
             if (index + 3) > self.lenPlots:
                 return
             if self.color['gpuMem_%d' % number] != 'w':
@@ -467,8 +467,8 @@ class SystemMonitorPlotter(EmPlotter):
             self.lines[label], = self.ax.plot([], [], '-', label=label)
 
         anim = animation.FuncAnimation(
-                self.fig, self.animate,
-                interval=self.monitor.samplingInterval * 1000)  # miliseconds
+            self.fig, self.animate,
+            interval=self.monitor.samplingInterval * 1000)  # miliseconds
 
         self.fig.canvas.mpl_connect('scroll_event', self.onscroll)
         self.fig.canvas.mpl_connect('key_press_event', self.press)
@@ -625,4 +625,3 @@ class SummaryWindow(pwgui.Window):
             text._open_cmd(reportPath)
         else:
             self.showInfo('Your html file is not ready yet. Please try again in a minute.')
-

@@ -58,7 +58,7 @@ def getFirstRow(mdOrFn):
     if isinstance(mdOrFn, str):
         md = MetaData()
         md.read(mdOrFn, 1)
-    else: # mdOrFn is MetaData
+    else:  # mdOrFn is MetaData
         md = mdOrFn
         
     if md.getParsedLines():
@@ -179,7 +179,7 @@ class SetMdIterator:
                 enabled = 1
 
         if (row is None or
-            item.getObjId() != row.getValue(self.keyLabel)):
+                item.getObjId() != row.getValue(self.keyLabel)):
             item._appendItem = False
             
         elif enabled == -1 and self.skipDisabled:

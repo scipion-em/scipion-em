@@ -61,8 +61,7 @@ class TestImportParticles(TestImportBase):
                 'haveDataBeenPhaseFlipped': True
                 }
 
-
-        # Id's should be set increasing from 1 if ### is not in the 
+        # Id's should be set increasing from 1 if ### is not in the
         # pattern
         protMicImport = self.newProtocol(emprot.ProtImportParticles, **args)
         protMicImport.setObjLabel('from files')
@@ -81,7 +80,7 @@ class TestImportParticles(TestImportBase):
                 'amplitudConstrast': 0.1,
                 'sphericalAberration': 2.,
                 'voltage': 100,
-                'alignType' : 3,
+                'alignType': 3,
                 'samplingRate': 2.46,
                 'magnification': 10000,
                 'haveDataBeenPhaseFlipped': True
@@ -199,8 +198,7 @@ class TestImportParticles(TestImportBase):
                 'samplingRate': 2.1,
                 }
 
-
-        # Id's should be set increasing from 1 if ### is not in the 
+        # Id's should be set increasing from 1 if ### is not in the
         # pattern
         protImport = self.newProtocol(emprot.ProtImportParticles, **args)
         protImport.setObjLabel('from imagic')

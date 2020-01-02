@@ -58,7 +58,7 @@ ALIGN_PROJ = 'Projection'  # relate projections with 3d map
 
 ALIGNMENTS = [ALIGN_NONE, ALIGN_2D, ALIGN_3D, ALIGN_PROJ]
 
-#Constants related with colormaps for viewers
+# Constants related with colormaps for viewers
 # Color maps
 COLOR_JET = 0
 COLOR_TERRAIN = 1
@@ -89,12 +89,12 @@ AX_Z = 2
 SYM_CYCLIC = 0  # CN cyclic symmetry Cn around z axis
 SYM_DIHEDRAL = 1  # DN cyclic symmetry plus and extra 2fold symmetry axis around X
 SYM_DIHEDRAL_X = SYM_DIHEDRAL
-SYM_DIHEDRAL_Y = 2 # DN cyclic symmetry plus and extra 2fold symmetry axis around Y (cryoSparc)
+SYM_DIHEDRAL_Y = 2  # DN cyclic symmetry plus and extra 2fold symmetry axis around Y (cryoSparc)
 SYM_TETRAHEDRAL = 3  # T 222 Tetahedral symmetry with two-fold symmetry axes along the X, Y, 
-                     # and Z axes, a three-fold along axis (1,1,1)
+# and Z axes, a three-fold along axis (1,1,1)
 SYM_TETRAHEDRAL_Z3 = 4  # T  three-fold symmetry axis along Z, another three-fold axis 
-                        # in the YZ plane such that rotation about the X axis by ~110° 
-                        # is a symmetry operation (EMAN convention)
+# in the YZ plane such that rotation about the X axis by ~110°
+# is a symmetry operation (EMAN convention)
 
 SYM_OCTAHEDRAL = 5  # O
 
@@ -117,13 +117,13 @@ SYM_In25 = 8
 # 'n25' with 180 degree rotation about x
 SYM_In25r = 9
 
-SYM_I2n3 = 10 # Two-fold symmetry along X and 3-fold along Z
-SYM_I2n3r = 11 # Idem but rotated 180 degree about Y
-SYM_I2n5 = 12 # Two-fold symmetry along Y and 5-fold along Z
-SYM_I2n5r = 13 # Idem but rotated 180 degree about X
+SYM_I2n3 = 10  # Two-fold symmetry along X and 3-fold along Z
+SYM_I2n3r = 11  # Idem but rotated 180 degree about Y
+SYM_I2n5 = 12  # Two-fold symmetry along Y and 5-fold along Z
+SYM_I2n5r = 13  # Idem but rotated 180 degree about X
 
 # Symmetry dictionary
-SCIPION_SYM_NAME = {}
+SCIPION_SYM_NAME = dict()
 SCIPION_SYM_NAME[SYM_CYCLIC] = 'Cn'
 SCIPION_SYM_NAME[SYM_DIHEDRAL_X] = 'Dxn'
 SCIPION_SYM_NAME[SYM_DIHEDRAL_Y] = 'Dyn'

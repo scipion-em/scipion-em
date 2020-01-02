@@ -47,7 +47,7 @@ from .viewer_sequence import SequenceViewer
 from .viewer_volumes import viewerProtImportVolumes
 from .showj import *
 
-## register file handlers to preview info in the Filebrowser....
+# register file handlers to preview info in the Filebrowser....
 from .filehandlers import *
 register = FileTreeProvider.registerFileHandler
 register(MdFileHandler(), '.xmd', '.star', '.pos', '.ctfparam', '.doc')

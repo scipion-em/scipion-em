@@ -1,8 +1,8 @@
-'''
+"""
 Created on May 20, 2013
 
 @author: laura
-'''
+"""
 
 from glob import iglob
 try:
@@ -58,7 +58,7 @@ def createDummyProtocol(projName):
     try:
         proj.launchProtocol(prot)
     except Exception as e:
-        print (str(e))
+        print(str(e))
     return prot
  
 
@@ -68,31 +68,31 @@ class TestFSC(unittest.TestCase):
         
     def testIO(self):
         """Test basic FSC object"""
-        xList=[0.00,0.05,0.10,0.15,0.2]
-        yList=[1.00,0.95,0.90,0.85,0.2]
+        xList = [0.00, 0.05, 0.10, 0.15, 0.2]
+        yList = [1.00, 0.95, 0.90, 0.85, 0.2]
         fsc = emobj.FSC()
-        fsc.setData(xList,yList)
-        #fsc.printAll()
+        fsc.setData(xList, yList)
+        # fsc.printAll()
         x,y = fsc.getData()
-        self.assertEqual(xList,x)
-        self.assertEqual(yList,y)
+        self.assertEqual(xList, x)
+        self.assertEqual(yList, y)
 
     def testMd(self):
         """test create FSC from metdata"""
         import xmippLib
-        xList=[0.00,0.05,0.10,0.15,0.2]
-        yList=[1.00,0.95,0.90,0.85,0.2]
+        xList = [0.00, 0.05, 0.10, 0.15, 0.2]
+        yList = [1.00, 0.95, 0.90, 0.85, 0.2]
         md1 =xmippLib.MetaData()
-        for freq,fscValue in izip(xList, yList):
+        for freq, fscValue in izip(xList, yList):
             id = md1.addObject()
             md1.setValue(xmippLib.MDL_RESOLUTION_FREQ, freq, id)
             md1.setValue(xmippLib.MDL_RESOLUTION_FRC, fscValue, id)
         fsc = emobj.FSC()
-        fsc.loadFromMd(md1,xmippLib.MDL_RESOLUTION_FREQ,
+        fsc.loadFromMd(md1, xmippLib.MDL_RESOLUTION_FREQ,
                        xmippLib.MDL_RESOLUTION_FRC)
-        x,y = fsc.getData()
-        self.assertEqual(xList,x)
-        self.assertEqual(yList,y)
+        x, y = fsc.getData()
+        self.assertEqual(xList, x)
+        self.assertEqual(yList, y)
 
 
 class TestImage(unittest.TestCase):
@@ -103,7 +103,7 @@ class TestImage(unittest.TestCase):
     def setUpClass(cls):
         setupTestOutput(cls)
         cls.dataset = DataSet.getDataSet('xmipp_tutorial')
-        cls.mic1 = cls.dataset.getFile( 'mic1')
+        cls.mic1 = cls.dataset.getFile('mic1')
 
     def testLocation(self):
         fn = self.mic1
@@ -131,14 +131,14 @@ class TestImage(unittest.TestCase):
         mic.setSamplingRate(1.)
 
         referenceT = emobj.Transform()
-        referenceT.setShifts(-4608.,-4720.,1)
+        referenceT.setShifts(-4608., -4720., 1)
         mreferenceT = referenceT.getMatrix()
 
         t = mic.getOrigin(True)
         mt = t.getMatrix()
         for i in range(4):
             for j in range(4):
-                self.assertAlmostEquals(mt[i][j],mreferenceT[i][j],delta=0.5)
+                self.assertAlmostEquals(mt[i][j], mreferenceT[i][j], delta=0.5)
 
 
 class TestImageHandler(unittest.TestCase):
@@ -303,7 +303,7 @@ class TestSetOfMicrographs(BaseTest):
                                             sphericalAberration=2,
                                             amplitudeContrast=0.1)
         
-        #cls.mics = glob(cls.micsPattern)
+        # cls.mics = glob(cls.micsPattern)
         cls.mics = []
         for mic in iglob(cls.micsPattern):
             cls.mics.append(cls.getRelPath(cls.dataset.getPath(), mic))
@@ -316,7 +316,7 @@ class TestSetOfMicrographs(BaseTest):
         idCount = 1
     
         for mic1, fn in izip(micSet, self.mics):  
-            #traceback.print_stack(file=sys.stdout)
+            # traceback.print_stack(file=sys.stdout)
             micFn = mic1.getFileName()
             self.assertEqual(fn, micFn, 
                              "micrograph NAME in the set is wrong, \n   expected: '%s'\n        got: '%s'" 
@@ -324,7 +324,7 @@ class TestSetOfMicrographs(BaseTest):
             self.assertEqual(idCount, mic1.getObjId(), 
                              "micrograph ID in the set is wrong, \n   expected: '%s'\n        got: '%s'" 
                              % (idCount, mic1.getObjId()))
-            mic2 = micSet[idCount] # Test getitem
+            mic2 = micSet[idCount]  # Test getitem
             self.assertEqual(mic1.getObjId(), mic2.getObjId(), "micrograph got from ID is wrong")
             idCount += 1           
              
@@ -360,22 +360,22 @@ class TestSetOfMicrographs(BaseTest):
         
         micSet = emobj.SetOfMicrographs(filename=micFn)
         self.assertEqual(2, micSet.getSize())
-        acquisition=emobj.Acquisition()
+        acquisition = emobj.Acquisition()
         acquisition.setMagnification(10000.)
         acquisition.setVoltage(200.)
         acquisition.setSphericalAberration(2.26)
         acquisition.setAmplitudeContrast(0.1)
         
-        mic2=emobj.Micrograph()
+        mic2 = emobj.Micrograph()
         mic2.setSamplingRate(2.8)
         mic2.setAcquisition(acquisition)
 
-        fileNames=['/home/roberto/Scipion/Test/Test2/down2_12585',
-                   '/home/roberto/Scipion/Test/Test2/down2_12610']
-        counter=0
+        fileNames = ['/home/roberto/Scipion/Test/Test2/down2_12585',
+                     '/home/roberto/Scipion/Test/Test2/down2_12610']
+        counter = 0
         for mic in micSet:
             mic2.setFileName(fileNames[counter])
-            self.assertTrue(mic.equalAttributes( mic2))
+            self.assertTrue(mic.equalAttributes(mic2))
             counter += 1
 
     def test_mapper(self):
@@ -388,7 +388,7 @@ class TestSetOfMicrographs(BaseTest):
         # create set of micrographs
         micSet = prot._createSetOfMicrographs()
         mic = emobj.Micrograph()
-        for i in range(MICNUMBER+ 1):
+        for i in range(MICNUMBER + 1):
             mic.setLocation(i, "stack.stk")
             micSet.append(mic)
             mic.cleanObjId()
@@ -400,7 +400,7 @@ class TestSetOfMicrographs(BaseTest):
         indexes = sorted([index[1] for index in
                           getIndex(setOfMicrographsFileName)])
         for index, indexName in zip(indexes, indexesNames):
-            self.assertEqual(index, 'index_' + indexName )
+            self.assertEqual(index, 'index_' + indexName)
 
 
 class TestSetOfParticles(BaseTest):
@@ -415,9 +415,9 @@ class TestSetOfParticles(BaseTest):
         cls.dataset = DataSet.getDataSet('xmipp_tutorial')
         
     def test_orderBy(self):
-        #create setofProjections sorted
-        imgSet1 = emobj.SetOfParticles(filename=':memory:',prefix='set1')
-        imgSet2 = emobj.SetOfParticles(filename=':memory:',prefix='set2')
+        # create setofProjections sorted
+        imgSet1 = emobj.SetOfParticles(filename=':memory:', prefix='set1')
+        imgSet2 = emobj.SetOfParticles(filename=':memory:', prefix='set2')
         imgSet1.setSamplingRate(1.5)
         imgSet2.setSamplingRate(1.5)
         img = emobj.Particle()
@@ -425,12 +425,12 @@ class TestSetOfParticles(BaseTest):
         for i in range(1, 10):
             img.setLocation(i, 'mystack.stk')
             img.setMicId(10-i)
-            img.setClassId(i%5)
+            img.setClassId(i % 5)
             imgSet1.append(img)
             img.setMicId(i)
             imgSet2.append(img)
             img.cleanObjId()
-        #orderby
+        # orderby
         for item1, item2 in izip(imgSet1.iterItems(orderBy='_micId',
                                                    direction='ASC'),
                                  imgSet2.iterItems(orderBy='_micId',
@@ -443,15 +443,15 @@ class TestSetOfParticles(BaseTest):
         """
         size = 29
         xdim = 500        
-        inStack = self.dataset.getFile( 'particles1')
+        inStack = self.dataset.getFile('particles1')
         outFn = self.getOutputPath('particles.sqlite')
         
         imgSet = emobj.SetOfParticles(filename=outFn)
         imgSet.setSamplingRate(1.0)
-        imgSet.readStack(inStack) # This should add 29 new items to the set
+        imgSet.readStack(inStack)  # This should add 29 new items to the set
         
-        self.assertEquals(size, imgSet.getSize()) # Check same size
-        self.assertEquals(xdim, imgSet.getDim()[0]) # Check same dimensions
+        self.assertEquals(size, imgSet.getSize())  # Check same size
+        self.assertEquals(xdim, imgSet.getDim()[0])  # Check same dimensions
         
         print("writing particles to: ", outFn)
         imgSet.write()
@@ -470,7 +470,7 @@ class TestSetOfParticles(BaseTest):
         print("     (set SCIPION_TEST_HUGE environment var to other value)")
         
         dbFn = self.getOutputPath('huge_set.sqlite')
-        #dbFn = ':memory:'
+        # dbFn = ':memory:'
         
         img = emobj.Particle()
         imgSet = emobj.SetOfParticles(filename=dbFn)
@@ -479,12 +479,12 @@ class TestSetOfParticles(BaseTest):
         for i in range(1, n+1):
             # Creating object inside the loop significantly
             # decrease performance
-            #img = Particle()
+            # img = Particle()
             img.setLocation(i, "images.stk")
             
             imgSet.append(img)
             img.cleanObjId()
-            #img.setObjId(None)
+            # img.setObjId(None)
             
         imgSet.write()
         
@@ -500,7 +500,7 @@ class TestSetOfParticles(BaseTest):
         for i in range(1, n+1):
             # Creating object inside the loop significantly
             # decrease performance
-            #img = Particle()
+            # img = Particle()
             objId = imgMd.addObject()
             imgMd.setValue(md.MDL_IMAGE, '%06d@images.stk' % (i+1), objId)
             
@@ -522,14 +522,14 @@ class TestSetOfParticles(BaseTest):
         for i in range(1, n+1):
             string = '%06d@images.stk' % i
             f.write(string)
-            #print >> f, '%06d@images.stk' % i
+            # print >> f, '%06d@images.stk' % i
             
         f.close()     
         
     def test_getFiles(self):
-        #create setofImages
+        # create setofImages
         dbFn = self.getOutputPath('multistack_set.sqlite')
-        #dbFn = ':memory:'
+        # dbFn = ':memory:'
         n = 10
         m = 3
         img = emobj.Particle()
@@ -563,7 +563,7 @@ class TestSetOfParticles(BaseTest):
         # create set of particles
         partSet = prot._createSetOfParticles()
         part = emobj.Particle()
-        for i in range(PARTNUMBER+ 1):
+        for i in range(PARTNUMBER + 1):
             part.setLocation(i, "stack.vol")
             partSet.append(part)
             part.cleanObjId()
@@ -575,7 +575,7 @@ class TestSetOfParticles(BaseTest):
         indexes = sorted([index[1] for index in
                           getIndex(setOfPArticleFileName)])
         for index, indexName in zip(indexes, indexesNames):
-            self.assertEqual(index, 'index_' + indexName )
+            self.assertEqual(index, 'index_' + indexName)
 
 
 class TestSetOfCoordinates(BaseTest):
@@ -617,7 +617,7 @@ class TestSetOfCoordinates(BaseTest):
         indexes = sorted([index[1] for index in
                           getIndex(setOfCoordinatesFileName)])
         for index, indexName in zip(indexes, indexesNames):
-            self.assertEqual(index, 'index_' + indexName )
+            self.assertEqual(index, 'index_' + indexName)
 
         # Test speed: based on loop in file protocol_extractparticles.py
         # for 600 mic and 100 part the values for the first
@@ -631,7 +631,7 @@ class TestSetOfCoordinates(BaseTest):
         # Loop no index: after several  hours I stopped the process
 
         SPEEDTEST = True
-        if SPEEDTEST: # code from protocol_particles. line 415
+        if SPEEDTEST:  # code from protocol_particles. line 415
             testTimer = Timer()
             testTimer.tic()
             for mic in micSet:
@@ -644,7 +644,7 @@ class TestSetOfCoordinates(BaseTest):
             lastMicId = None
             testTimer.tic()
             for coord in coordSet.iterItems(orderBy='_micId',
-                                                   direction='ASC'):
+                                            direction='ASC'):
                 micId = coord.getMicId()
                 if micId != lastMicId:
                     lastMicId = micId
@@ -672,7 +672,7 @@ class TestSetOfCoordinates(BaseTest):
             lastMicId = None
             testTimer.tic()
             for coord in coordSet.iterItems(orderBy='_micId',
-                                                   direction='ASC'):
+                                            direction='ASC'):
                 micId = coord.getMicId()
                 if micId != lastMicId:
                     lastMicId = micId
@@ -703,7 +703,7 @@ class TestSetOfClasses2D(BaseTest):
         self.assertEqual(cls1._mapperPath.get(), '%s,Class001' % self.selectionFn)
         
         img1 = cls1.getFirstItem()
-        self.assertEqual(img1.getObjId(), 1) # First image of first class is 1 in this test
+        self.assertEqual(img1.getObjId(), 1)  # First image of first class is 1 in this test
         
         images = [[1, 3, 4, 5, 7, 9, 11, 14, 16, 17, 21, 22, 24, 26, 28, 29, 30,
                    35, 37, 38, 39, 40, 42, 45, 54, 57, 62, 65, 67, 69, 70, 71, 74],
@@ -746,7 +746,7 @@ class TestSetOfClasses2D(BaseTest):
         # should be 68
         sizes = [32, 36]
         self.assertEqual(imgSet.getSize(), sum(sizes))
-        imgSet.clear() # Close db connection and clean data
+        imgSet.clear()  # Close db connection and clean data
         
         # Now create a subset of classes and check the number
         # of images per class
@@ -754,7 +754,7 @@ class TestSetOfClasses2D(BaseTest):
         clsSet.appendFromClasses(classes2DSet)
         for i, cls in enumerate(clsSet):
             self.assertEqual(cls.getSize(), sizes[i])
-        clsSet.clear() # Close db connection and clean data
+        clsSet.clear()  # Close db connection and clean data
 
 
 class TestTransform(BaseTest):
@@ -839,7 +839,7 @@ class TestCopyItems(BaseTest):
         outputSet.copyItems(inputSet, 
                             updateItemCallback=self._updateItem)
         
-        #print("writing particles to: ", outFn)
+        # print("writing particles to: ", outFn)
         outputSet.write()        
         outputSet.close()
         

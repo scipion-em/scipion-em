@@ -179,7 +179,7 @@ class TestSets(pwtests.BaseTest):
         print("\n", pwutils.greenStr(" Test Subset ".center(75, '-')))
 
         def check(set0, n1=2, n2=2):
-            "Simple checks on subsets, coming from split sets of set0."
+            """Simple checks on subsets, coming from split sets of set0."""
             print(pwutils.magentaStr("\n==> Check subset of %s" % type(set0).__name__))
             p_split1 = self.split(set0, n=n1, randomize=True)
             p_split2 = self.split(set0, n=n2, randomize=True)
@@ -213,8 +213,8 @@ class TestSets(pwtests.BaseTest):
 
                 # Check properties
                 self.assertTrue(set0.equalAttributes(output,
-                                    ignore=['_mapperPath', '_size'],
-                                    verbose=True),
+                                                     ignore=['_mapperPath', '_size'],
+                                                     verbose=True),
                                 "Intersection subset attributes are wrong")
 
                 n1 = len(output)
@@ -244,7 +244,6 @@ class TestSets(pwtests.BaseTest):
             self.assertTrue(n >= n2)
             self.assertEqual(n, n1 + n2)
 
-
         # We won't do these first two, there are too few elements.
         #   check(self.micros)
         #   check(self.vols)
@@ -257,8 +256,8 @@ class TestSets(pwtests.BaseTest):
         print("\n", pwutils.greenStr(" Test Subset by Mic".center(75, '-')))
         "Simple checks on subsets, coming from split sets of setMics."
         print(pwutils.magentaStr("\n==> Check subset of %s by %s"
-                         % (type(self.partMicId).__name__,
-                            type(self.micsMicId).__name__)))
+                                 % (type(self.partMicId).__name__,
+                                    type(self.micsMicId).__name__)))
 
         # launch the protocol for a certain mics input
         def launchSubsetByMic(micsSubset):

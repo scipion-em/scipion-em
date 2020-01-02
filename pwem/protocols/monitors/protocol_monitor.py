@@ -60,21 +60,21 @@ class ProtMonitor(EMProtocol):
         g = form.addGroup('Email settings')
 
         g.addParam('doMail', params.BooleanParam,
-                      label="Enable Email notification?", default=False,
-                      help="Allow monitors to notify via email.")
+                   label="Enable Email notification?", default=False,
+                   help="Allow monitors to notify via email.")
 
-        g.addParam('emailFrom',params.StringParam, condition='doMail',
-                   default = "from@from.fakeadress.com",
+        g.addParam('emailFrom', params.StringParam, condition='doMail',
+                   default="from@from.fakeadress.com",
                    label='From',
                    help='Provide the sender address for notifications.')
 
         g.addParam('emailTo', params.StringParam, condition='doMail',
-                   default = "to@to.fakeadress.com",
+                   default="to@to.fakeadress.com",
                    label='To',
                    help='Provide the destination address for notifications.')
 
         g.addParam('smtp', params.StringParam, condition='doMail',
-                   default = "smtp.fakeadress.com",
+                   default="smtp.fakeadress.com",
                    label='SMTP Mail server',
                    help='Provide the address of SMTP mail server.')
 

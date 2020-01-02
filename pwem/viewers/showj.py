@@ -228,14 +228,14 @@ class ColumnProperties:
             setattr(self, key, defaultColumnLayoutProperties[key])
 
     def getValues(self):
-        return {"visible":self.visible,
-                "allowSetVisible":self.allowSetVisible,
-                "editable":self.editable,
-                "allowSetEditable":self.allowSetEditable,
-                "renderable":self.renderable,
-                "allowSetRenderable":self.allowSetRenderable,
-                "renderFunc":self.renderFunc,
-                "extraRenderFunc":self.extraRenderFunc,
+        return {"visible": self.visible,
+                "allowSetVisible": self.allowSetVisible,
+                "editable": self.editable,
+                "allowSetEditable": self.allowSetEditable,
+                "renderable": self.renderable,
+                "allowSetRenderable": self.allowSetRenderable,
+                "renderFunc": self.renderFunc,
+                "extraRenderFunc": self.extraRenderFunc,
                 'columnType': self.columnType,
                 'columnName': self.getName(),
                 'columnLabel': self.getLabel()
@@ -289,7 +289,7 @@ def runJavaIJapp(memory, appName, args, env=None):
 
     args = getJavaIJappArguments(memory, appName, args)
     print('java %s' % args)
-    #return subprocess.Popen('java ' + args, shell=True, env=env)
+    # return subprocess.Popen('java ' + args, shell=True, env=env)
     cmd = ['java'] + shlex.split(args)
     return subprocess.Popen(cmd, env=env)
 
@@ -297,22 +297,22 @@ def runJavaIJapp(memory, appName, args, env=None):
 def launchSupervisedPickerGUI(micsFn, outputDir, protocol,
                               mode=None, memory=None,
                               pickerProps=None, inTmpFolder=False):
-        app = "xmipp.viewer.particlepicker.training.SupervisedPickerRunner"
-        args = "--input %s --output %s" % (micsFn, outputDir)
+    app = "xmipp.viewer.particlepicker.training.SupervisedPickerRunner"
+    args = "--input %s --output %s" % (micsFn, outputDir)
 
-        if mode:
-            args += " --mode %s" % mode
+    if mode:
+        args += " --mode %s" % mode
 
-        if pickerProps:
-            args += " --classifier " + pickerProps
-        else:
-            port = initProtocolTCPServer(protocol)
-            args += " --scipion %s"%port
+    if pickerProps:
+        args += " --classifier " + pickerProps
+    else:
+        port = initProtocolTCPServer(protocol)
+        args += " --scipion %s" % port
 
-        if inTmpFolder:
-            args += " --tmp true"
+    if inTmpFolder:
+        args += " --tmp true"
 
-        return runJavaIJapp(memory, app, args)
+    return runJavaIJapp(memory, app, args)
 
 
 def launchTiltPairPickerGUI(micsFn, outputDir, protocol, mode=None):
@@ -332,13 +332,13 @@ class ProtocolTCPRequestHandler(socketserver.BaseRequestHandler):
         tokens = shlex.split(msg)
         if msg.startswith('run function'):
             functionName = tokens[2]
-            #try:
+            # try:
             functionPointer = getattr(protocol, functionName)
             functionPointer(*tokens[3:])
             self.request.sendall('done\n')
             self.server.end = True
-            #except:
-            #    print 'protocol %s must implement %s'%(protocol.getName(), functionName)
+            # except:
+            # print 'protocol %s must implement %s'%(protocol.getName(), functionName)
 
         else:
             answer = 'no answer available'
@@ -354,14 +354,12 @@ class MySocketServer (socketserver.TCPServer):
 
 
 def initProtocolTCPServer(protocol):
-        address = ''
-        port = getFreePort()
-        server = MySocketServer((address, port), ProtocolTCPRequestHandler)
-        server.protocol = protocol
-        server_thread = threading.Thread(name="ProtocolTCPServer",
-                                         target=server.serve_forever)
-        server_thread.daemon = True
-        server_thread.start()
-        return port
-
-
+    address = ''
+    port = getFreePort()
+    server = MySocketServer((address, port), ProtocolTCPRequestHandler)
+    server.protocol = protocol
+    server_thread = threading.Thread(name="ProtocolTCPServer",
+                                     target=server.serve_forever)
+    server_thread.daemon = True
+    server_thread.start()
+    return port

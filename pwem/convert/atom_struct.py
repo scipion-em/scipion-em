@@ -311,26 +311,26 @@ class AtomicStructHandler:
                 for chain in model:
                     if str(chain.id) == chainID:
                         if len(chain.get_unpacked_list()[0].resname) == 1:
-                            print("Your sequence is a nucleotide sequence (" \
+                            print("Your sequence is a nucleotide sequence ("
                                   "RNA)\n")
                             # alphabet = IUPAC.IUPACAmbiguousRNA._upper()
                             for residue in chain:
-                                ## Check if the residue belongs to the
-                                ## standard RNA and add those residues to the
-                                ## seq
+                                # Check if the residue belongs to the
+                                # standard RNA and add those residues to the
+                                # seq
                                 if residue.get_resname() in ['A', 'C',
                                                              'G', 'U']:
                                     seq.append(residue.get_resname())
                                 else:
                                     seq.append("X")
                         elif len(chain.get_unpacked_list()[0].resname) == 2:
-                            print("Your sequence is a nucleotide sequence (" \
+                            print("Your sequence is a nucleotide sequence ("
                                   "DNA)\n")
                             # alphabet = IUPAC.ExtendedIUPACDNA._upper()
                             for residue in chain:
-                                ## Check if the residue belongs to the
-                                ## standard DNA and add those residues to the
-                                ## seq
+                                # Check if the residue belongs to the
+                                # standard DNA and add those residues to the
+                                # seq
                                 if residue.get_resname()[1] in ['A', 'C',
                                                                 'G', 'T']:
                                     seq.append(residue.get_resname()[1])
@@ -341,10 +341,10 @@ class AtomicStructHandler:
                             for residue in chain:
                                 if is_aa(residue.get_resname(), standard=True):
                                     # alphabet = IUPAC.ExtendedIUPACProtein._upper()
-                                    ## The test checks if the amino acid
-                                    ## is one of the 20 standard amino acids
-                                    ## Some proteins have "UNK" or "XXX", or other symbols
-                                    ## for missing or unknown residues
+                                    # The test checks if the amino acid
+                                    # is one of the 20 standard amino acids
+                                    # Some proteins have "UNK" or "XXX", or other symbols
+                                    # for missing or unknown residues
                                     seq.append(three_to_one(residue.get_resname()))
                                     counter += 1
                                 else:
@@ -733,8 +733,9 @@ def _frombase(inFileName, outFileName, log, oParam=1):
         # run in the background
         env = getEnviron()
         pwutils.runJob(None, Plugin.getMaxitBin(), args, env=env)
-    else:  # this is not the ideal convertion but it is better
-           # than nothing
+    else:
+        # this is not the ideal conversion but it is better
+        # than nothing
         aSH = AtomicStructHandler()
         aSH.read(inFileName)
         aSH.write(outFileName)
@@ -807,4 +808,3 @@ def retry(runEnvirom, program, args, cwd, listAtomStruct=[], log=None, clean_dir
                         runEnvirom(program, _args, cwd=cwd)
                     except:
                         print("CIF file standarization failed.")
-

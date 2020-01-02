@@ -42,8 +42,8 @@ class TestCtfStream(pwtests.BaseTest):
 
     def _updateProtocol(self, prot):
         prot2 = pwprot.getProtocolFromDb(prot.getProject().path,
-                                  prot.getDbPath(),
-                                  prot.getObjId())
+                                         prot.getDbPath(),
+                                         prot.getObjId())
         # Close DB connections
         prot2.getProject().closeMapper()
         prot2.closeMappers()
@@ -59,7 +59,7 @@ class TestCtfStream(pwtests.BaseTest):
                   'creationInterval': 5,
                   'delay': 0,
                   'setof': emprot.SET_OF_RANDOM_MICROGRAPHS  # SetOfMicrographs
-                }
+                  }
 
         # put some stress on the system
         protStream = self.newProtocol(emprot.ProtCreateStreamData, **kwargs)

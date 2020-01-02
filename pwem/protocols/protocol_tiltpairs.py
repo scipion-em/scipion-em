@@ -54,7 +54,7 @@ class ProtImportMicrographsTiltPairs(ProtImportFiles):
     _label = 'import tilted micrographs'
     OUTPUT_NAME = "outputMicrographsTiltPair"
         
-    #--------------------------- DEFINE param functions --------------------------------------------
+    # --------------------------- DEFINE param functions ----------------------
     
     def _defineParams(self, form):
         form.addSection(label='Input')
@@ -67,38 +67,37 @@ class ProtImportMicrographsTiltPairs(ProtImportFiles):
         form.addParam('copyToProj', params.BooleanParam,
                       label=pwutils.Message.LABEL_COPYFILES, default=False)
         form.addParam('voltage', params.FloatParam, default=200,
-                   label=pwutils.Message.LABEL_VOLTAGE, help=pwutils.Message.TEXT_VOLTAGE)
+                      label=pwutils.Message.LABEL_VOLTAGE, help=pwutils.Message.TEXT_VOLTAGE)
         form.addParam('sphericalAberration', params.FloatParam, default=2.26,
-                   label=pwutils.Message.LABEL_SPH_ABERRATION,
-                   help=pwutils.Message.TEXT_SPH_ABERRATION)
+                      label=pwutils.Message.LABEL_SPH_ABERRATION,
+                      help=pwutils.Message.TEXT_SPH_ABERRATION)
         form.addParam('ampContrast', params.FloatParam, default=0.1,
                       label=pwutils.Message.LABEL_AMPLITUDE,
                       help=pwutils.Message.TEXT_AMPLITUDE)
         form.addParam('samplingRateMode', params.EnumParam,
                       default=emcts.SAMPLING_FROM_IMAGE,
-                   label=pwutils.Message.LABEL_SAMP_MODE,
-                   help=pwutils.Message.TEXT_SAMP_MODE,
-                   choices=[pwutils.Message.LABEL_SAMP_MODE_1,
-                            pwutils.Message.LABEL_SAMP_MODE_2])
+                      label=pwutils.Message.LABEL_SAMP_MODE,
+                      help=pwutils.Message.TEXT_SAMP_MODE,
+                      choices=[pwutils.Message.LABEL_SAMP_MODE_1,
+                               pwutils.Message.LABEL_SAMP_MODE_2])
         form.addParam('samplingRate', params.FloatParam, default=1,
-                   label=pwutils.Message.LABEL_SAMP_RATE,
-                   help=pwutils.Message.TEXT_SAMP_RATE,
-                   condition='samplingRateMode==%d' % emcts.SAMPLING_FROM_IMAGE)
+                      label=pwutils.Message.LABEL_SAMP_RATE,
+                      help=pwutils.Message.TEXT_SAMP_RATE,
+                      condition='samplingRateMode==%d' % emcts.SAMPLING_FROM_IMAGE)
         form.addParam('magnification', params.IntParam, default=50000,
-                   label=pwutils.Message.LABEL_MAGNI_RATE,
-                   help=pwutils.Message.TEXT_MAGNI_RATE,
-                   condition='samplingRateMode==%d' % emcts.SAMPLING_FROM_SCANNER)
+                      label=pwutils.Message.LABEL_MAGNI_RATE,
+                      help=pwutils.Message.TEXT_MAGNI_RATE,
+                      condition='samplingRateMode==%d' % emcts.SAMPLING_FROM_SCANNER)
         form.addParam('scannedPixelSize', params.FloatParam, default=7.0,
-                   label=pwutils.Message.LABEL_SCANNED,
-                   condition='samplingRateMode==%d' % emcts.SAMPLING_FROM_SCANNER)
-    
-    
-    #--------------------------- INSERT steps functions -------------------------------------------- 
+                      label=pwutils.Message.LABEL_SCANNED,
+                      condition='samplingRateMode==%d' % emcts.SAMPLING_FROM_SCANNER)
+
+    # --------------------------- INSERT steps functions ----------------------
     
     def _insertAllSteps(self):
         self._insertFunctionStep('createTiltedPairsStep')
         
-    #--------------------------- STEPS functions ---------------------------------------------------
+    # --------------------------- STEPS functions -----------------------------
     
     def importMicrographs(self, pattern, suffix, voltage, sphericalAberration, amplitudeContrast):
         """ Copy images matching the filename pattern
@@ -106,7 +105,7 @@ class ProtImportMicrographsTiltPairs(ProtImportFiles):
         """
         filePaths = glob(pwutils.expandPattern(pattern))
         
-        #imgSet = SetOfMicrographs(filename=self.micsPairsSqlite, prefix=suffix)
+        # imgSet = SetOfMicrographs(filename=self.micsPairsSqlite, prefix=suffix)
         imgSet = self._createSetOfMicrographs(suffix=suffix)
         acquisition = imgSet.getAcquisition()
         # Setting Acquisition properties
@@ -126,7 +125,7 @@ class ProtImportMicrographsTiltPairs(ProtImportFiles):
         filePaths.sort()
         
         for i, fn in enumerate(filePaths):
-#             ext = os.path.splitext(basename(f))[1]
+            # ext = os.path.splitext(basename(f))[1]
             dst = self._getExtraPath(basename(fn))
             if self.copyToProj:
                 pwutils.copyFile(fn, dst)
@@ -153,14 +152,13 @@ class ProtImportMicrographsTiltPairs(ProtImportFiles):
         print("\n")
         
         imgSet.write()
-        
-        
+
         return imgSet
     
     def createTiltedPairsStep(self):
         args = {} 
         self.micsPairsSqlite = self._getPath('micrographs_pairs.sqlite')
-        pwutils.cleanPath(self.micsPairsSqlite) # Delete if exists
+        pwutils.cleanPath(self.micsPairsSqlite)  # Delete if exists
         
         micsTiltPair = emobj.MicrographsTiltPair(filename=self.micsPairsSqlite)
         micsU = self.importMicrographs(self.patternUntilted.get(), 'Untilted',
@@ -181,7 +179,7 @@ class ProtImportMicrographsTiltPairs(ProtImportFiles):
         args[self.OUTPUT_NAME] = micsTiltPair
         self._defineOutputs(**args)
     
-    #--------------------------- INFO functions ----------------------------------------------------
+    # --------------------------- INFO functions ------------------------------
     def _validate(self):
         errors = []
         if not self.patternUntilted.get() or not self.patternTilted.get():
@@ -201,7 +199,8 @@ class ProtImportMicrographsTiltPairs(ProtImportFiles):
         if not output:
             summary.append("Output not ready yet.") 
             if self.copyToProj:
-                summary.append("*Warning*: Import step could take a long time due to the images are copying in the project.")
+                summary.append("*Warning*: Import step could take a long "
+                               "time due to the images are copying in the project.")
         else:
             summary.append("Import of %d " % output.getTilted().getSize() + self._className + "s tilted from %s" % self.patternTilted.get())
             summary.append("Import of %d " % output.getUntilted().getSize() + self._className + "s untilted from %s" % self.patternUntilted.get())
@@ -218,7 +217,7 @@ class ProtImportMicrographsTiltPairs(ProtImportFiles):
             
         return methods
     
-    #--------------------------- UTILS functions ---------------------------------------------------
+    # --------------------------- UTILS functions -----------------------------
     def getFiles(self):
         return getattr(self, self._getOutput().getFiles())
     

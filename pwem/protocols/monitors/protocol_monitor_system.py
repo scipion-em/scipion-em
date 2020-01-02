@@ -172,7 +172,7 @@ class ProtMonitorSystem(ProtMonitor):
                                                 1048576.)
                     summary.append(msg)
         except NVMLError as err:
-                summary.append(str(err))
+            summary.append(str(err))
 
         return summary
 
@@ -398,7 +398,7 @@ class MonitorSystem(Monitor):
             except Exception as e:
                 print("ERROR readind data (plotter). I continue")
                 print("SQLCOMMAND", "select %s from %s" %
-                       (name, self._tableName))
+                      (name, self._tableName))
             data = cur.fetchall()
             if len(data) == 0:
                 return [0]

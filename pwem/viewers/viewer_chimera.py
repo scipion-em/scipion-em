@@ -38,9 +38,9 @@ import pyworkflow as pw
 import pyworkflow.utils as pwutils
 import pyworkflow.viewer as pwviewer
 
-import pyworkflow.gui.matplotlib_image as pwgui 
+import pyworkflow.gui.matplotlib_image as pwgui
 
-import pwem.constants as emcts 
+import pwem.constants as emcts
 import pwem.metadata as md
 import pwem.convert as emconv
 import pwem.objects as emobj
@@ -48,7 +48,6 @@ import pwem.objects as emobj
 from .showj import (CHIMERA_PORT, MODE, MODE_MD, INVERTY)
 
 import xmippLib
-
 
 chimeraPdbTemplateFileName = "chimeraOut%04d.pdb"
 chimeraMapTemplateFileName = "chimeraOut%04d.mrc"
@@ -161,7 +160,6 @@ def printCmd(cmd):
     # print cmd
 
 
-
 class ChimeraClient:
 
     def openVolumeOnServer(self, volume, sendEnd=True):
@@ -197,8 +195,8 @@ class ChimeraClient:
 
         serverfile = pw.join('em', 'viewers', 'chimera_server.py')
         command = pwviewer.CommandView("chimera --script '%s %s %s' &" %
-                              (serverfile, self.port, serverName),
-                              env=Chimera.getEnviron(),).show()
+                                       (serverfile, self.port, serverName),
+                                       env=Chimera.getEnviron(), ).show()
         self.authkey = 'test'
         self.client = Client((self.address, self.port), authkey=self.authkey)
         self.initVolumeData()
@@ -211,10 +209,10 @@ class ChimeraClient:
         self.client.send(data)
 
     def initListenThread(self):
-            self.listen_thread = threading.Thread(name="ChimeraCli.listenTh",
-                                                  target=self.listen)
-            # self.listen_thread.daemon = True
-            self.listen_thread.start()
+        self.listen_thread = threading.Thread(name="ChimeraCli.listenTh",
+                                              target=self.listen)
+        # self.listen_thread.daemon = True
+        self.listen_thread.start()
 
     def listen(self):
 
@@ -264,7 +262,7 @@ class ChimeraAngDistClient(ChimeraClient):
             if spheresMaxRadius else 0.02 * self.spheresDistance
         self.loadAngularDist(True)
 
-    def loadAngularDist(self,  sendEnd=True):
+    def loadAngularDist(self, sendEnd=True):
         if self.angularDistFile:
             self.readAngularDistFile()
             self.send('command_list', self.angulardist)
@@ -291,9 +289,9 @@ class ChimeraAngDistClient(ChimeraClient):
         interval = maxweight - minweight
 
         self.angulardist = []
-        x2 = self.xdim/2
-        y2 = self.ydim/2
-        z2 = self.zdim/2
+        x2 = self.xdim / 2
+        y2 = self.ydim / 2
+        z2 = self.zdim / 2
         # cofr does not seem to work!
         # self.angulardist.append('cofr %d,%d,%d'%(x2,y2,z2))
         for id in mdAngDist:
@@ -302,7 +300,7 @@ class ChimeraAngDistClient(ChimeraClient):
             psi = mdAngDist.getValue(anglePsiLabel, id) if anglePsiLabel else 0
             weight = mdAngDist.getValue(md.MDL_WEIGHT, id)
             # Avoid zero division
-            weight = 0 if interval == 0 else (weight - minweight)/interval
+            weight = 0 if interval == 0 else (weight - minweight) / interval
             weight = weight + 0.5  # add 0.5 to avoid cero weight
             x, y, z = xmippLib.Euler_direction(rot, tilt, psi)
             radius = weight * self.spheresMaxRadius
@@ -321,31 +319,31 @@ class ChimeraVirusClient(ChimeraClient):
     def __init__(self, volfile, **kwargs):
         self.h = kwargs.get('h', 5)
         if self.h is None:
-                self.h = 5
+            self.h = 5
         self.k = kwargs.get('k', 0)
         if self.k is None:
-                self.k = 0
+            self.k = 0
         self.sym = kwargs.get('sym', 'i222r')
         if self.sym is None:
-                self.sym = 'i222r'
+            self.sym = 'i222r'
         self.radius = kwargs.get('radius', 100.)
         if self.radius is None:
-                self.radius = 100.
+            self.radius = 100.
         self.spheRadius = kwargs.get('spheRadius', 1.5)
         if self.spheRadius is None:
-                self.spheRadius = 1.5
+            self.spheRadius = 1.5
         self.color = kwargs.get('color', 'red')
         if self.color is None:
-                self.color = 'red'
+            self.color = 'red'
         self.linewidth = kwargs.get('linewidth', 1)
         if self.linewidth is None:
-                self.linewidth = 1
+            self.linewidth = 1
         self.sphere = kwargs.get('sphere', 0)
         if self.sphere is None:
-                self.sphere = 0
+            self.sphere = 0
         self.shellRadius = kwargs.get('shellRadius', self.spheRadius)
         if self.shellRadius is None:
-                self.shellRadius = self.spheRadius
+            self.shellRadius = self.spheRadius
         kwargs['ChimeraServer'] = 'ChimeraVirusServer'
         ChimeraClient.__init__(self, volfile, **kwargs)
 
@@ -390,8 +388,8 @@ class ChimeraVirusClient(ChimeraClient):
     def listToBild(self, points, radius, file, color='0 0 1'):
         f = open(file, 'w')
         for point in points:
-            print("\n.color", color, "\n.sphere", point[0]+128.,
-                   point[1]+128., point[2]+128., radius, file=f)
+            print("\n.color", color, "\n.sphere", point[0] + 128.,
+                  point[1] + 128., point[2] + 128., radius, file=f)
 
     def answer(self, msg):
         ChimeraClient.answer(self, msg)
@@ -405,7 +403,7 @@ class ChimeraVirusClient(ChimeraClient):
             self.rotate(rot, tilt, psi)
         elif msg == 'id':
             id = self.client.recv()
-            self.listToBild([self.va[id-1]], 2.5, 'id.bild')
+            self.listToBild([self.va[id - 1]], 2.5, 'id.bild')
         else:
             pass
 
@@ -458,8 +456,8 @@ class ChimeraProjectionClient(ChimeraAngDistClient):
         self.fourierprojector.projectVolume(self.projection, 0, 0, 0)
         self.showjPort = self.kwargs.get('showjPort', None)
         self.iw = pwgui.ImageWindow(filename=os.path.basename(volfile),
-                              image=self.projection,
-                              dim=self.size, label="Projection")
+                                    image=self.projection,
+                                    dim=self.size, label="Projection")
         self.iw.updateData(flipud(self.projection.getData()))
         if self.showjPort:
             self.showjThread = threading.Thread(name="ChimeraProjClient",
@@ -536,13 +534,15 @@ class ChimeraProjectionClient(ChimeraAngDistClient):
 
 class ChimeraView(pwviewer.CommandView):
     """ View for calling an external command. """
+
     def __init__(self, inputFile, **kwargs):
         pwviewer.CommandView.__init__(self, 'chimera "%s" &' % inputFile,
-                             env=Chimera.getEnviron(), **kwargs)
+                                      env=Chimera.getEnviron(), **kwargs)
 
 
 class ChimeraClientView(pwviewer.CommandView):
     """ View for calling an external command. """
+
     def __init__(self, inputFile, **kwargs):
         self._inputFile = inputFile
         self._kwargs = kwargs
@@ -596,7 +596,7 @@ class ChimeraViewer(pwviewer.Viewer):
                 # check if tmp dir exists, if not use /tmp
                 # tmp does not exists if you try to visualize something  (eye)
                 # before irunning the protocol
-                tmpPath=self.protocol._getTmpPath()
+                tmpPath = self.protocol._getTmpPath()
                 if not os.path.exists(tmpPath):
                     tmpPath = "/tmp"
                 fnCmd = os.path.join(tmpPath, "chimera.cmd")
@@ -616,14 +616,14 @@ class ChimeraViewer(pwviewer.Viewer):
                             % (volID, x, y, z))
                 else:
                     dim = 150  # eventually we will create a PDB library that
-                               # computes PDB dim
+                    # computes PDB dim
                     sampling = 1.
                 # Construct the coordinate file
                 bildFileName = os.path.abspath(
                     os.path.join(tmpPath, "axis.bild"))
                 Chimera.createCoordinateAxisFile(dim,
-                                         bildFileName=bildFileName,
-                                         sampling=sampling)
+                                                 bildFileName=bildFileName,
+                                                 sampling=sampling)
                 f.write("open %s\n" % bildFileName)
                 f.write("open %s\n" % os.path.abspath(fn))
                 f.close()

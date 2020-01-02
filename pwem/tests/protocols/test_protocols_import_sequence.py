@@ -45,12 +45,12 @@ class TestImportSequence(TestImportBase):
     DESCRIPTION = 'User description'
     NUCLEOTIDESEQ1 = 'AATGCGGTTGGGBDSW********GGCACACG'
     AMINOACIDSSEQ1 = 'LARKJLAKPABXZJUO********VAVAVALK'
-    CHAIN1 = '{"model": 0, "chain": "B", "residues": 148}' # Protein
-    CHAIN2 = '{"model": 0, "chain": "A", "residues": 12}' # RNA
-    CHAIN3 = '{"model": 0, "chain": "I", "residues": 146}' # DNA
-    pdbID1 = "3lqd" # Protein
-    pdbID2 = "205d" # RNA
-    pdbID3 = "1aoi" # DNA and protein
+    CHAIN1 = '{"model": 0, "chain": "B", "residues": 148}'  # Protein
+    CHAIN2 = '{"model": 0, "chain": "A", "residues": 12}'  # RNA
+    CHAIN3 = '{"model": 0, "chain": "I", "residues": 146}'  # DNA
+    pdbID1 = "3lqd"  # Protein
+    pdbID2 = "205d"  # RNA
+    pdbID3 = "1aoi"  # DNA and protein
     GENEBANKID = 'AJ520101.1'
     UNIPROTID = 'P12345'
 
@@ -64,10 +64,10 @@ class TestImportSequence(TestImportBase):
                 'inputSequence': emconv.SEQ_TYPE_NUCLEOTIDES,
                 'nucleotideIUPACalphabet': emconv.EXTENDED_DNA_ALPHABET,
                 'inputRawSequence': self.NUCLEOTIDESEQ1
-               }
+                }
         prot1 = self.newProtocol(emprot.ProtImportSequence, **args)
         prot1.setObjLabel('1_import DNA,\nseq from user\nExtended DNA '
-                           'alphabet')
+                          'alphabet')
         self.launchProtocol(prot1)
         sequence = prot1.outputSequence
         self.assertEqual("USER_SEQ", sequence.getId())
@@ -77,7 +77,7 @@ class TestImportSequence(TestImportBase):
         self.assertEqual("AATGCGGTTG", sequence.getSequence()[:10])
         self.assertEqual("GATCBDSW",
                          emconv.indexToAlphabet(sequence.getIsAminoacids(),
-                                         sequence.getAlphabet()).letters)
+                                                sequence.getAlphabet()).letters)
 
     def testImportUserNucleotideSequence2(self):
         """
@@ -89,10 +89,10 @@ class TestImportSequence(TestImportBase):
                 'inputSequence': emconv.SEQ_TYPE_NUCLEOTIDES,
                 'nucleotideIUPACalphabet': emconv.AMBIGOUS_RNA_ALPHABET,
                 'inputRawSequence': self.NUCLEOTIDESEQ1
-               }
+                }
         prot2 = self.newProtocol(emprot.ProtImportSequence, **args)
         prot2.setObjLabel('2_import RNA,\nseq from user\nAmbigous RNA '
-                           'alphabet')
+                          'alphabet')
         self.launchProtocol(prot2)
         sequence = prot2.outputSequence
         self.assertEqual("USER_SEQ", sequence.getId())
@@ -102,7 +102,7 @@ class TestImportSequence(TestImportBase):
         self.assertEqual("AAGCGGGGGB", sequence.getSequence()[:10])
         self.assertEqual("GAUCRYWSMKHBVDN",
                          emconv.indexToAlphabet(sequence.getIsAminoacids(),
-                                         sequence.getAlphabet()).letters)
+                                                sequence.getAlphabet()).letters)
 
     def testImportStructureNucleotideSequence1(self):
         """
@@ -120,7 +120,7 @@ class TestImportSequence(TestImportBase):
                 }
         prot3 = self.newProtocol(emprot.ProtImportSequence, **args)
         prot3.setObjLabel('3_import RNA seq,\n from atomic '
-                           'structure')
+                          'structure')
         self.launchProtocol(prot3)
         sequence = prot3.outputSequence
         self.assertEqual("205d_A", sequence.getId())
@@ -130,7 +130,7 @@ class TestImportSequence(TestImportBase):
         self.assertEqual("GGACUUUGGU", sequence.getSequence()[:10])
         self.assertEqual("GAUC",
                          emconv.indexToAlphabet(sequence.getIsAminoacids(),
-                                         sequence.getAlphabet()).letters)
+                                                sequence.getAlphabet()).letters)
 
     def testImportStructureNucleotideSequence2(self):
         """
@@ -149,7 +149,7 @@ class TestImportSequence(TestImportBase):
                 }
         prot4 = self.newProtocol(emprot.ProtImportSequence, **args)
         prot4.setObjLabel('4_import RNA seq,\n from atomic '
-                           'structure')
+                          'structure')
         self.launchProtocol(prot4)
         sequence = prot4.outputSequence
         self.assertEqual("UserID", sequence.getId())
@@ -159,7 +159,7 @@ class TestImportSequence(TestImportBase):
         self.assertEqual("GGACUUUGGU", sequence.getSequence()[:10])
         self.assertEqual("GAUC",
                          emconv.indexToAlphabet(sequence.getIsAminoacids(),
-                                         sequence.getAlphabet()).letters)
+                                                sequence.getAlphabet()).letters)
 
     def testImportStructureNucleotideSequence3(self):
         """
@@ -177,7 +177,7 @@ class TestImportSequence(TestImportBase):
                 }
         prot5 = self.newProtocol(emprot.ProtImportSequence, **args)
         prot5.setObjLabel('5_import DNA seq,\n from atomic '
-                           'structure')
+                          'structure')
         self.launchProtocol(prot5)
         sequence = prot5.outputSequence
         self.assertEqual("1aoi_I", sequence.getId())
@@ -187,7 +187,7 @@ class TestImportSequence(TestImportBase):
         self.assertEqual("ATCAATATCC", sequence.getSequence()[:10])
         self.assertEqual("GAUC",
                          emconv.indexToAlphabet(sequence.getIsAminoacids(),
-                                         sequence.getAlphabet()).letters)
+                                                sequence.getAlphabet()).letters)
 
     def testImportStructureNucleotideSequence4(self):
         """
@@ -206,7 +206,7 @@ class TestImportSequence(TestImportBase):
                 }
         prot6 = self.newProtocol(emprot.ProtImportSequence, **args)
         prot6.setObjLabel('6_import DNA seq,\n from atomic '
-                           'structure')
+                          'structure')
         self.launchProtocol(prot6)
         sequence = prot6.outputSequence
         self.assertEqual("UserID", sequence.getId())
@@ -216,7 +216,7 @@ class TestImportSequence(TestImportBase):
         self.assertEqual("ATCAATATCC", sequence.getSequence()[:10])
         self.assertEqual("GAUC",
                          emconv.indexToAlphabet(sequence.getIsAminoacids(),
-                                         sequence.getAlphabet()).letters)
+                                                sequence.getAlphabet()).letters)
 
     def testImportFileNucleotideSequence1(self):
         """
@@ -239,11 +239,11 @@ class TestImportSequence(TestImportBase):
                          "plasmid "
                          "partial fixC gene, fixX gene, nifA gene "
                          "and nifB gene",
-                        sequence.getDescription())
+                         sequence.getDescription())
         self.assertEqual("GGATCCGAGA", sequence.getSequence()[:10])
         self.assertEqual("GAUC",
                          emconv.indexToAlphabet(sequence.getIsAminoacids(),
-                                         sequence.getAlphabet()).letters)
+                                                sequence.getAlphabet()).letters)
 
     def testImportFileNucleotideSequence2(self):
         """
@@ -269,7 +269,7 @@ class TestImportSequence(TestImportBase):
         self.assertEqual("GGATCCGAGA", sequence.getSequence()[:10])
         self.assertEqual("GAUC",
                          emconv.indexToAlphabet(sequence.getIsAminoacids(),
-                                         sequence.getAlphabet()).letters)
+                                                sequence.getAlphabet()).letters)
 
     def testImportFileNucleotideSequence3(self):
         """
@@ -293,7 +293,7 @@ class TestImportSequence(TestImportBase):
         self.assertEqual("TGGCTAAATA", sequence.getSequence()[:10])
         self.assertEqual("GAUC",
                          emconv.indexToAlphabet(sequence.getIsAminoacids(),
-                                         sequence.getAlphabet()).letters)
+                                                sequence.getAlphabet()).letters)
 
     def testImportFileNucleotideSequence4(self):
         """
@@ -320,7 +320,7 @@ class TestImportSequence(TestImportBase):
         self.assertEqual("TGGCTAAATA", sequence.getSequence()[:10])
         self.assertEqual("GAUC",
                          emconv.indexToAlphabet(sequence.getIsAminoacids(),
-                                         sequence.getAlphabet()).letters)
+                                                sequence.getAlphabet()).letters)
 
     def testImportGeneBankNucleotideSequence1(self):
         """
@@ -346,7 +346,7 @@ class TestImportSequence(TestImportBase):
         self.assertEqual("GGATCCGAGA", sequence.getSequence()[:10])
         self.assertEqual("GAUC",
                          emconv.indexToAlphabet(sequence.getIsAminoacids(),
-                                         sequence.getAlphabet()).letters)
+                                                sequence.getAlphabet()).letters)
 
     def testImportGeneBankNucleotideSequence2(self):
         """
@@ -372,7 +372,7 @@ class TestImportSequence(TestImportBase):
         self.assertEqual("GGATCCGAGA", sequence.getSequence()[:10])
         self.assertEqual("GAUC",
                          emconv.indexToAlphabet(sequence.getIsAminoacids(),
-                                         sequence.getAlphabet()).letters)
+                                                sequence.getAlphabet()).letters)
 
     def testImportUserAminoacidSequence1(self):
         """
@@ -395,8 +395,8 @@ class TestImportSequence(TestImportBase):
         self.assertEqual("LARKJLAKPA", sequence.getSequence()[:10])
         self.assertEqual("ACDEFGHIKLMNPQRSTVWYBXZJUO",
                          emconv.indexToAlphabet(sequence.getIsAminoacids(),
-                                         sequence.getAlphabet()).letters
-                        )
+                                                sequence.getAlphabet()).letters
+                         )
 
     def testImportUserAminoacidSequence2(self):
         """
@@ -419,8 +419,8 @@ class TestImportSequence(TestImportBase):
         self.assertEqual("LARKLAKPAV", sequence.getSequence()[:10])
         self.assertEqual("ACDEFGHIKLMNPQRSTVWY",
                          emconv.indexToAlphabet(sequence.getIsAminoacids(),
-                                         sequence.getAlphabet()).letters
-                        )
+                                                sequence.getAlphabet()).letters
+                         )
 
     def testImportStructureAminoacidSequence1(self):
         """
@@ -447,7 +447,7 @@ class TestImportSequence(TestImportBase):
         self.assertEqual("VHLSGEEKSA", sequence.getSequence()[:10])
         self.assertEqual("ACDEFGHIKLMNPQRSTVWY",
                          emconv.indexToAlphabet(sequence.getIsAminoacids(),
-                                         sequence.getAlphabet()).letters)
+                                                sequence.getAlphabet()).letters)
 
     def testImportStructureAminoacidSequence2(self):
         """
@@ -474,7 +474,7 @@ class TestImportSequence(TestImportBase):
         self.assertEqual("VHLSGEEKSA", sequence.getSequence()[:10])
         self.assertEqual("ACDEFGHIKLMNPQRSTVWY",
                          emconv.indexToAlphabet(sequence.getIsAminoacids(),
-                                         sequence.getAlphabet()).letters)
+                                                sequence.getAlphabet()).letters)
 
     def testImportFileAminoacidSequence1(self):
         """
@@ -495,11 +495,11 @@ class TestImportSequence(TestImportBase):
         self.assertEqual('USER_SEQ', sequence.getSeqName())
         self.assertEqual('YP_003024028.1 cytochrome c oxidase '
                          'subunit I (mitochondrion) [Homo sapiens]',
-                        sequence.getDescription())
+                         sequence.getDescription())
         self.assertEqual("MFADRWLFST", sequence.getSequence()[:10])
         self.assertEqual("ACDEFGHIKLMNPQRSTVWY",
                          emconv.indexToAlphabet(sequence.getIsAminoacids(),
-                                         sequence.getAlphabet()).letters)
+                                                sequence.getAlphabet()).letters)
 
     def testImportFileAminoacidSequence2(self):
         """
@@ -524,7 +524,7 @@ class TestImportSequence(TestImportBase):
         self.assertEqual("MFADRWLFST", sequence.getSequence()[:10])
         self.assertEqual("ACDEFGHIKLMNPQRSTVWY",
                          emconv.indexToAlphabet(sequence.getIsAminoacids(),
-                                         sequence.getAlphabet()).letters)
+                                                sequence.getAlphabet()).letters)
 
     def testImportUniprotAminoacidSequence1(self):
         """
@@ -547,7 +547,7 @@ class TestImportSequence(TestImportBase):
         self.assertEqual("MALLHSARVL", sequence.getSequence()[:10])
         self.assertEqual("ACDEFGHIKLMNPQRSTVWY",
                          emconv.indexToAlphabet(sequence.getIsAminoacids(),
-                                         sequence.getAlphabet()).letters)
+                                                sequence.getAlphabet()).letters)
 
     def testImportUniprotAminoacidSequence2(self):
         """
@@ -559,10 +559,10 @@ class TestImportSequence(TestImportBase):
                 'inputProteinSequence':
                     emprot.ProtImportSequence.IMPORT_FROM_UNIPROT,
                 'uniProtSequence': self.UNIPROTID
-                    }
+                }
         prot20 = self.newProtocol(emprot.ProtImportSequence, **args)
         prot20.setObjLabel('20_import aminoacids,\nseq from '
-                            'UniProt')
+                           'UniProt')
         self.launchProtocol(prot20)
         sequence = prot20.outputSequence
         self.assertEqual("UserID", sequence.getId())
@@ -572,7 +572,4 @@ class TestImportSequence(TestImportBase):
         self.assertEqual("MALLHSARVL", sequence.getSequence()[:10])
         self.assertEqual("ACDEFGHIKLMNPQRSTVWY",
                          emconv.indexToAlphabet(sequence.getIsAminoacids(),
-                                         sequence.getAlphabet()).letters)
-
-
-
+                                                sequence.getAlphabet()).letters)

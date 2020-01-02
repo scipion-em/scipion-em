@@ -239,7 +239,6 @@ class TestAtomicStructHandler(unittest.TestCase):
         # retrieve "Structure of the human TRPC3
         # both 3Dmap and PDB
 
-
         doTest = False
 
         if not doTest:
@@ -247,7 +246,6 @@ class TestAtomicStructHandler(unittest.TestCase):
             print("This test is to be tested manually since it opens chimera afterwards")
             print("For testing this, edit this file and set doTest = True")
             return
-
 
         PDBID = '6CUD'
         EMDBID = '7620'
@@ -291,8 +289,8 @@ class TestAtomicStructHandler(unittest.TestCase):
             # create a Scipion transformation matrix
             from numpy import deg2rad
             rotation_matrix = emconv.euler_matrix(deg2rad(angles[0]),
-                                           deg2rad(angles[1]),
-                                           deg2rad(angles[2]), 'szyz')
+                                                  deg2rad(angles[1]),
+                                                  deg2rad(angles[2]), 'szyz')
             translation = emconv.translation_matrix(shift)
             M = emconv.concatenate_matrices(rotation_matrix, translation)
 
@@ -465,7 +463,7 @@ class TestAtomicStructHandler(unittest.TestCase):
         #
         aSH1.addStruct(fileName2, outPDBfileName=outFile, useModel=True)
         #
-        #aSH1.addStruct(fileName2, outPDBfileName=outFile, useModel=False)
+        # aSH1.addStruct(fileName2, outPDBfileName=outFile, useModel=False)
         chains = [chain.id for chain in aSH1.getStructure().get_chains()]
         # compare unordered lists of chains
         goal = ['A', 'A', 'B', 'C']
@@ -500,8 +498,8 @@ class TestAtomicStructHandler(unittest.TestCase):
         atomsNumT = len([atom.id for atom in aSH2.getStructure().get_atoms()])
         self.assertEqual(122, atomsNumT)
 
-        #os.unlink(fileName1)
-        #os.unlink(outFile)
+        # os.unlink(fileName1)
+        # os.unlink(outFile)
 
     @classmethod
     def tearDownClass(cls):

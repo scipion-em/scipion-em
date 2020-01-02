@@ -108,7 +108,7 @@ class EmProtocolViewer(pwviewer.ProtocolViewer):
                 """
                 for projection in projectionList:
                     if (abs(projection[0] - angleRot) <= 0.5 and
-                                abs(projection[1] - angleTilt) <= 0.5):
+                            abs(projection[1] - angleTilt) <= 0.5):
                         return projection
                 return None
 

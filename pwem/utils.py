@@ -33,7 +33,7 @@ def loadSetFromDb(dbName, dbPrefix=''):
     from pwem import Domain
     from pyworkflow.mapper.sqlite import SqliteFlatDb
     db = SqliteFlatDb(dbName=dbName, tablePrefix=dbPrefix)
-    setClassName = db.getProperty('self') # get the set class name
+    setClassName = db.getProperty('self')  # get the set class name
     setObj = Domain.getObjects()[setClassName](filename=dbName, prefix=dbPrefix)
     return setObj
 
@@ -48,7 +48,7 @@ def runProgram(program, params):
         relion = Domain.importFromPlugin('relion', 'Plugin')
         env = relion.getEnviron()
     elif (program.startswith('e2') or
-              program.startswith('sx')):
+          program.startswith('sx')):
         eman2 = Domain.importFromPlugin('eman2', 'Plugin')
         env = eman2.getEnviron()
     elif program.startswith('b'):
