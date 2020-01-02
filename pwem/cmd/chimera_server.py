@@ -1,9 +1,12 @@
-#!/usr/bin/env xmipp_python
+#!/usr/bin/env python
 """
 This scripts seems to be execute with the Python and libraries from Chimera.
+python2.7 code so far.
 """
 
 from __future__ import print_function
+
+import os
 import sys
 from multiprocessing.connection import Listener, Client
 from VolumeData import Array_Grid_Data
@@ -11,20 +14,31 @@ from VolumeViewer import volume_from_grid_data
 from numpy import array, identity, dot
 from numpy.linalg import inv
 import chimera
+from chimera import runCommand
 from time import sleep
 from threading import Thread
-
-from pwem import Domain
 
 
 # from time import gmtime, strftime
 # from datetime import datetime
 # import socket
 
+class Logger:
+    # Toggle logging for debugging purposes
+    doLog = True
+    logFile = os.environ.get("CHIMERA_SERVER_LOG_FILE",
+                             os.path.join(os.getcwd(),'chimera-server.log'))
+
+    @classmethod
+    def write(cls, logline):
+        if cls.doLog:
+            fh = open(cls.logFile, "a")
+            fh.write(logline + "\n")
+            fh.close()
+
 class ChimeraServer:
-    
+
     def __init__(self, centerVolume=True):
-        # print 'init'
         address = ''
         port = int(sys.argv[1])
 
@@ -47,8 +61,6 @@ class ChimeraServer:
 
     def openVolume(self):
         try:
-            runCommand = Domain.importFromPlugin('chimera', 'Plugin',
-                                                 doRaise=True)
             while True:
                 if self.vol_conn.poll():
                     
@@ -78,9 +90,7 @@ class ChimeraServer:
             # should close app??
 
     def answer(self, msg):
-        # print msg
-        runCommand = Domain.importFromPlugin('chimera', 'Plugin',
-                                             doRaise=True)
+
         if msg == 'open_volume':
             data = self.vol_conn.recv()  # objects are serialized by default
             # print data
@@ -190,8 +200,6 @@ class ChimeraVirusServer(ChimeraServer):
     def answer(self, msg):
         """execute a single command and return values"""
         ChimeraServer.answer(msg)
-        runCommand = Domain.importFromPlugin('chimera', 'Plugin',
-                                             doRaise=True)
         if msg == 'hk_icosahedron_lattice':
             from IcosahedralCage import cages
             h, k, radius, shellRadius, spheRadius, sym, sphere, color = \
