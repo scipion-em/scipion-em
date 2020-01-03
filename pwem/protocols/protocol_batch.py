@@ -84,24 +84,24 @@ class ProtUserSubSet(BatchProtocol):
             self._defineOutputs(outputVolume=output)
 
         elif isinstance(inputObj, emobj.SetOfImages):
-            output = self._createSubSetFromImages(inputObj)
+            self._createSubSetFromImages(inputObj)
 
         elif isinstance(inputObj, emobj.SetOfClasses):
-            output = self._createSubSetFromClasses(inputObj)
+            self._createSubSetFromClasses(inputObj)
 
         elif isinstance(inputObj, emobj.SetOfCTF):
             outputClassName = self.outputClassName.get()
             if outputClassName.startswith('SetOfMicrographs'):
-                output = self._createMicsSubSetFromCTF(inputObj)
+                self._createMicsSubSetFromCTF(inputObj)
 
-        elif isinstance(inputObj, emobj.SetOfPDBs):
-            output = self._createSubSetFromPDBs(inputObj)
+        elif isinstance(inputObj, emobj.SetOfAtomStructs):
+            self._createSubSetFromAtomStructs(inputObj)
 
         elif isinstance(inputObj, MicrographsTiltPair):
-            output = self._createSubSetFromMicrographsTiltPair(inputObj)
+            self._createSubSetFromMicrographsTiltPair(inputObj)
 
         elif isinstance(inputObj, ParticlesTiltPair):
-            output = self._createSubSetFromParticlesTiltPair(inputObj)
+            self._createSubSetFromParticlesTiltPair(inputObj)
 
         elif isinstance(inputObj, EMProtocol):
             if self.other.hasValue():
@@ -125,7 +125,7 @@ class ProtUserSubSet(BatchProtocol):
                     self._createSimpleSubset(volSet)
 
         else:
-            output = self._createSimpleSubset(inputObj)
+            self._createSimpleSubset(inputObj)
 
     def _createSimpleSubset(self, inputObj):
         className = inputObj.getClassName()
@@ -153,7 +153,6 @@ class ProtUserSubSet(BatchProtocol):
                                 copyInfoCallback=None):
         className = inputImages.getClassName()
         setClass = inputImages.getClass()
-        inputClass = False
 
         createFunc = getattr(self, '_create' + className)
         modifiedSet = setClass(filename=self._dbName, prefix=self._dbPrefix)
@@ -238,7 +237,10 @@ class ProtUserSubSet(BatchProtocol):
 
         # Register outputs
         outputCtfs.setMicrographs(outputMics)
-        self._defineOutputs(outputMicrographs=outputMics, outputCTF=outputCtfs)
+        # NOTE: I've splited the define output in 2 steps.
+        # It seems with python3 outputCTF was processed first and needs mics to be saved first.
+        self._defineOutputs(outputMicrographs=outputMics)
+        self._defineOutputs(outputCTF=outputCtfs)
         self._defineTransformRelation(setOfMics, outputMics)
         self._defineCtfRelation(outputMics, outputCtfs)
         msg = 'From input %s of size %s created output ' % (inputCTFs.getClassName(),
@@ -286,7 +288,8 @@ class ProtUserSubSet(BatchProtocol):
         self.summaryVar.set(msg)
         return output
 
-    def _copyInfoAndSetAlignment(self, inputClasses, output):
+    @staticmethod
+    def _copyInfoAndSetAlignment(inputClasses, output):
         """ This method is used when creating subset of images from classes.
         We need to copy the information from the original classes images
         and also set the proper alignment contained in the classes.
@@ -365,6 +368,7 @@ class ProtUserSubSet(BatchProtocol):
         outputU.copyInfo(inputU)
         outputT.copyInfo(inputT)
 
+        # noinspection DuplicatedCode
         for micPair, u, t in izip(modifiedSet, inputU, inputT):
             if micPair.isEnabled():
                 output.append(micPair)
@@ -378,17 +382,17 @@ class ProtUserSubSet(BatchProtocol):
         self._defineTransformRelation(micrographsTiltPair, output)
         return output
 
-    def _createSubSetFromPDBs(self, setOfPDBs):
-        """ Create a subset of SetOfPDBs. """
-        output = emobj.SetOfPDBs(filename=self._getPath('pdbs.sqlite'))
-        modifiedSet = emobj.SetOfPDBs(filename=self._dbName, prefix=self._dbPrefix)
+    def _createSubSetFromAtomStructs(self, setOfPDBs):
+        """ Create a subset of SetOfAtomStruct. """
+        output = emobj.SetOfAtomStructs(filename=self._getPath('atomstructs.sqlite'))
+        modifiedSet = emobj.SetOfAtomStructs(filename=self._dbName, prefix=self._dbPrefix)
 
         for pdb in modifiedSet:
             if pdb.isEnabled():
                 output.append(pdb)
 
         # Register outputs
-        outputDict = {'outputPDBs': output}
+        outputDict = {'outputAtomStructs': output}
         self._defineOutputs(**outputDict)
         self._defineTransformRelation(setOfPDBs, output)
         return output
@@ -407,6 +411,7 @@ class ProtUserSubSet(BatchProtocol):
         modifiedSet = ParticlesTiltPair(filename=self._dbName,
                                         prefix=self._dbPrefix)
 
+        # noinspection DuplicatedCode
         for pair, u, t in izip(modifiedSet, inputU, inputT):
             if pair.isEnabled():
                 output.append(pair)
@@ -423,6 +428,7 @@ class ProtUserSubSet(BatchProtocol):
         self._defineTransformRelation(particlesTiltPair, output)
         return output
 
+    # noinspection PyAttributeOutsideInit
     def createSetObject(self):
         _dbName, self._dbPrefix = self.sqliteFile.get().split(',')
         self._dbName = self._getPath('subset.sqlite')
@@ -504,7 +510,7 @@ class ProtCreateMask(BatchProtocol):
         self._defineSourceRelation(self.inputObj, self.outputMask)
 
     def _summary(self):
-        summary = []
+        summary = list()
         summary.append('From input %s created mask %s'
                        % (self.getObjectTag("inputObj"),
                           self.getObjectTag("outputMask")))
@@ -558,7 +564,7 @@ class ProtCreateFSC(BatchProtocol):
         self._defineOutputs(outputFSCs=fscSet)
 
     def _summary(self):
-        summary = []
+        summary = list()
         summary.append('From input %s created FSC %s'
                        % (self.getObjectTag("inputObj"),
                           self.getObjectTag("outputFSCs")))

@@ -328,7 +328,7 @@ class ProtocolTCPRequestHandler(socketserver.BaseRequestHandler):
 
     def handle(self):  # FIXME: RUNNING FOREVER
         protocol = self.server.protocol
-        msg = self.request.recv(1024)
+        msg = str(self.request.recv(1024),"utf-8")
         tokens = shlex.split(msg)
         if msg.startswith('run function'):
             functionName = tokens[2]
