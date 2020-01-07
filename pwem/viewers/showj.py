@@ -335,7 +335,7 @@ class ProtocolTCPRequestHandler(socketserver.BaseRequestHandler):
             # try:
             functionPointer = getattr(protocol, functionName)
             functionPointer(*tokens[3:])
-            self.request.sendall('done\n')
+            self.request.sendall(b'done\n')
             self.server.end = True
             # except:
             # print 'protocol %s must implement %s'%(protocol.getName(), functionName)
