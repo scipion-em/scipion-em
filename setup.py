@@ -70,7 +70,7 @@ setup(
         'Programming Language :: Python :: 3.7',
         'Topic :: Scientific/Engineering'
     ],
-    keywords='scipion cryoem imageprocessing scipion-2.0',  # Optional
+    keywords='scipion cryoem imageprocessing scipion-3.0',  # Optional
     packages=find_packages(),
     install_requires=[requirements],
     entry_points={
@@ -79,7 +79,9 @@ setup(
             '%s = pwem.cmd.chimera_client:main' % CHIMERA_ENTRY_POINT,
             '%s = pwem.cmd.chimera_virus:main' % CHIMERAV_ENTRY_POINT,
             '%s = pwem.cmd.convert:main' % CONVERT_ENTRY_POINT,
-        ]}
+        ],
+        'pyworkflow.plugin': 'pwem = pwem'
+    }
     # package_data={  # Optional
     # #    '': [''],
     # }
