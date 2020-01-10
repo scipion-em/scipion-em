@@ -83,5 +83,4 @@ class Plugin(pyworkflow.plugin.Plugin):
         # requirements bison, flex, gcc
 
 
-Domain.registerPlugin(__name__)
 
