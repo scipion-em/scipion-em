@@ -90,8 +90,7 @@ class TestMixedRelionTutorial(TestWorkflow):
             'cistem.protocols',
             doRaise=True)
         protCTF = self.newProtocol(grigorieffLabProtocols.CistemProtCTFFind,
-                                   lowRes=0.04, highRes=0.45,
-                                   minDefocus=1.2, maxDefocus=3,
+                                   minDefocus=12000, maxDefocus=30000,
                                    runMode=1, numberOfMpi=1, numberOfThreads=16)
         protCTF.inputMicrographs.set(protPreprocess.outputMicrographs)
         protCTF.setObjLabel('CTF ctffind')
@@ -126,8 +125,7 @@ class TestMixedRelionTutorial(TestWorkflow):
         print("Performing Xmipp CTF...")
         protCTF2 = self.newProtocol(xmippProtocols.XmippProtCTFMicrographs,
                                     doInitialCTF=True,
-                                    lowRes=0.04,
-                                    highRes=0.45, minDefocus=1.2, maxDefocus=3,
+                                    minDefocus=12000, maxDefocus=30000,
                                     runMode=1, numberOfMpi=1, numberOfThreads=16)
         protCTF2.ctfRelations.set(protCTF.outputCTF)
         protCTF2.inputMicrographs.set(protPreprocess.outputMicrographs)
@@ -241,8 +239,7 @@ class TestMixedFrealignClassify(TestWorkflow):
             'cistem.protocols',
             doRaise=True)
         protCTF = self.newProtocol(grigorieffLabProtocols.CistemProtCTFFind,
-                                   lowRes=0.04, highRes=0.45,
-                                   minDefocus=1.2, maxDefocus=3,
+                                   minDefocus=12000, maxDefocus=30000,
                                    runMode=1, numberOfMpi=1, numberOfThreads=16)
         protCTF.inputMicrographs.set(protPreprocess.outputMicrographs)
         protCTF.setObjLabel('CTF ctffind')
@@ -261,24 +258,3 @@ class TestMixedFrealignClassify(TestWorkflow):
         self.launchProtocol(protExtract)
         self.assertIsNotNone(protExtract.outputParticles,
                              "There was a problem with the extract particles")
-        
-        # Classify the SetOfParticles.
-        print("Running Frealign Classification...")
-        ProtFrealignCls = Domain.importFromPlugin('grigoriefflab.protocols',
-                                                  'ProtFrealignClassify', doRaise=True)
-        protFrealign = self.newProtocol(ProtFrealignCls,
-                                        doInvert=False,
-                                        numberOfClasses=3, itRefineAngles=2,
-                                        itRefineShifts=3, angStepSize=20,
-                                        numberOfIterations=6, mode=1,
-                                        doExtraRealSpaceSym=True,
-                                        outerRadius=180, PhaseResidual=65,
-                                        lowResolRefine=300, highResolRefine=15,
-                                        resolution=15, runMode=1,
-                                        numberOfMpi=16)
-        protFrealign.inputParticles.set(protExtract.outputParticles)
-        protFrealign.input3DReference.set(protImportVol.outputVolume)
-        protFrealign.setObjLabel('Frealign')
-        self.launchProtocol(protFrealign)        
-        self.assertIsNotNone(protFrealign.outputClasses,
-                             "There was a problem with Frealign")

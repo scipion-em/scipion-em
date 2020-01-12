@@ -21,7 +21,7 @@ def main():
                                      usage=
                                      "pwem command to convert metatata "
                                      "coordinates from several em formats "
-                                     "(eman, relion, gautomatch, gempicker "
+                                     "(eman, relion, gautomatch "
                                      "and bsoft) to xmipp metadata")
     parser.add_argument('--coordinates', help='Convert coordinates',
                         action="store_true")
@@ -71,11 +71,6 @@ def main():
                 readSetOfCoordinates = pwutils.Config.getDomain().importFromPlugin('gautomatch.convert',
                                                                                    'readSetOfCoordinates',
                                                                                    doRaise=True)
-        elif fromType == 'gempicker':
-            if toType == 'xmipp':
-                readSetOfCoordinates = pwutils.Config.getDomain().importFromPlugin('igbmc.convert',
-                                                                                   'readSetOfCoordinates',
-                                                                                   doRaise=True)
         else:
             raise Exception('Unknown coordinates type: %s' % fromType)
 
@@ -88,6 +83,3 @@ def main():
     
 if __name__ == '__main__':
     main()
-    
-    
-

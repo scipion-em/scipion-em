@@ -259,9 +259,7 @@ class TestRelionExtractStreaming(TestBaseRelionStreaming):
         ProtCTFFind = Domain.importFromPlugin('cistem.protocols',
                                               'CistemProtCTFFind', doRaise=True)
         protCTF = self.newProtocol(ProtCTFFind,
-                                   useCtffind4=True,
-                                   lowRes=0.02, highRes=0.45,
-                                   minDefocus=1.2, maxDefocus=3,
+                                   minDefocus=12000, maxDefocus=30000,
                                    runMode=1,
                                    numberOfMpi=1, numberOfThreads=1)
         protCTF.inputMicrographs.set(protImport.outputMicrographs)
@@ -348,9 +346,7 @@ class TestRelionPickStreaming(TestBaseRelionStreaming):
         ProtCTFFind = Domain.importFromPlugin('cistem.protocols',
                                               'CistemProtCTFFind', doRaise=True)
         protCTF = self.newProtocol(ProtCTFFind,
-                                   useCtffind4=True,
-                                   lowRes=0.02, highRes=0.45,
-                                   minDefocus=1.2, maxDefocus=3,
+                                   minDefocus=12000, maxDefocus=30000,
                                    runMode=1,
                                    numberOfMpi=1, numberOfThreads=1)
         protCTF.inputMicrographs.set(protImport.outputMicrographs)

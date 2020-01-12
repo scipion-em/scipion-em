@@ -55,18 +55,6 @@ class TestImportCTFs(pwtests.BaseTest):
 
         self.assertIsNotNone(protCTF.outputCTF,
                              "There was a problem when importing ctfs.")
-
-    def testImportCtffind3(self):
-        protCTF = self.newProtocol(emprot.ProtImportCTF,
-                                   importFrom=emprot.ProtImportCTF.IMPORT_FROM_GRIGORIEFF,
-                                   filesPath=self.dsGrigorieff.getFile('ctffind3'),
-                                   filesPattern='BPV*/*txt')
-        protCTF.inputMicrographs.set(self.protImport.outputMicrographs)
-        protCTF.setObjLabel('import from ctffind3')
-        self.launchProtocol(protCTF)
-
-        self.assertIsNotNone(protCTF.outputCTF,
-                             "There was a problem when importing ctfs.")
         
     def testImportCtffind4(self):
         protCTF = self.newProtocol(emprot.ProtImportCTF,
