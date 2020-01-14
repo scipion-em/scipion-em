@@ -81,7 +81,7 @@ class TestMixedBPV(TestWorkflow):
         ProtCTFFind = Domain.importFromPlugin('cistem.protocols',
                                               'CistemProtCTFFind', doRaise=True)
         protCTF = self.newProtocol(ProtCTFFind, numberOfThreads=4,
-                                   minDefocus=2.2, maxDefocus=2.5)
+                                   minDefocus=22000, maxDefocus=25000)
         protCTF.inputMicrographs.set(protDownsampling.outputMicrographs)
         self.launchProtocol(protCTF)
         self.assertIsNotNone(protCTF.outputCTF,
@@ -124,28 +124,6 @@ class TestMixedBPV(TestWorkflow):
         self.assertIsNotNone(protExtract.outputParticles,
                              "There was a problem with the extract particles")
         #         self.validateFiles('protExtract', protExtract)
-
-        # Refine the SetOfParticles and reconstruct a refined volume.
-        print("Running Frealign...")
-        ProtFrealign = Domain.importFromPlugin('grigoriefflab.protocols',
-                                               'ProtFrealign')
-        protFrealign = self.newProtocol(ProtFrealign, doInvert=False,
-                                        angStepSize=15,
-                                        numberOfIterations=2, mode=1,
-                                        doExtraRealSpaceSym=True,
-                                        innerRadius=130, outerRadius=300,
-                                        symmetry='I1', PhaseResidual=30,
-                                        molMass=19400,
-                                        score=5, resolution=20,
-                                        runMode=1, numberOfThreads=4)
-        protFrealign.inputParticles.set(protExtract.outputParticles)
-        protFrealign.input3DReference.set(protImportVol.outputVolume)
-        self.launchProtocol(protFrealign)
-        self.assertIsNotNone(protFrealign.outputVolume,
-                             "There was a problem with Frealign")
-
-
-#         self.validateFiles('protFrealign', protFrealign)
 
 
 class TestMixedBPV2(TestWorkflow):
@@ -197,7 +175,7 @@ class TestMixedBPV2(TestWorkflow):
         ProtCTFFind = Domain.importFromPlugin('cistem.protocols',
                                               'CistemProtCTFFind', doRaise=True)
         protCTF = self.newProtocol(ProtCTFFind, numberOfThreads=4,
-                                   minDefocus=2.2, maxDefocus=2.5)
+                                   minDefocus=22000, maxDefocus=25000)
         protCTF.inputMicrographs.set(protImport.outputMicrographs)
         self.launchProtocol(protCTF)
         self.assertIsNotNone(protCTF.outputCTF,
