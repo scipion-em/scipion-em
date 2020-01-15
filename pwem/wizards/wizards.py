@@ -33,6 +33,7 @@ import pyworkflow.object as pwobj
 from pyworkflow.gui import dialog
 import pyworkflow.wizard as pwizard
 from pyworkflow.gui.tree import ListTreeProviderString
+from pyworkflow.utils import redStr
 
 import pwem.convert as emconv
 
@@ -56,7 +57,7 @@ class ImportAcquisitionWizard(EmWizard):
                 dialog.showError("Input error", acquisitionInfo, form.root)
 
         except FileNotFoundError as e:
-            print('\nERROR:\n%s\n' % e)
+            print(redStr('\nERROR:\n%s\n' % e))
 
     @classmethod
     def _setAcquisition(cls, form, acquisitionInfo):
