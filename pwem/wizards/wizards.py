@@ -57,7 +57,7 @@ class ImportAcquisitionWizard(EmWizard):
                 dialog.showError("Input error", acquisitionInfo, form.root)
 
         except FileNotFoundError as e:
-            print(redStr('\nERROR:\n%s\n' % e))
+            dialog.showInfo("File not found", "Metadata file with acquisition not found.\n\n %s" % e, form.root)
 
     @classmethod
     def _setAcquisition(cls, form, acquisitionInfo):
