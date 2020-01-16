@@ -81,7 +81,3 @@ class Plugin(pyworkflow.plugin.Plugin):
                        commands=maxit_commands,
                        default=default)  # scipion installb maxit
         # requirements bison, flex, gcc
-
-
-Domain.registerPlugin(__name__)
-

@@ -55,7 +55,7 @@ class ProtMonitorCTF(ProtMonitor):
 
         form.addParam('inputProtocol', params.PointerParam,
                       label="Input protocols", important=True,
-                      pointerClass='ProtCTFFind, XmippProtCTFMicrographs',
+                      pointerClass='CistemProtCTFFind, XmippProtCTFMicrographs',
                       help="this protocol will be monitorized")
         form.addParam('samplingInterval', params.IntParam, default=60,
                       label="Sampling Interval (sec)",

@@ -606,7 +606,7 @@ class ProtAlignMovies(ProtProcessMovies):
          right-part from psd2 (corrected PSD)
         """
         ih = emconv.ImageHandler()
-        self.composePSDImages(self, ih.read(psd1), ih.read(psd2), outputFn,
+        self.composePSDImages(ih.read(psd1), ih.read(psd2), outputFn,
                               outputFnUncorrected, outputFnCorrected)
 
     def computePSDImages(self, movie, fnUncorrected, fnCorrected,
@@ -622,7 +622,7 @@ class ProtAlignMovies(ProtProcessMovies):
                     outputFnUncorrected=None, outputFnCorrected=None):
         import warnings
         warnings.warn("Use computePSDImages() instead", DeprecationWarning)
-        self.computePSDImages(self, movie, fnUncorrected, fnCorrected,
+        self.computePSDImages(movie, fnUncorrected, fnCorrected,
                               outputFnUncorrected, outputFnCorrected)
 
     def computeThumbnail(self, inputFn, scaleFactor=6, outputFn=None):

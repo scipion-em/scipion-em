@@ -105,7 +105,7 @@ class ReportHtml:
 
     def getHTMLReportText(self):
         if exists(self.template):
-            return open(self.template, 'rb').read().decode('utf-8')
+            return open(self.template, encoding="utf-8").read()
         else:
             return ""
 
@@ -307,7 +307,7 @@ class ReportHtml:
                 belowThresh += 1
             elif v > maxDefocus:
                 aboveThresh += 1
-        zipped = zip(values, labels)
+        zipped = list(zip(values, labels))
         zipped[:0] = [(belowThresh, "0-%0.1f" % minDefocus)]
         # TODO unresolved method for class Iterator in python3
         # zipped.append((aboveThresh, "> %0.1f" % (maxDefocus)))
@@ -327,7 +327,7 @@ class ReportHtml:
 
         # Get phaseShift
         phaseShiftSerie = data[PHASE_SHIFT]
-        phaseShiftSerie = zip(ts, phaseShiftSerie)
+        phaseShiftSerie = list(zip(ts, phaseShiftSerie))
         # Add it to the series
         timeSeries[PHASE_SHIFT] = phaseShiftSerie
 
@@ -335,13 +335,13 @@ class ReportHtml:
         defocusSerie = data[DEFOCUS_U]
         defocusSerie = [i * 1e-4 for i in defocusSerie]
 
-        defocusSerie = zip(ts, defocusSerie)
+        defocusSerie = list(zip(ts, defocusSerie))
         # Add it to the series
         timeSeries[DEFOCUS_U] = defocusSerie
 
         # Get Resolution
         resSerie = data[RESOLUTION]
-        resSerie = zip(ts, resSerie)
+        resSerie = list(zip(ts, resSerie))
         # Add it to the series
         timeSeries[RESOLUTION] = resSerie
 
@@ -353,7 +353,7 @@ class ReportHtml:
         maxValue = int(np.ceil(max(resolutionValues)))
         edges = np.append(np.arange(0, maxValue, RESOLUTION_HIST_BIN_WIDTH), maxValue)
         values, binEdges = np.histogram(resolutionValues, bins=edges, range=(0, maxValue))
-        return zip(values, binEdges)
+        return list(zip(values, binEdges))
 
     def generate(self, finished):
         reportTemplate = self.getHTMLReportText()
@@ -441,7 +441,11 @@ class ReportHtml:
 
         reportFinished = self.thumbsReady == numMics
 
-        ctfData = json.dumps(data)
+        def convert(o):
+            if isinstance(o, np.int64): return int(o)
+            raise TypeError
+
+        ctfData = json.dumps(data, default=convert)
 
         # Movie gain monitor chart data
         data = [] if self.movieGainMonitor is None else self.movieGainMonitor.getData()
@@ -450,7 +454,7 @@ class ReportHtml:
 
         # system monitor chart data
         data = self.sysMonitor.getData()
-        systemData = json.dumps(data)
+        systemData = json.dumps(data, default=convert)
         tnow = datetime.now()
         args = {'projectName': projName,
                 'startTime': pwutils.dateStr(project.getCreationTime(), secs=True),
@@ -468,9 +472,9 @@ class ReportHtml:
 
         self.info("Writing report html to: %s" % abspath(self.reportPath))
         pwutils.cleanPath(self.reportPath)
-        reportFile = open(self.reportPath, 'w')
+        reportFile = open(self.reportPath, 'w', encoding="utf-8")
         reportTemplate = reportTemplate % args
-        reportFile.write(reportTemplate.encode('utf-8'))
+        reportFile.write(reportTemplate)
         reportFile.close()
 
         if self.publishCmd:

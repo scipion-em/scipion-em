@@ -33,6 +33,7 @@ import pyworkflow.object as pwobj
 from pyworkflow.gui import dialog
 import pyworkflow.wizard as pwizard
 from pyworkflow.gui.tree import ListTreeProviderString
+from pyworkflow.utils import redStr
 
 import pwem.convert as emconv
 
@@ -45,15 +46,18 @@ class ImportAcquisitionWizard(EmWizard):
     _targets = [(emprot.ProtImportImages, ['acquisitionWizard'])]
 
     def show(self, form, *params):
-        acquisitionInfo = form.protocol.loadAcquisitionInfo()
+        try:
+            acquisitionInfo = form.protocol.loadAcquisitionInfo()
+            if isinstance(acquisitionInfo, dict):
+                # If acquisitionInfo is None means something is wrong.
+                # Now, let's try to show a meaningful error message.
+                self._setAcquisition(form, acquisitionInfo)
+            else:
+                # If not dict, it should be an error message
+                dialog.showError("Input error", acquisitionInfo, form.root)
 
-        if isinstance(acquisitionInfo, dict):
-            # If acquisitionInfo is None means something is wrong.
-            # Now, let's try to show a meaningful error message.
-            self._setAcquisition(form, acquisitionInfo)
-        else:
-            # If not dict, it should be an error message
-            dialog.showError("Input error", acquisitionInfo, form.root)
+        except FileNotFoundError as e:
+            dialog.showInfo("File not found", "Metadata file with acquisition not found.\n\n %s" % e, form.root)
 
     @classmethod
     def _setAcquisition(cls, form, acquisitionInfo):
