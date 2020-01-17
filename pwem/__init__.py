@@ -29,18 +29,27 @@ This modules contains classes related with EM
 
 import os
 import sys
-from os.path import dirname, join
-sys.path.append(join(dirname(__file__), "xmipp-ghost"))
+
+sys.path.append(os.path.join(os.path.dirname(__file__), "xmipp-ghost"))
+
+import pyworkflow as pw
 from pyworkflow.protocol import Protocol
 from pyworkflow.viewer import Viewer
 from pyworkflow.wizard import Wizard
 import pyworkflow.plugin
 
-from pwem.constants import *
-from pwem.objects import EMObject
+from .constants import *
+from .objects import EMObject
 from .utils import *
 from .metadata import *
+
 _references = ["delaRosaTrevin201693"]
+
+
+class Config:
+    __get = os.environ.get  # shortcut
+    EM_ROOT = __get('EM_ROOT', os.path.join(pw.Config.SCIPION_HOME,
+                                            'software', 'em'))
 
 
 class Domain(pyworkflow.plugin.Domain):
@@ -53,6 +62,14 @@ class Domain(pyworkflow.plugin.Domain):
 
 
 class Plugin(pyworkflow.plugin.Plugin):
+
+    @classmethod
+    def _defineEmVar(cls, varName, defaultValue):
+        """ Shortcut method to define variables by prepending EM_ROOT
+        to the default value.
+        """
+        cls._defineVar(varName,
+                       os.path.join(Config.EM_ROOT, defaultValue))
 
     @classmethod
     def getMaxitHome(cls):
@@ -83,5 +100,6 @@ class Plugin(pyworkflow.plugin.Plugin):
         # requirements bison, flex, gcc
 
 
+#FIXME: Can we remove this call now?
 Domain.registerPlugin(__name__)
 
