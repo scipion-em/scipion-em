@@ -267,6 +267,11 @@ class ProtAlignMovies(ProtProcessMovies):
                                 self._getOutputMicWtName,
                                 'outputMicrographsDoseWeighted')
 
+        if self._createOutputPSMicrographs():
+            _updateOutputMicSet('micrographs_ps.sqlite',
+                                self._getOutputMicPsName,
+                                'outputMicrographsPS')
+
         if self.finished:  # Unlock createOutputStep if finished all jobs
             outputStep = self._getFirstJoinStep()
             if outputStep and outputStep.isWaiting():
@@ -448,6 +453,12 @@ class ProtAlignMovies(ProtProcessMovies):
         """
         return self._getMovieRoot(movie) + '_aligned_mic_DW.mrc'
 
+    def _getOutputMicPsName(self, movie):
+        """ Returns the name of the output PS
+        (relative to micFolder)
+        """
+        return self._getMovieRoot(movie) + '_aligned_mic_PS.mrc'
+
     def _getOutputMicThumbnail(self, movie):
         return self._getExtraPath(self._getMovieRoot(movie) + '_thumbnail.png')
 
@@ -474,6 +485,9 @@ class ProtAlignMovies(ProtProcessMovies):
         return self.getAttributeValue('doSaveAveMic', True)
 
     def _createOutputWeightedMicrographs(self):
+        return False
+
+    def _createOutputPSMicrographs(self):
         return False
 
     def _preprocessOutputMicrograph(self, mic, movie):
