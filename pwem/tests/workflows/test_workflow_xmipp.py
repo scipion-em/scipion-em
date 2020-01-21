@@ -95,8 +95,8 @@ class TestXmippWorkflow(TestWorkflow):
         print("Performing CTF...")
         protCTF = self.newProtocol(xmippProtcols.XmippProtCTFMicrographs,
                                    numberOfThreads=4,
-                                   minDefocus=2.2,
-                                   maxDefocus=2.5)
+                                   minDefocus=22000,
+                                   maxDefocus=25000)
         protCTF.inputMicrographs.set(protDownsampling.outputMicrographs)
         self.launchProtocol(protCTF)
         self.assertSetSize(protCTF.outputCTF, 3)

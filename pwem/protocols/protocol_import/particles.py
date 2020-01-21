@@ -185,9 +185,9 @@ class ProtImportParticles(ProtImportImages):
         elif self.importFrom == self.IMPORT_FROM_FREALIGN:
             self.importFilePath = self.parFile.get('').strip()
             GrigorieffLabImportParticles = Domain.importFromPlugin(
-                'grigoriefflab.convert', 'GrigorieffLabImportParticles',
-                     errorMsg='GrigorieffLab is needed to import .stk files',
-                     doRaise=True)
+                'cistem.convert', 'GrigorieffLabImportParticles',
+                errorMsg='Cistem is needed to import .stk files',
+                doRaise=True)
             return GrigorieffLabImportParticles(self, self.parFile.get(),
                                                 self.stackFile.get())
         elif self.importFrom == self.IMPORT_FROM_EMAN:

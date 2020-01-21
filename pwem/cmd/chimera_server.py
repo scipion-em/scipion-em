@@ -9,14 +9,15 @@ from __future__ import print_function
 import os
 import sys
 from multiprocessing.connection import Listener, Client
-from VolumeData import Array_Grid_Data
-from VolumeViewer import volume_from_grid_data
-from numpy import array, identity, dot
-from numpy.linalg import inv
-import chimera
-from chimera import runCommand
 from time import sleep
 from threading import Thread
+from numpy import array, identity, dot
+from numpy.linalg import inv
+
+import chimera
+from chimera import runCommand
+from VolumeData import Array_Grid_Data
+from VolumeViewer import volume_from_grid_data
 
 
 # from time import gmtime, strftime
@@ -36,13 +37,14 @@ class Logger:
             fh.write(logline + "\n")
             fh.close()
 
+
 class ChimeraServer:
 
     def __init__(self, centerVolume=True):
         address = ''
         port = int(sys.argv[1])
 
-        self.authkey = 'test'
+        self.authkey = b'test'
         self.listener = Listener((address, port), authkey=self.authkey)
         self.vol_conn = self.listener.accept()
         self.openVolume()

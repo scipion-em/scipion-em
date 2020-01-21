@@ -31,8 +31,8 @@ except ImportError:
     izip = zip
 
 from pyworkflow.gui.plotter import Plotter, plt
-
 import pwem.metadata as md
+import numbers
 
 
 class EmPlotter(Plotter):
@@ -151,15 +151,17 @@ class EmPlotter(Plotter):
             yvalues = data.getColumnValues(col)
             color = colors[i]
             line = lines[i]
+            colLabel = col if not col.startswith("_") else col[1:]
             if bins:
-                ax.hist(yvalues, bins=int(bins), color=color, linestyle=line, label=col)
+                yvalues = data._removeInfinites(yvalues)
+                ax.hist(yvalues, bins=int(bins), color=color, linestyle=line, label=colLabel)
             else:
                 if plotType == 'Plot':
                     marker = (markers[i] if not markers[i] == 'none' else None)
-                    ax.plot(xvalues, yvalues, color, marker=marker, linestyle=line, label=col)
+                    ax.plot(xvalues, yvalues, color, marker=marker, linestyle=line, label=colLabel)
                 else:
                     ax.scatter(xvalues, yvalues, c=color, label=col, alpha=0.5)
-        ax.legend(columns)
+        ax.legend()
 
         return plotter
         
@@ -196,8 +198,15 @@ class PlotData:
     def _getValuesFromSet(self, columnName):
         return [self._getValue(obj, columnName) 
                 for obj in self._table.iterItems(orderBy=self._orderColumn,
-                                                 direction=self._orderDirection)]
-        
+                                       direction=self._orderDirection)]
+    @staticmethod
+    def _removeInfinites(values):
+        newValues = []
+        for value in values:
+            if isinstance(value, numbers.Number) and value < float("Inf"):
+                newValues.append(value)
+        return newValues
+
     def _loadMd(self, fileName, tableName):
         label = md.str2Label(self._orderColumn)
         tableMd = md.MetaData('%s@%s' % (tableName, fileName))

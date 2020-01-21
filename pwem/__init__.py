@@ -99,7 +99,3 @@ class Plugin(pyworkflow.plugin.Plugin):
                        default=default)  # scipion installb maxit
         # requirements bison, flex, gcc
 
-
-#FIXME: Can we remove this call now?
-Domain.registerPlugin(__name__)
-
