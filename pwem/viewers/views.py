@@ -25,15 +25,13 @@
 import os
 
 from pyworkflow.gui import getDefaultFont
+from pyworkflow.gui.text import openTextFileEditor
+import re
+import csv
 
-try:  # python 2
-    import tkinter as tk
-    import tkFont
-    import ttk
-except ImportError:  # Python 3
-    import tkinter as tk
-    import tkinter.font as tkFont
-    import tkinter.ttk as ttk
+
+import tkinter as tk
+import tkinter.ttk as ttk
 
 import pyworkflow.viewer as pwviewer
 
@@ -342,8 +340,14 @@ class TableView(pwviewer.View):
     def __init__(self, headerList, dataList,
                  mesg=None, title=None,
                  height=10, width=400,
-                 padding=10):
-        # get new widget that has as parent the top level window and set title
+                 padding=10, outFileName=None):
+        """Get new widget that has as parent the top level window and set title.
+        tables can be dump to a csv file. The name of the file is outFileName
+        """
+        self.title = title
+        self.headerList = headerList
+        self.dataList = dataList
+        self.outFileName = outFileName
         win = tk.Toplevel()
         if title:
             win.wm_title(title)
@@ -357,6 +361,9 @@ class TableView(pwviewer.View):
         style = ttk.Style()
         style.configure('Calendar.Treeview', font=font, rowheight=fontheight)
 
+        # add a "save data" button
+        saveDataButton = ttk.Button(master=win , text="Save Data",
+                                    command=self.saveData)
         # create treeview to store multi list with data
         tree = ttk.Treeview(columns=headerList,
                             show="headings", master=win,
@@ -418,9 +425,40 @@ class TableView(pwviewer.View):
 
         # set mg in grid 0,0
         msg.grid(row=0, column=0)
-        # set tree in grid 1,0
-        tree.grid(row=1, column=0)
-        # set ysg in grid 1 1
+        # set button in grid 1 0
+        saveDataButton.grid(row=1, column=0)
+        # set ysg in grid 2 0
+        tree.grid(row=2, column=0)
+        # set ysg in grid 2 1
         # but only if number of elements is larger than height
         if len(dataList) > height:
-            ysb.grid(row=1, column=1, sticky='ns')
+            ysb.grid(row=2, column=1, sticky='ns')
+
+    def saveData(self):
+        """ Save data in the treeView Widget to a file.
+        If not provided the outfile is in the Logs directory
+        the name is the title of the table"""
+        def slugify(value):
+            """
+            Create a valid file name from the table title.
+            Normalizes string, converts to lowercase, removes non-alpha characters,
+            and converts spaces to hyphens.
+            """
+            value = re.sub('[^\w\s-]', '', value).strip().lower()
+            value = re.sub('[-\s]+', '-', value)
+            return value
+
+        if self.outFileName is None:
+            outFileName = slugify(self.title) + ".csv"
+            outFileName = os.path.join(os.getcwd(), 'Logs', outFileName)
+
+        print("Data saved to file: ", outFileName)
+        with open(outFileName, "wt") as f:
+            f.write("# TITLE = %s\n" % self.title)
+            spamWriter = csv.writer(f)
+            spamWriter.writerow(self.headerList)
+            for data in self.dataList:
+                spamWriter.writerow(data)
+        f.close()
+        # call the application used to handle csv files.
+        openTextFileEditor(outFileName)
