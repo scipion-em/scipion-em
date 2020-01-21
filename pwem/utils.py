@@ -65,5 +65,10 @@ def getPWEMPath(*paths):
 def getTemplatePath(*paths):
     return join(getPWEMPath('templates'), *paths)
 
+
 def getCmdPath(*paths):
     return join(getPWEMPath('cmd'), *paths)
+
+
+def convert_pix2length(sampling_rate, length):
+    return sampling_rate*length

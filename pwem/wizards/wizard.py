@@ -35,6 +35,7 @@ import pyworkflow as pw
 import pyworkflow.object as pwobj
 import pyworkflow.wizard as pwizard
 import pyworkflow.gui.dialog as dialog
+from pwem import convert_pix2length
 from pyworkflow.gui.tree import BoundTree, ListTreeProvider
 from pyworkflow.gui.widgets import LabelSlider
 
@@ -579,8 +580,8 @@ class CtfDialog(DownsampleDialog):
         if self._showInAngstroms():
             s = self.firstItem.getSamplingRate()
             lowFreq = max(self.getLowFreq(), 0.0001)  # avoid division by zero
-            self.lfVar.set('%0.3f A' % (s / lowFreq))
-            self.hfVar.set('%0.3f A' % (s / self.getHighFreq()))
+            self.lfVar.set('%0.3f %s' % (s / lowFreq, emcts.UNIT_ANGSTROM_SYMBOL))
+            self.hfVar.set('%0.3f %s' % (s / self.getHighFreq(), emcts.UNIT_ANGSTROM_SYMBOL))
 
     def getLowFreq(self):
         return self.lfSlider.get()
@@ -754,6 +755,10 @@ class MaskPreviewDialog(ImagePreviewDialog):
 
     def _createControls(self, frame):
         self.addRadiusBox(frame)
+        self.hfVar = tk.StringVar()
+        self.hfLabel = tk.Label(frame, textvariable=self.hfVar)
+        self.hfLabel.grid(row=1, column=0)
+        self.showValueInAngstroms()
 
     def addRadiusBox(self, parent):
         self.radiusSlider = LabelSlider(parent, 'Outer radius (%s)' % self.unit,
@@ -765,9 +770,16 @@ class MaskPreviewDialog(ImagePreviewDialog):
 
     def updateRadius(self):
         self.preview.updateMask(self.radiusSlider.get() * self.ratio)
+        self.showValueInAngstroms()
 
     def getRadius(self):
         return int(self.radiusSlider.get())
+
+    def showValueInAngstroms(self):
+        self.hfVar.set('{:.1f} {}'.format(
+            self.radiusSlider.get()*self.firstItem.getSamplingRate(),
+            emcts.UNIT_ANGSTROM_SYMBOL)
+        )
 
 
 class MaskRadiiPreviewDialog(MaskPreviewDialog):
@@ -788,26 +800,44 @@ class MaskRadiiPreviewDialog(MaskPreviewDialog):
 
     def _createControls(self, frame):
 
-        self.radiusSliderOut = LabelSlider(frame, 'Outer radius',
+        self.radiusSliderOut = LabelSlider(frame, 'Outer radius (px)',
                                            from_=1, to=int(self.dim_par / 2),
                                            value=self.outerRadius, step=1,
                                            callback=lambda a, b, c: self.updateRadius(self.radiusSliderOut,
                                                                                       self.radiusSliderIn))
         self.radiusSliderOut.grid(row=0, column=0, padx=5, pady=5)
+        self.orVar = tk.StringVar()
+        self.orLabel = tk.Label(frame, textvariable=self.orVar)
+        self.orLabel.grid(row=1, column=0)
 
-        self.radiusSliderIn = LabelSlider(frame, 'Inner radius',
+        self.radiusSliderIn = LabelSlider(frame, 'Inner radius (px)',
                                           from_=1, to=int(self.dim_par / 2),
                                           value=self.innerRadius, step=1,
                                           callback=lambda a, b, c: self.updateRadius(self.radiusSliderOut,
                                                                                      self.radiusSliderIn))
-        self.radiusSliderIn.grid(row=1, column=0, padx=5, pady=5)
+        self.radiusSliderIn.grid(row=2, column=0, padx=5, pady=5)
+        self.irVar = tk.StringVar()
+        self.irLabel = tk.Label(frame, textvariable=self.irVar)
+        self.irLabel.grid(row=3, column=0)
+
+
+        self.showValueInAngstroms(self.orVar, self.radiusSliderOut)
+        self.showValueInAngstroms(self.irVar, self.radiusSliderIn)
 
     def updateRadius(self, radiusSliderOut, radiusSliderIn):
         self.preview.updateMask(outerRadius=radiusSliderOut.get() * self.ratio,
                                 innerRadius=radiusSliderIn.get() * self.ratio)
+        self.showValueInAngstroms(self.orVar, self.radiusSliderOut)
+        self.showValueInAngstroms(self.irVar, self.radiusSliderIn)
 
     def getRadius(self, radiusSlider):
         return int(radiusSlider.get())
+
+    def showValueInAngstroms(self, var2set, radiusSlider):
+        var2set.set('{:.1f} {}'.format(
+            convert_pix2length(radiusSlider.get(), self.firstItem.getSamplingRate()),
+            emcts.UNIT_ANGSTROM_SYMBOL)
+        )
 
 # Moved to pyworkflow.gui.tree
 # class ListTreeProviderString(ListTreeProvider):
