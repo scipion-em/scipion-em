@@ -119,7 +119,7 @@ class Ccp4Header:
         self._name = self.cleanFileNameAnnotation(fileName)  # remove mrc ending
         self._header = collections.OrderedDict()
         self.chain = "< 3i i 3i 3i 3f 36s i 104s 3f"
-
+        self._nObjects = 1
         if readHeader:
             self.loaded = True
             self.readHeader()
@@ -233,6 +233,18 @@ class Ccp4Header:
 
     def setISPG(self, ispg):
         self._header['ISPG'] = ispg
+
+    def getNumberObjects(self):
+        return self._nObjects
+
+    def setNumberObjects(self, val):
+        self._nObjects = val
+
+    def setHeaderVal(self, key, val):
+        self._header[key] = val
+
+    def getHeaderVal(self, key):
+        return self._header[key]
 
     def read_header_values(self, file, file_size, file_type):
 

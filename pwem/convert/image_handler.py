@@ -274,10 +274,15 @@ class ImageHandler(object):
                 x, y = im.size  # (width,height) tuple
                 return x, y, 1, 1
 
-            elif Ccp4Header.getFileFormat(fn) != Ccp4Header.UNKNOWNFORMAT:
+            elif Ccp4Header.getFileFormat(fn) == Ccp4Header.MRC:
                 header = Ccp4Header(fn, readHeader=True)
+                # Special case for volume stacks...
+                if header.getISPG() == 401:
+                    header.setNumberObjects(int(header._header['NS'] / header._header['NZ']))
+                    header.setHeaderVal('NS', header.getHeaderVal('NZ'))
                 x, y, z = header.getDims()
-                return x, y, z, 1
+                n = header.getNumberObjects()
+                return x, y, z, n
 
             elif ext == '.img':
                 # FIXME Since now we can not read dm4 format in Scipion natively
