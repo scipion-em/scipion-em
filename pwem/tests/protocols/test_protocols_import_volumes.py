@@ -184,11 +184,10 @@ class TestImportVolumes(TestImportBase):
         # position
         # """
         # Id's should be taken from filename
-        args['filesPath'] = self.dsRelion.getFile('import/case2/'
-                                                  'relion_volumes.mrc')
-        args['filesPattern'] = ''
+        args['filesPath'] = self.dsRelion.getFile('import/case2/')
+        args['filesPattern'] = 'relion_it015_class00*.mrc'
         prot2 = self.newProtocol(emprot.ProtImportVolumes, **args)
-        prot2.setObjLabel('import 3 vols from mrc stack,\n user origin,'
+        prot2.setObjLabel('import 3 mrc vols,\n user origin,'
                           '\n chimera no axis')
         self.launchProtocol(prot2)
         # Check the number of output volumes and dimensions
