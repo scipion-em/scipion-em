@@ -267,20 +267,16 @@ class ImageHandler(object):
             ext = pwutils.getExt(fn).lower()
 
             # Local import to avoid import loop between ImageHandler and Ccp4Header.
-            from pwem.convert import Ccp4Header
+            from pwem.convert import headers
 
             if ext == '.png' or ext == '.jpg':
                 im = Image.open(fn)
                 x, y = im.size  # (width,height) tuple
                 return x, y, 1, 1
 
-            elif Ccp4Header.getFileFormat(fn) == Ccp4Header.MRC:
-                header = Ccp4Header(fn, readHeader=True)
-                # Special case for volume stacks...
-                if header.getISPG() == 401:
-                    header.setNumberObjects(int(header._header['NS'] / header._header['NZ']))
-                    header.setHeaderVal('NS', header.getHeaderVal('NZ'))
-                x, y, z = header.getDims()
+            elif headers.getFileFormat(fn) == headers.MRC or headers.getFileFormat(fn) == headers.MRCS:
+                header = headers.Ccp4Header(fn, readHeader=True)
+                x, y, z = header.getGridSampling()
                 n = header.getNumberObjects()
                 return x, y, z, n
 

@@ -38,15 +38,16 @@ from pyworkflow.utils import getExt
 
 from .image_handler import ImageHandler
 
+# File formats
+MRC = 0
+SPIDER = 1
+UNKNOWNFORMAT = 2
+
 
 class Ccp4Header:
     ORIGIN = 0  # save coordinate origin in the mrc header field=Origin (Angstrom)
     START = 1  # save coordinate origin in the mrc header field=start (pixel)
 
-    # File formats
-    MRC = 0
-    SPIDER = 1
-    UNKNOWNFORMAT = 2
     """
     In spite of the name this is the MRC2014 format no the CCP4.
     In an MRC EM file the origin is typically in header fields called
@@ -116,19 +117,14 @@ class Ccp4Header:
     80-character 'lines' and the 'lines' do not terminate in a ``*``).
     """
     def __init__(self, fileName, readHeader=False):
-        self._name = self.cleanFileNameAnnotation(fileName)  # remove mrc ending
+        self._name = cleanFileNameAnnotation(fileName)  # remove mrc ending
         self._header = collections.OrderedDict()
         self.chain = "< 3i i 3i 3i 3f 36s i 104s 3f"
-        self._nObjects = 1
         if readHeader:
             self.loaded = True
             self.readHeader()
         else:
             self.loaded = False
-
-    @staticmethod
-    def cleanFileNameAnnotation(fileName):
-        return fileName.replace(':mrc', '')
 
     def setOrigin(self, originTransformShift):
         # TODO: should we use originX,Y,Z and set this to 0
@@ -231,20 +227,12 @@ class Ccp4Header:
     def getISPG(self):
         return self._header['ISPG']
 
-    def setISPG(self, ispg):
-        self._header['ISPG'] = ispg
-
     def getNumberObjects(self):
-        return self._nObjects
-
-    def setNumberObjects(self, val):
-        self._nObjects = val
-
-    def setHeaderVal(self, key, val):
-        self._header[key] = val
-
-    def getHeaderVal(self, key):
-        return self._header[key]
+        # Special case for volume stacks...
+        if self.getISPG() == 401:
+            return int(self._header['NS'] / self._header['NZ'])
+        else:
+            return 1
 
     def read_header_values(self, file, file_size, file_type):
 
@@ -349,13 +337,17 @@ class Ccp4Header:
 
         ccp4header.writeHeader()
 
-    @classmethod
-    def getFileFormat(cls, fileName):
 
-        ext = getExt(cls.cleanFileNameAnnotation(fileName))
-        if (ext == '.mrc') or (ext == '.map'):
-            return cls.MRC
-        elif (ext == '.spi') or (ext == '.vol'):
-            return cls.SPIDER
-        else:
-            return cls.UNKNOWNFORMAT
+def getFileFormat(fileName):
+
+    ext = getExt(cleanFileNameAnnotation(fileName))
+    if (ext == '.mrc') or (ext == '.map') or (ext == '.mrcs'):
+        return MRC
+    elif (ext == '.spi') or (ext == '.vol'):
+        return SPIDER
+    else:
+        return UNKNOWNFORMAT
+
+
+def cleanFileNameAnnotation(fileName):
+    return fileName.replace(':mrc', '')
