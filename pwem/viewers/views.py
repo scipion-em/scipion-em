@@ -27,14 +27,8 @@ import re
 
 from pyworkflow.gui import getDefaultFont, openTextFileEditor
 
-try:  # python 2
-    import tkinter as tk
-    import tkFont
-    import ttk
-except ImportError:  # Python 3
-    import tkinter as tk
-    import tkinter.font as tkFont
-    import tkinter.ttk as ttk
+import tkinter as tk
+import tkinter.ttk as ttk
 
 import pyworkflow.viewer as pwviewer
 
