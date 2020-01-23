@@ -229,10 +229,7 @@ class Ccp4Header:
 
     def getNumberObjects(self):
         # Special case for volume stacks...
-        if self.getISPG() == 401:
-            return int(self._header['NS'] / self._header['NZ'])
-        else:
-            return 1
+        return int(self._header['NS'] / self._header['NZ'])
 
     def read_header_values(self, file, file_size, file_type):
 

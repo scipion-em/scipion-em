@@ -274,7 +274,7 @@ class ImageHandler(object):
                 x, y = im.size  # (width,height) tuple
                 return x, y, 1, 1
 
-            elif headers.getFileFormat(fn) == headers.MRC or headers.getFileFormat(fn) == headers.MRCS:
+            elif headers.getFileFormat(fn) == headers.MRC:
                 header = headers.Ccp4Header(fn, readHeader=True)
                 x, y, z = header.getGridSampling()
                 n = header.getNumberObjects()
