@@ -133,37 +133,24 @@ class CTFModel(EMObject):
         self._fitQuality = Float()
 
     def __str__(self):
-        if self._resolution.hasValue():
-            phaseShift = self.getPhaseShift() if self.hasPhaseShift() else 0
-            ctfStr = "defocus(U,V,a,psh,re,fit) = " \
-                     "(%0.2f,%0.2f,%0.2f,%0.2f,%0.2f,%0.2f)" % \
-                     (self._defocusU.get(),
-                      self._defocusV.get(),
-                      self._defocusAngle.get(),
-                      phaseShift,
-                      self._resolution.get(),
-                      self._fitQuality.get()
-                      )
-        else:   # TODO; remove eventually,
-            # compatibility with old ctfmodel
-            ctfStr = "defocus(U,V,a) = " \
-                     "(%0.2f,%0.2f,%0.2f)" % (self._defocusU.get(),
-                                              self._defocusV.get(),
-                                              self._defocusAngle.get())
+        phaseShift = self.getPhaseShift() if self.hasPhaseShift() else 0
+        ctfStr = "defocus(U,V,ast,psh,res,fit) = " \
+                 "(%0.2f,%0.2f,%0.2f,%0.2f,%0.2f,%0.2f)" % \
+                 (self._defocusU.get(),
+                  self._defocusV.get(),
+                  self._defocusAngle.get(),
+                  phaseShift,
+                  self._resolution.get(),
+                  self._fitQuality.get()
+                  )
 
         if self._micObj:
             ctfStr + " mic=%s" % self._micObj
         return ctfStr
 
     def getPhaseShift(self):
-        # this is an awful hack to read phase shift from ctffind or gctf
-        # It should be eventually removed
         if self._phaseShift is not None:
             return self._phaseShift.get()
-        elif hasattr(self, '_ctffind4_ctfPhaseShift'):
-            return self._ctffind4_ctfPhaseShift.get()
-        elif hasattr(self, '_gctf_ctfPhaseShift'):
-            return self._gctf_ctfPhaseShift.get()
         else:
             return None
 
@@ -174,19 +161,7 @@ class CTFModel(EMObject):
         return False if self.getPhaseShift() is None else True
 
     def getResolution(self):
-        # this is an awful hack to read freq either from ctffid/gctf or xmipp
-        # labels assigned to max resolution used to be different
-        # It should be eventually removed
-        if self._resolution.hasValue():
-            return self._resolution.get()
-        elif hasattr(self, '_ctffind4_ctfResolution'):
-            return self._ctffind4_ctfResolution.get()
-        elif hasattr(self, '_gctf_ctfResolution'):
-            return self._gctf_ctfResolution.get()
-        elif hasattr(self, '_xmipp_ctfCritMaxFreq'):
-            return self._xmipp_ctfCritMaxFreq.get()
-        else:
-            return self._resolution.get()
+        return self._resolution.get()
 
     def hasResolution(self):
         return self._resolution.hasValue()
@@ -195,19 +170,7 @@ class CTFModel(EMObject):
         self._resolution.set(value)
 
     def getFitQuality(self):
-        # this is an awful hack to read freq either from ctffind/gctf or xmipp
-        # labels assigned to max resolution used to be different
-        # It should be eventually removed
-        if self._fitQuality.hasValue():
-            return self._fitQuality.get()
-        elif hasattr(self, '_ctffind4_crossCorrelation'):
-            return self._ctffind4_crossCorrelation.get()
-        elif hasattr(self, '_gctf_crossCorrelation'):
-            return self._gctf_crossCorrelation.get()
-        elif hasattr(self, '_xmipp_ctfCritFitting'):
-            return self._xmipp_ctfCritFitting.get()
-        else:
-            return self._fitQuality.get()
+        return self._fitQuality.get()
 
     def setFitQuality(self, value):
         self._fitQuality.set(value)
@@ -344,7 +307,7 @@ class SetOfDefocusGroups:
         Params:
             inputSet: input particles or micrographs with CTF information.
             groupRange: maximum defocus range allowed in one group.
-            groupMinSize: impose a minimun number of particles per group.
+            groupMinSize: impose a minimum number of particles per group.
         """
         self._groups = OrderedDict()
         self.__createGroups(inputSet, groupRange, groupMinSize)
@@ -1083,7 +1046,7 @@ class SetOfImages(EMSet):
     def writeStack(self, fnStack, orderBy='id', direction='ASC',
                    applyTransform=False):
         # TODO create empty file to improve efficiency
-        from pwem.convert import ImageHandler
+        from ..convert import ImageHandler
 
         ih = ImageHandler()
         applyTransform = applyTransform and self.hasAlignment2D()
@@ -1097,7 +1060,7 @@ class SetOfImages(EMSet):
     # for example: protocol_apply_mask
     def readStack(self, fnStack, postprocessImage=None):
         """ Populate the set with the images in the stack """
-        from pwem.convert import ImageHandler
+        from ..convert import ImageHandler
 
         _, _, _, ndim = ImageHandler().getDimensions(fnStack)
         img = self.ITEM_TYPE()
@@ -1412,8 +1375,6 @@ class Coordinate(EMObject):
         """ Copy information from other coordinate. """
         self.setPosition(*coord.getPosition())
         self.setObjId(coord.getObjId())
-        # setBoxSize does not exist for Coord
-        # self.setBoxSize(coord.getBoxSize())
 
     def getMicId(self):
         return self._micId.get()
