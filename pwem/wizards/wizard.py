@@ -380,6 +380,7 @@ class PreviewDialog(dialog.Dialog):
 
         self.provider = provider
         self.firstItem = provider.getObjects()[0]
+        self.isInnerRad = False
         buttons = [('Select', dialog.RESULT_YES),
                    ('Cancel', dialog.RESULT_CANCEL)]
         dialog.Dialog.__init__(self, parent, "Wizard",
@@ -793,14 +794,51 @@ class MaskRadiiPreviewDialog(MaskPreviewDialog):
             self.innerRadius = 0
         if self.outerRadius is None or self.outerRadius == -1 or self.outerRadius > self.dim_par / 2:
             self.outerRadius = int(self.dim_par / 2)
+
+        listeners = {"<Button-4>": self.makeBigger, "<Button-5>": self.makeSmaller,
+                     "<Up>": self.upKeyPress, "<Down>": self.downKeyPress}
+
         self.preview = MaskPreview(frame, self.dim, label=self.previewLabel,
                                    outerRadius=int(self.outerRadius) * self.ratio,
-                                   innerRadius=self.innerRadius * self.ratio)
+                                   innerRadius=self.innerRadius * self.ratio, listenersDict=listeners)
+
         self.preview.grid(row=0, column=0)
+
+    def upKeyPress(self, event):
+        if self.isInnerRad:
+            self.isInnerRad = False
+
+    def downKeyPress(self, event):
+        if not self.isInnerRad:
+            self.isInnerRad = True
+
+    def makeBigger(self, event):
+        if self.isInnerRad:
+            new_val = self.innerRadius * 1.1
+            if self.outerRadius > new_val:
+                self.innerRadius = new_val
+            self.preview.updateMask(self.outerRadius, self.innerRadius)
+            self.radiusSliderIn.slider.set(self.innerRadius)
+        else:
+            self.outerRadius = self.outerRadius * 1.1
+            self.preview.updateMask(self.outerRadius, self.innerRadius)
+            self.radiusSliderOut.slider.set(self.outerRadius)
+
+    def makeSmaller(self, event):
+        if self.isInnerRad:
+            self.innerRadius = self.innerRadius * 0.9
+            self.preview.updateMask(self.outerRadius, self.innerRadius)
+            self.radiusSliderIn.slider.set(self.innerRadius)
+        else:
+            new_val = self.outerRadius * 0.9
+            if self.innerRadius < new_val:
+                self.outerRadius = new_val
+            self.preview.updateMask(self.outerRadius, self.innerRadius)
+            self.radiusSliderOut.slider.set(self.outerRadius)
 
     def _createControls(self, frame):
 
-        self.radiusSliderOut = LabelSlider(frame, 'Outer radius (px)',
+        self.radiusSliderOut = LabelSlider(frame, 'Outer radius',
                                            from_=1, to=int(self.dim_par / 2),
                                            value=self.outerRadius, step=1,
                                            callback=lambda a, b, c: self.updateRadius(self.radiusSliderOut,
@@ -810,7 +848,7 @@ class MaskRadiiPreviewDialog(MaskPreviewDialog):
         self.orLabel = tk.Label(frame, textvariable=self.orVar)
         self.orLabel.grid(row=1, column=0)
 
-        self.radiusSliderIn = LabelSlider(frame, 'Inner radius (px)',
+        self.radiusSliderIn = LabelSlider(frame, 'Inner radius',
                                           from_=1, to=int(self.dim_par / 2),
                                           value=self.innerRadius, step=1,
                                           callback=lambda a, b, c: self.updateRadius(self.radiusSliderOut,
@@ -820,13 +858,15 @@ class MaskRadiiPreviewDialog(MaskPreviewDialog):
         self.irLabel = tk.Label(frame, textvariable=self.irVar)
         self.irLabel.grid(row=3, column=0)
 
-
         self.showValueInAngstroms(self.orVar, self.radiusSliderOut)
         self.showValueInAngstroms(self.irVar, self.radiusSliderIn)
 
     def updateRadius(self, radiusSliderOut, radiusSliderIn):
-        self.preview.updateMask(outerRadius=radiusSliderOut.get() * self.ratio,
-                                innerRadius=radiusSliderIn.get() * self.ratio)
+        self.preview.updateMask(outerRadius=radiusSliderOut.get(),
+                                innerRadius=radiusSliderIn.get())
+        self.outerRadius = radiusSliderOut.get()
+        self.innerRadius = radiusSliderIn.get()
+
         self.showValueInAngstroms(self.orVar, self.radiusSliderOut)
         self.showValueInAngstroms(self.irVar, self.radiusSliderIn)
 
