@@ -282,7 +282,6 @@ def getJavaIJappArguments(memory, appName, appArgs):
 
 
 def runJavaIJapp(memory, appName, args, env=None):
-    xmipp3 = Config.getDomain().importFromPlugin('xmipp3', doRaise=True)
     env = env or {}
     getEnviron = Config.getDomain().importFromPlugin('xmipp3', 'Plugin').getEnviron
     env.update(getEnviron(xmippFirst=False))
@@ -328,7 +327,7 @@ class ProtocolTCPRequestHandler(socketserver.BaseRequestHandler):
 
     def handle(self):  # FIXME: RUNNING FOREVER
         protocol = self.server.protocol
-        msg = str(self.request.recv(1024),"utf-8")
+        msg = str(self.request.recv(1024), "utf-8")
         tokens = shlex.split(msg)
         if msg.startswith('run function'):
             functionName = tokens[2]
@@ -341,11 +340,11 @@ class ProtocolTCPRequestHandler(socketserver.BaseRequestHandler):
             # print 'protocol %s must implement %s'%(protocol.getName(), functionName)
 
         else:
-            answer = 'no answer available'
-            self.request.sendall(answer + '\n')
+            answer = b'no answer available\n'
+            self.request.sendall(answer)
 
 
-class MySocketServer (socketserver.TCPServer):
+class MySocketServer(socketserver.TCPServer):
 
     def serve_forever(self):
         self.end = False
