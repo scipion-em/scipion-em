@@ -274,11 +274,6 @@ class ImageHandler(object):
                 x, y = im.size  # (width,height) tuple
                 return x, y, 1, 1
 
-            elif Ccp4Header.getFileFormat(fn) != Ccp4Header.UNKNOWNFORMAT:
-                header = Ccp4Header(fn, readHeader=True)
-                x, y, z = header.getDims()
-                return x, y, z, 1
-
             elif ext == '.img':
                 # FIXME Since now we can not read dm4 format in Scipion natively
                 # or recent .img format
@@ -522,6 +517,20 @@ class ImageHandler(object):
         I.scale(int(x * scaleFactor), int(y * scaleFactor),
                 int(z * scaleFactor))
         I.write(outputFn)
+
+    @staticmethod
+    def applyTransform(inputFile, outputFile, transformMatrix, shape, borderValue=0.0, borderAverage=False):
+        """Apply the transformation matrix over the input image and return the transformed image in a given shape.
+        Transformation matrix should be a numpy array data type. If borderAverage is true will set the borderValue to
+        the mean of the image."""
+        imageObj = xmippLib.Image()
+        imageObj.read(inputFile)
+        if borderAverage:
+            mean, _, _, _ = imageObj.computeStats()
+            resultImage = imageObj.applyWarpAffine(list(transformMatrix.flatten()), shape, mean)
+        else:
+            resultImage = imageObj.applyWarpAffine(list(transformMatrix.flatten()), shape, borderValue)
+        resultImage.write(outputFile)
 
 
 DT_FLOAT = ImageHandler.DT_FLOAT
