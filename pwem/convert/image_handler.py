@@ -274,11 +274,6 @@ class ImageHandler(object):
                 x, y = im.size  # (width,height) tuple
                 return x, y, 1, 1
 
-            elif Ccp4Header.getFileFormat(fn) != Ccp4Header.UNKNOWNFORMAT:
-                header = Ccp4Header(fn, readHeader=True)
-                x, y, z = header.getDims()
-                return x, y, z, 1
-
             elif ext == '.img':
                 # FIXME Since now we can not read dm4 format in Scipion natively
                 # or recent .img format
