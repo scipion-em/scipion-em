@@ -33,11 +33,12 @@ import os
 import json
 import numpy as np
 
-from pwem.constants import (NO_INDEX, ALIGN_NONE, ALIGN_2D, ALIGN_3D,
-                            ALIGN_PROJ, ALIGNMENTS)
 from pyworkflow.object import (OrderedObject, Float, Integer, String,
                                OrderedDict, CsvList, Boolean, Set, Pointer,
                                Scalar)
+
+from pwem.constants import (NO_INDEX, ALIGN_NONE, ALIGN_2D, ALIGN_3D,
+                            ALIGN_PROJ, ALIGNMENTS)
 
 
 class EMObject(OrderedObject):
@@ -453,7 +454,7 @@ class Image(EMObject):
 
     def getDim(self):
         """Return image dimensions as tuple: (Xdim, Ydim, Zdim)"""
-        from pwem.convert import ImageHandler
+        from pwem.emlib.image import ImageHandler
         x, y, z, n = ImageHandler().getDimensions(self)
         return None if x is None else (x, y, z)
 
@@ -693,7 +694,7 @@ class Volume(Image):
 
     def getDim(self):
         """Return image dimensions as tuple: (Xdim, Ydim, Zdim)"""
-        from pwem.convert import ImageHandler
+        from pwem.emlib.image import ImageHandler
 
         fn = self.getFileName()
         if fn is not None and os.path.exists(fn.replace(':mrc', '')):
@@ -1050,8 +1051,7 @@ class SetOfImages(EMSet):
     def writeStack(self, fnStack, orderBy='id', direction='ASC',
                    applyTransform=False):
         # TODO create empty file to improve efficiency
-        from ..convert import ImageHandler
-
+        from pwem.emlib.image import ImageHandler
         ih = ImageHandler()
         applyTransform = applyTransform and self.hasAlignment2D()
 
@@ -1064,7 +1064,7 @@ class SetOfImages(EMSet):
     # for example: protocol_apply_mask
     def readStack(self, fnStack, postprocessImage=None):
         """ Populate the set with the images in the stack """
-        from ..convert import ImageHandler
+        from pwem.emlib.image import ImageHandler
 
         _, _, _, ndim = ImageHandler().getDimensions(fnStack)
         img = self.ITEM_TYPE()
@@ -1836,7 +1836,7 @@ class SetOfClasses2D(SetOfClasses):
 
     def writeStack(self, fnStack):
         """ Write an stack with the classes averages. """
-        from pwem.convert import ImageHandler
+        from pwem.emlib.image import ImageHandler
 
         if not self.hasRepresentatives():
             raise Exception('Could not write Averages stack '
@@ -1972,7 +1972,7 @@ class Movie(Micrograph):
     def getDim(self):
         """Return image dimensions as tuple: (Xdim, Ydim, Zdim)
         Consider compressed Movie files"""
-        from pwem.convert import ImageHandler
+        from pwem.emlib.image import ImageHandler
 
         if not self.isCompressed():
             x, y, z, n = ImageHandler().getDimensions(self)
@@ -1988,7 +1988,7 @@ class Movie(Micrograph):
             return last - first + 1
 
         if not self.isCompressed():
-            from pwem.convert import ImageHandler
+            from pwem.emlib.image import ImageHandler
 
             x, y, z, n = ImageHandler().getDimensions(self)
             if x is not None:
@@ -2156,7 +2156,7 @@ class FSC(EMObject):
             labelY: label used for FSC values
         """
         # iterate through x and y and create csvLists
-        import pwem.metadata as md
+        import pwem.emlib.metadata as md
         self._x.clear()
         self._y.clear()
 

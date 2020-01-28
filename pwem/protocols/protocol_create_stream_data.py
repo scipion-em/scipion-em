@@ -284,7 +284,7 @@ class ProtCreateStreamData(EMProtocol):
                         newMov = mov.clone()
                         break
                 ProtCreateStreamData.object = \
-                    emconv.ImageHandler().read(newMov.getLocation())
+                    emlib.image.ImageHandler().read(newMov.getLocation())
                 self.name = "movie"
 
             elif self.setof == SET_OF_MICROGRAPHS:
@@ -294,7 +294,7 @@ class ProtCreateStreamData(EMProtocol):
                         newMic = mic.clone()
                         break
                 ProtCreateStreamData.object = \
-                    emconv.ImageHandler().read(newMic.getLocation())
+                    emlib.image.ImageHandler().read(newMic.getLocation())
                 self.name = "micro"
 
         # save file
@@ -312,7 +312,7 @@ class ProtCreateStreamData(EMProtocol):
                     (idx <= self.counter-1 + self.group)):
                 newP = p.clone()
                 ProtCreateStreamData.object = \
-                    emconv.ImageHandler().read(newP.getLocation())
+                    emlib.image.ImageHandler().read(newP.getLocation())
                 destFn = self._getExtraPath("%s_%05d" % (self.name, idx))
                 ProtCreateStreamData.object.write(destFn)
                 self.dictObj[destFn] = True

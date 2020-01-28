@@ -448,11 +448,11 @@ class ImagePreviewDialog(PreviewDialog):
     def _itemSelected(self, obj):
 
         index = obj.getIndex()
-        filename = emconv.ImageHandler.fixXmippVolumeFileName(obj)
+        filename = emlib.image.ImageHandler.fixXmippVolumeFileName(obj)
         if index:
             filename = "%03d@%s" % (index, filename)
 
-        self.image = emconv.ImageHandler()._img
+        self.image = emlib.image.ImageHandler()._img
 
         try:
             self.image.readPreview(filename, self.dim)
@@ -475,7 +475,7 @@ class DownsampleDialog(ImagePreviewDialog):
         self.rightPreviewLabel = "PSD"
         self.message = "Computing PSD..."
         self.previewLabel = "Micrograph"
-        self.rightImage = emconv.ImageHandler()._img
+        self.rightImage = emlib.image.ImageHandler()._img
 
     def _createPreview(self, frame):
         """ Should be implemented by subclasses to
@@ -606,7 +606,7 @@ class BandPassFilterDialog(DownsampleDialog):
         self.rightPreviewLabel = "Filtered"
         self.message = "Computing filtered image..."
         self.previewLabel = "Image"
-        self.rightImage = emconv.ImageHandler()._img
+        self.rightImage = emlib.image.ImageHandler()._img
 
     def _createControls(self, frame):
         self.freqFrame = ttk.LabelFrame(frame,
@@ -665,7 +665,7 @@ class BandPassFilterDialog(DownsampleDialog):
         using the self.lastObj that was selected
         """
         emlib.bandPassFilter(self.rightImage,
-                                emconv.ImageHandler.locationToXmipp(self.lastObj),
+                                emlib.image.ImageHandler.locationToXmipp(self.lastObj),
                                 self.getLowFreq(), self.getHighFreq(),
                                 self.getFreqDecay(), self.dim)
 
@@ -715,7 +715,7 @@ class GaussianFilterDialog(BandPassFilterDialog):
         using the self.lastObj that was selected
         """
         emlib.gaussianFilter(self.rightImage,
-                                emconv.ImageHandler.locationToXmipp(self.lastObj),
+                                emlib.image.ImageHandler.locationToXmipp(self.lastObj),
                                 self.getFreqSigma(), self.dim)
 
 

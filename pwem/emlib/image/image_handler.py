@@ -139,8 +139,8 @@ class ImageHandler(object):
         outDataType = inDataType
 
         if outputFilename.endswith(".mrc") or outputFilename.endswith(".mrcs"):
-            if inDataType == cls.DT_SCHAR:
-                outDataType = cls.DT_USHORT
+            if inDataType == lib.DT_SCHAR:
+                outDataType = lib.DT_USHORT
 
         return outDataType
 
@@ -415,7 +415,7 @@ class ImageHandler(object):
     @classmethod
     def createEmptyImage(cls, fnOut, xDim=1, yDim=1, zDim=1, nDim=1,
                          dataType=None):
-        dt = dataType or cls.DT_FLOAT
+        dt = dataType or lib.DT_FLOAT
         lib.createEmptyFile(fnOut, xDim, yDim, zDim, nDim, dt)
 
     @classmethod

@@ -24,4 +24,5 @@
 # *
 # **************************************************************************
 
+from ..lib import DT_FLOAT
 from .image_handler import ImageHandler

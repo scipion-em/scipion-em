@@ -25,7 +25,6 @@
 # **************************************************************************
 
 from .utils import getSubsetByDefocus, downloadPdb
-from ..emlib.image import ImageHandler, DT_FLOAT
 from .atom_struct import AtomicStructHandler, toCIF, cifToPdb
 from .headers import Ccp4Header
 from .symmetry import getSymmetryMatrices, Icosahedron

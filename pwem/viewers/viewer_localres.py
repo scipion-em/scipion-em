@@ -42,7 +42,7 @@ class LocalResolutionViewer(pwviewer.ProtocolViewer):
 
     def getImgData(self, imgFile):
         import numpy as np
-        img = emconv.ImageHandler().read(imgFile)
+        img = emlib.image.ImageHandler().read(imgFile)
         imgData = img.getData()
 
         maxRes = np.amax(imgData)

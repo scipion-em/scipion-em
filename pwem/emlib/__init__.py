@@ -24,8 +24,7 @@
 # *
 # **************************************************************************
 
-import metadata
-import image
+from .lib import *
 
-
-
+from . import metadata
+from . import image

@@ -41,7 +41,7 @@ import pyworkflow.viewer as pwviewer
 import pyworkflow.gui.matplotlib_image as pwgui
 
 import pwem.constants as emcts
-import pwem.metadata as md
+import pwem.emlib.metadata as md
 import pwem.convert as emconv
 import pwem.objects as emobj
 from pwem import emlib
@@ -608,7 +608,7 @@ class ChimeraViewer(pwviewer.Viewer):
                     dim = volumeObject.getDim()[0]
                     sampling = volumeObject.getSamplingRate()
                     f.write("open %s\n" % os.path.abspath(
-                        emconv.ImageHandler.removeFileType(volumeObject.getFileName())))
+                        emlib.image.ImageHandler.removeFileType(volumeObject.getFileName())))
                     f.write("volume #%d style surface voxelSize %f\n"
                             % (volID, sampling))
                     x, y, z = volumeObject.getShiftsFromOrigin()

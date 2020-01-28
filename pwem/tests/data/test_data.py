@@ -148,7 +148,7 @@ class TestImageHandler(unittest.TestCase):
     def testExistLocation(self):
         volFn = self.dataset.getFile('volumes/volume_1_iter_002.mrc')
 
-        ih = emconv.ImageHandler()
+        ih = emlib.image.ImageHandler()
         # Test the volume filename exists
         self.assertTrue(ih.existsLocation(volFn))
         # Test missing filename
@@ -165,7 +165,7 @@ class TestImageHandler(unittest.TestCase):
         """
         micFn = self.dataset.getFile('micrographs/BPV_1386.mrc')
         outSuffix = pwutils.replaceBaseExt(micFn, 'img')
-        ih = emconv.ImageHandler()
+        ih = emlib.image.ImageHandler()
 
         outFn = join('/tmp', outSuffix)
         print("Converting: \n%s -> %s" % (micFn, outFn))
@@ -183,7 +183,7 @@ class TestImageHandler(unittest.TestCase):
         """
         micFn = self.dsFormat.getFile('SuperRef_c3-adp-se-xyz-0228_001.dm4')
 
-        ih = emconv.ImageHandler()
+        ih = emlib.image.ImageHandler()
         # Check that we can read the dimensions of the dm4 file:
         EXPECTED_SIZE = (7676, 7420, 1, 1)
         self.assertEqual(ih.getDimensions(micFn), EXPECTED_SIZE)
@@ -209,7 +209,7 @@ class TestImageHandler(unittest.TestCase):
         """
         micFn = self.dsFormat.getFile('c3-adp-se-xyz-0228_200.tif')
 
-        ih = emconv.ImageHandler()
+        ih = emlib.image.ImageHandler()
         # Check that we can read the dimensions of the dm4 file:
         EXPECTED_SIZE = (7676, 7420, 1, 38)
         self.assertEqual(ih.getDimensions(micFn), EXPECTED_SIZE)
@@ -233,10 +233,10 @@ class TestImageHandler(unittest.TestCase):
         """Check movie conversion"""
         movFn = self.dsFormat.getFile('qbeta/qbeta.mrc') + ":mrcs"
         
-        ih = emconv.ImageHandler()
+        ih = emlib.image.ImageHandler()
         # Check that we can read the dimensions of the dm4 file:
         EXPECTED_SIZE = (4096, 4096, 1, 7)
-        EXPECTED_DT = emconv.ImageHandler.DT_USHORT
+        EXPECTED_DT = emlib.DT_USHORT
 
         self.assertEqual(ih.getDimensions(movFn), EXPECTED_SIZE)
         self.assertEqual(ih.getDataType(movFn), EXPECTED_DT)
@@ -256,7 +256,7 @@ class TestImageHandler(unittest.TestCase):
             pwutils.cleanPath(outFn)
 
     def test_truncateMask(self):
-        ih = emconv.ImageHandler()
+        ih = emlib.image.ImageHandler()
 
         maskFn = self.dataset.getFile('masks/mask.vol')
         outFn = join('/tmp', 'mask.vol')
@@ -273,8 +273,8 @@ class TestImageHandler(unittest.TestCase):
     def test_createEmptyImage(self):
         outFn = join('/tmp', 'empty.mrc')
         SIZE = (128, 128, 1, 1)
-        ih = emconv.ImageHandler()
-        DT = ih.DT_FLOAT
+        ih = emlib.image.ImageHandler()
+        DT = emlib.DT_FLOAT
         ih.createEmptyImage(outFn, SIZE[0], SIZE[1], dataType=DT)
 
         self.assertTrue(pwutils.getFileSize(outFn) > 0)
