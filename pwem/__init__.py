@@ -48,9 +48,19 @@ _references = ["delaRosaTrevin201693"]
 
 class Config:
     __get = os.environ.get  # shortcut
-    EM_ROOT = __get('EM_ROOT', os.path.join(pw.Config.SCIPION_HOME,
-                                            'software', 'em'))
+    EM_ROOT = __get('EM_ROOT', os.path.join(pw.Config.SCIPION_SOFTWARE, 'em'))
+    # Default XMIPP_HOME
+    XMIPP_HOME = __get('XMIPP_HOME', os.path.join(EM_ROOT, 'xmipp'))
 
+    # Some visualization packages
+    CHIMERA_HOME = __get('CHIMERA_HOME', os.path.join(EM_ROOT,'chimera-1.13.1'))
+
+    # Get java home, we might need to provide correct default value
+    JAVA_HOME = __get('JAVA_HOME', '')
+
+    # CUDA
+    CUDA_LIB = __get('CUDA_LIB', '/usr/local/cuda/lib64')
+    CUDA_BIN = __get('CUDA_BIN', '/usr/local/cuda/bin')
 
 class Domain(pyworkflow.plugin.Domain):
     _name = __name__

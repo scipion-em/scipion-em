@@ -44,7 +44,7 @@ import pwem.constants as emcts
 import pwem.metadata as md
 import pwem.convert as emconv
 import pwem.objects as emobj
-from pwem import getCmdPath
+from pwem import getCmdPath, Config as emConfig
 
 from .showj import (CHIMERA_PORT, MODE, MODE_MD, INVERTY)
 
@@ -96,7 +96,7 @@ class Chimera:
 
     @classmethod
     def getHome(cls):
-        return os.environ.get('CHIMERA_HOME', None)
+        return emConfig.CHIMERA_HOME
 
     @classmethod
     def getEnviron(cls):

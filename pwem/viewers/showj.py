@@ -37,6 +37,7 @@ import subprocess
 
 from pyworkflow import Config
 from pyworkflow.utils import getFreePort
+from pwem import Config as emConfig
 import threading
 import shlex
 import socketserver
@@ -262,10 +263,10 @@ def getJavaIJappArguments(memory, appName, appArgs):
         memory = getJvmMaxMemory()
         print("No memory size provided. Using default: %s" % memory)
 
-    jdkLib = join(os.environ['JAVA_HOME'], 'lib')
-    javaBind = join(os.environ['XMIPP_HOME'], "bindings", "java")
+    jdkLib = join(emConfig.JAVA_HOME, 'lib')
+    javaBind = join(emConfig.XMIPP_HOME, "bindings", "java")
     imagej_home = join(javaBind, "imagej")
-    lib = join(os.environ['XMIPP_HOME'], "lib")
+    lib = join(emConfig.XMIPP_HOME, "lib")
     javaLib = join(javaBind, 'lib')
     plugins_dir = os.path.join(imagej_home, "plugins")
     arch = getArchitecture()
