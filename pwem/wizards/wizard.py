@@ -41,8 +41,7 @@ from pyworkflow.gui.widgets import LabelSlider
 import pwem.convert as emconv
 import pwem.constants as emcts
 import pwem.objects as emobj
-
-import xmippLib
+from pwem import emlib
 
 
 # ===============================================================================
@@ -453,7 +452,6 @@ class ImagePreviewDialog(PreviewDialog):
         if index:
             filename = "%03d@%s" % (index, filename)
 
-        #        self.image = xmippLib.Image()
         self.image = emconv.ImageHandler()._img
 
         try:
@@ -530,7 +528,7 @@ class DownsampleDialog(ImagePreviewDialog):
         """ This function should compute the right preview
         using the self.lastObj that was selected
         """
-        xmippLib.fastEstimateEnhancedPSD(self.rightImage,
+        emlib.fastEstimateEnhancedPSD(self.rightImage,
                                          self.lastObj.getFileName(),
                                          self.getDownsample(), self.dim, 2)
 
@@ -666,7 +664,7 @@ class BandPassFilterDialog(DownsampleDialog):
         """ This function should compute the right preview
         using the self.lastObj that was selected
         """
-        xmippLib.bandPassFilter(self.rightImage,
+        emlib.bandPassFilter(self.rightImage,
                                 emconv.ImageHandler.locationToXmipp(self.lastObj),
                                 self.getLowFreq(), self.getHighFreq(),
                                 self.getFreqDecay(), self.dim)
@@ -716,7 +714,7 @@ class GaussianFilterDialog(BandPassFilterDialog):
         """ This function should compute the right preview
         using the self.lastObj that was selected
         """
-        xmippLib.gaussianFilter(self.rightImage,
+        emlib.gaussianFilter(self.rightImage,
                                 emconv.ImageHandler.locationToXmipp(self.lastObj),
                                 self.getFreqSigma(), self.dim)
 
