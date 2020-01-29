@@ -41,7 +41,7 @@ class Row:
     corresponding to a Metadata row. 
     """
     def __init__(self):
-        self._labelDict = OrderedDict() # Dictionary containing labels and values
+        self._labelDict = OrderedDict()  # Dictionary containing labels and values
         self._objId = None  # Set this id when reading from a metadata
         
     def getObjId(self):
@@ -137,6 +137,12 @@ class Row:
     
     def __iter__(self):
         return self._labelDict.items()
+
+    def __getitem__(self, item):
+        return self.getValue(item)
+
+    def __setitem__(self, key, value):
+        return self.setValue(key, value)
         
     def containsAll(self, labels):
         """ Check if all labels are present in the row.

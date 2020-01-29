@@ -179,9 +179,7 @@ class CtfView(ObjectView):
                   '_xmipp_enhanced_psd', '_xmipp_ctfmodel_quadrant',
                   '_xmipp_ctfmodel_halfplane', '_micObj.plotGlobal._filename'
                   ]
-    EXTRA_LABELS = ['_ctffind4_ctfResolution', '_gctf_ctfResolution',
-                    '_ctffind4_ctfPhaseShift', '_gctf_ctfPhaseShift',
-                    '_ctftilt_tiltAxis', '_ctftilt_tiltAngle',
+    EXTRA_LABELS = ['_ctftilt_tiltAxis', '_ctftilt_tiltAngle',
                     '_xmipp_ctfCritFirstZero',
                     '_xmipp_ctfCritCorr13', '_xmipp_ctfCritIceness', '_xmipp_ctfCritFitting',
                     '_xmipp_ctfCritNonAstigmaticValidty',
@@ -190,7 +188,6 @@ class CtfView(ObjectView):
                     ]
 
     def __init__(self, project, ctfSet, other='', **kwargs):
-        from pwem import Domain
         first = ctfSet.getFirstItem()
 
         def existingLabels(labelList):
@@ -214,21 +211,6 @@ class CtfView(ObjectView):
 
         if ctfSet.isStreamOpen():
             viewParams['dont_recalc_ctf'] = ''
-
-        def _anyAttrStartsBy(obj, prefix):
-            """ Return True if any of the attributes of this object starts
-            by the provided prefix.
-            """
-            return any(attrName.startswith(prefix)
-                       for attrName, _ in obj.getAttributesToStore())
-
-        if _anyAttrStartsBy(first, '_ctffind4_ctfResolution'):
-            gviewer = Domain.importFromPlugin('cistem.viewers', '')
-            viewParams[OBJCMDS] = "'%s'" % gviewer.OBJCMD_CTFFIND4
-
-        elif _anyAttrStartsBy(first, '_gctf'):
-            OBJCMD_GCTF = Domain.importFromPlugin('gctf.viewers', 'OBJCMD_GCTF')
-            viewParams[OBJCMDS] = "'%s'" % OBJCMD_GCTF
 
         inputId = ctfSet.getObjId() or ctfSet.getFileName()
         ObjectView.__init__(self, project,
