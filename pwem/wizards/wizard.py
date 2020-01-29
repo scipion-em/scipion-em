@@ -411,7 +411,10 @@ class PreviewDialog(dialog.Dialog):
 
         # Create controls frame
         controlsFrame = tk.Frame(bodyFrame)
-        controlsFrame.grid(row=1, column=1, padx=5, pady=5, sticky='news')
+        controlsFrame.grid(row=1, column=0, columnspan=2, padx=5, pady=5, sticky='sew')
+        controlsFrame.columnconfigure(0, weight=1)
+        controlsFrame.rowconfigure(0, weight=1)
+
         self._createControls(controlsFrame)
         self._itemSelected(self.firstItem)
         itemsTree.selectChildByIndex(0)  # Select the first item
@@ -468,7 +471,7 @@ class ImagePreviewDialog(PreviewDialog):
             self.Z = self.image.getData()
         except Exception as e:
             from pyworkflow.gui.matplotlib_image import getPngData
-            self.Z = getPngData(pw.findResource('no-image.png'))
+            self.Z = getPngData(pw.findResource('no-image.gif'))
             dialog.showError("Input particles", "Error reading image <%s>"
                              % filename, self)
         self.preview.updateData(self.Z)
@@ -862,33 +865,42 @@ class MaskRadiiPreviewDialog(MaskPreviewDialog):
                     self.outerRadius = self.innerRadius + self.samplingRate
                 self.radiusSliderOut.slider.set(self.outerRadius)
 
-        self.showValueInAngstroms(self.orVar, self.radiusSliderOut)
-        self.showValueInAngstroms(self.irVar, self.radiusSliderIn)
+        self.showValueInPixAndAngstroms(self.orVar, self.radiusSliderOut)
+        self.showValueInPixAndAngstroms(self.irVar, self.radiusSliderIn)
         self.preview.updateMask(self.outerRadius, self.innerRadius)
 
     def _createControls(self, frame):
 
+        to = int(self.dim_par / 2)
         self.radiusSliderOut = LabelSlider(frame, 'Outer radius',
-                                           from_=1, to=int(self.dim_par / 2),
+                                           from_=1, to=to,
                                            value=self.outerRadius, step=self.samplingRate,
-                                           callback=lambda a, b, c: self.updateSliderOuterRadius())
-        self.radiusSliderOut.grid(row=0, column=0, padx=5, pady=5)
+                                           callback=lambda a, b, c: self.updateSliderOuterRadius(),
+                                           length=150, showvalue=0)
         self.radiusSliderOut.highlightLabel()
         self.orVar = tk.StringVar()
-        self.orLabel = tk.Label(frame, textvariable=self.orVar)
-        self.orLabel.grid(row=1, column=0)
+        self.orLabel = tk.Label(frame, textvariable=self.orVar, width=20)
 
         self.radiusSliderIn = LabelSlider(frame, 'Inner radius',
-                                          from_=1, to=int(self.dim_par / 2),
+                                          from_=1, to=to,
                                           value=self.innerRadius, step=self.samplingRate,
-                                          callback=lambda a, b, c: self.updateSliderInnerRadius())
-        self.radiusSliderIn.grid(row=2, column=0, padx=5, pady=5)
+                                          callback=lambda a, b, c: self.updateSliderInnerRadius(),
+                                          length=150, showvalue=0)
         self.irVar = tk.StringVar()
-        self.irLabel = tk.Label(frame, textvariable=self.irVar)
-        self.irLabel.grid(row=3, column=0)
+        self.irLabel = tk.Label(frame, textvariable=self.irVar, width=20)
 
-        self.showValueInAngstroms(self.orVar, self.radiusSliderOut)
-        self.showValueInAngstroms(self.irVar, self.radiusSliderIn)
+        self.radiusSliderOut.grid(row=0, column=0, sticky='NEWS')
+        self.radiusSliderOut.columnconfigure(0, weight=1)
+        self.orLabel.grid(row=0, column=1, sticky='NSE', padx=5, pady=5)
+        self.orLabel.columnconfigure(0, weight=1)
+
+        self.radiusSliderIn.grid(row=1, column=0, sticky='NEWS')
+        self.radiusSliderIn.columnconfigure(0, weight=1)
+        self.irLabel.grid(row=1, column=1, sticky='NSE', padx=5, pady=5)
+        self.irLabel.columnconfigure(0, weight=1)
+
+        self.showValueInPixAndAngstroms(self.orVar, self.radiusSliderOut)
+        self.showValueInPixAndAngstroms(self.irVar, self.radiusSliderIn)
 
     def updateSliderOuterRadius(self):
 
@@ -925,8 +937,8 @@ class MaskRadiiPreviewDialog(MaskPreviewDialog):
     def getRadius(self, radiusSlider):
         return int(radiusSlider.get())
 
-    def showValueInAngstroms(self, var2set, radiusSlider):
-        var2set.set('{:.1f} {}'.format(
+    def showValueInPixAndAngstroms(self, var2set, radiusSlider):
+        var2set.set('{:5.0f} pix | {:6.1f} {}'.format(radiusSlider.slider.get(),
             convert_pix2length(radiusSlider.get(), self.firstItem.getSamplingRate()),
             emcts.UNIT_ANGSTROM_SYMBOL)
         )
