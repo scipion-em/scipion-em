@@ -127,7 +127,7 @@ class viewerProtImportVolumes(EmProtocolViewer):
             count = 1  # skip first model because is not a 3D map
 
         for vol in _setOfVolumes:
-            localVol = os.path.abspath(emconv.ImageHandler.removeFileType(
+            localVol = os.path.abspath(emlib.image.ImageHandler.removeFileType(
                 vol.getFileName()))
             if localVol.endswith("stk"):
                 errorWindow(None, "Extension .stk is not supported")

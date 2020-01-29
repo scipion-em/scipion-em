@@ -33,6 +33,7 @@ import pyworkflow.protocol.params as params
 
 import pwem.objects as emobj
 import pwem.convert as emconv
+from pwem import emlib
 from pwem.convert.atom_struct import fromPDBToCIF
 
 from .base import ProtImportFiles
@@ -131,7 +132,7 @@ class ProtImportVolumes(ProtImportImages):
         vol = emobj.Volume()
         vol.setSamplingRate(samplingRate)
 
-        imgh = emconv.ImageHandler()
+        imgh = emlib.image.ImageHandler()
 
         volSet = self._createSetOfVolumes()
         volSet.setSamplingRate(samplingRate)

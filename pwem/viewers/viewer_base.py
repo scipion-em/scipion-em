@@ -30,7 +30,7 @@ import pyworkflow.object as pwobj
 
 # FIXME: rename data by objects
 import pwem.objects as emobj
-import pwem.metadata as md
+import pwem.emlib.metadata as md
 from pwem.viewers import ObjectView
 
 

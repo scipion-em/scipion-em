@@ -140,7 +140,7 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
         elif not os.path.exists(finalName):
             # Conversion never happened...
             print('converting %s to %s' % (correctionImage, finalName))
-            emconv.ImageHandler().convert(correctionImage, finalName)
+            emlib.image.ImageHandler().convert(correctionImage, finalName)
 
         # return final name
         return os.path.abspath(finalName)
@@ -320,7 +320,7 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
                 with open(movieTxt) as f:
                     movieOrigin = os.path.basename(os.readlink(movieFn))
                     newMovieName = movieName.replace('.txt', '.mrcs')
-                    ih = emconv.ImageHandler()
+                    ih = emlib.image.ImageHandler()
                     for i, line in enumerate(f):
                         if line.strip():
                             inputFrame = os.path.join(movieOrigin, line.strip())
@@ -359,7 +359,7 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
                     self.info("Converting movie '%s' -> '%s'"
                               % (inputMovieFn, outputMovieFn))
 
-                    emconv.ImageHandler().convertStack(inputMovieFn, outputMovieFn)
+                    emlib.image.ImageHandler().convertStack(inputMovieFn, outputMovieFn)
 
             # Just store the original name in case it is needed in _processMovie
             movie._originalFileName = pwobj.String(objDoStore=False)

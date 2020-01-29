@@ -1,12 +1,12 @@
 # **************************************************************************
 # *
-# * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
+# * Authors:     J.M. de la Rosa Trevin (delarosatrevin@scilifelab.se) [1]
 # *
-# * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
+# * [1] SciLifeLab, Stockholm University
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
-# * the Free Software Foundation; either version 2 of the License, or
+# * the Free Software Foundation; either version 3 of the License, or
 # * (at your option) any later version.
 # *
 # * This program is distributed in the hope that it will be useful,
@@ -29,54 +29,26 @@ import sys
 
 from PIL import Image
 
-try:
-    from itertools import izip
-except ImportError:
-    izip = zip
 import PIL
 
 import pyworkflow.utils as pwutils
 
 import pwem.objects as emobj
 import pwem.constants as emcts
-try:
-    import xmippLib
-except Exception as e:
-    print("\nXmipp installation have failed or xmipp's C++ binnding have some problem:")
-    print(e)
-    print("\n  > Please, remove the Xmipp installation (usually 'rm software/em/xmipp') "
-          "and re-install it\n")
-    sys.exit(-1)
+from .. import lib
 
 
 class ImageHandler(object):
     """ Class to provide several Image manipulation utilities. """
     # TODO: remove dependency from Xmipp
-    DT_DEFAULT = xmippLib.DT_DEFAULT
-    DT_UNKNOWN = xmippLib.DT_UNKNOWN
-    DT_UCHAR = xmippLib.DT_UCHAR
-    DT_SCHAR = xmippLib.DT_SCHAR
-    DT_USHORT = xmippLib.DT_USHORT
-    DT_SHORT = xmippLib.DT_SHORT
-    DT_UINT = xmippLib.DT_UINT
-    DT_INT = xmippLib.DT_INT
-    DT_LONG = xmippLib.DT_LONG
-    DT_FLOAT = xmippLib.DT_FLOAT
-    DT_DOUBLE = xmippLib.DT_DOUBLE
-    DT_COMPLEXSHORT = xmippLib.DT_COMPLEXSHORT
-    DT_COMPLEXINT = xmippLib.DT_COMPLEXINT
-    DT_COMPLEXFLOAT = xmippLib.DT_COMPLEXFLOAT
-    DT_COMPLEXDOUBLE = xmippLib.DT_COMPLEXDOUBLE
-    DT_BOOL = xmippLib.DT_BOOL
-    DT_LASTENTRY = xmippLib.DT_LASTENTRY
-    
+
     def __init__(self):
         # Now it will use Xmipp image library
         # to read and write most of formats, in the future
         # if we want to be independent of Xmipp, we should have
         # our own image library
-        self._img = xmippLib.Image()
-        self._imgClass = xmippLib.Image
+        self._img = lib.Image()
+        self._imgClass = lib.Image
     
     @classmethod
     def fixXmippVolumeFileName(cls, image):
@@ -167,8 +139,8 @@ class ImageHandler(object):
         outDataType = inDataType
 
         if outputFilename.endswith(".mrc") or outputFilename.endswith(".mrcs"):
-            if inDataType == cls.DT_SCHAR:
-                outDataType = cls.DT_USHORT
+            if inDataType == lib.DT_SCHAR:
+                outDataType = lib.DT_USHORT
 
         return outDataType
 
@@ -236,10 +208,10 @@ class ImageHandler(object):
         #                        "implemented yet. " % pwutils.getExt(outputFn))
         else:
             # get input dim
-            (x, y, z, n) = xmippLib.getImageSize(inputFn)
+            (x, y, z, n) = lib.getImageSize(inputFn)
             
             location = self._convertToLocation(inputFn)
-            self._img.read(location, xmippLib.HEADER)
+            self._img.read(location, lib.HEADER)
             dataType = self.getSupportedDataType(self._img.getDataType(),
                                                  outputLower)
 
@@ -251,8 +223,8 @@ class ImageHandler(object):
                 n = lastImg - firstImg + 1
             
             # Create empty output stack file to reserve desired space
-            xmippLib.createEmptyFile(outputFn, x, y, 1, n, dataType)
-            for i, j in izip(range(firstImg, lastImg + 1), range(1, n+1)):
+            lib.createEmptyFile(outputFn, x, y, 1, n, dataType)
+            for i, j in zip(range(firstImg, lastImg + 1), range(1, n+1)):
                 self.convert((i, inputFn), (j, outputFn))
     
     def getDimensions(self, locationObj):
@@ -284,7 +256,7 @@ class ImageHandler(object):
                     doRaise=True)
                 return getImageDimensions(fn)  # we are ignoring index here
             else:
-                self._img.read(location, xmippLib.HEADER)
+                self._img.read(location, lib.HEADER)
                 return self._img.getDimensions()
         else:
             return None, None, None, None
@@ -292,7 +264,7 @@ class ImageHandler(object):
     def getDataType(self, locationObj):
         if self.existsLocation(locationObj):
             location = self._convertToLocation(locationObj)
-            self._img.read(location, xmippLib.HEADER)
+            self._img.read(location, lib.HEADER)
             return self._img.getDataType()
         else:
             return None
@@ -319,7 +291,7 @@ class ImageHandler(object):
         loc1 = self._convertToLocation(locationObj1)
         loc2 = self._convertToLocation(locationObj2)
         
-        return xmippLib.compareTwoImageTolerance(loc1, loc2, tolerance)
+        return lib.compareTwoImageTolerance(loc1, loc2, tolerance)
     
     def computeAverage(self, inputSet):
         """ Compute the average image either from filename or set.
@@ -357,9 +329,9 @@ class ImageHandler(object):
     
     def invertStack(self, inputFn, outputFn):
         # get input dim
-        (x, y, z, n) = xmippLib.getImageSize(inputFn)
+        (x, y, z, n) = lib.getImageSize(inputFn)
         # Create empty output stack for efficiency
-        xmippLib.createEmptyFile(outputFn, x, y, z, n)
+        lib.createEmptyFile(outputFn, x, y, z, n)
         # handle image formats
         for i in range(1, n+1):
             self.invert((i, inputFn), (i, outputFn))
@@ -443,15 +415,15 @@ class ImageHandler(object):
     @classmethod
     def createEmptyImage(cls, fnOut, xDim=1, yDim=1, zDim=1, nDim=1,
                          dataType=None):
-        dt = dataType or cls.DT_FLOAT
-        xmippLib.createEmptyFile(fnOut, xDim, yDim, zDim, nDim, dt)
+        dt = dataType or lib.DT_FLOAT
+        lib.createEmptyFile(fnOut, xDim, yDim, zDim, nDim, dt)
 
     @classmethod
     def isImageFile(cls, imgFn):
         """ Check if imgFn has an image extension. The function
         is implemented in the Xmipp binding.
         """
-        return xmippLib.FileName(imgFn).isImage()
+        return lib.FileName(imgFn).isImage()
 
     def computeThumbnail(self, inputFn, outputFn, scaleFactor=6, flipOnY=False,
                          flipOnX=False):
@@ -512,7 +484,7 @@ class ImageHandler(object):
     @classmethod
     def scaleSplines(cls, inputFn, outputFn, scaleFactor):
         """ Scale an image using splines. """
-        I = xmippLib.Image(inputFn)
+        I = lib.Image(inputFn)
         x, y, z, _ = I.getDimensions()
         I.scale(int(x * scaleFactor), int(y * scaleFactor),
                 int(z * scaleFactor))
@@ -523,7 +495,7 @@ class ImageHandler(object):
         """Apply the transformation matrix over the input image and return the transformed image in a given shape.
         Transformation matrix should be a numpy array data type. If borderAverage is true will set the borderValue to
         the mean of the image."""
-        imageObj = xmippLib.Image()
+        imageObj = lib.Image()
         imageObj.read(inputFile)
         if borderAverage:
             mean, _, _, _ = imageObj.computeStats()
@@ -531,6 +503,3 @@ class ImageHandler(object):
         else:
             resultImage = imageObj.applyWarpAffine(list(transformMatrix.flatten()), shape, borderValue)
         resultImage.write(outputFile)
-
-
-DT_FLOAT = ImageHandler.DT_FLOAT
