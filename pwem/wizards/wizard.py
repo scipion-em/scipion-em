@@ -829,42 +829,42 @@ class MaskRadiiPreviewDialog(MaskPreviewDialog):
     def makeBigger(self, event):
         self.isMakingBigger = True
         if self.isInnerRad:
-            self.innerRadius = self.innerRadius + self.samplingRate
+            self.innerRadius = self.innerRadius + 1
         else:
-            self.outerRadius = self.outerRadius + self.samplingRate
+            self.outerRadius = self.outerRadius + 1
         self.manageMaskVals()
 
     def makeSmaller(self, event):
         self.isMakingBigger = False
         if self.isInnerRad:
-            new_val = self.innerRadius - self.samplingRate
+            new_val = self.innerRadius - 1
             if new_val >= 0:
                 self.innerRadius = new_val
         else:
-            self.outerRadius = self.outerRadius - self.samplingRate
+            self.outerRadius = self.outerRadius - 1
         self.manageMaskVals()
 
     def manageMaskVals(self):
 
         if self.isMakingBigger:
-            if self.isInnerRad:
-                if self.innerRadius >= self.outerRadius:  # Inner ring can't be bigger than outer ring
+            if self.isInnerRad and self.innerRadius >= self.outerRadius:  # Inner ring can't be bigger than outer ring
                     # Subtract one step to go back to the nearest lower value
-                    self.innerRadius = self.outerRadius - self.samplingRate  # Set outer ring radius
-                self.radiusSliderIn.slider.set(self.innerRadius)  # Set inner ring slider
-            else:
-                # Set outer ring slider in case it comes from the mouse wheel
-                self.radiusSliderOut.slider.set(self.outerRadius)
+                    self.innerRadius = self.outerRadius - 1
         else:
-            if self.isInnerRad:
-                self.radiusSliderIn.slider.set(self.innerRadius)
-            else:
-                if self.outerRadius <= self.innerRadius:
-                    self.outerRadius = self.innerRadius + self.samplingRate
-                self.radiusSliderOut.slider.set(self.outerRadius)
+            if not self.isInnerRad and self.outerRadius <= self.innerRadius:  # Outer ring can't be smaller than inner
+                # ring
+                    # Add one step to go back to the nearest higher value
+                    self.outerRadius = self.innerRadius + 1
 
-        self.showValueInPixAndAngstroms(self.orVar, self.radiusSliderOut)
-        self.showValueInPixAndAngstroms(self.irVar, self.radiusSliderIn)
+        # Set the ring sliders in case it comes from the mouse wheel
+        self.setRadius(self.radiusSliderIn, self.innerRadius)
+        self.setRadius(self.radiusSliderOut, self.outerRadius)
+
+        # Show values
+        self.showValues(self.orVar, self.radiusSliderOut)
+        self.showValues(self.irVar, self.radiusSliderIn)
+
+        # Update mask
         self.preview.updateMask(self.outerRadius, self.innerRadius)
 
     def _createControls(self, frame):
@@ -872,7 +872,7 @@ class MaskRadiiPreviewDialog(MaskPreviewDialog):
         to = int(self.dim_par / 2)
         self.radiusSliderOut = LabelSlider(frame, 'Outer radius',
                                            from_=1, to=to,
-                                           value=self.outerRadius, step=self.samplingRate,
+                                           value=self.outerRadius, step=1,
                                            callback=lambda a, b, c: self.updateSliderOuterRadius(),
                                            length=150, showvalue=0)
         self.radiusSliderOut.highlightLabel()
@@ -881,7 +881,7 @@ class MaskRadiiPreviewDialog(MaskPreviewDialog):
 
         self.radiusSliderIn = LabelSlider(frame, 'Inner radius',
                                           from_=1, to=to,
-                                          value=self.innerRadius, step=self.samplingRate,
+                                          value=self.innerRadius, step=1,
                                           callback=lambda a, b, c: self.updateSliderInnerRadius(),
                                           length=150, showvalue=0)
         self.irVar = tk.StringVar()
@@ -897,15 +897,15 @@ class MaskRadiiPreviewDialog(MaskPreviewDialog):
         self.irLabel.grid(row=1, column=1, sticky='NSE', padx=5, pady=5)
         self.irLabel.columnconfigure(0, weight=1)
 
-        self.showValueInPixAndAngstroms(self.orVar, self.radiusSliderOut)
-        self.showValueInPixAndAngstroms(self.irVar, self.radiusSliderIn)
+        self.showValues(self.orVar, self.radiusSliderOut)
+        self.showValues(self.irVar, self.radiusSliderIn)
 
     def updateSliderOuterRadius(self):
 
         new_val = self.getRadius(self.radiusSliderOut)
         # Carry out the action only if the slider is clicked & dragged (prevent from minimal variations when the mouse
         # is on the slider but not clicking on it)
-        if abs(new_val - self.outerRadius) >= self.samplingRate:
+        if abs(new_val - self.outerRadius) >= 1:  #self.samplingRate:
             self.highlightOuterSlider()
             self.isInnerRad = False
             self.isMakingBigger = False
@@ -921,7 +921,7 @@ class MaskRadiiPreviewDialog(MaskPreviewDialog):
         new_val = self.getRadius(self.radiusSliderIn)
         # Highlight only if the slider is clicked & dragged (prevent from minimal variations when the mouse is on the
         # slider but not clicking on it)
-        if abs(new_val - self.innerRadius) >= self.samplingRate:
+        if abs(new_val - self.innerRadius) >= 1:  #self.samplingRate:
             self.highlightInnerSlider()
             self.isInnerRad = True
             self.isMakingBigger = False
@@ -932,14 +932,25 @@ class MaskRadiiPreviewDialog(MaskPreviewDialog):
             self.innerRadius = new_val
             self.manageMaskVals()
 
-    def getRadius(self, radiusSlider):
+    @staticmethod
+    def getRadius(radiusSlider):
         return int(radiusSlider.get())
 
-    def showValueInPixAndAngstroms(self, var2set, radiusSlider):
-        var2set.set('{:5.0f} pix | {:6.1f} {}'.format(radiusSlider.slider.get(),
-            convert_pix2length(radiusSlider.get(), self.firstItem.getSamplingRate()),
-            emcts.UNIT_ANGSTROM_SYMBOL)
-        )
+    @staticmethod
+    def setRadius(radiusSlider, val):
+        radiusSlider.slider.set(int(val))
+
+    def showValues(self, var2set, radiusSlider):
+        """
+        Show the values selected for the inner and outer radius. If the units are angstroms (sampling_rate = 1,
+        it will show only one value to avoid redundancies
+        """
+        if self.unit == emcts.UNIT_ANGSTROM:
+            var2set.set('{:5.0f} pix | {:6.1f} {}'.format(radiusSlider.slider.get(),
+                convert_pix2length(radiusSlider.get(), self.firstItem.getSamplingRate()),
+                emcts.UNIT_ANGSTROM_SYMBOL))
+        else:
+            var2set.set('{:6.1f} {}'.format(radiusSlider.slider.get(), emcts.UNIT_ANGSTROM_SYMBOL))
 
 # Moved to pyworkflow.gui.tree
 # class ListTreeProviderString(ListTreeProvider):
