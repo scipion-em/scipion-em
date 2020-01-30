@@ -524,7 +524,7 @@ class ImageHandler(object):
         I.write(outputFn)
 
     @staticmethod
-    def applyTransform(inputFile, outputFile, transformMatrix, shape, borderValue=0.0, borderAverage=False):
+    def applyTransform(inputFile, outputFile, transformMatrix, shape, borderValue=0.0, applyWarp=False, borderAverage=False):
         """Apply the transformation matrix over the input image and return the transformed image in a given shape.
         Transformation matrix should be a numpy array data type. If borderAverage is true will set the borderValue to
         the mean of the image."""
@@ -532,9 +532,9 @@ class ImageHandler(object):
         imageObj.read(inputFile)
         if borderAverage:
             mean, _, _, _ = imageObj.computeStats()
-            resultImage = imageObj.applyWarpAffine(list(transformMatrix.flatten()), shape, mean)
+            resultImage = imageObj.applyWarpAffine(list(transformMatrix.flatten()), shape, applyWarp, mean)
         else:
-            resultImage = imageObj.applyWarpAffine(list(transformMatrix.flatten()), shape, borderValue)
+            resultImage = imageObj.applyWarpAffine(list(transformMatrix.flatten()), shape, applyWarp, borderValue)
         resultImage.write(outputFile)
 
 
