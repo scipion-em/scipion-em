@@ -298,7 +298,7 @@ class TestAtomicStructHandler(unittest.TestCase):
             # if rotation move to center
             aSH = emconv.AtomicStructHandler(pdbFileName)
             if angles[0] != 0. or angles[1] != 0. or angles[2] != 0.:
-                ih = emconv.ImageHandler()
+                ih = emlib.image.ImageHandler()
                 x, y, z, n = ih.getDimensions("emd_%s.map" % EMDBID)
                 x /= 2.
                 y /= 2.

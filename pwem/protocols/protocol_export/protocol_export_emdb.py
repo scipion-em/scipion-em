@@ -32,7 +32,8 @@ import os
 import pyworkflow.protocol.params as params
 from pyworkflow import VERSION_1_2
 
-from pwem.convert import ImageHandler, AtomicStructHandler, toCIF
+from pwem.emlib.image import ImageHandler
+from pwem.convert import AtomicStructHandler, toCIF
 from pwem.protocols import EMProtocol
 from pwem.objects import FSC
 

@@ -39,7 +39,7 @@ from pyworkflow.protocol.params import (IntParam, PointerParam, FloatParam,
 import pyworkflow.utils as pwutils
 
 from pwem import Domain
-import pwem.metadata as md
+import pwem.emlib.metadata as md
 from pwem.objects import CoordinatesTiltPair
 from pwem.protocols import ProtParticlePicking
 

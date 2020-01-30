@@ -36,7 +36,7 @@ from datetime import datetime
 from pyworkflow.protocol import getUpdatedProtocol
 import pyworkflow.utils as pwutils
 
-from pwem.convert import ImageHandler
+from pwem.emlib.image import ImageHandler
 from pwem.utils import getTemplatePath
 from .summary_provider import SummaryProvider
 

@@ -34,7 +34,7 @@ import pyworkflow.protocol.params as params
 import pyworkflow.utils as pwutils
 
 from pwem.objects import Mask, VolumeMask
-from pwem.convert import ImageHandler
+from pwem.emlib.image import ImageHandler
 
 from .base import ProtImport
 
