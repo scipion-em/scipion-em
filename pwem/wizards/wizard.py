@@ -41,8 +41,7 @@ from pyworkflow.gui.widgets import LabelSlider
 import pwem.convert as emconv
 import pwem.constants as emcts
 import pwem.objects as emobj
-
-import xmippLib
+from pwem import emlib
 
 
 # ===============================================================================
@@ -449,12 +448,11 @@ class ImagePreviewDialog(PreviewDialog):
     def _itemSelected(self, obj):
 
         index = obj.getIndex()
-        filename = emconv.ImageHandler.fixXmippVolumeFileName(obj)
+        filename = emlib.image.ImageHandler.fixXmippVolumeFileName(obj)
         if index:
             filename = "%03d@%s" % (index, filename)
 
-        #        self.image = xmippLib.Image()
-        self.image = emconv.ImageHandler()._img
+        self.image = emlib.image.ImageHandler()._img
 
         try:
             self.image.readPreview(filename, self.dim)
@@ -477,7 +475,7 @@ class DownsampleDialog(ImagePreviewDialog):
         self.rightPreviewLabel = "PSD"
         self.message = "Computing PSD..."
         self.previewLabel = "Micrograph"
-        self.rightImage = emconv.ImageHandler()._img
+        self.rightImage = emlib.image.ImageHandler()._img
 
     def _createPreview(self, frame):
         """ Should be implemented by subclasses to
@@ -530,7 +528,7 @@ class DownsampleDialog(ImagePreviewDialog):
         """ This function should compute the right preview
         using the self.lastObj that was selected
         """
-        xmippLib.fastEstimateEnhancedPSD(self.rightImage,
+        emlib.fastEstimateEnhancedPSD(self.rightImage,
                                          self.lastObj.getFileName(),
                                          self.getDownsample(), self.dim, 2)
 
@@ -608,7 +606,7 @@ class BandPassFilterDialog(DownsampleDialog):
         self.rightPreviewLabel = "Filtered"
         self.message = "Computing filtered image..."
         self.previewLabel = "Image"
-        self.rightImage = emconv.ImageHandler()._img
+        self.rightImage = emlib.image.ImageHandler()._img
 
     def _createControls(self, frame):
         self.freqFrame = ttk.LabelFrame(frame,
@@ -666,8 +664,8 @@ class BandPassFilterDialog(DownsampleDialog):
         """ This function should compute the right preview
         using the self.lastObj that was selected
         """
-        xmippLib.bandPassFilter(self.rightImage,
-                                emconv.ImageHandler.locationToXmipp(self.lastObj),
+        emlib.bandPassFilter(self.rightImage,
+                                emlib.image.ImageHandler.locationToXmipp(self.lastObj),
                                 self.getLowFreq(), self.getHighFreq(),
                                 self.getFreqDecay(), self.dim)
 
@@ -716,8 +714,8 @@ class GaussianFilterDialog(BandPassFilterDialog):
         """ This function should compute the right preview
         using the self.lastObj that was selected
         """
-        xmippLib.gaussianFilter(self.rightImage,
-                                emconv.ImageHandler.locationToXmipp(self.lastObj),
+        emlib.gaussianFilter(self.rightImage,
+                                emlib.image.ImageHandler.locationToXmipp(self.lastObj),
                                 self.getFreqSigma(), self.dim)
 
 

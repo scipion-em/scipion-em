@@ -5,21 +5,16 @@ Created on May 20, 2013
 """
 
 from glob import iglob
-try:
-    from itertools import izip
-except ImportError:
-    izip = zip
 import sqlite3
 import numpy as np
 
-
 from pyworkflow.tests import *
 import pyworkflow.utils as pwutils
-from pyworkflow.utils import Timer
 
 import pwem.convert as emconv
 import pwem.objects as emobj
-import pwem.metadata as md
+from pwem import emlib
+from pwem.emlib import metadata as md
 
 # set to true if you want to check how fast is the access to
 # the database
@@ -79,17 +74,16 @@ class TestFSC(unittest.TestCase):
 
     def testMd(self):
         """test create FSC from metdata"""
-        import xmippLib
         xList = [0.00, 0.05, 0.10, 0.15, 0.2]
         yList = [1.00, 0.95, 0.90, 0.85, 0.2]
-        md1 =xmippLib.MetaData()
-        for freq, fscValue in izip(xList, yList):
+        md1 = emlib.MetaData()
+        for freq, fscValue in zip(xList, yList):
             id = md1.addObject()
-            md1.setValue(xmippLib.MDL_RESOLUTION_FREQ, freq, id)
-            md1.setValue(xmippLib.MDL_RESOLUTION_FRC, fscValue, id)
+            md1.setValue(emlib.MDL_RESOLUTION_FREQ, freq, id)
+            md1.setValue(emlib.MDL_RESOLUTION_FRC, fscValue, id)
         fsc = emobj.FSC()
-        fsc.loadFromMd(md1, xmippLib.MDL_RESOLUTION_FREQ,
-                       xmippLib.MDL_RESOLUTION_FRC)
+        fsc.loadFromMd(md1, emlib.MDL_RESOLUTION_FREQ,
+                       emlib.MDL_RESOLUTION_FRC)
         x, y = fsc.getData()
         self.assertEqual(xList, x)
         self.assertEqual(yList, y)
@@ -154,7 +148,7 @@ class TestImageHandler(unittest.TestCase):
     def testExistLocation(self):
         volFn = self.dataset.getFile('volumes/volume_1_iter_002.mrc')
 
-        ih = emconv.ImageHandler()
+        ih = emlib.image.ImageHandler()
         # Test the volume filename exists
         self.assertTrue(ih.existsLocation(volFn))
         # Test missing filename
@@ -171,7 +165,7 @@ class TestImageHandler(unittest.TestCase):
         """
         micFn = self.dataset.getFile('micrographs/BPV_1386.mrc')
         outSuffix = pwutils.replaceBaseExt(micFn, 'img')
-        ih = emconv.ImageHandler()
+        ih = emlib.image.ImageHandler()
 
         outFn = join('/tmp', outSuffix)
         print("Converting: \n%s -> %s" % (micFn, outFn))
@@ -189,7 +183,7 @@ class TestImageHandler(unittest.TestCase):
         """
         micFn = self.dsFormat.getFile('SuperRef_c3-adp-se-xyz-0228_001.dm4')
 
-        ih = emconv.ImageHandler()
+        ih = emlib.image.ImageHandler()
         # Check that we can read the dimensions of the dm4 file:
         EXPECTED_SIZE = (7676, 7420, 1, 1)
         self.assertEqual(ih.getDimensions(micFn), EXPECTED_SIZE)
@@ -215,7 +209,7 @@ class TestImageHandler(unittest.TestCase):
         """
         micFn = self.dsFormat.getFile('c3-adp-se-xyz-0228_200.tif')
 
-        ih = emconv.ImageHandler()
+        ih = emlib.image.ImageHandler()
         # Check that we can read the dimensions of the dm4 file:
         EXPECTED_SIZE = (7676, 7420, 1, 38)
         self.assertEqual(ih.getDimensions(micFn), EXPECTED_SIZE)
@@ -239,10 +233,10 @@ class TestImageHandler(unittest.TestCase):
         """Check movie conversion"""
         movFn = self.dsFormat.getFile('qbeta/qbeta.mrc') + ":mrcs"
         
-        ih = emconv.ImageHandler()
+        ih = emlib.image.ImageHandler()
         # Check that we can read the dimensions of the dm4 file:
         EXPECTED_SIZE = (4096, 4096, 1, 7)
-        EXPECTED_DT = emconv.ImageHandler.DT_USHORT
+        EXPECTED_DT = emlib.DT_USHORT
 
         self.assertEqual(ih.getDimensions(movFn), EXPECTED_SIZE)
         self.assertEqual(ih.getDataType(movFn), EXPECTED_DT)
@@ -262,7 +256,7 @@ class TestImageHandler(unittest.TestCase):
             pwutils.cleanPath(outFn)
 
     def test_truncateMask(self):
-        ih = emconv.ImageHandler()
+        ih = emlib.image.ImageHandler()
 
         maskFn = self.dataset.getFile('masks/mask.vol')
         outFn = join('/tmp', 'mask.vol')
@@ -279,8 +273,8 @@ class TestImageHandler(unittest.TestCase):
     def test_createEmptyImage(self):
         outFn = join('/tmp', 'empty.mrc')
         SIZE = (128, 128, 1, 1)
-        ih = emconv.ImageHandler()
-        DT = ih.DT_FLOAT
+        ih = emlib.image.ImageHandler()
+        DT = emlib.DT_FLOAT
         ih.createEmptyImage(outFn, SIZE[0], SIZE[1], dataType=DT)
 
         self.assertTrue(pwutils.getFileSize(outFn) > 0)
@@ -315,7 +309,7 @@ class TestSetOfMicrographs(BaseTest):
     def checkSet(self, micSet):
         idCount = 1
     
-        for mic1, fn in izip(micSet, self.mics):  
+        for mic1, fn in zip(micSet, self.mics):
             # traceback.print_stack(file=sys.stdout)
             micFn = mic1.getFileName()
             self.assertEqual(fn, micFn, 
@@ -431,7 +425,7 @@ class TestSetOfParticles(BaseTest):
             imgSet2.append(img)
             img.cleanObjId()
         # orderby
-        for item1, item2 in izip(imgSet1.iterItems(orderBy='_micId',
+        for item1, item2 in zip(imgSet1.iterItems(orderBy='_micId',
                                                    direction='ASC'),
                                  imgSet2.iterItems(orderBy='_micId',
                                                    direction='ASC')):
@@ -632,7 +626,7 @@ class TestSetOfCoordinates(BaseTest):
 
         SPEEDTEST = True
         if SPEEDTEST:  # code from protocol_particles. line 415
-            testTimer = Timer()
+            testTimer = pwutils.Timer()
             testTimer.tic()
             for mic in micSet:
                 micId = mic.getObjId()
@@ -850,13 +844,13 @@ class TestCopyItems(BaseTest):
         # have the added _list attribute with the correct values
         particle = checkSet.getFirstItem()        
         self.assertTrue(particle.hasAttribute('_list'))
-        for v1, v2 in izip([1.0, 2.0], particle._list):
+        for v1, v2 in zip([1.0, 2.0], particle._list):
             self.assertAlmostEqual(v1, float(v2))
             
         # check that copied items have exactly
         # the same attribes than the input set
         # except for the _list
-        for i1, i2 in izip(inputSet, checkSet):
+        for i1, i2 in zip(inputSet, checkSet):
             self.assertTrue(i2.equalAttributes(i1, ignore=['_list']))
         
     def _updateItem(self, item, row):

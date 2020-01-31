@@ -43,6 +43,7 @@ import pyworkflow.protocol.constants as pwcts
 
 import pwem.convert as emconv
 import pwem.objects as emobj
+from pwem import emlib
 
 from pwem.protocols import ProtProcessMovies
 
@@ -328,7 +329,7 @@ class ProtAlignMovies(ProtProcessMovies):
             _validateRange("align")
             _validateRange("sum")
 
-        if not emconv.ImageHandler().existsLocation(firstItem.getLocation()):
+        if not emlib.image.ImageHandler().existsLocation(firstItem.getLocation()):
             errors.append("The input movie files do not exist!!! "
                           "Since usually input movie files are symbolic links, "
                           "please check that links are not broken if you "
@@ -569,7 +570,7 @@ class ProtAlignMovies(ProtProcessMovies):
                    overlap=0.4):
         warnings.warn("Use psd = image.computePSD(overlap=0.4, xdim=384, ydim=384, fftthreads=1) instead",
                       DeprecationWarning)
-        ih = emconv.ImageHandler()
+        ih = emlib.image.ImageHandler()
         psdImg1 = ih.read(inputMic)
         res = psdImg1.computePSD(overlap, dim, dim)
         res.write(oroot+".psd")
@@ -605,15 +606,15 @@ class ProtAlignMovies(ProtProcessMovies):
          left part from psd1 (uncorrected PSD),
          right-part from psd2 (corrected PSD)
         """
-        ih = emconv.ImageHandler()
+        ih = emlib.image.ImageHandler()
         self.composePSDImages(ih.read(psd1), ih.read(psd2), outputFn,
                               outputFnUncorrected, outputFnCorrected)
 
     def computePSDImages(self, movie, fnUncorrected, fnCorrected,
                          outputFnUncorrected=None, outputFnCorrected=None):
         self.composePSDImages(
-            emconv.ImageHandler().read(fnUncorrected).computePSD(),
-            emconv.ImageHandler().read(fnCorrected).computePSD(),
+            emlib.image.ImageHandler().read(fnUncorrected).computePSD(),
+            emlib.image.ImageHandler().read(fnCorrected).computePSD(),
             self._getPsdCorr(movie),
             outputFnUncorrected,
             outputFnCorrected)
@@ -637,7 +638,7 @@ class ProtAlignMovies(ProtProcessMovies):
 
     def correctGain(self, movieFn, outputFn, gainFn=None, darkFn=None):
         """correct a movie with both gain and dark images"""
-        ih = emconv.ImageHandler()
+        ih = emlib.image.ImageHandler()
         _, _, z, n = ih.getDimensions(movieFn)
         numberOfFrames = max(z, n)  # in case of wrong mrc stacks as volumes
 
@@ -645,7 +646,7 @@ class ProtAlignMovies(ProtProcessMovies):
             img = None
             if fn:
                 img = ih.read(fn)
-                img.convert2DataType(ih.DT_FLOAT)
+                img.convert2DataType(emlib.DT_FLOAT)
             return img
 
         gainImg = _readImgFloat(gainFn)
@@ -655,7 +656,7 @@ class ProtAlignMovies(ProtProcessMovies):
 
         for i in range(1, numberOfFrames + 1):
             img.read((i, movieFn))
-            img.convert2DataType(ih.DT_FLOAT)
+            img.convert2DataType(emlib.DT_FLOAT)
 
             if darkImg:
                 img.inplaceSubtract(darkImg)
@@ -736,7 +737,7 @@ class ProtAverageFrames(ProtAlignMovies):
 
     def _processMovie(self, movie):
         allFramesSum = self._getPath('all_frames_sum.mrc')
-        ih = emconv.ImageHandler()
+        ih = emlib.image.ImageHandler()
         sumImg = ih.createImage()
         img = ih.createImage()
 
@@ -764,7 +765,7 @@ class ProtAverageFrames(ProtAlignMovies):
         self._loadInputList()
         n = len(self.listOfMovies)
 
-        ih = emconv.ImageHandler()
+        ih = emlib.image.ImageHandler()
         sumImg = ih.read(allFramesSum)
         sumImg.inplaceDivide(float(n))
         sumImg.write(allFramesAvg)

@@ -35,8 +35,7 @@ import struct
 from math import isnan
 
 from pyworkflow.utils import getExt
-
-from .image_handler import ImageHandler
+from ..emlib.image import ImageHandler
 
 
 class Ccp4Header:

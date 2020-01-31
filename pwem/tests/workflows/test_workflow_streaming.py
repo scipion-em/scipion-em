@@ -306,7 +306,7 @@ class TestRelionExtractStreaming(TestBaseRelionStreaming):
 class TestRelionPickStreaming(TestBaseRelionStreaming):
     def testRisosome(self):
         print("Importing 2D averages (subset of 4)")
-        ih = emconv.ImageHandler()
+        ih = emlib.image.ImageHandler()
         classesFn = self.ds.getFile('import/classify2d/extra/'
                                     'relion_it015_classes.mrcs')
 
@@ -394,7 +394,7 @@ class TestFrameStacking(pwtests.BaseTest):
 
         nFiles = len(files)
         nMovies = MOVS
-        ih = emconv.ImageHandler()
+        ih = emlib.image.ImageHandler()
 
         for i in range(nMovies):
             # Loop over the number of input movies if we want more for testing

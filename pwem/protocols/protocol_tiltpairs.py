@@ -25,10 +25,6 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-try:
-    from itertools import izip
-except ImportError:
-    izip = zip
 """
 This module contains protocols classes related to Random Conical Tilt.
 """
@@ -41,7 +37,7 @@ import pyworkflow.utils as pwutils
 import pyworkflow.protocol.params as params
 
 import pwem.constants as emcts
-import pwem.convert as emconv
+from pwem import emlib
 import pwem.objects as emobj
 
 from .protocol_import import ProtImportFiles
@@ -117,7 +113,7 @@ class ProtImportMicrographsTiltPairs(ProtImportFiles):
         self._setOtherPars(imgSet)
         
         outFiles = [imgSet.getFileName()]
-        imgh = emconv.ImageHandler()
+        imgh = emlib.image.ImageHandler()
         img = imgSet.ITEM_TYPE()
         n = 1
         size = len(filePaths)
@@ -173,7 +169,7 @@ class ProtImportMicrographsTiltPairs(ProtImportFiles):
         micsTiltPair.setUntilted(micsU)
         micsTiltPair.setTilted(micsT)
         
-        for micU, micT in izip(micsU, micsT):
+        for micU, micT in zip(micsU, micsT):
             micsTiltPair.append(emobj.TiltPair(micU, micT))
         
         args[self.OUTPUT_NAME] = micsTiltPair
