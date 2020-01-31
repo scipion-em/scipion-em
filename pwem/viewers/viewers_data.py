@@ -77,13 +77,13 @@ class DataViewer(pwviewer.Viewer):
         cls = type(obj)
 
         if issubclass(cls, emobj.Volume):
-            fn = emconv.ImageHandler.locationToXmipp(obj)
+            fn = emlib.image.ImageHandler.locationToXmipp(obj)
             self._addObjView(obj, fn,
                              {RENDER: 'image',
                               SAMPLINGRATE: obj.getSamplingRate()})
 
         elif issubclass(cls, emobj.Image):
-            fn = emconv.ImageHandler.locationToXmipp(obj)
+            fn = emlib.image.ImageHandler.locationToXmipp(obj)
             self._addObjView(obj, fn)
 
         elif issubclass(cls, emobj.SetOfPDBs):

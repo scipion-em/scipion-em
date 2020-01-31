@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 
-from pwem.viewers import ChimeraClient, ChimeraProjectionClient
 import argparse
-import xmippLib
+
+from pwem import emlib
+from pwem.viewers import ChimeraClient, ChimeraProjectionClient
 
 
 def main():
@@ -29,7 +30,7 @@ def main():
                                  choices=['NEAREST', 'LINEAR', 'BSPLINE3'], help='Projection spline degree')
     projectorParser.add_argument('--showjPort', help='Port to link projections to chimera', type=int)
 
-    splineDegreeDict = {'NEAREST': xmippLib.NEAREST, 'LINEAR': xmippLib.LINEAR, 'BSPLINE3': xmippLib.BSPLINE3}
+    splineDegreeDict = {'NEAREST': emlib.NEAREST, 'LINEAR': emlib.LINEAR, 'BSPLINE3': emlib.BSPLINE3}
 
     args = parentParser.parse_args()
     volfile = args.input

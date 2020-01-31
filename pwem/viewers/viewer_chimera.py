@@ -41,14 +41,13 @@ import pyworkflow.viewer as pwviewer
 import pyworkflow.gui.matplotlib_image as pwgui
 
 import pwem.constants as emcts
-import pwem.metadata as md
+import pwem.emlib.metadata as md
 import pwem.convert as emconv
 import pwem.objects as emobj
+from pwem import emlib
 from pwem import getCmdPath, Config as emConfig
 
 from .showj import (CHIMERA_PORT, MODE, MODE_MD, INVERTY)
-
-import xmippLib
 
 chimeraPdbTemplateFileName = "chimeraOut%04d.pdb"
 chimeraMapTemplateFileName = "chimeraOut%04d.mrc"
@@ -231,7 +230,7 @@ class ChimeraClient:
         self.client.close()
 
     def initVolumeData(self):
-        self.image = xmippLib.Image(self.volfile)
+        self.image = emlib.Image(self.volfile)
         self.image.convert2DataType(md.DT_DOUBLE)
         self.xdim, self.ydim, self.zdim, self.n = self.image.getDimensions()
         self.vol = self.image.getData()
@@ -303,7 +302,7 @@ class ChimeraAngDistClient(ChimeraClient):
             # Avoid zero division
             weight = 0 if interval == 0 else (weight - minweight) / interval
             weight = weight + 0.5  # add 0.5 to avoid cero weight
-            x, y, z = xmippLib.Euler_direction(rot, tilt, psi)
+            x, y, z = emlib.Euler_direction(rot, tilt, psi)
             radius = weight * self.spheresMaxRadius
 
             x = x * self.spheresDistance + x2
@@ -399,7 +398,7 @@ class ChimeraVirusClient(ChimeraClient):
             printCmd('reading motion')
             self.motion = data
             printCmd('getting euler angles')
-            rot, tilt, psi = xmippLib.Euler_matrix2angles(self.motion)
+            rot, tilt, psi = emlib.Euler_matrix2angles(self.motion)
             printCmd('calling rotate')
             self.rotate(rot, tilt, psi)
         elif msg == 'id':
@@ -424,7 +423,7 @@ class ChimeraVirusClient(ChimeraClient):
                     tilt = float(tokens[2])
                     psi = float(tokens[3])
 
-                    matrix = xmippLib.Euler_angles2matrix(rot, tilt, psi)
+                    matrix = emlib.Euler_angles2matrix(rot, tilt, psi)
                 elif cmd == 'rotate_matrix':
                     matrixString = tokens[1]
                     matrix = ast.literal_eval(matrixString)
@@ -442,7 +441,7 @@ class ChimeraProjectionClient(ChimeraAngDistClient):
     def __init__(self, volfile, **kwargs):
         print("on chimera projection client")
         ChimeraAngDistClient.__init__(self, volfile, **kwargs)
-        self.projection = xmippLib.Image()
+        self.projection = emlib.Image()
         self.projection.setDataType(md.DT_DOUBLE)
         # 0.5 ->  Niquiest frequency
         # 2 -> bspline interpolation
@@ -452,7 +451,7 @@ class ChimeraProjectionClient(ChimeraAngDistClient):
         paddingFactor = self.kwargs.get('paddingFactor', 1)
         maxFreq = self.kwargs.get('maxFreq', 0.5)
         splineDegree = self.kwargs.get('splineDegree', 3)
-        self.fourierprojector = xmippLib.FourierProjector(
+        self.fourierprojector = emlib.FourierProjector(
             self.image, paddingFactor, maxFreq, splineDegree)
         self.fourierprojector.projectVolume(self.projection, 0, 0, 0)
         self.showjPort = self.kwargs.get('showjPort', None)
@@ -488,7 +487,7 @@ class ChimeraProjectionClient(ChimeraAngDistClient):
             printCmd('reading motion')
             self.motion = data
             printCmd('getting euler angles')
-            rot, tilt, psi = xmippLib.Euler_matrix2angles(self.motion)
+            rot, tilt, psi = emlib.Euler_matrix2angles(self.motion)
             printCmd('calling rotate')
             self.rotate(rot, tilt, psi)
 
@@ -520,7 +519,7 @@ class ChimeraProjectionClient(ChimeraAngDistClient):
                     tilt = float(tokens[2])
                     psi = float(tokens[3])
 
-                    matrix = xmippLib.Euler_angles2matrix(rot, tilt, psi)
+                    matrix = emlib.Euler_angles2matrix(rot, tilt, psi)
                 elif cmd == 'rotate_matrix':
                     matrixString = tokens[1]
                     matrix = ast.literal_eval(matrixString)
@@ -609,7 +608,7 @@ class ChimeraViewer(pwviewer.Viewer):
                     dim = volumeObject.getDim()[0]
                     sampling = volumeObject.getSamplingRate()
                     f.write("open %s\n" % os.path.abspath(
-                        emconv.ImageHandler.removeFileType(volumeObject.getFileName())))
+                        emlib.image.ImageHandler.removeFileType(volumeObject.getFileName())))
                     f.write("volume #%d style surface voxelSize %f\n"
                             % (volID, sampling))
                     x, y, z = volumeObject.getShiftsFromOrigin()
