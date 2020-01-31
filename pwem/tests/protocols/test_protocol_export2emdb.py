@@ -31,7 +31,9 @@ import os
 import pyworkflow.tests as pwtest
 
 import pwem.protocols as emprot
-
+import pwem.constants as emcts
+import pwem.convert as emconv
+from .test_protocols_import_volumes import createFeatVolume
 
 class TestExport2EMDB(pwtest.BaseTest):
     @classmethod
@@ -84,13 +86,13 @@ class TestExport2EMDB(pwtest.BaseTest):
         prot.referenceVolume.set(self.protImportHalf2.outputVolume)
         self.launchProtocol(prot)
 
-        protExp = self.newProtocol(emprot.ProtExportEMDB)
+        protExp = self.newProtocol(emprot.ProtExportDataBases)
+
         protExp.exportVolume.set(self.protImportHalf1.outputVolume)
         protExp.exportFSC.set(prot.outputFSC)
-
         protExp.exportAtomStruct.set(self._importAtomStructCIF())
 
-        protExp.filesPath.set(os.getcwd())
+        protExp.filesPath.set(os.getcwd() + "/Dir1")
         self.launchProtocol(protExp)
 
         # Check the files were generated properly.
@@ -127,7 +129,7 @@ class TestExport2EMDB(pwtest.BaseTest):
         prot.referenceVolume.set(self.protImportHalf2.outputVolume)
         self.launchProtocol(prot)
 
-        protExp = self.newProtocol(emprot.ProtExportEMDB)
+        protExp = self.newProtocol(emprot.ProtExportDataBases)
         protExp.exportVolume.set(self.protImportHalf1.outputVolume)
         protExp.exportFSC.set(prot.outputFSC)
 
@@ -151,7 +153,7 @@ class TestExport2EMDB(pwtest.BaseTest):
         self.launchProtocol(protChimera)
         protExp.exportAtomStruct.set(protChimera.outputPdb_01)
 
-        protExp.filesPath.set(os.getcwd())
+        protExp.filesPath.set(os.getcwd() + "/Dir2")
         self.launchProtocol(protExp)
 
         # Check the files were generated properly.
@@ -177,3 +179,135 @@ class TestExport2EMDB(pwtest.BaseTest):
                 count = count+1
 
         self.assertListEqual(orig_x, saved_x)
+
+    def import_volume_halfmaps(self):
+        """
+        Test to import a full map (Icosahedron) and two maps (half1 and half2)
+        to compute the FSC
+        """
+        volFeatName = '/tmp/Icosahedron_map.txt'
+        volMapNamefull = '/tmp/Icosahedron_map_full.mrc'
+        volMapNamehalf1 = '/tmp/Icosahedron_map_half1.mrc'
+        volMapNamehalf2 = '/tmp/Icosahedron_map_half2.mrc'
+        volMaskName = '/tmp/mask.mrc'
+        createFeatVolume(volFeatName, volMapNamefull, sym=emcts.SYM_I222r)
+        createFeatVolume(volFeatName, volMapNamehalf1, sym=emcts.SYM_I222r)
+        createFeatVolume(volFeatName, volMapNamehalf2, sym=emcts.SYM_I222r, factor=1.005)
+        createFeatVolume(volFeatName, volMaskName, sym=emcts.SYM_I222r, factor=1.2)
+        _samplingRate = 1.0
+
+        # import 3d map
+        args = {'filesPath': volMapNamefull,
+                'filesPattern': '',
+                'setHalfMaps': True,
+                'half1map': volMapNamehalf1,
+                'half2map': volMapNamehalf2,
+                'samplingRate': _samplingRate
+                }
+        prot5 = self.newProtocol(emprot.ProtImportVolumes, **args)
+        prot5.setObjLabel('import phantom icosahedron,\n half1 and half2')
+        self.launchProtocol(prot5)
+        self.volume = prot5.outputVolume
+        self.volume.setOrigin(None)
+        # The volume has no origin
+        t = self.volume.getOrigin(force=True)
+        x, y, z = t.getShifts()
+        self.assertEqual(-90.0, x)
+        self.assertEqual(-90.0, y)
+        self.assertEqual(-90.0, z)
+        # import half maps
+        args = {'filesPath': volMapNamehalf1,
+                'filesPattern': '',
+                'samplingRate': _samplingRate
+                }
+        prot5_1 = self.newProtocol(emprot.ProtImportVolumes, **args)
+        prot5_1.setObjLabel('import phantom\nicosahedron,\nhalf1')
+        self.launchProtocol(prot5_1)
+        self.half1 = prot5_1.outputVolume
+        self.half1.setOrigin(None)
+            # The volume has no origin
+        t = self.volume.getOrigin(force=True)
+        x, y, z = t.getShifts()
+        self.assertEqual(-90.0, x)
+        self.assertEqual(-90.0, y)
+        self.assertEqual(-90.0, z)
+
+        args = {'filesPath': volMapNamehalf2,
+                'filesPattern': '',
+                'samplingRate': _samplingRate
+                }
+        prot5_2 = self.newProtocol(emprot.ProtImportVolumes, **args)
+        prot5_2.setObjLabel('import phantom\nicosahedron,\nhalf2')
+        self.launchProtocol(prot5_2)
+        self.half2 = prot5_2.outputVolume
+        self.half2.setOrigin(None)
+        # The volume has no origin
+        t = self.volume.getOrigin(force=True)
+        x, y, z = t.getShifts()
+        self.assertEqual(-90.0, x)
+        self.assertEqual(-90.0, y)
+        self.assertEqual(-90.0, z)
+        # import mask
+        args = {'maskPath': volMaskName,
+                'samplingRate': _samplingRate
+                }
+        prot6 = self.newProtocol(emprot.ProtImportMask, **args)
+        prot6.setObjLabel('import mask') #  add origin to the mask
+        self.launchProtocol(prot6)
+        self.mask = prot6.outputMask
+        self.mask.setOrigin(None)
+        # The volume has no origin
+        t = self.mask.getOrigin(force=True)
+        x, y, z = t.getShifts()
+        self.assertEqual(-90.0, x)
+        self.assertEqual(-90.0, y)
+        self.assertEqual(-90.0, z)
+
+
+    def test_halfmaps_mask(self):
+        """ If the input is a 3D map with half volumes associated
+            Save them to the output directory
+            Also create a mask and export it
+        """
+        # first create the 3 3dmaps and the mask
+        self.import_volume_halfmaps()
+        # run the export protocol
+        from pwem import Domain
+        XmippProtResolution3D = Domain.importFromPlugin('xmipp3.protocols',
+                                                        'XmippProtResolution3D',
+                                                        doRaise=True)
+
+        prot = self.newProtocol(XmippProtResolution3D)
+        prot.inputVolume.set(self.half1)
+        prot.referenceVolume.set(self.half2)
+        self.launchProtocol(prot)
+        print("prot.outputFSC: ", prot.outputFSC)
+        #
+        # prot.inputVolume.set(self.volume.getHalfMaps().split(',')[0])
+        # prot.referenceVolume.set(self.volume.getHalfMaps().split(',')[1])
+        # self.launchProtocol(prot)
+
+        protExp = self.newProtocol(emprot.ProtExportDataBases)
+
+        protExp.exportVolume.set(self.volume)
+        protExp.additionalVolumesToExport.set(True)
+        protExp.exportAdditionalVolumes.set([self.protImportHalf1.outputVolume,
+                                            self.protImportHalf1.outputVolume])
+        protExp.exportFSC.set(prot.outputFSC)
+        protExp.masksToExport.set(True)
+        protExp.exportMasks.set(self.mask)
+        protExp.exportAtomStruct.set(self._importAtomStructCIF())
+
+        protExp.filesPath.set(os.getcwd() + "/Dir3")
+        self.launchProtocol(protExp)
+
+        # Check the files were generated properly.
+        # protExp._createFileNamesTemplates()
+        nameVolume = protExp.VOLUMENAME
+        dirName = protExp.filesPath.get()
+        nameFsc = os.path.join(dirName, "fsc_%02d.xml" % 0)
+        nameAtomStruct = protExp.COORDINATEFILENAME
+        self.assertTrue(os.path.exists(nameVolume))
+        self.assertTrue(os.path.exists(nameFsc))
+        self.assertTrue(os.path.exists(nameAtomStruct))
+        # assert results

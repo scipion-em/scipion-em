@@ -32,18 +32,20 @@ import os
 import pyworkflow.protocol.params as params
 from pyworkflow import VERSION_1_2
 
+from pwem.convert.atom_struct import fromPDBToCIF, fromCIFTommCIF
 from pwem.convert import ImageHandler, AtomicStructHandler, toCIF
 from pwem.protocols import EMProtocol
 from pwem.objects import FSC
 
 
-class ProtExportEMDB(EMProtocol):
-    """ generates files for volumes and FSCs to submit structures to EMDB
+class ProtExportDataBases(EMProtocol):
+    """ generates files for elements to submit structures to EMDB/PDB
     """
-    _label = 'export emdb'
+    _label = 'export emdb/pdb'
     _program = ""
     _lastUpdateVersion = VERSION_1_2
-    VOLUMENAME = 'volume.mrc'
+    VOLUMENAME = 'main_map.mrc'
+    HALFVOLUMENAME = 'half_map_'
     COORDINATEFILENAME = 'coordinates.cif'
 
     def __init__(self, **kwargs):
@@ -53,39 +55,94 @@ class ProtExportEMDB(EMProtocol):
     def _defineParams(self, form):
         form.addSection(label='Input')
 
-        form.addParam('exportVolume', params.PointerParam, label="Volume to export", important=True,
+        form.addParam('exportVolume', params.PointerParam,
+                      label="Main EM map to export",
+                      allowsNull=True,
                       pointerClass='Volume',
-                      help='This volume will be exported using mrc format')
-        form.addParam('exportFSC', params.PointerParam, label="FSC to export", important=True,
+                      help='This EM map is mandatory for EMDB and it '
+                           'will be exported using mrc format. '
+                           'If this map is associated to their respective '
+                           'half maps, they will be exported as well.')
+        form.addParam('additionalVolumesToExport', params.BooleanParam,
+                      default=False, label='Additional maps to export?',
+                      help='Select YES if you want to add some more '
+                              'EM maps to export.')
+        form.addParam('exportAdditionalVolumes', params.MultiPointerParam,
+                      label="Additional EM maps to export",
+                      allowsNull=True,
+                      condition='additionalVolumesToExport == True',
+                      pointerClass='Volume',
+                      help='These additional EM maps will be also exported '
+                           'using mrc format.')
+        form.addParam('exportFSC', params.PointerParam, label="FSC file to export",
+                      allowsNull=True,
                       pointerClass='FSC, SetOfFSCs',
-                      help='This FSC will be exported using XML emdb format')
+                      help='This FSCs will be exported using XML format')
+        form.addParam('masksToExport', params.BooleanParam,
+                      default=False, label='Masks to export?',
+                      help='Select YES if you want to add some  '
+                           'masks to export.')
+        form.addParam('exportMasks', params.MultiPointerParam, label="Masks to export",
+                      allowsNull=True, condition='masksToExport == True',
+                      pointerClass='Mask',
+                      help='These mask will be exported using mrc format')
         form.addParam('exportAtomStruct', params.PointerParam,
                       label="Atomic structure to export", allowsNull=True,
                       pointerClass='AtomStruct',
                       help='This atomic structure will be exported using mmCIF format')
+        form.addParam('exportPicture', params.PointerParam,
+                      label="Image to export", allowsNull=True,
+                      pointerClass='Image',
+                      help='This image is mandatory for EMDB')
         form.addParam('filesPath', params.PathParam, important=True,
                       label="Export to directory",
                       help="Directory where the files will be generated.")
 
     # --------------------------- INSERT steps functions ----------------------
     def _insertAllSteps(self):
-        self._insertFunctionStep('exportVolumeStep')
+        self._insertFunctionStep('createDirectoryStep')
+        if self.exportVolume.get() is not None:
+            self._insertFunctionStep('exportVolumeStep')
+        if self.additionalVolumesToExport:
+            self._insertFunctionStep('exportAdditionalVolumeStep')
         self._insertFunctionStep('exportFSCStep')
+        if self.masksToExport:
+            self._insertFunctionStep('exportMasksStep')
         self._insertFunctionStep('exportAtomStructStep')
+        self._insertFunctionStep('exportImageStep')
 
     # --------------------------- STEPS functions -----------------------------
 
-    def exportVolumeStep(self):
-        # create directory if needed
-        dirName = self.filesPath.get()
+    def createDirectoryStep(self):
+        self.dirName = self.filesPath.get()
         try:
-            os.makedirs(dirName)
+            os.makedirs(self.dirName)
         except OSError:
-            if not os.path.isdir(dirName):
+            if not os.path.isdir(self.dirName):
                 raise
+        print("self.dirName: ", self.dirName)
+
+    def exportVolumeStep(self):
         ih = ImageHandler()
         ih.convert(self.exportVolume.get().getLocation(),
-                   os.path.join(dirName, self.VOLUMENAME))
+                   os.path.join(self.dirName, self.VOLUMENAME))
+        print(self.exportVolume.get()._halfMapFilenames)
+        print(type(self.exportVolume.get()._halfMapFilenames))
+        print ("HELLO")
+        #     counter = 1
+        #     for half_map in self.exportVolume.get().setHalfMaps.get():
+        #         ih = ImageHandler()
+        #         ih.convert(half_map.getLocation(),
+        #                os.path.join(self.dirName,
+        #                             self.HALFVOLUMENAME + counter + '.mrc'))
+        #         counter += 1
+
+    def exportAdditionalVolumeStep(self):
+        for map in self.exportAdditionalVolumes.get():
+            ih = ImageHandler()
+            ih.convert(map.getLocation(),
+                    os.path.join(self.dirName + "/Additional_maps",
+                                 map.getLocation))
 
     def exportFSCStep(self):
         exportFSC = self.exportFSC.get()
@@ -113,17 +170,34 @@ class ProtExportEMDB(EMProtocol):
             fo.write("</fsc>\n")
             fo.close()
 
+    def exportMasksStep(self):
+        pass
     def exportAtomStructStep(self):
         exportAtomStruct = self.exportAtomStruct.get()
         originStructPath = exportAtomStruct.getFileName()
         dirName = self.filesPath.get()
         destinyStructPath = os.path.join(dirName, self.COORDINATEFILENAME)
-        if originStructPath.endswith(".cif") or originStructPath.endswith(".mmcif"):
-            h = AtomicStructHandler()
-            h.read(originStructPath)
-            h.write(destinyStructPath)
-        else:
-            toCIF(originStructPath, destinyStructPath)
+        # if originStructPath.endswith(".cif") or originStructPath.endswith(".mmcif"):
+        #     h = AtomicStructHandler()
+        #     h.read(originStructPath)
+        #     h.write(destinyStructPath)
+        # else:
+        #     toCIF(originStructPath, destinyStructPath)
+        if originStructPath.endswith(".pdb"):
+            # convert pdb to cif by using maxit program
+            log = self._log
+            fromPDBToCIF('"' + originStructPath + '"',
+                         '"' + destinyStructPath + '"', log)
+            fromCIFTommCIF('"' + destinyStructPath + '"',
+                         '"' + destinyStructPath + '"', log)
+        if originStructPath.endswith(".cif"):
+            # convert cif to mmCIF by using maxit program
+            log = self._log
+            fromCIFTommCIF('"' + originStructPath + '"',
+                           '"' + destinyStructPath + '"', log)
+
+    def exportImageStep(self):
+        pass
 
     # --------------------------- INFO functions ------------------------------
     def _validate(self):

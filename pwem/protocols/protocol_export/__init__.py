@@ -24,4 +24,4 @@
 # *
 # **************************************************************************
 
-from .protocol_export_emdb import ProtExportEMDB
+from .protocol_export_emdb import ProtExportDataBases
