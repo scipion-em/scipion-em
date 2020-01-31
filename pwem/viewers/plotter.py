@@ -27,7 +27,7 @@
 from math import radians
 
 from pyworkflow.gui.plotter import Plotter, plt
-import pwem.metadata as md
+import pwem.emlib.metadata as md
 import numbers
 
 

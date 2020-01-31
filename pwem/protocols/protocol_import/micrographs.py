@@ -381,7 +381,7 @@ class ProtImportMicrographs(ProtImportMicBase):
     
     # --------------------------- INFO functions ------------------------------
     def _validate(self):
-        from pwem.convert import ImageHandler
+        from pwem.emlib.image import ImageHandler
         ci = self.getImportClass()
         if ci is None:
             errors = ProtImportMicBase._validate(self)
@@ -645,7 +645,7 @@ class ProtImportMovies(ProtImportMicBase):
             frameDict[prefix].append((frameid, fileName))
         
         suffix = self.movieSuffix.get()
-        ih = emconv.ImageHandler()
+        ih = emlib.image.ImageHandler()
         
         for movieFn in self.createdStacks:
             uniqueFn = basename(movieFn)

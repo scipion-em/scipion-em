@@ -67,7 +67,7 @@ class DataView(pwviewer.View):
         # If path is a tuple, we will convert to the filename format
         # as expected by Showj
         if isinstance(path, tuple):
-            self._path = emconv.ImageHandler.locationToXmipp(path)
+            self._path = emlib.image.ImageHandler.locationToXmipp(path)
         # Check if there is a table name with @ in path
         # in that case split table name and path
         # table names can never starts with a number

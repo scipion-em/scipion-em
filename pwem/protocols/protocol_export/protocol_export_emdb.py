@@ -33,7 +33,8 @@ import pyworkflow.protocol.params as params
 from pyworkflow import VERSION_1_2
 
 from pwem.convert.atom_struct import fromPDBToCIF, fromCIFTommCIF
-from pwem.convert import ImageHandler, AtomicStructHandler, toCIF
+from pwem.emlib.image import ImageHandler
+from pwem.convert import AtomicStructHandler, toCIF
 from pwem.protocols import EMProtocol
 from pwem.objects import FSC
 
@@ -90,7 +91,7 @@ class ProtExportDataBases(EMProtocol):
                       label="Atomic structure to export", allowsNull=True,
                       pointerClass='AtomStruct',
                       help='This atomic structure will be exported using mmCIF format')
-        form.addParam('exportPicture', params.PointerParam,
+        form.addParam('exportPicture', params.PathParam,
                       label="Image to export", allowsNull=True,
                       pointerClass='Image',
                       help='This image is mandatory for EMDB')
@@ -172,6 +173,7 @@ class ProtExportDataBases(EMProtocol):
 
     def exportMasksStep(self):
         pass
+
     def exportAtomStructStep(self):
         exportAtomStruct = self.exportAtomStruct.get()
         originStructPath = exportAtomStruct.getFileName()
