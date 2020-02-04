@@ -53,9 +53,6 @@ class ProtExportDataBases(EMProtocol):
     MASKDIR = "masks"
     MASKNAME = "mask_%02d.mrc"
 
-    def __init__(self, **kwargs):
-        EMProtocol.__init__(self, **kwargs)
-
     # --------------------------- DEFINE param functions ----------------------
     def _defineParams(self, form):
         form.addSection(label='Input')
