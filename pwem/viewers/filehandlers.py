@@ -27,22 +27,22 @@
 This modules contains file handlers to be registered in the scipion file browser
 """
 import os
-from os.path import dirname
-import xmippLib
 
-from pyworkflow.gui.browser import FileHandler, isStandardImage
-from pyworkflow import gui
 import pyworkflow.utils as pwutils
+from pyworkflow import gui
+from pyworkflow.gui.browser import FileHandler, isStandardImage
+
+from pwem import emlib
 
 
 class ImageFileHandler(FileHandler):
-    _image = xmippLib.Image()
+    _image = emlib.Image()
     _index = ''
 
     def _getImageString(self, filename):
         if isStandardImage(filename):
             return "Image file."
-        x, y, z, n = xmippLib.getImageSize(filename)
+        x, y, z, n = emlib.getImageSize(filename)
         objType = 'Image'
         dimMsg = "*%(objType)s file*\n  dimensions: %(x)d x %(y)d"
         expMsg = "Columns x Rows "
@@ -114,8 +114,8 @@ class MdFileHandler(ImageFileHandler):
 
     def _getImgPath(self, mdFn, imgFn):
         """ Get ups and ups until finding the relative location to images. """
-        path = dirname(mdFn)
-        index, fn = xmippLib.FileName(imgFn).decompose()
+        path = os.path.dirname(mdFn)
+        index, fn = emlib.FileName(imgFn).decompose()
 
         while path and path != '/':
             newFn = os.path.join(path, fn)
@@ -123,12 +123,12 @@ class MdFileHandler(ImageFileHandler):
                 if index:
                     newFn = '%d@%s' % (index, newFn)
                 return newFn
-            path = dirname(path)
+            path = os.path.dirname(path)
 
         return None
 
     def _getMdString(self, filename, block=None):
-        md = xmippLib.MetaData()
+        md = emlib.MetaData()
         if block:
             md.read(block + '@' + filename)
         else:
@@ -136,12 +136,12 @@ class MdFileHandler(ImageFileHandler):
         labels = md.getActiveLabels()
         msg = "Metadata items: *%d*\n" % md.getParsedLines()
         msg += "Metadata labels: " + ''.join(
-            ["\n   - %s" % xmippLib.label2Str(l)
+            ["\n   - %s" % emlib.label2Str(l)
              for l in labels])
 
         imgPath = None
         for label in labels:
-            if xmippLib.labelIsImage(label):
+            if emlib.labelIsImage(label):
                 imgPath = self._getImgPath(filename,
                                            md.getValue(label, md.firstObject()))
                 break
@@ -158,7 +158,7 @@ class MdFileHandler(ImageFileHandler):
 
         if ext == '.xmd' or ext == '.ctfparam' or ext == '.pos' or ext == '.doc':
             msg = "*Metadata File* "
-            blocks = xmippLib.getBlocksInMetaDataFile(filename)
+            blocks = emlib.getBlocksInMetaDataFile(filename)
             nblocks = len(blocks)
             if nblocks <= 1:
                 mdStr = self._getMdString(filename)
@@ -187,7 +187,7 @@ def getPILImage(imageXmipp, dim=None, normalize=True):
     from PIL import Image
 
     if normalize:
-        imageXmipp.convert2DataType(xmippLib.DT_UCHAR, xmippLib.CW_ADJUST)
+        imageXmipp.convert2DataType(emlib.DT_UCHAR, emlib.CW_ADJUST)
 
     imageData = imageXmipp.getData()
     image = Image.fromarray(imageData)
@@ -207,7 +207,7 @@ def getImageFromPath(imagePath):
     """ Read an image using Xmipp, convert to PIL
     and then return as expected by Tk.
     """
-    img = xmippLib.Image(imagePath)
+    img = emlib.Image(imagePath)
     imgPIL = getPILImage(img)
     from PIL import ImageTk
     imgTk = ImageTk.PhotoImage(imgPIL)

@@ -29,10 +29,10 @@ import os
 import pyworkflow.viewer as pwviewer
 import pyworkflow.utils as pwutils
 
+from pwem import Domain
+from pwem import emlib
 import pwem.objects as emobj
 import pwem.protocols as emprot
-import pwem.convert as emconv
-from pwem import Domain
 
 from .views import (ObjectView, MicrographsView, CoordinatesObjectView,
                     ClassesView, Classes3DView, CtfView, DataView)
@@ -77,13 +77,13 @@ class DataViewer(pwviewer.Viewer):
         cls = type(obj)
 
         if issubclass(cls, emobj.Volume):
-            fn = emconv.ImageHandler.locationToXmipp(obj)
+            fn = emlib.image.ImageHandler.locationToXmipp(obj)
             self._addObjView(obj, fn,
                              {RENDER: 'image',
                               SAMPLINGRATE: obj.getSamplingRate()})
 
         elif issubclass(cls, emobj.Image):
-            fn = emconv.ImageHandler.locationToXmipp(obj)
+            fn = emlib.image.ImageHandler.locationToXmipp(obj)
             self._addObjView(obj, fn)
 
         elif issubclass(cls, emobj.SetOfPDBs):

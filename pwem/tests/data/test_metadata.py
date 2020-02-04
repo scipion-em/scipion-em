@@ -27,7 +27,7 @@
 
 import pyworkflow.tests as pwtests
 
-import pwem.metadata as md
+import pwem.emlib.metadata as md
 
 
 class TestMetaData(pwtests.unittest.TestCase):

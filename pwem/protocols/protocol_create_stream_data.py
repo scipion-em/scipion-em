@@ -38,8 +38,7 @@ from pyworkflow.protocol.constants import STEPS_PARALLEL
 from pwem.protocols import EMProtocol
 import pwem.objects as emobj
 import pwem.convert as emconv
-
-import xmippLib
+from pwem import emlib
 
 
 SET_OF_MOVIES = 0
@@ -285,7 +284,7 @@ class ProtCreateStreamData(EMProtocol):
                         newMov = mov.clone()
                         break
                 ProtCreateStreamData.object = \
-                    emconv.ImageHandler().read(newMov.getLocation())
+                    emlib.image.ImageHandler().read(newMov.getLocation())
                 self.name = "movie"
 
             elif self.setof == SET_OF_MICROGRAPHS:
@@ -295,7 +294,7 @@ class ProtCreateStreamData(EMProtocol):
                         newMic = mic.clone()
                         break
                 ProtCreateStreamData.object = \
-                    emconv.ImageHandler().read(newMic.getLocation())
+                    emlib.image.ImageHandler().read(newMic.getLocation())
                 self.name = "micro"
 
         # save file
@@ -313,7 +312,7 @@ class ProtCreateStreamData(EMProtocol):
                     (idx <= self.counter-1 + self.group)):
                 newP = p.clone()
                 ProtCreateStreamData.object = \
-                    emconv.ImageHandler().read(newP.getLocation())
+                    emlib.image.ImageHandler().read(newP.getLocation())
                 destFn = self._getExtraPath("%s_%05d" % (self.name, idx))
                 ProtCreateStreamData.object.write(destFn)
                 self.dictObj[destFn] = True
@@ -326,22 +325,22 @@ class ProtCreateStreamData(EMProtocol):
                                              doRaise=True).getEnviron
 
         # create image
-        img = xmippLib.Image()
-        img.setDataType(xmippLib.DT_FLOAT)
+        img = emlib.Image()
+        img.setDataType(emlib.DT_FLOAT)
         img.resize(self.xDim, self.yDim)
-        img.initRandom(0., 1., xmippLib.XMIPP_RND_UNIFORM)
+        img.initRandom(0., 1., emlib.XMIPP_RND_UNIFORM)
         baseFn = self._getExtraPath(self._singleImageFn)
         img.write(baseFn)
 
-        md1 = xmippLib.MetaData()
+        md1 = emlib.MetaData()
         md1.setColumnFormat(False)
         idctf = md1.addObject()
 
         baseFnCtf = self._getTmpPath("ctf_%d.param" % mic)
         baseFnImageCTF = self._getExtraPath("imageCTF_%d.xmp" % mic)
 
-        md1.setValue(xmippLib.MDL_CTF_SAMPLING_RATE, 1., idctf)
-        md1.setValue(xmippLib.MDL_CTF_VOLTAGE, 200., idctf)
+        md1.setValue(emlib.MDL_CTF_SAMPLING_RATE, 1., idctf)
+        md1.setValue(emlib.MDL_CTF_VOLTAGE, 200., idctf)
         defocus = 20000 + 10000 * random.random()
         udefocus = defocus + 1000 * random.random()
         vdefocus = defocus + 1000 * random.random()
@@ -349,13 +348,13 @@ class ProtCreateStreamData(EMProtocol):
             aux = vdefocus
             vdefocus = udefocus
             udefocus = aux
-        md1.setValue(xmippLib.MDL_CTF_DEFOCUSU, udefocus, idctf)
-        md1.setValue(xmippLib.MDL_CTF_DEFOCUSV, vdefocus, idctf)
-        md1.setValue(xmippLib.MDL_CTF_DEFOCUS_ANGLE, 180.0 * random.random(),
+        md1.setValue(emlib.MDL_CTF_DEFOCUSU, udefocus, idctf)
+        md1.setValue(emlib.MDL_CTF_DEFOCUSV, vdefocus, idctf)
+        md1.setValue(emlib.MDL_CTF_DEFOCUS_ANGLE, 180.0 * random.random(),
                      idctf)
-        md1.setValue(xmippLib.MDL_CTF_CS, 2., idctf)
-        md1.setValue(xmippLib.MDL_CTF_Q0, 0.07, idctf)
-        md1.setValue(xmippLib.MDL_CTF_K, 1., idctf)
+        md1.setValue(emlib.MDL_CTF_CS, 2., idctf)
+        md1.setValue(emlib.MDL_CTF_Q0, 0.07, idctf)
+        md1.setValue(emlib.MDL_CTF_K, 1., idctf)
 
         md1.write(baseFnCtf)
 

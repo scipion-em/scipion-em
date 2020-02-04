@@ -41,14 +41,13 @@ import pyworkflow.viewer as pwviewer
 import pyworkflow.gui.matplotlib_image as pwgui
 
 import pwem.constants as emcts
-import pwem.metadata as md
+import pwem.emlib.metadata as md
 import pwem.convert as emconv
 import pwem.objects as emobj
+from pwem import emlib
 from pwem import getCmdPath
 
 from .showj import (CHIMERA_PORT, MODE, MODE_MD, INVERTY)
-
-import xmippLib
 
 chimeraPdbTemplateFileName = "chimeraOut%04d.pdb"
 chimeraMapTemplateFileName = "chimeraOut%04d.mrc"
@@ -231,7 +230,7 @@ class ChimeraClient:
         self.client.close()
 
     def initVolumeData(self):
-        self.image = xmippLib.Image(self.volfile)
+        self.image = emlib.Image(self.volfile)
         self.image.convert2DataType(md.DT_DOUBLE)
         self.xdim, self.ydim, self.zdim, self.n = self.image.getDimensions()
         self.vol = self.image.getData()
@@ -303,7 +302,7 @@ class ChimeraAngDistClient(ChimeraClient):
             # Avoid zero division
             weight = 0 if interval == 0 else (weight - minweight) / interval
             weight = weight + 0.5  # add 0.5 to avoid cero weight
-            x, y, z = xmippLib.Euler_direction(rot, tilt, psi)
+            x, y, z = emlib.Euler_direction(rot, tilt, psi)
             radius = weight * self.spheresMaxRadius
 
             x = x * self.spheresDistance + x2
@@ -313,6 +312,7 @@ class ChimeraAngDistClient(ChimeraClient):
                       (radius, x, y, z, self.spheresColor)
             self.angulardist.append(command)
             # printCmd(command)
+
 
 
 class ChimeraView(pwviewer.CommandView):
@@ -391,7 +391,7 @@ class ChimeraViewer(pwviewer.Viewer):
                     dim = volumeObject.getDim()[0]
                     sampling = volumeObject.getSamplingRate()
                     f.write("open %s\n" % os.path.abspath(
-                        emconv.ImageHandler.removeFileType(volumeObject.getFileName())))
+                        emlib.image.ImageHandler.removeFileType(volumeObject.getFileName())))
                     f.write("volume #%d style surface voxelSize %f\n"
                             % (volID, sampling))
                     x, y, z = volumeObject.getShiftsFromOrigin()
