@@ -727,8 +727,8 @@ def _frombase(inFileName, outFileName, log, oParam=1):
             maxitAvailable = True
 
     if maxitAvailable:
-        args = ' -input ' + inFileName + ' -output ' + outFileName + \
-               ' -o %d' % oParam
+        args = ' -input "' + inFileName + '" -output "' + outFileName + \
+               '" -o %d' % oParam
         log.info('Launching: ' + Plugin.getMaxitBin() + args)
         # run in the background
         env = getEnviron()
