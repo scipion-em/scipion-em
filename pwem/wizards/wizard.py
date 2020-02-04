@@ -37,9 +37,8 @@ import pyworkflow.wizard as pwizard
 import pyworkflow.gui.dialog as dialog
 from pwem import convert_pix2length
 from pyworkflow.gui.tree import BoundTree, ListTreeProvider
-from pyworkflow.gui.widgets import LabelSlider
+from pyworkflow.gui.widgets import LabelSlider, ExplanationText
 
-import pwem.convert as emconv
 import pwem.constants as emcts
 import pwem.objects as emobj
 from pwem import emlib
@@ -381,8 +380,7 @@ class PreviewDialog(dialog.Dialog):
         self.firstItem = provider.getObjects()[0]
         self.isInnerRad = False
         self.isMakingBigger = False
-        self.last_iner_val = 0
-        self.last_outer_val = 0
+        self.expText = []
         buttons = [('Select', dialog.RESULT_YES),
                    ('Cancel', dialog.RESULT_CANCEL)]
         dialog.Dialog.__init__(self, parent, "Wizard",
@@ -393,26 +391,38 @@ class PreviewDialog(dialog.Dialog):
         bodyFrame.columnconfigure(0, weight=1)
         bodyFrame.rowconfigure(0, weight=1)
         bodyFrame.columnconfigure(1, weight=1)
+        bodyFrame.columnconfigure(2, weight=1)
+
+        # Create explanation label
+        expFrame = tk.Frame(bodyFrame)
+        expFrame.columnconfigure(0, weight=1)
+        expFrame.rowconfigure(0, weight=1)
+        # self.expText = tk.Text(bodyFrame, height=3, width=50, bg='gray')
+        self.expText = ExplanationText(bodyFrame, nlines=3, width=50, bg='gray')
+        # self.expText.config(state='disabled')
+        # self.expText = ExplanationText(bodyFrame, nlines=3, width=100, text='JORGE')
+        self.expText.text.grid(row=0, column=0, columnspan=2, padx=5, pady=5, sticky='news')
+
         # Create items frame
         itemsFrame = tk.Frame(bodyFrame, bg='white')
-        itemsFrame.grid(row=0, column=0, padx=5, pady=5, sticky='news')
+        itemsFrame.grid(row=1, column=0, padx=5, pady=5, sticky='news')
         itemsFrame.columnconfigure(0, weight=1)
-        itemsFrame.rowconfigure(0, weight=1)
+        itemsFrame.rowconfigure(1, weight=1)
         itemsTree = BoundTree(itemsFrame, self.provider)
         itemsTree.grid(row=0, column=0, padx=5, pady=5, sticky='news')
         itemsTree.itemClick = self._itemSelected
 
         # Create preview frame
         previewFrame = tk.Frame(bodyFrame)
-        previewFrame.grid(row=0, column=1, padx=5, pady=5)
+        previewFrame.grid(row=1, column=1, padx=5, pady=5)
         self._beforePreview()
         self._createPreview(previewFrame)
 
         # Create controls frame
         controlsFrame = tk.Frame(bodyFrame)
-        controlsFrame.grid(row=1, column=0, columnspan=2, padx=5, pady=5, sticky='sew')
+        controlsFrame.grid(row=2, column=0, columnspan=2, padx=5, pady=5, sticky='sew')
         controlsFrame.columnconfigure(0, weight=1)
-        controlsFrame.rowconfigure(0, weight=1)
+        controlsFrame.rowconfigure(2, weight=1)
 
         self._createControls(controlsFrame)
         self._itemSelected(self.firstItem)
@@ -756,13 +766,13 @@ class MaskPreviewDialog(ImagePreviewDialog):
 
         self.preview = MaskPreview(frame, self.dim, label=self.previewLabel,
                                    outerRadius=self.iniRadius * self.ratio)
-        self.preview.grid(row=0, column=0)
+        self.preview.grid(row=1, column=0)
 
     def _createControls(self, frame):
         self.addRadiusBox(frame)
         self.hfVar = tk.StringVar()
         self.hfLabel = tk.Label(frame, textvariable=self.hfVar)
-        self.hfLabel.grid(row=1, column=0)
+        self.hfLabel.grid(row=2, column=0)
         self.showValueInAngstroms()
 
     def addRadiusBox(self, parent):
@@ -793,6 +803,10 @@ class MaskRadiiPreviewDialog(MaskPreviewDialog):
         """ Should be implemented by subclasses to
         create the items preview.
         """
+
+        # self.expLabel = ExplanationText(self.expFrame, nlines=3, width=100, text='JORGE')
+        # self.expFrame.grid(row=0, column=0, columnspan=2, padx=5, pady=5, sticky='news')
+
         from pyworkflow.gui.matplotlib_image import MaskPreview
         if self.innerRadius is None:
             self.innerRadius = 0
@@ -807,12 +821,13 @@ class MaskRadiiPreviewDialog(MaskPreviewDialog):
                                    innerRadius=int(self.innerRadius) * self.ratio,
                                    listenersDict=listeners)
 
-        self.preview.grid(row=0, column=0)
+        self.preview.grid(row=1, column=0)
         self.preview.updateMask(self.outerRadius, self.innerRadius)
 
     def upKeyPress(self, event):
         self.isInnerRad = False
         self.highlightOuterSlider()
+
 
     def downKeyPress(self, event):
         self.isInnerRad = True
