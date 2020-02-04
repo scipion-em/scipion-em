@@ -193,15 +193,15 @@ class ProtExportDataBases(EMProtocol):
         if originStructPath.endswith(".pdb"):
             # convert pdb to cif  using maxit program
             log = self._log
-            fromPDBToCIF('"' + originStructPath + '"',
-                         '"' + destinyStructPath + '"', log)
-            fromCIFTommCIF('"' + destinyStructPath + '"',
-                         '"' + destinyStructPath + '"', log)
+            fromPDBToCIF(originStructPath,
+                        destinyStructPath, log)
+            fromCIFTommCIF(destinyStructPath,
+                        destinyStructPath, log)
         elif originStructPath.endswith(".cif"):
             # convert cif to mmCIF by using maxit program
             log = self._log
-            fromCIFTommCIF('"' + originStructPath + '"',
-                           '"' + destinyStructPath + '"', log)
+            fromCIFTommCIF(originStructPath,
+                           destinyStructPath, log)
 
     def exportImageStep(self):
         imageBaseFileName = os.path.basename(self.exportPicture.get())
