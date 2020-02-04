@@ -35,7 +35,7 @@ import pwem.constants as emcts
 import pwem.convert as emconv
 from .test_protocols_import_volumes import createFeatVolume
 
-class TestExport2EMDB(pwtest.BaseTest):
+class TestExport2DataBases(pwtest.BaseTest):
     @classmethod
     def runImportVolumes(cls, pattern, samplingRate, label):
         """ Run an Import volumes protocol. """
@@ -87,20 +87,20 @@ class TestExport2EMDB(pwtest.BaseTest):
         self.launchProtocol(prot)
 
         protExp = self.newProtocol(emprot.ProtExportDataBases)
-
+        protExp.setObjLabel("export to DB\ndir1")
         protExp.exportVolume.set(self.protImportHalf1.outputVolume)
         protExp.exportFSC.set(prot.outputFSC)
         protExp.exportAtomStruct.set(self._importAtomStructCIF())
 
-        protExp.filesPath.set(os.getcwd() + "/Dir1")
+        protExp.filesPath.set(os.getcwd() + "/dir1")
         self.launchProtocol(protExp)
 
         # Check the files were generated properly.
         # protExp._createFileNamesTemplates()
-        nameVolume = protExp.VOLUMENAME
         dirName = protExp.filesPath.get()
-        nameFsc = os.path.join(dirName, "fsc_%02d.xml" % 0)
-        nameAtomStruct = protExp.COORDINATEFILENAME
+        nameVolume = os.path.join(dirName, protExp.VOLUMENAME)
+        nameFsc = os.path.join(dirName, "fsc_%02d.xml" % 1)
+        nameAtomStruct = os.path.join(dirName, protExp.COORDINATEFILENAME)
         self.assertTrue(os.path.exists(nameVolume))
         self.assertTrue(os.path.exists(nameFsc))
         self.assertTrue(os.path.exists(nameAtomStruct))
@@ -130,6 +130,7 @@ class TestExport2EMDB(pwtest.BaseTest):
         self.launchProtocol(prot)
 
         protExp = self.newProtocol(emprot.ProtExportDataBases)
+        protExp.setObjLabel("export to DB\ndir2")
         protExp.exportVolume.set(self.protImportHalf1.outputVolume)
         protExp.exportFSC.set(prot.outputFSC)
 
@@ -151,17 +152,18 @@ class TestExport2EMDB(pwtest.BaseTest):
         protChimera = self.newProtocol(ChimeraProtRigidFit, **args)
         protChimera.setObjLabel('chimera fit\n volume and PDB\n save model')
         self.launchProtocol(protChimera)
+
         protExp.exportAtomStruct.set(protChimera.outputPdb_01)
 
-        protExp.filesPath.set(os.getcwd() + "/Dir2")
+        protExp.filesPath.set(os.getcwd() + "/dir2")
         self.launchProtocol(protExp)
 
         # Check the files were generated properly.
         # protExp._createFileNamesTemplates()
-        nameVolume = protExp.VOLUMENAME
         dirName = protExp.filesPath.get()
-        nameFsc = os.path.join(dirName, "fsc_%02d.xml" % 0)
-        nameAtomStruct = protExp.COORDINATEFILENAME
+        nameVolume = os.path.join(dirName, protExp.VOLUMENAME)
+        nameFsc = os.path.join(dirName, "fsc_%02d.xml" % 1)
+        nameAtomStruct = os.path.join(dirName, protExp.COORDINATEFILENAME)
         self.assertTrue(os.path.exists(nameVolume))
         self.assertTrue(os.path.exists(nameFsc))
         self.assertTrue(os.path.exists(nameAtomStruct))
@@ -283,7 +285,7 @@ class TestExport2EMDB(pwtest.BaseTest):
         self.launchProtocol(prot)
 
         protExp = self.newProtocol(emprot.ProtExportDataBases)
-
+        protExp.setObjLabel("export to DB\ndir3")
         protExp.exportVolume.set(self.volume)
         protExp.additionalVolumesToExport.set(True)
         protExp.exportAdditionalVolumes.set([self.protImportHalf1.outputVolume,
@@ -293,15 +295,15 @@ class TestExport2EMDB(pwtest.BaseTest):
         protExp.exportMasks.set([self.mask])
         protExp.exportAtomStruct.set(self._importAtomStructCIF())
 
-        protExp.filesPath.set(os.getcwd() + "/Dir3")
+        protExp.filesPath.set(os.getcwd() + "/dir3")
         self.launchProtocol(protExp)
 
         # Check the files were generated properly.
         # protExp._createFileNamesTemplates()
-        nameVolume = protExp.VOLUMENAME
         dirName = protExp.filesPath.get()
-        nameFsc = os.path.join(dirName, "fsc_%02d.xml" % 0)
-        nameAtomStruct = protExp.COORDINATEFILENAME
+        nameVolume = os.path.join(dirName, protExp.VOLUMENAME)
+        nameFsc = os.path.join(dirName, "fsc_%02d.xml" % 1)
+        nameAtomStruct = os.path.join(dirName, protExp.COORDINATEFILENAME)
         self.assertTrue(os.path.exists(nameVolume))
         self.assertTrue(os.path.exists(nameFsc))
         self.assertTrue(os.path.exists(nameAtomStruct))
