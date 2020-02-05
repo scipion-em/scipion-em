@@ -25,9 +25,9 @@
 # **************************************************************************
 
 ghostStr = """
- >>> WARNING: Xmipp binaries not found. Ghost active.....BOOOOOO!
+ >>> WARNING: Image library not found!
   > Please install Xmipp to get full functionality. 
-(Configuration->Plugins->scipion-em-xmipp in Scipion manager window)
+(Configuration->Plugins->scipion-em-xmipp -> expand, in Scipion plugin manager window)
 """
 
 print(ghostStr)

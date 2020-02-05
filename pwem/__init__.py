@@ -46,10 +46,10 @@ _references = ["delaRosaTrevin201693"]
 class Config:
     __get = os.environ.get  # shortcut
     EM_ROOT = __get('EM_ROOT', os.path.join(pw.Config.SCIPION_SOFTWARE, 'em'))
-    # Default XMIPP_HOME
+    # Default XMIPP_HOME: needed here for ShowJ viewers
     XMIPP_HOME = __get('XMIPP_HOME', os.path.join(EM_ROOT, 'xmipp'))
 
-    # Some visualization packages
+    # Needed by Chimera viewer.
     CHIMERA_HOME = __get('CHIMERA_HOME', os.path.join(EM_ROOT,'chimera-1.13.1'))
 
     # Get java home, we might need to provide correct default value
