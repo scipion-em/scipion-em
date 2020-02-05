@@ -7,7 +7,7 @@ https://github.com/pypa/sampleproject
 
 # Always prefer setuptools over distutils
 from pwem import EM_PROGRAM_ENTRY_POINT, CHIMERA_ENTRY_POINT, \
-    CHIMERAV_ENTRY_POINT, CONVERT_ENTRY_POINT
+    CONVERT_ENTRY_POINT
 from setuptools import setup, find_packages
 # To use a consistent encoding
 from codecs import open
@@ -77,7 +77,6 @@ setup(
         'console_scripts': [
             '%s = pwem.cmd.program:main' % EM_PROGRAM_ENTRY_POINT,
             '%s = pwem.cmd.chimera_client:main' % CHIMERA_ENTRY_POINT,
-            '%s = pwem.cmd.chimera_virus:main' % CHIMERAV_ENTRY_POINT,
             '%s = pwem.cmd.convert:main' % CONVERT_ENTRY_POINT,
         ],
         'pyworkflow.plugin': 'pwem = pwem'

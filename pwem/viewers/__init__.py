@@ -39,8 +39,7 @@ from .viewer_fsc import FscViewer
 from .viewer_pdf import PDFReportViewer
 from .viewer_chimera import (Chimera, ChimeraView, ChimeraClientView,
                              ChimeraDataView, ChimeraViewer,
-                             ChimeraClient, ChimeraProjectionClient,
-                             ChimeraVirusClient)
+                             ChimeraClient)
 from .viewer_monitors import (ProtMonitorCTFViewer, ProtMonitorSystemViewer,
                               ProtMonitorMovieGainViewer, ViewerMonitorSummary)
 from .viewer_sequence import SequenceViewer

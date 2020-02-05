@@ -269,10 +269,11 @@ class TestImportVolumes(TestImportBase):
         volMapNamefull = '/tmp/Icosahedron_map_full.mrc'
         volMapNamehalf1 = '/tmp/Icosahedron_map_half1.mrc'
         volMapNamehalf2 = '/tmp/Icosahedron_map_half2.mrc'
-        self.createFeatVolume(volFeatName, volMapNamefull, sym=emcts.SYM_I222r)
-        self.createFeatVolume(volFeatName, volMapNamehalf1, sym=emcts.SYM_I222r)
-        self.createFeatVolume(volFeatName, volMapNamehalf2, sym=emcts.SYM_I222r)
+        createFeatVolume(volFeatName, volMapNamefull, sym=emcts.SYM_I222r)
+        createFeatVolume(volFeatName, volMapNamehalf1, sym=emcts.SYM_I222r)
+        createFeatVolume(volFeatName, volMapNamehalf2, sym=emcts.SYM_I222r)
         _samplingRate = 1.0
+
         args = {'filesPath': volMapNamefull,
                 'filesPattern': '',
                 'setHalfMaps': True,
@@ -295,57 +296,55 @@ class TestImportVolumes(TestImportBase):
         self.assertEqual(-90.0, y)
         self.assertEqual(-90.0, z)
 
-    def __runXmippProgram(self, program, args):
-        """ Internal shortcut function to launch a Xmipp program.
-        If xmipp not available o fails return False, else Tru"""
-        try:
-            from pwem import Domain
-            xmipp3 = Domain.importFromPlugin('xmipp3', doRaise=True)
-            xmipp3.Plugin.runXmippProgram(program, args)
-        except ImportError:
-            return False
-        return True
+def __runXmippProgram(program, args):
+    """ Internal shortcut function to launch a Xmipp program.
+    If xmipp not available o fails return False, else Tru"""
+    try:
+        from pwem import Domain
+        xmipp3 = Domain.importFromPlugin('xmipp3', doRaise=True)
+        xmipp3.Plugin.runXmippProgram(program, args)
+    except ImportError:
+        return False
+    return True
 
-    def createFeatVolume(self, volFeatName, volMapName, sym=emcts.SYM_I222r):
-        f = open(volFeatName, "w")
-        f.write("""# Phantom description file, (generated with phantom help)
+def createFeatVolume(volFeatName, volMapName, sym=emcts.SYM_I222r, factor=1.):
+    f = open(volFeatName, "w")
+    f.write("""# Phantom description file, (generated with phantom help)
 # General Volume Parameters:
 #      Xdim      Ydim      Zdim   Background_Density Scale
-       180 180 180 0 1.0
+   180 180 180 0 1.0
 # Feature Parameters:
 #Type  +/=  Density X_Center Y_Center Z_Center
 """)
-        icosahedron = emconv.Icosahedron(orientation=emcts.SCIPION_SYM_NAME[sym][1:])
-        x = 0.
-        y = 0.
-        z = 0.
-        f.write("# large sphere at the center\n")
-        f.write("sph  + 1. %.3f %.3f %.3f 36.\n" % (x, y, z))
-        f.write("# 5-fold\n")
+    icosahedron = emconv.Icosahedron(orientation=emcts.SCIPION_SYM_NAME[sym][1:])
+    x = 0.
+    y = 0.
+    z = 0.
+    f.write("# large sphere at the center\n")
+    f.write("sph  + 1. %.3f %.3f %.3f %.3f\n" % (x, y, z, 36 * factor))
+    f.write("# 5-fold\n")
 
-        for i, vertice in enumerate(icosahedron.getVertices()):
-            vertice = 55.0 * vertice
-            f.write("sph  + 3 %.3f %.3f %.3f 8.25\n" %
-                    (vertice[0], vertice[1], vertice[2]))
-            if i == 0:
-                self.pentonDir = "%.3f, %.3f, %.3f" % (vertice[0], vertice[1], vertice[2])
+    for i, vertice in enumerate(icosahedron.getVertices()):
+        vertice = 55.0 * vertice
+        f.write("sph  + 3 %.3f %.3f %.3f %.3f \n" %
+                (vertice[0], vertice[1], vertice[2], 8.25 * factor))
 
-        # print 3fold points
-        f.write("# 3-fold\n")
+    # print 3fold points
+    f.write("# 3-fold\n")
 
-        for _3fold in icosahedron.get3foldAxis():
-            x, y, z = _3fold
-            f.write("sph  + 0.8 %.3f %.3f %.3f 6.0\n" % (55.0 * x, 55.0 * y, 55.0 * z))
+    for _3fold in icosahedron.get3foldAxis():
+        x, y, z = _3fold
+        f.write("sph  + 0.8 %.3f %.3f %.3f %.3f \n" % (55.0 * x, 55.0 * y, 55.0 * z, 6 * factor))
 
-        # print 2fold points
-        f.write("# 2-fold\n")
-        for _2fold in icosahedron.get2foldAxis():
-            x, y, z = _2fold
-            f.write("sph  + 0.7 %.3f %.3f %.3f 3.0\n" %
-                    (55.0 * x, 55.0 * y, 55.0 * z))
-        f.close()
-        #    map
-        program = "xmipp_phantom_create"
-        args = '-i {featFile} -o {mapFile}'.format(
-            featFile=volFeatName, mapFile=volMapName)
-        self.__runXmippProgram(program, args)
+    # print 2fold points
+    f.write("# 2-fold\n")
+    for _2fold in icosahedron.get2foldAxis():
+        x, y, z = _2fold
+        f.write("sph  + 0.7 %.3f %.3f %.3f %.3f\n" %
+                (55.0 * x, 55.0 * y, 55.0 * z, 3. * factor))
+    f.close()
+    #    map
+    program = "xmipp_phantom_create"
+    args = '-i {featFile} -o {mapFile}'.format(
+        featFile=volFeatName, mapFile=volMapName)
+    __runXmippProgram(program, args)

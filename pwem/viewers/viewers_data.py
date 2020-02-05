@@ -29,10 +29,10 @@ import os
 import pyworkflow.viewer as pwviewer
 import pyworkflow.utils as pwutils
 
+from pwem import Domain
+from pwem import emlib
 import pwem.objects as emobj
 import pwem.protocols as emprot
-import pwem.convert as emconv
-from pwem import Domain
 
 from .views import (ObjectView, MicrographsView, CoordinatesObjectView,
                     ClassesView, Classes3DView, CtfView, DataView)
