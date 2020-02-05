@@ -393,9 +393,6 @@ class PreviewDialog(dialog.Dialog):
         bodyFrame.columnconfigure(2, weight=1)
 
         # Create explanation label
-        expFrame = tk.Frame(bodyFrame)
-        expFrame.columnconfigure(0, weight=1)
-        expFrame.rowconfigure(0, weight=1)
         self.expText = ExplanationText(bodyFrame)
         self.expText.text.grid(row=0, column=0, columnspan=2, padx=5, pady=5, sticky='news')
 
@@ -551,7 +548,7 @@ class CtfDialog(DownsampleDialog):
 
     def _createRightPreview(self, rightFrame):
         from pyworkflow.gui.matplotlib_image import PsdPreview
-        return PsdPreview(rightFrame, 1.2 * self.dim, self.lf, self.hf,
+        return PsdPreview(rightFrame, self.dim, self.lf, self.hf,
                           label=self.rightPreviewLabel)
 
     def _showInAngstroms(self):
