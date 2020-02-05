@@ -48,6 +48,11 @@ class Row:
         self._labelDict = OrderedDict()  # Dictionary containing labels and values
         self._objId = None  # Set this id when reading from a metadata
 
+        # Add set and get method as alias to setValue and getValue
+        # in this way the Row will behave more like a dict
+        self.set = self.setValue
+        self.get = self.getValue
+
     def getObjId(self):
         return self._objId
 
