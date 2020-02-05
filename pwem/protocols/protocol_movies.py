@@ -37,7 +37,7 @@ import pyworkflow.protocol.constants as pwcts
 import pyworkflow.utils as pwutils
 
 import pwem.objects as emobj
-import pwem.convert as emconv
+from pwem import emlib
 
 from .protocol_micrographs import ProtPreprocessMicrographs
 from .protocol_particles import ProtExtractParticles

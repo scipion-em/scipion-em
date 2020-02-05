@@ -34,7 +34,7 @@ import pyworkflow.protocol.params as params
 import pwem.objects as emobj
 import pwem.convert as emconv
 from pwem import emlib
-from pwem.convert.atom_struct import fromPDBToCIF
+from pwem.convert.atom_struct import fromPDBToCIF, fromCIFTommCIF
 
 from .base import ProtImportFiles
 from .images import ProtImportImages
@@ -283,7 +283,7 @@ Format may be PDB or MMCIF"""
         """Download all pdb files in file_list and unzip them.
         """
         aSH = emconv.AtomicStructHandler()
-        print("retriving PDB file %s" % self.pdbId.get())
+        print("retrieving atomic structure with ID = %s" % self.pdbId.get())
         pdbPath = aSH.readFromPDBDatabase(self.pdbId.get(),
                                           type='mmCif',
                                           dir=self._getExtraPath())
@@ -305,8 +305,10 @@ Format may be PDB or MMCIF"""
                 # convert pdb to cif by using maxit program
                 log = self._log
                 localPath = localPath.replace(".pdb", ".cif")
-                fromPDBToCIF('"' + atomStructPath + '"',
-                             '"' + localPath + '"', log)
+                fromPDBToCIF(atomStructPath,
+                             localPath, log)
+                # fromCIFTommCIF('"' + localPath + '"',
+                #                '"' + localPath + '"', log)
             elif atomStructPath.endswith(".cif"):
                 copyFile(atomStructPath, localPath)
 

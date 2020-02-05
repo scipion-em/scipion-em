@@ -43,6 +43,7 @@ import pwem.convert as emconv
 import pwem.protocols as emprot
 from pwem import emlib
 from pwem.viewers import Chimera, ChimeraView, EmProtocolViewer
+from pwem.emlib import image
 
 VOLUME_SLICES = 1
 VOLUME_CHIMERA = 0
@@ -128,7 +129,7 @@ class viewerProtImportVolumes(EmProtocolViewer):
             count = 1  # skip first model because is not a 3D map
 
         for vol in _setOfVolumes:
-            localVol = os.path.abspath(emlib.image.ImageHandler.removeFileType(
+            localVol = os.path.abspath(image.ImageHandler.removeFileType(
                 vol.getFileName()))
             if localVol.endswith("stk"):
                 errorWindow(None, "Extension .stk is not supported")

@@ -21,14 +21,11 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-
-import os
-
-from pyworkflow.gui import getDefaultFont
-from pyworkflow.gui.text import openTextFileEditor
-import re
 import csv
+import os
+import re
 
+from pyworkflow.gui import getDefaultFont, openTextFileEditor
 
 import tkinter as tk
 import tkinter.ttk as ttk
