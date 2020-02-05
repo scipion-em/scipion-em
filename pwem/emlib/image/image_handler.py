@@ -239,12 +239,18 @@ class ImageHandler(object):
             ext = pwutils.getExt(fn).lower()
 
             # Local import to avoid import loop between ImageHandler and Ccp4Header.
-            from pwem.convert import Ccp4Header
+            from pwem.convert import headers
 
             if ext == '.png' or ext == '.jpg':
                 im = Image.open(fn)
                 x, y = im.size  # (width,height) tuple
                 return x, y, 1, 1
+
+            elif headers.getFileFormat(fn) == headers.MRC:
+                header = headers.Ccp4Header(fn, readHeader=True)
+                x, y, z = header.getGridSampling()
+                n = header.getNumberOfObjects()
+                return x, y, z, n
 
             elif ext == '.img':
                 # FIXME Since now we can not read dm4 format in Scipion natively
