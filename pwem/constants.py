@@ -150,3 +150,11 @@ EM_PROGRAM_ENTRY_POINT = 'emprogram'
 MAXIT_HOME = 'MAXIT_HOME'
 MAXIT = 'maxit'
 
+# Explanation messages for the wizards
+RING_MASK_WIZ_MSG = 'The values of the outer and inner radius can be controlled via both the sliders placed below or ' \
+                    'the mousewheel (when the mouse cursor is over the image). The arrow (=>) located at the left of ' \
+                    'the sliders is used to indicate which one is active. To change from one to another, simply ' \
+                    'click and drag the corresponding slider or use up and down keys.'
+CIRCLE_MASK_WIZ_MSG = 'The values of the mask radius can be controlled via both the slider or the mousewheel (when ' \
+                      'the mouse cursor is over the image).'
+
