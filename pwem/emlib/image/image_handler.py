@@ -249,7 +249,7 @@ class ImageHandler(object):
             elif headers.getFileFormat(fn) == headers.MRC:
                 header = headers.Ccp4Header(fn, readHeader=True)
                 x, y, z = header.getGridSampling()
-                n = header.getNumberObjects()
+                n = header.getNumberOfObjects()
                 return x, y, z, n
 
             elif ext == '.img':

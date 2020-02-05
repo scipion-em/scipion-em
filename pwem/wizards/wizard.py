@@ -35,7 +35,7 @@ import pyworkflow as pw
 import pyworkflow.object as pwobj
 import pyworkflow.wizard as pwizard
 import pyworkflow.gui.dialog as dialog
-from pwem import convert_pix2length
+from pwem import convertPixToLength
 from pyworkflow.gui.tree import BoundTree, ListTreeProvider
 from pyworkflow.gui.widgets import LabelSlider, ExplanationText
 
@@ -827,7 +827,7 @@ class MaskPreviewDialog(ImagePreviewDialog):
             var2set.set('{:6.1f} {}'.format(radiusSlider.slider.get(), emcts.UNIT_PIXEL))
         else:
             var2set.set('{:5.0f} pix | {:6.1f} {}'.format(radiusSlider.slider.get(),
-                                                          convert_pix2length(radiusSlider.get(), self.samplingRate),
+                                                          convertPixToLength(radiusSlider.get(), self.samplingRate),
                                                           emcts.UNIT_ANGSTROM_SYMBOL))
 
     @staticmethod
@@ -867,7 +867,6 @@ class MaskRadiiPreviewDialog(MaskPreviewDialog):
         self.isInnerRad = False
         self.highlightOuterSlider()
 
-
     def downKeyPress(self, event):
         self.isInnerRad = True
         self.highlightInnerSlider()
@@ -901,7 +900,6 @@ class MaskRadiiPreviewDialog(MaskPreviewDialog):
         self.manageMaskVals()
 
     def manageMaskVals(self):
-
         if self.isMakingBigger:
             if self.isInnerRad and self.innerRadius >= self.outerRadius:  # Inner ring can't be bigger than outer ring
                     # Subtract one step to go back to the nearest lower value
@@ -925,7 +923,6 @@ class MaskRadiiPreviewDialog(MaskPreviewDialog):
                                 self.innerRadius*self.ratio)
 
     def _createControls(self, frame):
-
         to = int(self.dim_par / 2)
         self.radiusSliderOut = LabelSlider(frame, 'Outer radius',
                                            from_=1, to=to,
@@ -943,21 +940,20 @@ class MaskRadiiPreviewDialog(MaskPreviewDialog):
                                           length=150, showvalue=0)
         self.irVar = tk.StringVar()
         self.irLabel = tk.Label(frame, textvariable=self.irVar, width=20)
-
+        # Pack and configure outer radius slider
         self.radiusSliderOut.grid(row=0, column=0, sticky='NEWS')
         self.radiusSliderOut.columnconfigure(0, weight=1)
         self.orLabel.grid(row=0, column=1, sticky='NSE', padx=5, pady=5)
         self.orLabel.columnconfigure(0, weight=1)
-
+        # Pack and configure inner radius slider
         self.radiusSliderIn.grid(row=1, column=0, sticky='NEWS')
         self.radiusSliderIn.columnconfigure(0, weight=1)
         self.irLabel.grid(row=1, column=1, sticky='NSE', padx=5, pady=5)
         self.irLabel.columnconfigure(0, weight=1)
-
+        # Update both mask and sliders with the initial values
         self.manageMaskVals()
 
     def updateSliderOuterRadius(self):
-
         new_val = self.getRadius(self.radiusSliderOut)
         # Carry out the action only if the slider is clicked & dragged (prevent from minimal variations when the mouse
         # is on the slider but not clicking on it)
@@ -973,7 +969,6 @@ class MaskRadiiPreviewDialog(MaskPreviewDialog):
             self.manageMaskVals()
 
     def updateSliderInnerRadius(self):
-
         new_val = self.getRadius(self.radiusSliderIn)
         # Highlight only if the slider is clicked & dragged (prevent from minimal variations when the mouse is on the
         # slider but not clicking on it)

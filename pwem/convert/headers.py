@@ -226,7 +226,7 @@ class Ccp4Header:
     def getISPG(self):
         return self._header['ISPG']
 
-    def getNumberObjects(self):
+    def getNumberOfObjects(self):
         # Special case for volume stacks...
         return int(self._header['NS'] / self._header['NZ'])
 
@@ -337,9 +337,9 @@ class Ccp4Header:
 def getFileFormat(fileName):
 
     ext = getExt(cleanFileNameAnnotation(fileName))
-    if (ext == '.mrc') or (ext == '.map') or (ext == '.mrcs'):
+    if ext == '.mrc' or ext == '.map' or ext == '.mrcs':
         return MRC
-    elif (ext == '.spi') or (ext == '.vol'):
+    elif ext == '.spi' or ext == '.vol':
         return SPIDER
     else:
         return UNKNOWNFORMAT
