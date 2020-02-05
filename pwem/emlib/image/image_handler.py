@@ -491,15 +491,21 @@ class ImageHandler(object):
         I.write(outputFn)
 
     @staticmethod
-    def applyTransform(inputFile, outputFile, transformMatrix, shape, borderValue=0.0, borderAverage=False):
+    def applyTransform(inputFile, outputFile, transformMatrix, shape, fillValue=None, doWrap=False):
         """Apply the transformation matrix over the input image and return the transformed image in a given shape.
-        Transformation matrix should be a numpy array data type. If borderAverage is true will set the borderValue to
-        the mean of the image."""
+        Parameters:
+            :param inputFile: path location of the input image
+            :param outputFile: path location of the output image
+            :param transformMatrix: transformation matrix to be applied to the image. It should be a numpy array data type.
+            :param shape: dimensions of the output image given as a tuple (xDim, yDim)
+            :param fillValue: value with which the empty regions due to wrapping will be filled.
+            :param doWrap: if True the empty regions will be filled with the wrapped values of the input image.
+        """
         imageObj = lib.Image()
         imageObj.read(inputFile)
-        if borderAverage:
+        if fillValue is None:
             mean, _, _, _ = imageObj.computeStats()
-            resultImage = imageObj.applyWarpAffine(list(transformMatrix.flatten()), shape, mean)
+            resultImage = imageObj.applyWarpAffine(list(transformMatrix.flatten()), shape, doWrap, mean)
         else:
-            resultImage = imageObj.applyWarpAffine(list(transformMatrix.flatten()), shape, borderValue)
+            resultImage = imageObj.applyWarpAffine(list(transformMatrix.flatten()), shape, doWrap, fillValue)
         resultImage.write(outputFile)
