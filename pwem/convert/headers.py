@@ -116,7 +116,7 @@ class Ccp4Header:
     80-character 'lines' and the 'lines' do not terminate in a ``*``).
     """
     def __init__(self, fileName, readHeader=False):
-        self._name = cleanFileNameAnnotation(fileName)  # remove mrc ending
+        self._name = fileName
         self._header = collections.OrderedDict()
         self.chain = "< 3i i 3i 3i 3f 36s i 104s 3f"
         if readHeader:
@@ -230,21 +230,16 @@ class Ccp4Header:
         # Special case for volume stacks...
         return int(self._header['NS'] / self._header['NZ'])
 
-    def read_header_values(self, file, file_size, file_type):
-
-        MRC_USER = 29
-        CCP4_USER = 15
-        MRC_NUM_LABELS = 10
-        MRC_LABEL_SIZE = 80
-        MRC_HEADER_LENGTH = 1024
-
-        from numpy import int32, float32
-        i32 = int32
-        f32 = float32
+    def getXYZN(self):
+        if self.getISPG():
+            x, y, z = self.getGridSampling()  # Stack of volumes
+            n = self.getNumberOfObjects()
+        else:
+            x, y, n = self.getDims()
+            z = 1
+        return x, y, z, n
 
     def readHeader(self):
-        # check file exists
-
         # read header
         f = open(self._name, 'rb')
         s = f.read(52*4)  # read header from word 0 to 51
@@ -252,7 +247,6 @@ class Ccp4Header:
         a = struct.unpack(self.chain, s)
 
         # fill dicionary
-        # self._header['empty']=""
         self._header['NC'] = a[0]
         self._header['NR'] = a[1]
         self._header['NS'] = a[2]
@@ -336,14 +330,10 @@ class Ccp4Header:
 
 def getFileFormat(fileName):
 
-    ext = getExt(cleanFileNameAnnotation(fileName))
+    ext = getExt(fileName)
     if ext == '.mrc' or ext == '.map' or ext == '.mrcs':
         return MRC
     elif ext == '.spi' or ext == '.vol':
         return SPIDER
     else:
         return UNKNOWNFORMAT
-
-
-def cleanFileNameAnnotation(fileName):
-    return fileName.replace(':mrc', '')
