@@ -248,9 +248,7 @@ class ImageHandler(object):
 
             elif headers.getFileFormat(fn) == headers.MRC:
                 header = headers.Ccp4Header(fn, readHeader=True)
-                x, y, z = header.getGridSampling()
-                n = header.getNumberOfObjects()
-                return x, y, z, n
+                return header.getXYZN()
 
             elif ext == '.img':
                 # FIXME Since now we can not read dm4 format in Scipion natively
