@@ -235,7 +235,7 @@ class Ccp4Header:
         return int(self._header['NS'] / self._header['NZ'])
 
     def getXYZN(self):
-        if self.getISPG():
+        if self.getISPG() and not self.isMovie:
             x, y, z = self.getGridSampling()  # Stack of volumes
             n = self.getNumberOfObjects()
         else:
