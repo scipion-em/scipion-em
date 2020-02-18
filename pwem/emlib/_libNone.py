@@ -41,7 +41,7 @@ def linkXmippBinding():
 
         # Link the binding
         createLink(os.path.join(xmipp_home,"bindings", "python", "xmippLib.so" ),
-                           os.path.join(pwConfig.SCIPION_HOME, "bindings", "xmippLib.so"))
+                           os.path.join(pwConfig.SCIPION_BINDINGS, "xmippLib.so"))
 
         xmippLibFolder = os.path.join(xmipp_home, "lib")
 
