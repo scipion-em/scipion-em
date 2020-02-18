@@ -59,7 +59,13 @@ class OutOfChainsError(Exception):
 
 class scipionMMCIFIO(MMCIFIO):
 
-    def _save_dict(self, out_file):
+    # this class was needed before including maxit
+    # as converter.
+    # TODO: Delete it after a more extensive testing period
+    # DATE mar feb 18 17:48:57 CET 2020
+
+
+    def _save_dict_delete(self, out_file):
         # Form dictionary where key is first part of mmCIF key and value is list
         # of corresponding second parts
         key_lists = {}
