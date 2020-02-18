@@ -138,7 +138,11 @@ class ProtUnionSet(ProtSets):
         set1 = self.inputSets[0].get()  # 1st set (we use it many times)
 
         # Read ClassName and create the corresponding EMSet (SetOfParticles...)
-        outputSet = getattr(self, "_create%s" % set1.getClassName())()
+        try:
+            outputSetFunction = getattr(self, "_create%s" % set1.getClassName())
+            outputSet = outputSetFunction()
+        except Exception:
+            outputSet = set1.create(self._getPath())
 
         # Copy info from input sets (sampling rate, etc).
         outputSet.copyInfo(set1)  # all sets must have the same info as set1!
@@ -377,11 +381,14 @@ class ProtSplitSet(ProtSets):
     def createOutputStep(self):
         inputSet = self.inputSet.get()
         inputClassName = str(inputSet.getClassName())
-        outputSetFunction = getattr(self, "_create%s" % inputClassName)
         n = self.numberOfSets.get()
-
         # Create as many subsets as requested by the user
-        subsets = [outputSetFunction(suffix=str(i)) for i in range(1, n+1)]
+        try:
+            outputSetFunction = getattr(self, "_create%s" % inputClassName)
+            subsets = [outputSetFunction(suffix=str(i)) for i in range(1, n+1)]
+        except Exception:
+            subsets = [inputSet.create(self._getPath(), suffix=str(i)) for i in
+                       range(1, n + 1)]
 
         # Iterate over the elements in the input set and assign
         # to different subsets.
@@ -490,9 +497,13 @@ class ProtSubSet(ProtSets):
         inputFullSet = self.inputFullSet.get()
 
         inputClassName = inputFullSet.getClassName()
-        outputSetFunction = getattr(self, "_create%s" % inputClassName)
 
-        outputSet = outputSetFunction()
+        try:
+            outputSetFunction = getattr(self, "_create%s" % inputClassName)
+            outputSet = outputSetFunction()
+        except Exception:
+            outputSet = inputFullSet.create(self._getPath())
+
         outputSet.copyInfo(inputFullSet)
 
         if self.chooseAtRandom:
