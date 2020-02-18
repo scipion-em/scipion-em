@@ -116,9 +116,10 @@ class Ccp4Header:
     80-character 'lines' and the 'lines' do not terminate in a ``*``).
     """
     def __init__(self, fileName, readHeader=False):
-        self._name = fileName
+        self.isMovie = False
         self._header = collections.OrderedDict()
         self.chain = "< 3i i 3i 3i 3f 36s i 104s 3f"
+        self._name = self.cleanFileNameAnnotation(fileName)
         if readHeader:
             self.loaded = True
             self.readHeader()
@@ -223,6 +224,9 @@ class Ccp4Header:
                self._header['Ylength'],\
                self._header['Zlength']
 
+    def setISPG(self, value):
+        self._header['ISPG'] = value
+
     def getISPG(self):
         return self._header['ISPG']
 
@@ -235,8 +239,11 @@ class Ccp4Header:
             x, y, z = self.getGridSampling()  # Stack of volumes
             n = self.getNumberOfObjects()
         else:
-            x, y, n = self.getDims()
-            z = 1
+            x, y, z = self.getDims()
+            n = 1
+            if self.isMovie:
+                n = z
+                z = 1
         return x, y, z, n
 
     def readHeader(self):
@@ -295,7 +302,7 @@ class Ccp4Header:
 
     def copyCCP4Header(self, inFileName, scipionOriginShifts,
                        sampling, originField=START):
-        x, y, z, ndim = ImageHandler().getDimensions(inFileName)
+        x, y, z, ndim = self.getXYZN()
         if not self.loaded:
             self.readHeader()
         self.setGridSampling(x, y, z)
@@ -307,16 +314,27 @@ class Ccp4Header:
             self.setStartAngstrom(scipionOriginShifts, sampling)
             self.writeHeader()
 
+    def cleanFileNameAnnotation(self, fileName):
+        ext = getExt(fileName)
+        self.isMovie = False
+
+        if ext == '.mrcs':
+            self.isMovie = True
+        elif ext == '.mrc:mrcs':  # Movie --> dims = [X, Y, Z = 1, N]
+            self.isMovie = True
+            fileName = fileName.replace(':mrcs', '')
+        elif ext == '.mrc:mrc':  # Volume --> dims = [X, Y, Z, N = 1]
+            fileName = fileName.replace(':mrc', '')
+
+        return fileName
+
     @classmethod
     def fixFile(cls, inFileName, outFileName, scipionOriginShifts,
                 sampling=1.0, originField=START):
         """ Create new CCP4 binary file and fix its header.
         """
-        x, y, z, ndim = ImageHandler().getDimensions(inFileName)
-        if z == 1 and ndim > 1:
-            z = ndim
-
         ImageHandler().convert(inFileName, outFileName)
+        x, y, z, ndim = ImageHandler().getDimensions(inFileName)
         ccp4header = Ccp4Header(outFileName, readHeader=True)
         ccp4header.setGridSampling(x, y, z)
         ccp4header.setCellDimensions(x * sampling, y * sampling, z * sampling)
@@ -331,7 +349,7 @@ class Ccp4Header:
 def getFileFormat(fileName):
 
     ext = getExt(fileName)
-    if ext == '.mrc' or ext == '.map' or ext == '.mrcs':
+    if ext in ['.mrc', '.map', '.mrcs', '.mrc:mrc', '.mrc:mrcs']:
         return MRC
     elif ext == '.spi' or ext == '.vol':
         return SPIDER

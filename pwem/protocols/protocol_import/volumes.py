@@ -34,7 +34,7 @@ import pyworkflow.protocol.params as params
 import pwem.objects as emobj
 import pwem.convert as emconv
 from pwem import emlib
-from pwem.convert.atom_struct import fromPDBToCIF, fromCIFTommCIF
+from pwem.convert.atom_struct import fromPDBToCIF
 
 from .base import ProtImportFiles
 from .images import ProtImportImages
