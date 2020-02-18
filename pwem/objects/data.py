@@ -893,29 +893,45 @@ class EMSet(Set, EMObject):
     def copyItems(self, otherSet,
                   updateItemCallback=None,
                   itemDataIterator=None,
-                  copyDisabled=False):
-        """ Copy items from another set.
-        If the updateItemCallback is passed, it will be
-        called with each item (and optionally with a data row).
-        This is a place where items can be updated while copying.
-        This is useful to set new attributes or update values
-        for each item.
+                  copyDisabled=False,
+                  doClone=True):
+        """ Copy items from another set, allowing to update items information
+        based on another source of data, paired with each item.
+
+        Params:
+            otherSet: input set from where the items will be copied.
+            updateItemCallback: if not None, this will be called for each item
+                and each data row (if the itemDataIterator is not None). Apart
+                from setting item values or new attributes, it is possible to
+                set the special flag _appendItem to False, and then this item
+                will not be added to the set.
+            itemDataIterator: if not None, it must be an iterator that have one
+                data item for each item in the set. Usually the data item is a
+                data row, coming from a table stored in text files (e.g STAR)
+            copyDisabled: By default, disabled items are not copied from the other
+                set. If copyDisable=True, then the enabled property of the item
+                will be ignored.
+            doClone: By default, the new item that will be inserted is a "clone"
+                of the input item. By using doClone=False, the same input item
+                will be passed to the callback and added to the set. This will
+                avoid the clone operation and the related overhead.
         """
+        itemDataIter = itemDataIterator  # shortcut
+
         for item in otherSet:
             # copy items if enabled or copyDisabled=True
             if copyDisabled or item.isEnabled():
-                newItem = item.clone()
+                newItem = item.clone() if doClone else item
                 if updateItemCallback:
-                    row = None if itemDataIterator is None \
-                        else next(itemDataIterator)
+                    row = None if itemDataIter is None else next(itemDataIter)
                     updateItemCallback(newItem, row)
                 # If updateCallBack function returns attribute
                 # _appendItem to False do not append the item
                 if getattr(newItem, "_appendItem", True):
                     self.append(newItem)
             else:
-                if itemDataIterator is not None:
-                    next(itemDataIterator)  # just skip disabled data row
+                if itemDataIter is not None:
+                    next(itemDataIter)  # just skip disabled data row
 
     def getFiles(self):
         return Set.getFiles(self)

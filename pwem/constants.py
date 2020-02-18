@@ -41,6 +41,7 @@ UNIT_PIXEL = 'px'
 UNIT_PIXEL_FOURIER = '1/px'
 UNIT_ANGSTROM = 'A'
 UNIT_ANGSTROM_FOURIER = '1/A'
+UNIT_ANGSTROM_SYMBOL = u"\u212B"
 
 # Fourier Filter options
 FILTER_LOW_PASS = 0
@@ -142,10 +143,25 @@ SCIPION_SYM_NAME[SYM_I2n5r] = 'I2n5r'
 # Entry points names
 CONVERT_ENTRY_POINT = 'emconvert'
 CHIMERA_ENTRY_POINT = 'emchimera'
-CHIMERAV_ENTRY_POINT = 'emchimerav'
 EM_PROGRAM_ENTRY_POINT = 'emprogram'
 
 # maxit
 MAXIT_HOME = 'MAXIT_HOME'
 MAXIT = 'maxit'
+
+# Explanation messages for the wizards
+RING_MASK_WIZ_MSG = \
+    'The values of the outer and inner radius can be controlled via both the sliders placed below or ' \
+    'the mousewheel (when the mouse cursor is over the image). The arrow (=>) located at the left of ' \
+    'the sliders is used to indicate which one is active. To change from one to another, simply ' \
+    'click and drag the corresponding slider or use up and down keys.'
+CIRCLE_MASK_WIZ_MSG = \
+    'The values of the mask radius can be controlled via both the slider or the mousewheel (when ' \
+    'the mouse cursor is over the image).'
+FREQ_BANDPASS_WIZ_MSG = \
+    'The values of the low and high frequencies can be controlled via both the sliders placed below or ' \
+    'the mousewheel (when the mouse cursor is over the image). The arrow (=>) located at the left of ' \
+    'the sliders is used to indicate which one is active. To change from one to another, simply ' \
+    'click and drag the corresponding slider or use up and down keys. Values are shown in both digital ' \
+    'frequency and angstroms.'
 
