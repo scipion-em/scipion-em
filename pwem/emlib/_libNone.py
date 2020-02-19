@@ -32,7 +32,7 @@ ghostStr = """
 """
 def linkXmippBinding():
     from pyworkflow.utils import createLink
-    from pyworkflow import Config as pwConfig
+    from pyworkflow as pw
     import pwem
     import os
     xmipp_home = pwem.Config.XMIPP_HOME
@@ -41,22 +41,20 @@ def linkXmippBinding():
 
         # Link the binding
         createLink(os.path.join(xmipp_home,"bindings", "python", "xmippLib.so" ),
-                           os.path.join(pwConfig.SCIPION_BINDINGS, "xmippLib.so"))
+                           os.path.join(pw.Config.SCIPION_BINDINGS, "xmippLib.so"))
 
         xmippLibFolder = os.path.join(xmipp_home, "lib")
 
         # Link the libraries
         createLink(os.path.join(xmippLibFolder, "libXmipp.so"),
-                   os.path.join(pwConfig.SCIPION_LIBS, "libXmipp.so"))
+                   os.path.join(pw.Config.SCIPION_LIBS, "libXmipp.so"))
         createLink(os.path.join(xmippLibFolder, "libXmippCore.so"),
-                           os.path.join(pwConfig.SCIPION_LIBS, "libXmippCore.so"))
+                           os.path.join(pw.Config.SCIPION_LIBS, "libXmippCore.so"))
 
         print("Xmipp bindings registered in Scipion. You will need to restart.")
 
-        if pwConfig.SCIPION_LIBS not in os.environ.get("LD_LIBRARY_PATH", ""):
-            print("LD_LIBRARY_PATH must contain scipion lib folder (%s).  Please, add it." % pwConfig.SCIPION_LIBS)
-
-
+        if pw.Config.SCIPION_LIBS not in os.environ.get("LD_LIBRARY_PATH", ""):
+            print("LD_LIBRARY_PATH must contain scipion lib folder (%s).  Please, add it." % pw.Config.SCIPION_LIBS)
 
 
 print(ghostStr)
