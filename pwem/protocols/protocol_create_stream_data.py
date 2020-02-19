@@ -146,8 +146,8 @@ class ProtCreateStreamData(EMProtocol):
         if self.setof == SET_OF_PARTICLES:
             self.nDims = int(min(self.nDim, len(self.inputParticles.get())))
             self.group = int(min(self.nDims, self.groups.get()))
-            for mic in range(1, (self.nDims / self.group) +
-                             (self.nDims % self.group > 0) + 1):
+            for mic in range(1, int((self.nDims / self.group) +
+                             (self.nDims % self.group > 0) + 1)):
                 self._insertFunctionStep(step, prerequisites=deps)
         else:
             for mic in range(1, self.nDim.get() + 1):

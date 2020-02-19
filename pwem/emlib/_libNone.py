@@ -23,6 +23,11 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
+from pyworkflow.utils import createLink
+import pyworkflow as pw
+import pwem
+import os
+
 LIB = "lib"
 
 ghostStr = """
@@ -31,30 +36,28 @@ ghostStr = """
 (Configuration->Plugins->scipion-em-xmipp -> expand, in Scipion plugin manager window)\n
 """
 def linkXmippBinding():
-    from pyworkflow.utils import createLink
-    import pyworkflow as pw
-    import pwem
-    import os
     xmipp_home = pwem.Config.XMIPP_HOME
     # If exists xmipp
     if os.path.exists(xmipp_home):
 
         # Link the binding
-        createLink(os.path.join(xmipp_home,"bindings", "python", "xmippLib.so" ),
-                           os.path.join(pw.Config.SCIPION_BINDINGS, "xmippLib.so"))
+        xmippBindingPath = os.path.join(xmipp_home,"bindings", "python", "xmippLib.so")
+        dest = os.path.join(pw.Config.SCIPION_BINDINGS, "xmippLib.so")
+        if not os.path.exists(dest):
+            createLink(xmippBindingPath, dest)
 
-        xmippLibFolder = os.path.join(xmipp_home, "lib")
+            xmippLibFolder = os.path.join(xmipp_home, "lib")
 
-        # Link the libraries
-        createLink(os.path.join(xmippLibFolder, "libXmipp.so"),
+            # Link the libraries
+            createLink(os.path.join(xmippLibFolder, "libXmipp.so"),
                    os.path.join(pw.Config.SCIPION_LIBS, "libXmipp.so"))
-        createLink(os.path.join(xmippLibFolder, "libXmippCore.so"),
-                           os.path.join(pw.Config.SCIPION_LIBS, "libXmippCore.so"))
+            createLink(os.path.join(xmippLibFolder, "libXmippCore.so"),
+                   os.path.join(pw.Config.SCIPION_LIBS, "libXmippCore.so"))
 
-        print("Xmipp bindings registered in Scipion. You will need to restart.")
+            print("Xmipp bindings registered in Scipion. You will need to restart.")
 
-        if pw.Config.SCIPION_LIBS not in os.environ.get("LD_LIBRARY_PATH", ""):
-            print("LD_LIBRARY_PATH must contain scipion lib folder (%s).  Please, add it." % pw.Config.SCIPION_LIBS)
+        if os.path.abspath(pw.Config.SCIPION_LIBS) not in os.environ.get("LD_LIBRARY_PATH", ""):
+            print("LD_LIBRARY_PATH must contain scipion lib folder (%s).  Please, add it." % os.path.abspath(pwConfig.SCIPION_LIBS))
 
 
 print(ghostStr)
