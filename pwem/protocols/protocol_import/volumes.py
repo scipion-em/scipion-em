@@ -41,6 +41,8 @@ from .images import ProtImportImages
 
 from pyworkflow.utils.path import copyFile
 
+from pwem.convert.atom_struct import AtomicStructHandler
+
 
 class ProtImportVolumes(ProtImportImages):
     """Protocol to import a set of volumes to the project"""
@@ -249,6 +251,7 @@ Format may be PDB or MMCIF"""
     _label = 'import atomic structure'
     IMPORT_FROM_ID = 0
     IMPORT_FROM_FILES = 1
+    SYMPLIFIED_STRUCT = "symplified_atom_structure.cif"
 
     def __init__(self, **args):
         ProtImportFiles.__init__(self, **args)
@@ -284,10 +287,10 @@ Format may be PDB or MMCIF"""
         """
         aSH = emconv.AtomicStructHandler()
         print("retrieving atomic structure with ID = %s" % self.pdbId.get())
-        pdbPath = aSH.readFromPDBDatabase(self.pdbId.get(),
+        atomStructPath = aSH.readFromPDBDatabase(self.pdbId.get(),
                                           type='mmCif',
                                           dir=self._getExtraPath())
-        self.createOutputStep(pdbPath)
+        self.createOutputStep(atomStructPath)
 
     #        downloadPdb(self.pdbId.get(), pdbPath, self._log)
 
@@ -301,16 +304,7 @@ Format may be PDB or MMCIF"""
         localPath = abspath(self._getExtraPath(baseName))
 
         if str(atomStructPath) != str(localPath):  # from local file
-            if atomStructPath.endswith(".pdb"):
-                # convert pdb to cif by using maxit program
-                log = self._log
-                localPath = localPath.replace(".pdb", ".cif")
-                fromPDBToCIF(atomStructPath,
-                             localPath, log)
-                # fromCIFTommCIF('"' + localPath + '"',
-                #                '"' + localPath + '"', log)
-            elif atomStructPath.endswith(".cif"):
-                copyFile(atomStructPath, localPath)
+            copyFile(atomStructPath, localPath)
 
         localPath = relpath(localPath)
 
@@ -318,7 +312,7 @@ Format may be PDB or MMCIF"""
         volume = self.inputVolume.get()
 
         # if a volume exists assign it to the pdb object
-        # IMPORTANT: we DO need to if volume is not None
+        # IMPORTANT: we DO need "if volume is not None"
         # because we need to persist the pdb object
         # before we can make the last source relation
         if volume is not None:
