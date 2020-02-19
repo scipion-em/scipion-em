@@ -40,23 +40,23 @@ def linkXmippBinding():
     if os.path.exists(xmipp_home):
 
         # Link the binding
-        createLink(os.path.join(xmipp_home,"bindings", "python", "xmippLib.so" ),
-                           os.path.join(pwConfig.SCIPION_BINDINGS, "xmippLib.so"))
+        xmippBindingPath = os.path.join(xmipp_home,"bindings", "python", "xmippLib.so")
+        dest = os.path.join(pwConfig.SCIPION_BINDINGS, "xmippLib.so")
+        if not os.path.exists(dest):
+            createLink(xmippBindingPath, dest)
 
-        xmippLibFolder = os.path.join(xmipp_home, "lib")
+            xmippLibFolder = os.path.join(xmipp_home, "lib")
 
-        # Link the libraries
-        createLink(os.path.join(xmippLibFolder, "libXmipp.so"),
+            # Link the libraries
+            createLink(os.path.join(xmippLibFolder, "libXmipp.so"),
                    os.path.join(pwConfig.SCIPION_LIBS, "libXmipp.so"))
-        createLink(os.path.join(xmippLibFolder, "libXmippCore.so"),
-                           os.path.join(pwConfig.SCIPION_LIBS, "libXmippCore.so"))
+            createLink(os.path.join(xmippLibFolder, "libXmippCore.so"),
+                   os.path.join(pwConfig.SCIPION_LIBS, "libXmippCore.so"))
 
-        print("Xmipp bindings registered in Scipion. You will need to restart.")
+            print("Xmipp bindings registered in Scipion. You will need to restart.")
 
-        if pwConfig.SCIPION_LIBS not in os.environ.get("LD_LIBRARY_PATH", ""):
-            print("LD_LIBRARY_PATH must contain scipion lib folder (%s).  Please, add it." % pwConfig.SCIPION_LIBS)
-
-
+        if os.path.abspath(pwConfig.SCIPION_LIBS) not in os.environ.get("LD_LIBRARY_PATH", ""):
+            print("LD_LIBRARY_PATH must contain scipion lib folder (%s).  Please, add it." % os.path.abspath(pwConfig.SCIPION_LIBS))
 
 
 print(ghostStr)
