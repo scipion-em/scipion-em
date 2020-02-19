@@ -32,14 +32,18 @@ import os
 import pyworkflow.protocol.params as params
 from pyworkflow import VERSION_1_2
 
-from pwem.convert.atom_struct import fromPDBToCIF, fromCIFTommCIF
+from pwem.convert.atom_struct import fromPDBToCIF, fromCIFTommCIF, \
+    AtomicStructHandler
 from pwem.emlib.image import ImageHandler
 from pwem.protocols import EMProtocol
 from pwem.objects import FSC
 from pyworkflow.utils.path import copyFile
 
 class ProtExportDataBases(EMProtocol):
-    """ generates files for elements to submit structures to EMDB/PDB
+    """ generates files for elements to submit structures to EMDB/PDB.
+        Since mmcif/pdb is only partially supported by some software
+        the protocol creates 4 versions of the atomic struct file with the hope that at least
+        one of them will work.
     """
     _label = 'export emdb/pdb'
     _program = ""
@@ -52,6 +56,7 @@ class ProtExportDataBases(EMProtocol):
     ADDITIONALVOLUMENAME = "map_%02d.mrc"
     MASKDIR = "masks"
     MASKNAME = "mask_%02d.mrc"
+    SYMPLIFIED_STRUCT = "symplified_atom_structure.cif"
 
     # --------------------------- DEFINE param functions ----------------------
     def _defineParams(self, form):
@@ -108,7 +113,7 @@ class ProtExportDataBases(EMProtocol):
             self._insertFunctionStep('exportVolumeStep')
         if self.additionalVolumesToExport:
             self._insertFunctionStep('exportAdditionalVolumeStep')
-        if self.exportFSC:
+        if self.exportFSC.get() is not None:
             self._insertFunctionStep('exportFSCStep')
         if self.masksToExport:
             self._insertFunctionStep('exportMasksStep')
@@ -136,8 +141,6 @@ class ProtExportDataBases(EMProtocol):
             ih = ImageHandler()
             for counter, half_map in enumerate(
                     self.exportVolume.get().getHalfMaps().split(','), 1):
-                print("half_map", half_map, "zzzz", os.path.join(self.dirName,
-                                    self.HALFVOLUMENAME % counter),  self.exportVolume.get().getHalfMaps())
                 ih.convert(half_map,
                        os.path.join(self.dirName,
                                     self.HALFVOLUMENAME % counter))
@@ -189,19 +192,40 @@ class ProtExportDataBases(EMProtocol):
         originStructPath = exportAtomStruct.getFileName()
         dirName = self.filesPath.get()
         destinyStructPath = os.path.join(dirName, self.COORDINATEFILENAME)
+        destinySympleStructPath = os.path.join(dirName, self.SYMPLIFIED_STRUCT)
 
+        # save input atom struct with no change
+        baseName = os.path.basename(originStructPath)
+        localPath = os.path.abspath(os.path.join(dirName,baseName))
+        copyFile(originStructPath, localPath)
+
+        # call biopython to simplify atom struct and save it
+        aSH = AtomicStructHandler()
+        aSH.read(originStructPath)
+        aSH.write(destinySympleStructPath)
+
+        # if pdb convert to mmcif calling maxit twice
         if originStructPath.endswith(".pdb"):
-            # convert pdb to cif  using maxit program
+            # convert pdb to cif using maxit program
             log = self._log
             fromPDBToCIF(originStructPath,
                         destinyStructPath, log)
-            fromCIFTommCIF(destinyStructPath,
-                        destinyStructPath, log)
+            try:
+                # convert cif to mmCIF by using maxit program
+                fromCIFTommCIF(destinyStructPath,
+                            destinyStructPath, log)
+            except Exception as e:
+                pass
+        # if cif convert to mmcif using maxit
         elif originStructPath.endswith(".cif"):
             # convert cif to mmCIF by using maxit program
             log = self._log
-            fromCIFTommCIF(originStructPath,
-                           destinyStructPath, log)
+            try:
+                fromCIFTommCIF(originStructPath,
+                               destinyStructPath, log)
+            except Exception as e:
+                pass
+
 
     def exportImageStep(self):
         imageBaseFileName = os.path.basename(self.exportPicture.get())

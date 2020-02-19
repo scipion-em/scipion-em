@@ -380,6 +380,7 @@ class PreviewDialog(dialog.Dialog):
         self.firstItem = provider.getObjects()[0]
         self.isInnerRad = False
         self.isMakingBigger = False
+        self.step = 1
         self.expText = []
         buttons = [('Select', dialog.RESULT_YES),
                    ('Cancel', dialog.RESULT_CANCEL)]
@@ -397,16 +398,16 @@ class PreviewDialog(dialog.Dialog):
         self.expText.text.grid(row=0, column=0, columnspan=2, padx=5, pady=5, sticky='news')
 
         # Create items frame
-        itemsFrame = tk.Frame(bodyFrame, bg='white')
-        itemsFrame.grid(row=1, column=0, padx=5, pady=5, sticky='news')
+        itemsFrame = tk.Frame(bodyFrame, bg=pw.TK_GRAY_DEFAULT)
+        itemsFrame.grid(row=1, column=0, padx=5, sticky='news')
         itemsFrame.columnconfigure(0, weight=1)
-        itemsFrame.rowconfigure(1, weight=1)
+        itemsFrame.rowconfigure(0, weight=1)
         itemsTree = BoundTree(itemsFrame, self.provider)
         itemsTree.grid(row=0, column=0, padx=5, pady=5, sticky='news')
         itemsTree.itemClick = self._itemSelected
 
         # Create preview frame
-        previewFrame = tk.Frame(bodyFrame)
+        previewFrame = tk.Frame(bodyFrame, bg=pw.TK_GRAY_DEFAULT)
         previewFrame.grid(row=1, column=1, padx=5, pady=5)
         self._beforePreview()
         self._createPreview(previewFrame)
@@ -481,6 +482,7 @@ class ImagePreviewDialog(PreviewDialog):
 class DownsampleDialog(ImagePreviewDialog):
 
     def _beforePreview(self):
+        self.expText.updateExpText(emcts.FREQ_BANDPASS_WIZ_MSG, width=75)
         ImagePreviewDialog._beforePreview(self)
         self.lastObj = None
         self.rightPreviewLabel = "PSD"
@@ -510,13 +512,13 @@ class DownsampleDialog(ImagePreviewDialog):
         self.downVar = tk.StringVar()
         self.downVar.set(getattr(self, 'downsample', 1))
         downFrame = tk.Frame(frame)
-        downFrame.grid(row=0, column=0, sticky='nw')
+        downFrame.grid(row=0, column=0, pady=5, sticky='new')
         downLabel = tk.Label(downFrame, text='Downsample')
-        downLabel.grid(row=0, column=0, padx=5, pady=5)
+        downLabel.grid(row=0, column=0, sticky='ew')
         downEntry = tk.Entry(downFrame, width=10, textvariable=self.downVar)
-        downEntry.grid(row=0, column=1, padx=5, pady=5)
+        downEntry.grid(row=0, column=1, padx=5, sticky='ew')
         downButton = tk.Button(downFrame, text='Preview', command=self._doPreview)
-        downButton.grid(row=0, column=2, padx=5, pady=5)
+        downButton.grid(row=1, column=1, padx=5, pady=5, sticky='ew')
 
     def getDownsample(self):
         return float(self.downVar.get())
@@ -547,49 +549,170 @@ class DownsampleDialog(ImagePreviewDialog):
 class CtfDialog(DownsampleDialog):
 
     def _createRightPreview(self, rightFrame):
+        self.isInnerRad = True
+        listeners = {"<Button-4>": self.makeBigger, "<Button-5>": self.makeSmaller,
+                     "<Up>": self.upKeyPress, "<Down>": self.downKeyPress}
         from pyworkflow.gui.matplotlib_image import PsdPreview
         return PsdPreview(rightFrame, self.dim, self.lf, self.hf,
-                          label=self.rightPreviewLabel)
+                          label=self.rightPreviewLabel, listenersDict=listeners)
+
+    def downKeyPress(self, event):
+        self.isInnerRad = False
+        self.highlightOuterSlider()
+
+    def upKeyPress(self, event):
+        self.isInnerRad = True
+        self.highlightInnerSlider()
+
+    def highlightOuterSlider(self):
+        self.hfSlider.highlightLabel()
+        self.lfSlider.removeHighlightFromLabel()
+
+    def highlightInnerSlider(self):
+        self.lfSlider.highlightLabel()
+        self.hfSlider.removeHighlightFromLabel()
+
+    def makeBigger(self, event):
+        self.isMakingBigger = True
+        if self.isInnerRad:
+            self.lf = self.lf + self.step
+        else:
+            new_val = self.hf + self.step
+            if new_val <= 0.5:  # Don't make the mask bigger unless the is equal or lower than the max
+                self.hf = new_val
+        self.manageMaskVals()
+
+    def makeSmaller(self, event):
+        self.isMakingBigger = False
+        if self.isInnerRad:
+            new_val = self.lf - self.step
+            if new_val >= 0:
+                self.lf = new_val
+        else:
+            self.hf = self.hf - self.step
+        self.manageMaskVals()
+
+    def manageMaskVals(self):
+        if self.isMakingBigger:
+            if self.isInnerRad and self.lf >= self.hf:  # Inner ring can't be bigger than outer ring
+                    # Subtract one step to go back to the nearest lower value
+                    self.lf = self.hf - self.step
+        else:
+            if not self.isInnerRad and self.hf <= self.lf:  # Outer ring can't be smaller than inner
+                # ring
+                    # Add one step to go back to the nearest higher value
+                    self.hf = self.lf + self.step
+
+        # Set the ring sliders in case it comes from the mouse wheel
+        self.setFreq(self.lfSlider, self.lf)
+        self.setFreq(self.hfSlider, self.hf)
+
+        # Show values
+        self.showValues(self.hfVar, self.hfSlider)
+        self.showValues(self.lfVar, self.lfSlider)
+
+        # Update mask
+        self.rightPreview.updateFreq(self.lf, self.hf)
 
     def _showInAngstroms(self):
         return getattr(self, 'showInAngstroms', False)
 
     def _createControls(self, frame):
-        self.freqFrame = ttk.LabelFrame(frame, text="Frequencies",
-                                        padding="5 5 5 5")
-        self.freqFrame.grid(row=0, column=0)
-        self.lfSlider = self.addFreqSlider('Low freq', self.lf, col=0)
-        self.hfSlider = self.addFreqSlider('High freq', self.hf, col=1)
+        frame.columnconfigure(0, weight=1)
+        frame.columnconfigure(1, weight=1)
+        frame.columnconfigure(2, weight=1)
 
-        if self._showInAngstroms():
-            self.lfVar = tk.StringVar()
-            self.lfLabel = tk.Label(self.freqFrame, textvariable=self.lfVar)
-            self.lfLabel.grid(row=1, column=0)
-            self.hfVar = tk.StringVar()
-            self.hfLabel = tk.Label(self.freqFrame, textvariable=self.hfVar)
-            self.hfLabel.grid(row=1, column=1)
-            self._updateFreqLabels()
+        self.step = 0.01
+        self.freqFrame = ttk.LabelFrame(frame, text="Frequencies")
+        self.freqFrame.columnconfigure(0, weight=3)
+        self.freqFrame.grid(row=0, column=2, sticky='news')
+        self.lfSlider = LabelSlider(self.freqFrame, 'Low freq',
+                                    value=self.lf,
+                                    from_=0.01,
+                                    to=0.5,
+                                    length=178,
+                                    labelWidth=13,
+                                    step=self.step,
+                                    showvalue=0,
+                                    callback=lambda a, b, c: self.updateSliderInnerRadius(),
+                                    )
+        self.lfSlider.grid(row=0, column=0, padx=5, pady=5, sticky='news')
+        self.lfSlider.highlightLabel()
+        self.hfSlider = LabelSlider(self.freqFrame, 'High freq',
+                                    value=self.lf,
+                                    from_=0.01,
+                                    to=0.5,
+                                    length=178,
+                                    labelWidth=13,
+                                    step=self.step,
+                                    showvalue=0,
+                                    callback=lambda a, b, c: self.updateSliderOuterRadius(),
+                                    )
+        self.hfSlider.grid(row=1, column=0, padx=5, pady=5, sticky='news')
+
+        # Pack and configure low freq slider
+        self.lfVar = tk.StringVar()
+        self.lfLabel = tk.Label(self.freqFrame, textvariable=self.lfVar, width=26)
+        self.lfLabel.grid(row=0, column=1, sticky='nse', padx=5, pady=5)
+        # Pack and configure high freq slider
+        self.hfVar = tk.StringVar()
+        self.hfLabel = tk.Label(self.freqFrame, textvariable=self.hfVar, width=26)
+        self.hfLabel.grid(row=1, column=1, sticky='nse', padx=5, pady=5)
+        # Update both mask and sliders with the initial values
+        self.manageMaskVals()
 
     def getDownsample(self):
         return 1.0  # Micrograph previously downsample, not taken into account here
 
-    def addFreqSlider(self, label, value, col):
-        slider = LabelSlider(self.freqFrame, label, from_=0.01, to=0.5,
-                             value=value,
-                             callback=lambda a, b, c: self.updateFreqRing())
-        slider.grid(row=0, column=col, padx=5, pady=5)
-        return slider
-
     def updateFreqRing(self):
         self.rightPreview.updateFreq(self.getLowFreq(), self.getHighFreq())
-        self._updateFreqLabels()
+        self.showValues(self.lfVar, self.lfSlider)
+        self.showValues(self.hfVar, self.hfSlider)
 
-    def _updateFreqLabels(self):
-        if self._showInAngstroms():
-            s = self.firstItem.getSamplingRate()
-            lowFreq = max(self.getLowFreq(), 0.0001)  # avoid division by zero
-            self.lfVar.set('%0.3f %s' % (s / lowFreq, emcts.UNIT_ANGSTROM_SYMBOL))
-            self.hfVar.set('%0.3f %s' % (s / self.getHighFreq(), emcts.UNIT_ANGSTROM_SYMBOL))
+    def updateSliderOuterRadius(self):
+        new_val = self.getFreq(self.hfSlider)
+        # Carry out the action only if the slider is clicked & dragged (prevent from minimal variations when the mouse
+        # is on the slider but not clicking on it)
+        if abs(new_val - self.hf) >= self.step:
+            self.highlightOuterSlider()
+            self.isInnerRad = False
+            self.isMakingBigger = False
+            # Check if the user is making the ring bigger
+            if new_val > self.hf:
+                self.isMakingBigger = True
+
+            self.hf = new_val
+            self.manageMaskVals()
+
+    def updateSliderInnerRadius(self):
+        new_val = self.getFreq(self.lfSlider)
+        # Highlight only if the slider is clicked & dragged (prevent from minimal variations when the mouse is on the
+        # slider but not clicking on it)
+        if abs(new_val - self.lf) >= self.step:
+            self.highlightInnerSlider()
+            self.isInnerRad = True
+            self.isMakingBigger = False
+            # Check if the user is making the ring bigger
+            if new_val > self.lf:
+                self.isMakingBigger = True
+
+            self.lf = new_val
+            self.manageMaskVals()
+
+    def showValues(self, var2set, labSlider):
+        """
+        Show the values selected for the inner and outer radius. If the units are angstroms (sampling_rate = 1,
+        it will show only one value to avoid redundancies
+        """
+        sr = self.firstItem.getSamplingRate()
+        freqVal = max(self.getFreq(labSlider), 0.0001)  # avoid division by zero
+        if sr == 1:
+            var2set.set('{:2.2f} {}'.format(labSlider.slider.get(), emcts.UNIT_PIXEL))
+        else:
+            var2set.set('{:2.2f} rad/{} | {:5.1f} {}'.format(labSlider.slider.get(),
+                                                             emcts.UNIT_ANGSTROM_SYMBOL,
+                                                             sr/freqVal,
+                                                             emcts.UNIT_ANGSTROM_SYMBOL))
 
     def getLowFreq(self):
         return self.lfSlider.get()
@@ -597,13 +720,20 @@ class CtfDialog(DownsampleDialog):
     def getHighFreq(self):
         return self.hfSlider.get()
 
+    @staticmethod
+    def getFreq(freqSlider):
+        return freqSlider.get()
+
+    @staticmethod
+    def setFreq(freqSlider, val):
+        freqSlider.slider.set(val)
+
 
 class CtfDownsampleDialog(CtfDialog):
 
     def _createControls(self, frame):
         DownsampleDialog._createControls(self, frame)
         CtfDialog._createControls(self, frame)
-        self.freqFrame.grid(row=0, column=1)
 
     def getDownsample(self):
         return float(self.downVar.get())
@@ -882,9 +1012,9 @@ class MaskRadiiPreviewDialog(MaskPreviewDialog):
     def makeBigger(self, event):
         self.isMakingBigger = True
         if self.isInnerRad:
-            self.innerRadius = self.innerRadius + 1
+            self.innerRadius = self.innerRadius + self.step
         else:
-            new_val = self.outerRadius + 1
+            new_val = self.outerRadius + self.step
             if new_val <= int(self.dim_par / 2):  # Don't make the mask bigger unless the is equal or lower than the max
                 self.outerRadius = new_val
         self.manageMaskVals()
@@ -892,23 +1022,23 @@ class MaskRadiiPreviewDialog(MaskPreviewDialog):
     def makeSmaller(self, event):
         self.isMakingBigger = False
         if self.isInnerRad:
-            new_val = self.innerRadius - 1
+            new_val = self.innerRadius - self.step
             if new_val >= 0:
                 self.innerRadius = new_val
         else:
-            self.outerRadius = self.outerRadius - 1
+            self.outerRadius = self.outerRadius - self.step
         self.manageMaskVals()
 
     def manageMaskVals(self):
         if self.isMakingBigger:
             if self.isInnerRad and self.innerRadius >= self.outerRadius:  # Inner ring can't be bigger than outer ring
                     # Subtract one step to go back to the nearest lower value
-                    self.innerRadius = self.outerRadius - 1
+                    self.innerRadius = self.outerRadius - self.step
         else:
             if not self.isInnerRad and self.outerRadius <= self.innerRadius:  # Outer ring can't be smaller than inner
                 # ring
                     # Add one step to go back to the nearest higher value
-                    self.outerRadius = self.innerRadius + 1
+                    self.outerRadius = self.innerRadius + self.step
 
         # Set the ring sliders in case it comes from the mouse wheel
         self.setRadius(self.radiusSliderIn, self.innerRadius)
@@ -923,10 +1053,11 @@ class MaskRadiiPreviewDialog(MaskPreviewDialog):
                                 self.innerRadius*self.ratio)
 
     def _createControls(self, frame):
+        self.step = 1
         to = int(self.dim_par / 2)
         self.radiusSliderOut = LabelSlider(frame, 'Outer radius',
                                            from_=1, to=to,
-                                           value=self.outerRadius, step=1,
+                                           value=self.outerRadius, step=self.step,
                                            callback=lambda a, b, c: self.updateSliderOuterRadius(),
                                            length=150, showvalue=0)
         self.radiusSliderOut.highlightLabel()
@@ -935,7 +1066,7 @@ class MaskRadiiPreviewDialog(MaskPreviewDialog):
 
         self.radiusSliderIn = LabelSlider(frame, 'Inner radius',
                                           from_=1, to=to,
-                                          value=self.innerRadius, step=1,
+                                          value=self.innerRadius, step=self.step,
                                           callback=lambda a, b, c: self.updateSliderInnerRadius(),
                                           length=150, showvalue=0)
         self.irVar = tk.StringVar()
@@ -957,7 +1088,7 @@ class MaskRadiiPreviewDialog(MaskPreviewDialog):
         new_val = self.getRadius(self.radiusSliderOut)
         # Carry out the action only if the slider is clicked & dragged (prevent from minimal variations when the mouse
         # is on the slider but not clicking on it)
-        if abs(new_val - self.outerRadius) >= 1:
+        if abs(new_val - self.outerRadius) >= self.step:
             self.highlightOuterSlider()
             self.isInnerRad = False
             self.isMakingBigger = False
@@ -972,7 +1103,7 @@ class MaskRadiiPreviewDialog(MaskPreviewDialog):
         new_val = self.getRadius(self.radiusSliderIn)
         # Highlight only if the slider is clicked & dragged (prevent from minimal variations when the mouse is on the
         # slider but not clicking on it)
-        if abs(new_val - self.innerRadius) >= 1:
+        if abs(new_val - self.innerRadius) >= self.step:
             self.highlightInnerSlider()
             self.isInnerRad = True
             self.isMakingBigger = False
