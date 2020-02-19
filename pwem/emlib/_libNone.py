@@ -32,7 +32,7 @@ ghostStr = """
 """
 def linkXmippBinding():
     from pyworkflow.utils import createLink
-    from pyworkflow as pw
+    import pyworkflow as pw
     import pwem
     import os
     xmipp_home = pwem.Config.XMIPP_HOME
