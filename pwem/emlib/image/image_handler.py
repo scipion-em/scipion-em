@@ -25,14 +25,8 @@
 # **************************************************************************
 
 import os
-import sys
-
 from PIL import Image
-
-import PIL
-
 import pyworkflow.utils as pwutils
-
 import pwem.objects as emobj
 import pwem.constants as emcts
 from .. import lib
