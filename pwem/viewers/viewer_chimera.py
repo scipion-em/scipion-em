@@ -323,32 +323,16 @@ class ChimeraView(pwviewer.CommandView):
                                       env=Chimera.getEnviron(), **kwargs)
 
 
-class ChimeraClientView(pwviewer.CommandView):
+class ChimeraClientView(ChimeraView):
     """ View for calling an external command. """
-
-    def __init__(self, inputFile, **kwargs):
-        self._inputFile = inputFile
-        self._kwargs = kwargs
-
-    def show(self):
-        if self._kwargs.get('showProjection', False):
-            ChimeraProjectionClient(self._inputFile, **self._kwargs)
-        else:
-            ChimeraAngDistClient(self._inputFile, **self._kwargs)
+    pass
 
 
-class ChimeraDataView(ChimeraClientView):
+class ChimeraDataView(ChimeraView):
 
     def __init__(self, dataview, vol, viewParams={}, **kwargs):
         self.dataview = dataview
-        self.showjPort = pwutils.getFreePort()
-        self.dataview._viewParams[CHIMERA_PORT] = self.showjPort
-        self.dataview._viewParams[MODE] = MODE_MD
-        self.dataview._viewParams[INVERTY] = ''
-        ChimeraClientView.__init__(self, vol.getFileName(),
-                                   showProjection=True,
-                                   showjPort=self.showjPort,
-                                   voxelSize=vol.getSamplingRate())
+        ChimeraClientView.__init__(self, vol.getFileName())
 
     def show(self):
         self.dataview.show()
