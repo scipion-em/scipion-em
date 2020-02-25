@@ -138,6 +138,28 @@ class ImportOriginVolumeWizard(pwizard.Wizard):
         return x, y, z
 
 
+class ChangeOriginSamplingWizard(pwizard.Wizard):
+    _targets = [(emprot.ProtOrigSampling, ['x', 'y', 'z', 'samplingRate'])]
+
+    def show(self, form, *params):
+        protocol = form.protocol
+        vol = protocol.inVolume.get()
+        fullPattern = vol.getLocation()
+        sampling = vol.getSamplingRate()
+        if ((str(fullPattern)).endswith('mrc') or
+           (str(fullPattern)).endswith('map')):
+            ccp4header = emconv.Ccp4Header(fullPattern, readHeader=True)
+            x, y, z = ccp4header.getOrigin(changeSign=True)  # In Angstroms
+        else:
+            x, y, z = \
+                ImportOriginVolumeWizard._halfOriginCoordinates(vol, sampling)
+
+        form.setVar('x', x)
+        form.setVar('y', y)
+        form.setVar('z', z)
+        form.setVar('samplingRate', sampling)
+
+
 class GetStructureChainsWizard(pwizard.Wizard):
     _targets = [(emprot.ProtImportSequence, ['inputStructureChain'])
                 # NOTE: be careful if you change this class since
