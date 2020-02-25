@@ -26,7 +26,8 @@ from tempfile import mkstemp
 import pyworkflow.tests as pwtests
 
 import pwem.protocols as emprot
-from pwem.emlib.image import ImageHandler
+from pwem.wizards import ChangeOriginSamplingWizard
+
 from xmipp3.protocols import XmippProtCreateMask3D
 
 
@@ -94,6 +95,7 @@ blo = 1 '0 0 0' '50 10.4 2'
                 'z': _z,
                 }
         prot2 = self.newProtocol(emprot.ProtOrigSampling, **args)
+        prot2.setObjLabel('set sampling and orig')
         self.launchProtocol(prot2)
 
         # read output and check new sampling
@@ -106,3 +108,121 @@ blo = 1 '0 0 0' '50 10.4 2'
         self.assertAlmostEqual(z, _z)
         print("sampling=%f"% sampling)
         print("orig=%f %f %f"% (x, y, z))
+        self.assertTrue(os.path.islink(vol.getFileName()), "%s is not a link"%vol.getFileName())
+
+    def test_assignOrigin(self):
+        """ Create 3D mask
+        """
+        args = {'source': 2, # mask from feature
+                'featureFilePath': self.inFileName,
+                'samplingRate': 1.1
+                }
+
+        prot = self.newProtocol(XmippProtCreateMask3D, **args)
+        prot.setObjLabel('create mask 3d (feat file)')
+        self.launchProtocol(prot)
+        self.assertIsNotNone(prot.outputMask,
+                             "There was a problem when importing a 3d mask.")
+
+        # execute protocol that modify sampling/origin
+        _sampling = 2.1
+        _x = 11 ; _y = 22; _z = 33
+        args = {'inVolume': prot.outputMask,
+                'copyFiles': False,
+                'setSampling': False,
+                'setOrigCoord': True,
+                'x': _x,
+                'y': _y,
+                'z': _z,
+                }
+        prot2 = self.newProtocol(emprot.ProtOrigSampling, **args)
+        prot2.setObjLabel('set orig')
+        self.launchProtocol(prot2)
+
+        # read output and check new sampling
+        vol = prot2.outputVolume
+        sampling = vol.getSamplingRate()
+        x, y, z = vol.getOrigin(force=True).getShifts()
+        self.assertAlmostEqual(x, _x)
+        self.assertAlmostEqual(y, _y)
+        self.assertAlmostEqual(z, _z)
+        print("sampling=%f"% sampling)
+        print("orig=%f %f %f"% (x, y, z))
+        self.assertTrue(os.path.islink(vol.getFileName()))
+
+    def test_assignSampling(self):
+        """ Create 3D mask
+        """
+        args = {'source': 2, # mask from feature
+                'featureFilePath': self.inFileName,
+                'samplingRate': 1.1
+                }
+
+        prot = self.newProtocol(XmippProtCreateMask3D, **args)
+        prot.setObjLabel('create mask 3d (feat file)')
+        self.launchProtocol(prot)
+        self.assertIsNotNone(prot.outputMask,
+                             "There was a problem when importing a 3d mask.")
+
+        # execute protocol that modify sampling/origin
+        _sampling = 2.1
+        args = {'inVolume': prot.outputMask,
+                'copyFiles': False,
+                'setSampling': True,
+                'samplingRate': _sampling,
+                'setOrigCoord': False,
+                }
+        prot2 = self.newProtocol(emprot.ProtOrigSampling, **args)
+        prot2.setObjLabel('set sampling')
+        self.launchProtocol(prot2)
+
+        # read output and check new sampling
+        vol = prot2.outputVolume
+        sampling = vol.getSamplingRate()
+        x, y, z = vol.getOrigin(force=True).getShifts()
+        self.assertAlmostEqual(sampling, _sampling)
+        print("sampling=%f"% sampling)
+        print("orig=%f %f %f"% (x, y, z))
+        self.assertTrue(os.path.islink(vol.getFileName()))
+
+    def test_assignOriginSamplingCopyFile(self):
+        """ Create 3D mask
+        """
+        args = {'source': 2, # mask from feature
+                'featureFilePath': self.inFileName,
+                'samplingRate': 1.1
+                }
+
+        prot = self.newProtocol(XmippProtCreateMask3D, **args)
+        prot.setObjLabel('create mask 3d (feat file)')
+        self.launchProtocol(prot)
+        self.assertIsNotNone(prot.outputMask,
+                             "There was a problem when importing a 3d mask.")
+
+        # execute protocol that modify sampling/origin
+        _sampling = 2.1
+        _x = 11 ; _y = 22; _z = 33
+        args = {'inVolume': prot.outputMask,
+                'copyFiles': True,
+                'setSampling': True,
+                'samplingRate': _sampling,
+                'setOrigCoord': True,
+                'x': _x,
+                'y': _y,
+                'z': _z,
+                }
+        prot2 = self.newProtocol(emprot.ProtOrigSampling, **args)
+        prot2.setObjLabel('set sampling, orig\n and copy file')
+        self.launchProtocol(prot2)
+
+        # read output and check new sampling
+        vol = prot2.outputVolume
+        sampling = vol.getSamplingRate()
+        x, y, z = vol.getOrigin(force=True).getShifts()
+        self.assertAlmostEqual(sampling, _sampling)
+        self.assertAlmostEqual(x, _x)
+        self.assertAlmostEqual(y, _y)
+        self.assertAlmostEqual(z, _z)
+        print("sampling=%f"% sampling)
+        print("orig=%f %f %f"% (x, y, z))
+        self.assertFalse(os.path.islink(vol.getFileName()))
