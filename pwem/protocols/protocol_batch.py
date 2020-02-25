@@ -129,11 +129,14 @@ class ProtUserSubSet(BatchProtocol):
 
     def _createSimpleSubset(self, inputObj):
         className = inputObj.getClassName()
-        createFunc = getattr(self, '_create' + className)
         modifiedSet = inputObj.getClass()(filename=self._dbName,
                                           prefix=self._dbPrefix)
+        try:
+            createFunc = getattr(self, '_create' + className)
+            output = createFunc()
+        except Exception:
+            output = inputObj.create(self._getPath())
 
-        output = createFunc()
         for item in modifiedSet:
             if item.isEnabled():
                 output.append(item)
@@ -154,10 +157,12 @@ class ProtUserSubSet(BatchProtocol):
         className = inputImages.getClassName()
         setClass = inputImages.getClass()
 
-        createFunc = getattr(self, '_create' + className)
         modifiedSet = setClass(filename=self._dbName, prefix=self._dbPrefix)
-
-        output = createFunc()
+        try:
+            createFunc = getattr(self, '_create' + className)
+            output = createFunc()
+        except Exception:
+            output = inputImages.create(self._getPath())
 
         if copyInfoCallback is None:
             modifiedSet.loadAllProperties()

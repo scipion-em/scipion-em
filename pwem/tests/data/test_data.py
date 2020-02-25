@@ -145,6 +145,7 @@ class TestImageHandler(unittest.TestCase):
         setupTestOutput(cls)
         cls.dataset = DataSet.getDataSet('xmipp_tutorial')
         cls.dsFormat = DataSet.getDataSet('movies')
+        cls.dsRelion = DataSet.getDataSet('relion_tutorial')
 
     def testExistLocation(self):
         volFn = self.dataset.getFile('volumes/volume_1_iter_002.mrc')
@@ -159,6 +160,81 @@ class TestImageHandler(unittest.TestCase):
         self.assertEqual(newFn, volFn + ":mrc")
         # Test that the new filename still exists even with the :mrc suffix
         self.assertTrue(ih.existsLocation(newFn))
+
+    def testGetDimensions(self):
+        volLabel = ':mrc'
+        movieLabel = ':mrcs'
+        ih = emlib.image.ImageHandler()
+
+        # MICROGRAPH
+        expectedSize_Mic = [9216, 9441, 1, 1]
+        micFn = self.dataset.getFile('micrographs/BPV_1386.mrc')
+        self.assertTrue(ih.existsLocation(micFn))
+        X, Y, Z, N = ih.getDimensions(micFn)
+        self.assertEqual([X, Y, Z, N], expectedSize_Mic)
+        # Labelled as movie
+        X, Y, Z, N = ih.getDimensions(micFn + movieLabel)
+        self.assertEqual([X, Y, Z, N], expectedSize_Mic)
+        # Labelled as volume
+        X, Y, Z, N = ih.getDimensions(micFn + volLabel)
+        self.assertEqual([X, Y, Z, N], expectedSize_Mic)
+
+        # MOVIE .MRC
+        expectedSize_Mov = [4096, 4096, 1, 7]
+        expectedSize_Vol = [4096, 4096, 7, 1]
+        movFn = self.dsFormat.getFile('qbeta/qbeta.mrc')  # Not labelled, so treated as volume
+        self.assertTrue(ih.existsLocation(movFn))
+        X, Y, Z, N = ih.getDimensions(movFn)
+        self.assertEqual([X, Y, Z, N], expectedSize_Vol)
+        # Labelled as movie
+        X, Y, Z, N = ih.getDimensions(movFn + movieLabel)
+        self.assertEqual([X, Y, Z, N], expectedSize_Mov)
+        # Labelled as volume
+        X, Y, Z, N = ih.getDimensions(movFn + volLabel)
+        self.assertEqual([X, Y, Z, N], expectedSize_Vol)
+
+        # MOVIE .MRCS
+        expectedSize_Mov = [1950, 1950, 1, 16]
+        expectedSize_Vol = [1950, 1950, 16, 1]
+        movFn = self.dsFormat.getFile('Falcon_2012_06_12-16_55_40_0_movie.mrcs')
+        self.assertTrue(ih.existsLocation(movFn))
+        X, Y, Z, N = ih.getDimensions(movFn)
+        self.assertEqual([X, Y, Z, N], expectedSize_Mov)
+        # Labelled as movie
+        X, Y, Z, N = ih.getDimensions(movFn + movieLabel)
+        self.assertEqual([X, Y, Z, N], expectedSize_Mov)
+        # Labelled as volume
+        X, Y, Z, N = ih.getDimensions(movFn + volLabel)
+        self.assertEqual([X, Y, Z, N], expectedSize_Vol)
+
+        # VOLUME
+        expectedSize_Mov = [64, 64, 1, 64]
+        expectedSize_Vol = [64, 64, 64, 1]
+        volFn = self.dataset.getFile('volumes/volume_1_iter_002.mrc')
+        self.assertTrue(ih.existsLocation(volFn))
+        X, Y, Z, N = ih.getDimensions(volFn)
+        self.assertEqual([X, Y, Z, N], expectedSize_Vol)
+        # Labelled as movie
+        X, Y, Z, N = ih.getDimensions(volFn + movieLabel)
+        self.assertEqual([X, Y, Z, N], expectedSize_Mov)
+        # Labelled as volume
+        X, Y, Z, N = ih.getDimensions(volFn + volLabel)
+        self.assertEqual([X, Y, Z, N], expectedSize_Vol)
+
+        # STACK OF VOLUMES
+        expectedSize_Mov = [60, 60, 1, 180]
+        expectedSize_Svol = [60, 60, 60, 3]
+        sVolFn = self.dsRelion.getFile('import/case2/relion_volumes.mrc')
+        self.assertTrue(ih.existsLocation(sVolFn))
+        X, Y, Z, N = ih.getDimensions(sVolFn)
+        self.assertEqual([X, Y, Z, N], expectedSize_Svol)
+        # Labelled as movie
+        X, Y, Z, N = ih.getDimensions(sVolFn + movieLabel)
+        self.assertEqual([X, Y, Z, N], expectedSize_Mov)
+        # Labelled as volume
+        X, Y, Z, N = ih.getDimensions(sVolFn + volLabel)
+        self.assertEqual([X, Y, Z, N], expectedSize_Svol)
+
 
     def test_convertMicrographs(self):
         """ Convert micrograhs to different formats.
