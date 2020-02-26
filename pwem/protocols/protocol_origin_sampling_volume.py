@@ -126,6 +126,7 @@ class ProtOrigSampling(EMProtocol):
         # copy or link
         copyOrLink = self.getCopyOrLink()
         fileName = self.inVol.getFileName()
+        fileName = fileName.replace(':mrc', '')
         imgBase = basename(fileName)
         imgDst = self._getExtraPath(imgBase)
         copyOrLink(os.path.abspath(fileName), imgDst)
