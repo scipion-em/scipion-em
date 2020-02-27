@@ -45,15 +45,20 @@ _references = ["delaRosaTrevin201693"]
 
 class Config:
     __get = os.environ.get  # shortcut
-    EM_ROOT = __get('EM_ROOT', os.path.join(pw.Config.SCIPION_SOFTWARE, 'em'))
+
+    # This will prepend SCIPION_HOME in case the variable is not absolute
+    __prefixHome = lambda path: path if os.path.isabs(path) else os.path.join(pw.Config.SCIPION_HOME, path)
+
+    EM_ROOT = __prefixHome(__get('EM_ROOT', os.path.join(pw.Config.SCIPION_SOFTWARE, 'em')))
     # Default XMIPP_HOME: needed here for ShowJ viewers
-    XMIPP_HOME = __get('XMIPP_HOME', os.path.join(EM_ROOT, 'xmipp'))
+    XMIPP_HOME = __prefixHome(__get('XMIPP_HOME', os.path.join(EM_ROOT, 'xmipp')))
 
     # Needed by Chimera viewer.
     CHIMERA_HOME = __get('CHIMERA_HOME', os.path.join(EM_ROOT,'chimera-1.13.1'))
 
     # Get java home, we might need to provide correct default value
     JAVA_HOME = __get('JAVA_HOME', '')
+    JAVA_MAX_MEMORY = __get('JAVA_MAX_MEMORY', '2')
 
     # CUDA
     CUDA_LIB = __get('CUDA_LIB', '/usr/local/cuda/lib64')

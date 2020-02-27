@@ -115,7 +115,7 @@ OBJECT_ID = 'objectId'
 
 def getJvmMaxMemory():
     # Memory in GB
-    return int(os.environ.get("JAVA_MAX_MEMORY", 2))
+    return int(emConfig.JAVA_MAX_MEMORY)
 
 
 class ColumnsConfig:
@@ -261,7 +261,6 @@ def getJavaIJappArguments(memory, appName, appArgs):
     """
     if memory is None:
         memory = getJvmMaxMemory()
-        print("No memory size provided. Using default: %s" % memory)
 
     jdkLib = join(emConfig.JAVA_HOME, 'lib')
     javaBind = join(emConfig.XMIPP_HOME, "bindings", "java")
