@@ -410,14 +410,7 @@ class ProtExtractParticles(ProtParticles):
         coordSet._xmippMd = pwobj.String()
         coordSet.loadAllProperties()
 
-        # TODO: horrible code. Rewrite using
-        # for coord in coordSet.iterItems(orderBy='_micId',
-        #                                 direction='ASC'):
-        #     micId = coord.getMicId()
-        #     if micId != lastMicId:
-        #         lastMicId = micId
-        #         ...
-        #     ...
+        micList = dict()  # To store a dictionary with mics with coordinates
 
         for micKey, mic in micDict.items():
             if counter % 50 == 0:
@@ -428,7 +421,6 @@ class ProtExtractParticles(ProtParticles):
 
             micId = mic.getObjId()
             coordList = []
-            micList = dict()  # To store a dictionary with mics with coordinates
 
             self.debug("Loading coords for mic: %s (%s)" % (micId, micKey))
             for coord in coordSet.iterItems(where='_micId=%s' % micId):

@@ -46,7 +46,9 @@
         "hostName": "localhost",
         "numberOfThreads": 1,
         "numberOfMpi": 1,
-        "inputMovies": "2.outputMovies"
+        "inputMovies": "2.outputMovies",
+        "estimateOrientation": false,
+        "normalizeGain": false
     },
     {
         "object.className": "ProtMotionCorr",
