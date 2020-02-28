@@ -41,6 +41,7 @@ import pyworkflow.viewer as pwviewer
 import pwem.objects as emobj
 import pwem.convert as emconv
 import pwem.protocols as emprot
+from pwem import emlib
 from pwem.viewers import Chimera, ChimeraView, EmProtocolViewer
 from pwem.emlib import image
 

@@ -8,6 +8,7 @@ from glob import iglob
 import sqlite3
 import numpy as np
 
+from pyworkflow import SCIPION_DEBUG_NOCLEAN
 from pyworkflow.tests import *
 import pyworkflow.utils as pwutils
 
@@ -326,7 +327,7 @@ class TestImageHandler(unittest.TestCase):
         self.assertEqual(ih.getDimensions(outFn), (4096, 4096, 1, 5))
         self.assertEqual(ih.getDataType(outFn), EXPECTED_DT)
 
-        if pwutils.envVarOn('SCIPION_DEBUG_NOCLEAN'):
+        if pwutils.envVarOn(SCIPION_DEBUG_NOCLEAN):
             print("Not cleaning output movie: ", outFn)
         else:
             pwutils.cleanPath(outFn)
