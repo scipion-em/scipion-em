@@ -410,14 +410,7 @@ class ProtExtractParticles(ProtParticles):
         coordSet._xmippMd = pwobj.String()
         coordSet.loadAllProperties()
 
-        # TODO: horrible code. Rewrite using
-        # for coord in coordSet.iterItems(orderBy='_micId',
-        #                                 direction='ASC'):
-        #     micId = coord.getMicId()
-        #     if micId != lastMicId:
-        #         lastMicId = micId
-        #         ...
-        #     ...
+        micList = dict()  # To store a dictionary with mics with coordinates
 
         for micKey, mic in micDict.items():
             if counter % 50 == 0:
@@ -428,6 +421,7 @@ class ProtExtractParticles(ProtParticles):
 
             micId = mic.getObjId()
             coordList = []
+
             self.debug("Loading coords for mic: %s (%s)" % (micId, micKey))
             for coord in coordSet.iterItems(where='_micId=%s' % micId):
                 # TODO: Check performance penalty of using this clone
@@ -436,14 +430,14 @@ class ProtExtractParticles(ProtParticles):
 
             if coordList:
                 self.coordDict[micId] = coordList
-            else:
-                del micDict[micKey]
+                micList[micKey] = mic
+
         self.coordsClosed = coordSet.isStreamClosed()
         coordSet.close()
         self.debug("Coords are closed? %s" % self.coordsClosed)
         self.debug("Closed db.")
 
-        return micDict
+        return micList
 
     def _checkNewInput(self):
         self.debug(">>> _checkNewInput ")

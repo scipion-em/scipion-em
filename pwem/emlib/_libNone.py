@@ -23,14 +23,46 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
+from pyworkflow.utils import createLink
+import pyworkflow as pw
+import pwem
+import os
+
+LIB = "lib"
 
 ghostStr = """
- >>> WARNING: Xmipp binaries not found. Ghost active.....BOOOOOO!
+ >>> WARNING: Image library not found!
   > Please install Xmipp to get full functionality. 
-(Configuration->Plugins->scipion-em-xmipp in Scipion manager window)
+(Configuration->Plugins->scipion-em-xmipp -> expand, in Scipion plugin manager window)\n
 """
+def linkXmippBinding():
+    xmipp_home = pwem.Config.XMIPP_HOME
+    # If exists xmipp
+    if os.path.exists(xmipp_home):
+
+        # Link the binding
+        xmippBindingPath = os.path.join(xmipp_home,"bindings", "python", "xmippLib.so")
+        dest = os.path.join(pw.Config.SCIPION_BINDINGS, "xmippLib.so")
+        if not os.path.exists(dest):
+            createLink(xmippBindingPath, dest)
+
+            xmippLibFolder = os.path.join(xmipp_home, "lib")
+
+            # Link the libraries
+            createLink(os.path.join(xmippLibFolder, "libXmipp.so"),
+                   os.path.join(pw.Config.SCIPION_LIBS, "libXmipp.so"))
+            createLink(os.path.join(xmippLibFolder, "libXmippCore.so"),
+                   os.path.join(pw.Config.SCIPION_LIBS, "libXmippCore.so"))
+
+            print("Xmipp bindings registered in Scipion. You will need to restart.")
+
+        if os.path.abspath(pw.Config.SCIPION_LIBS) not in os.environ.get("LD_LIBRARY_PATH", ""):
+            print("LD_LIBRARY_PATH must contain scipion lib folder (%s).  Please, add it." % os.path.abspath(pw.Config.SCIPION_LIBS))
+
 
 print(ghostStr)
+
+linkXmippBinding()
 
 GHOST_ACTIVATED = True  # Flag to unequivocal identify the Ghost
 

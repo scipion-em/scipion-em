@@ -28,7 +28,7 @@ import pyworkflow.viewer as pwviewer
 
 import pwem.constants as emcts
 import pwem.convert as emconv
-
+from pwem import emlib
 
 class LocalResolutionViewer(pwviewer.ProtocolViewer):
     """
