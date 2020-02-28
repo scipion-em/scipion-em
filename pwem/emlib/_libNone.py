@@ -57,7 +57,7 @@ def linkXmippBinding():
             print("Xmipp bindings registered in Scipion. You will need to restart.")
 
         if os.path.abspath(pw.Config.SCIPION_LIBS) not in os.environ.get("LD_LIBRARY_PATH", ""):
-            print("LD_LIBRARY_PATH must contain scipion lib folder (%s).  Please, add it." % os.path.abspath(pwConfig.SCIPION_LIBS))
+            print("LD_LIBRARY_PATH must contain scipion lib folder (%s).  Please, add it." % os.path.abspath(pw.Config.SCIPION_LIBS))
 
 
 print(ghostStr)
