@@ -302,6 +302,10 @@ class Ccp4Header:
 
     def copyCCP4Header(self, inFileName, scipionOriginShifts,
                        sampling, originField=START):
+        """This function updates the values of sampling and
+        origin in the header and save the header to disk.
+        It  has been designed for Volumes, it will NOT work for sets
+        of volumes or images."""
         # x, y, z, ndim = ImageHandler().getDimensions(inFileName)
         if not self.loaded:
             self.readHeader()
