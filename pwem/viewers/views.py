@@ -33,6 +33,7 @@ import tkinter.ttk as ttk
 import pyworkflow.viewer as pwviewer
 
 import pwem.convert as emconv
+from pwem import emlib
 
 from .showj import (getJvmMaxMemory, MODE, VISIBLE, ZOOM, ORDER, RENDER,
                     SORT_BY, runJavaIJapp, MODE_MD, OBJCMDS, LABELS,
