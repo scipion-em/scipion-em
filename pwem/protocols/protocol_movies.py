@@ -31,6 +31,7 @@ import os
 from os.path import join, basename, exists
 from datetime import datetime
 
+from pyworkflow import SCIPION_DEBUG_NOCLEAN
 import pyworkflow.object as pwobj
 import pyworkflow.protocol.params as params
 import pyworkflow.protocol.constants as pwcts
@@ -455,7 +456,7 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
         return True
 
     def _cleanMovieFolder(self, movieFolder):
-        if pwutils.envVarOn('SCIPION_DEBUG_NOCLEAN'):
+        if pwutils.envVarOn(SCIPION_DEBUG_NOCLEAN):
             self.info('Clean movie data DISABLED. '
                       'Movie folder will remain in disk!!!')
         else:
