@@ -300,7 +300,7 @@ class Ccp4Header:
     def computeSampling(self):
         return self._header['Zlength'] / self._header['NZ']
 
-    def copyCCP4Header(self, inFileName, scipionOriginShifts,
+    def copyCCP4Header(self, scipionOriginShifts,
                        sampling, originField=START):
         x, y, z, ndim = self.getXYZN()
         if not self.loaded:
