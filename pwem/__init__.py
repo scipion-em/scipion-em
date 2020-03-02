@@ -64,9 +64,20 @@ class Plugin(pyworkflow.plugin.Plugin):
     def _defineEmVar(cls, varName, defaultValue):
         """ Shortcut method to define variables by prepending EM_ROOT
         to the default value.
+
+        If the varName is defined, we will make the value absolute adding SCIPION_HOME
         """
-        cls._defineVar(varName,
-                       os.path.join(Config.EM_ROOT, defaultValue))
+        prefixedDefault = os.path.join(Config.EM_ROOT, defaultValue)
+        varValue = os.environ.get(varName)
+
+        # If en value is not absolute, then we prepend SCIPION_HOME
+        # This case addresses users reusing old config files where variable comes like:
+        # CHIMERA_HEADLESS_HOME="software/em/chimera_headless"
+        # CHIMERA_HOME="software/em/chimera-1.10.1"
+        varValue = prefixedDefault if varValue is None else os.path.join(pw.Config.SCIPION_HOME, varValue)
+
+        cls._addVar( varName, varValue)
+
 
     @classmethod
     def getMaxitHome(cls):
