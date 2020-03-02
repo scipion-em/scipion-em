@@ -265,31 +265,39 @@ class AtomicStructHandler:
 
     def getModelsChains(self):
         """
-        return a dic of all models and respective chains (chainID and
-        length of residues) from a pdb file
+        given an atomic structure returns two dictionaries:
+            (1) for all models and respective chains (chainID and length of residues)
+            (2) for each chain list of residues
         """
         self.checkRead()
-        models = OrderedDict()
+        listOfChains = OrderedDict()
+        listOfResidues = OrderedDict()
 
         for model in self.structure:
-            chainDic = OrderedDict()
+            chainDicLength = OrderedDict()
+            chainDicFirstResidue = OrderedDict()
             for chain in model:
                 if len(chain.get_unpacked_list()[0].resname.strip()) == 1:  # RNA
                     seq = list()
+                    seq_number = list()
                     for residue in chain:
                         if residue.get_resname() in ['A', 'C', 'G', 'U']:
                             seq.append(residue.get_resname())
                         else:
                             seq.append("X")
+                        seq_number.append((residue.get_id()[1], residue.get_resname()))
                 elif len(chain.get_unpacked_list()[0].resname.strip()) == 2:  # DNA
                     seq = list()
+                    seq_number = list()
                     for residue in chain:
                         if residue.get_resname()[1] in ['A', 'C', 'G', 'T']:
                             seq.append(residue.get_resname()[1])
                         else:
                             seq.append("X")
+                        seq_number.append((residue.get_id()[1], residue.get_resname()))
                 elif len(chain.get_unpacked_list()[0].resname.strip()) == 3:  # Protein
                     seq = list()
+                    seq_number = list()
                     counter = 0
                     for residue in chain:
                         if is_aa(residue.get_resname(), standard=True):  # aminoacids
@@ -297,6 +305,7 @@ class AtomicStructHandler:
                             counter += 1
                         else:
                             seq.append("X")
+                        seq_number.append((residue.get_id()[1], residue.get_resname()))
                     if counter == 0:  # HETAM
                         for residue in chain:
                             seq.append(residue.get_resname())
@@ -304,10 +313,12 @@ class AtomicStructHandler:
                     del seq[-1]
                 while seq[0] == "X":
                     del seq[0]
-                chainDic[chain.id] = len(seq)
-            models[model.id] = chainDic
+                chainDicLength[chain.id] = len(seq)
+                chainDicFirstResidue[chain.id] = seq_number
+            listOfChains[model.id] = chainDicLength
+            listOfResidues[model.id] = chainDicFirstResidue
 
-        return models
+        return listOfChains, listOfResidues
 
     def getSequenceFromChain(self, modelID, chainID):
         self.checkRead()
