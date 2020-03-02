@@ -41,7 +41,6 @@ from pwem.wizards.wizard import EmWizard
 import pwem.protocols as emprot
 import pwem.objects as emobj
 
-
 class ImportAcquisitionWizard(EmWizard):
     _targets = [(emprot.ProtImportImages, ['acquisitionWizard'])]
 
@@ -139,6 +138,8 @@ class ImportOriginVolumeWizard(pwizard.Wizard):
 
 
 class GetStructureChainsWizard(pwizard.Wizard):
+    """Load an atomic structure, parse chain related information as
+       name, number of residues, list of aminoacids (or other residues)"""
     _targets = [(emprot.ProtImportSequence, ['inputStructureChain'])
                 # NOTE: be careful if you change this class since
                 # chimera-wizard inherits from it.
@@ -148,6 +149,9 @@ class GetStructureChainsWizard(pwizard.Wizard):
 
     @classmethod
     def getModelsChainsStep(cls, protocol):
+        """ Returns (1) list with the information
+           {"model": %d, "chain": "%s", "residues": %d} (modelsLength)
+           (2) list with residues, postion and chain (modelsFirstResidue)"""
         structureHandler = emconv.AtomicStructHandler()
         fileName = ""
         if hasattr(protocol, 'pdbId'):
@@ -172,14 +176,13 @@ class GetStructureChainsWizard(pwizard.Wizard):
 
         structureHandler.read(fileName)
         structureHandler.getStructure()
-        models = structureHandler.getModelsChains()
-        return models
+        # listOfChains, listOfResidues = structureHandler.getModelsChains()
+        return structureHandler.getModelsChains()
 
-    def editionListOfChains(self, models):
+    def editionListOfChains(self, listOfChains):
         self.chainList = []
-        for model, chainDic in models.items():
+        for model, chainDic in listOfChains.items():
             for chainID, lenResidues in chainDic.items():
-
                 self.chainList.append(
                     '{"model": %d, "chain": "%s", "residues": %d}' %
                     (model, str(chainID), lenResidues))
@@ -187,12 +190,12 @@ class GetStructureChainsWizard(pwizard.Wizard):
     def show(self, form, *params):
         protocol = form.protocol
         try:
-            models = self.getModelsChainsStep(protocol)
+            listOfChains, listOfResidues = self.getModelsChainsStep(protocol)
         except Exception as e:
             print("ERROR: ", e)
             return
 
-        self.editionListOfChains(models)
+        self.editionListOfChains(listOfChains)
         finalChainList = []
         for i in self.chainList:
             finalChainList.append(pwobj.String(i))
