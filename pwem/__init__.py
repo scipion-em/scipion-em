@@ -50,14 +50,18 @@ class Config(pw.Config):
     EM_ROOT = _join(_get('EM_ROOT', _join(pw.Config.SCIPION_SOFTWARE, 'em')))
 
     # Default XMIPP_HOME: needed here for ShowJ viewers
-    XMIPP_HOME = _join('XMIPP_HOME', _join(EM_ROOT, 'xmipp'))
+    XMIPP_HOME = _join(EM_ROOT, _get('XMIPP_HOME', 'xmipp'))
 
     # Needed by Chimera viewer.
-    CHIMERA_HOME = _get('CHIMERA_HOME', _join(EM_ROOT, 'chimera-1.13.1'))
+    CHIMERA_HOME = _join(_get('CHIMERA_HOME', 'chimera-1.13.1'))
 
     # Get java home, we might need to provide correct default value
     JAVA_HOME = _get('JAVA_HOME', '')
     JAVA_MAX_MEMORY = _get('JAVA_MAX_MEMORY', '2')
+
+    # MPI
+    MPI_LIBDIR = _get('MPI_LIBDIR', '')
+    MPI_BINDIR = _get('MPI_BINDIR', '')
 
     # CUDA
     CUDA_LIB = _get('CUDA_LIB', '/usr/local/cuda/lib64')
@@ -80,8 +84,9 @@ class Plugin(pyworkflow.plugin.Plugin):
         """ Shortcut method to define variables by prepending EM_ROOT
         to the default value.
         """
-        cls._defineVar(varName,
-                       os.path.join(Config.EM_ROOT, defaultValue))
+        value = os.path.join(Config.EM_ROOT,
+                             os.environ.get(varName, defaultValue))
+        cls._addVar(varName, value)
 
     @classmethod
     def getMaxitHome(cls):
