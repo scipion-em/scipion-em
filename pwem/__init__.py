@@ -53,7 +53,7 @@ class Config(pw.Config):
     XMIPP_HOME = _join(EM_ROOT, _get('XMIPP_HOME', 'xmipp'))
 
     # Needed by Chimera viewer.
-    CHIMERA_HOME = _join(_get('CHIMERA_HOME', 'chimera-1.13.1'))
+    CHIMERA_HOME = _join(EM_ROOT, _get('CHIMERA_HOME', 'chimera-1.13.1'))
 
     # Get java home, we might need to provide correct default value
     JAVA_HOME = _get('JAVA_HOME', '')
