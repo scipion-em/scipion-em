@@ -60,8 +60,8 @@ class Config(pw.Config):
     JAVA_MAX_MEMORY = _get('JAVA_MAX_MEMORY', '2')
 
     # MPI
-    MPI_LIBDIR = _get('MPI_LIBDIR', '')
-    MPI_BINDIR = _get('MPI_BINDIR', '')
+    MPI_LIBDIR = _get('MPI_LIBDIR', '/usr/lib64/mpi/gcc/openmpi/lib')
+    MPI_BINDIR = _get('MPI_BINDIR', '/usr/lib64/mpi/gcc/openmpi/bin')
 
     # CUDA
     CUDA_LIB = _get('CUDA_LIB', '/usr/local/cuda/lib64')
