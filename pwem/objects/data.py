@@ -1762,39 +1762,13 @@ class SetOfClasses(EMSet):
                         newCls.append(img)
                 self.update(newCls)
 
-    def copyItems(self, otherSet,
-                  updateItemCallback=None,
-                  itemDataIterator=None,
-                  copyDisabled=False):
-        """ Copy items from another set.
-        If the updateItemCallback is passed, it will be
-        called with each item (and optionally with a data row).
-        This is a place where items can be updated while copying.
-        This is useful to set new attributes or update values
-        for each item.
-        """
-        for item in otherSet:
-            # copy items if enabled or copyDisabled=True
-            if copyDisabled or item.isEnabled():
-                newItem = item.clone()
-                if updateItemCallback:
-                    row = None if itemDataIterator is None \
-                        else next(itemDataIterator)
-                    updateItemCallback(newItem, row)
-                self.append(newItem)
-                # copy items inside the class
-                newItem.copyItems(item, copyDisabled=copyDisabled)
-                self.update(newItem)
-            else:
-                if itemDataIterator is not None:
-                    next(itemDataIterator)  # just skip disabled data row
-
     def classifyItems(self,
                       updateItemCallback=None,
                       updateClassCallback=None,
                       itemDataIterator=None,
                       classifyDisabled=False,
-                      iterParams=None):
+                      iterParams=None,
+                      doClone=True):
         """ Classify items from the self.getImages() and add the needed classes.
         This function iterates over each item in the images and call
         the updateItemCallback to register the information coming from
@@ -1802,6 +1776,8 @@ class SetOfClasses(EMSet):
         set the classId of the image that will be used to classify it.
         It is also possible to pass a callback to update the class properties.
         """
+        itemDataIter = itemDataIterator  # shortcut
+
         clsDict = {}  # Dictionary to store the (classId, classSet) pairs
         inputSet = self.getImages()
         iterParams = iterParams or {}
@@ -1809,10 +1785,9 @@ class SetOfClasses(EMSet):
         for item in inputSet.iterItems(**iterParams):
             # copy items if enabled or copyDisabled=True
             if classifyDisabled or item.isEnabled():
-                newItem = item.clone()
+                newItem = item.clone() if doClone else item
                 if updateItemCallback:
-                    row = None if itemDataIterator is None \
-                        else next(itemDataIterator)
+                    row = None if itemDataIter is None else next(itemDataIter)
                     updateItemCallback(newItem, row)
                     # If updateCallBack function returns attribute
                     # _appendItem to False do not append the item
@@ -1838,8 +1813,8 @@ class SetOfClasses(EMSet):
                     classItem = clsDict[ref]
                 classItem.append(newItem)
             else:
-                if itemDataIterator is not None:
-                    next(itemDataIterator)  # just skip disabled data row
+                if itemDataIter is not None:
+                    next(itemDataIter)  # just skip disabled data row
 
         for classItem in clsDict.values():
             self.update(classItem)
