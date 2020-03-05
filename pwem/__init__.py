@@ -40,8 +40,8 @@ from .constants import *
 from .objects import EMObject
 from .utils import *
 
+_logo = "scipion_icon.gif"
 _references = ["delaRosaTrevin201693"]
-
 
 class Config:
     __get = os.environ.get  # shortcut
@@ -74,7 +74,7 @@ class Domain(pyworkflow.plugin.Domain):
 
 
 class Plugin(pyworkflow.plugin.Plugin):
-
+    _url = URL
     @classmethod
     def _defineEmVar(cls, varName, defaultValue):
         """ Shortcut method to define variables by prepending EM_ROOT
