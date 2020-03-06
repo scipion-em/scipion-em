@@ -29,7 +29,7 @@ import pyworkflow.tests as pwtests
 
 import pwem.protocols as emprot
 
-# Class intentionally renamed sin
+# Class intentionally renamed to avoid muting this test
 class NotifierTest(pwtests.BaseTest):
     @classmethod
     def setUpClass(cls):
