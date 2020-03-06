@@ -26,6 +26,7 @@
 # **************************************************************************
 """ This module is for Actual wizards to be able to be discovered from the
 Domain. wizard.py is left for wizard models and base classes."""
+import decimal
 import os
 import requests
 
@@ -154,10 +155,13 @@ class ChangeOriginSamplingWizard(pwizard.Wizard):
             x, y, z = \
                 ImportOriginVolumeWizard._halfOriginCoordinates(vol, sampling)
 
-        form.setVar('x', x)
-        form.setVar('y', y)
-        form.setVar('z', z)
-        form.setVar('samplingRate', sampling)
+        def remove_zeros(number):
+            return decimal.Decimal(number).normalize()
+
+        form.setVar('x', remove_zeros(x))
+        form.setVar('y', remove_zeros(y))
+        form.setVar('z', remove_zeros(z))
+        form.setVar('samplingRate', remove_zeros(sampling))
 
 
 class GetStructureChainsWizard(pwizard.Wizard):

@@ -28,6 +28,7 @@
 import os
 
 import pyworkflow.protocol.params as params
+from pwem import UNIT_ANGSTROM_SYMBOL
 from pyworkflow import VERSION_3_0
 
 from pwem.protocols import EMProtocol
@@ -52,18 +53,19 @@ class ProtOrigSampling(EMProtocol):
 
         form.addParam('inVolume', params.PointerParam, label="Input Volume", important=True,
                       pointerClass='Volume',
-                      help='A new object volume will be created with the assigned sampling rate and origin. No new binary file will be created')
+                      help='A new object volume will be created with the assigned sampling rate and origin. '
+                           'No new binary file will be created')
         form.addParam('copyFiles', params.BooleanParam,
                       label="copy (true)/link(false) volume:",
-                      help="Option YES:\nA new volume file will be copied"
-                      "otherwise a link to the input volume is maded\n"
+                      help="Option YES:\nA new volume file will be copied "
+                      "otherwise a link to the input volume is made\n"
                       "default = false", expertLevel=params.LEVEL_ADVANCED,
                       default=False)
         form.addParam('setSampling', params.BooleanParam,
                       label="Set SamplingRate",
                       help="Option YES:\nA new volume object will be created with "
-                           "the given SamplinRate."
-                           "This SamplinRate will NOT be set in the map file header.\n\n",
+                           "the given SamplinRate. "
+                           "This SamplingRate will NOT be set in the map file header.\n\n",
                       default=False)
         form.addParam('samplingRate', params.FloatParam,
                       condition='setSampling',
@@ -71,28 +73,28 @@ class ProtOrigSampling(EMProtocol):
         form.addParam('setOrigCoord', params.BooleanParam,
                       label="Set origin of coordinates",
                       help="Option YES:\nA new volume object will be created with "
-                           "the given ORIGIN of coordinates."
+                           "the given ORIGIN of coordinates. "
                            "This ORIGIN will NOT be set in the map file header.\n\n",
                       default=False)
-        # line = form.addLine('Offset',
-        #                     help="A wizard will suggest you possible "
-        #                          "coordinates for the ORIGIN. In MRC volume "
-        #                          "files, the ORIGIN coordinates will be "
-        #                          "obtained from the file header.\n "
-        #                          "In case you prefer set your own ORIGIN "
-        #                          "coordinates, write them here. You have to "
-        #                          "provide the map center coordinates in "
-        #                          "Angstroms (pixels x sampling).\n",
-        #                     condition='setOrigCoord')
-        # line.addParam would produce a nicer looking form
-        # but them the wizard icon is drawn outside the visible
-        # window. Until this bug is fixed form is a better option
-        form.addParam('x', params.FloatParam, condition='setOrigCoord',
-                      label="x (A)", help="offset along x axis (Angstroms)")
-        form.addParam('y', params.FloatParam, condition='setOrigCoord',
-                      label="y (A)", help="offset along y axis (Angstroms)")
-        form.addParam('z', params.FloatParam, condition='setOrigCoord',
-                      label="z (A)", help="offset along z axis (Angstroms)")
+        line = form.addLine('Offset',
+                            help="A wizard will suggest you possible "
+                                 "coordinates for the ORIGIN. In MRC volume "
+                                 "files, the ORIGIN coordinates will be "
+                                 "obtained from the file header.\n "
+                                 "In case you prefer set your own ORIGIN "
+                                 "coordinates, write them here. You have to "
+                                 "provide the map center coordinates in "
+                                 "Angstroms (pixels x sampling).\n",
+                            condition='setOrigCoord')
+        line.addParam('x', params.FloatParam, condition='setOrigCoord',
+                      label="x(%s)" % UNIT_ANGSTROM_SYMBOL,
+                      help="offset along x axis (Angstroms)")
+        line.addParam('y', params.FloatParam, condition='setOrigCoord',
+                      label="y(%s)" % UNIT_ANGSTROM_SYMBOL,
+                      help="offset along y axis (Angstroms)")
+        line.addParam('z', params.FloatParam, condition='setOrigCoord',
+                      label="z(%s)" % UNIT_ANGSTROM_SYMBOL,
+                      help="offset along z axis (Angstroms)")
 
     # --------------------------- INSERT steps functions ----------------------
     def _insertAllSteps(self):
