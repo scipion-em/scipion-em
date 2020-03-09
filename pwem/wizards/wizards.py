@@ -155,13 +155,13 @@ class ChangeOriginSamplingWizard(pwizard.Wizard):
             x, y, z = \
                 ImportOriginVolumeWizard._halfOriginCoordinates(vol, sampling)
 
-        def remove_zeros(number):
+        def remove_tail_zeros(number):
             return decimal.Decimal(number).normalize()
 
-        form.setVar('x', remove_zeros(x))
-        form.setVar('y', remove_zeros(y))
-        form.setVar('z', remove_zeros(z))
-        form.setVar('samplingRate', remove_zeros(sampling))
+        form.setVar('x', remove_tail_zeros(x))
+        form.setVar('y', remove_tail_zeros(y))
+        form.setVar('z', remove_tail_zeros(z))
+        form.setVar('samplingRate', remove_tail_zeros(sampling))
 
 
 class GetStructureChainsWizard(pwizard.Wizard):
