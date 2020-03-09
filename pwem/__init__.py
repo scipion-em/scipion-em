@@ -43,26 +43,30 @@ from .utils import *
 _references = ["delaRosaTrevin201693"]
 
 
-class Config:
-    __get = os.environ.get  # shortcut
+class Config(pw.Config):
+    _get = pw.Config._get
+    _join = pw.Config._join
 
-    # This will prepend SCIPION_HOME in case the variable is not absolute
-    __prefixHome = lambda path: path if os.path.isabs(path) else os.path.join(pw.Config.SCIPION_HOME, path)
+    EM_ROOT = _join(_get('EM_ROOT', _join(pw.Config.SCIPION_SOFTWARE, 'em')))
 
-    EM_ROOT = __prefixHome(__get('EM_ROOT', os.path.join(pw.Config.SCIPION_SOFTWARE, 'em')))
     # Default XMIPP_HOME: needed here for ShowJ viewers
-    XMIPP_HOME = __prefixHome(__get('XMIPP_HOME', os.path.join(EM_ROOT, 'xmipp')))
+    XMIPP_HOME = _join(EM_ROOT, _get('XMIPP_HOME', 'xmipp'))
 
     # Needed by Chimera viewer.
-    CHIMERA_HOME = __get('CHIMERA_HOME', os.path.join(EM_ROOT,'chimera-1.13.1'))
+    CHIMERA_HOME = _join(EM_ROOT, _get('CHIMERA_HOME', 'chimera-1.13.1'))
 
     # Get java home, we might need to provide correct default value
-    JAVA_HOME = __get('JAVA_HOME', '')
-    JAVA_MAX_MEMORY = __get('JAVA_MAX_MEMORY', '2')
+    JAVA_HOME = _get('JAVA_HOME', '')
+    JAVA_MAX_MEMORY = _get('JAVA_MAX_MEMORY', '2')
+
+    # MPI
+    MPI_LIBDIR = _get('MPI_LIBDIR', '/usr/lib64/mpi/gcc/openmpi/lib')
+    MPI_BINDIR = _get('MPI_BINDIR', '/usr/lib64/mpi/gcc/openmpi/bin')
 
     # CUDA
-    CUDA_LIB = __get('CUDA_LIB', '/usr/local/cuda/lib64')
-    CUDA_BIN = __get('CUDA_BIN', '/usr/local/cuda/bin')
+    CUDA_LIB = _get('CUDA_LIB', '/usr/local/cuda/lib64')
+    CUDA_BIN = _get('CUDA_BIN', '/usr/local/cuda/bin')
+
 
 class Domain(pyworkflow.plugin.Domain):
     _name = __name__
@@ -80,8 +84,9 @@ class Plugin(pyworkflow.plugin.Plugin):
         """ Shortcut method to define variables by prepending EM_ROOT
         to the default value.
         """
-        cls._defineVar(varName,
-                       os.path.join(Config.EM_ROOT, defaultValue))
+        value = os.path.join(Config.EM_ROOT,
+                             os.environ.get(varName, defaultValue))
+        cls._addVar(varName, value)
 
     @classmethod
     def getMaxitHome(cls):
