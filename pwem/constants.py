@@ -165,3 +165,4 @@ FREQ_BANDPASS_WIZ_MSG = \
     'click and drag the corresponding slider or use up and down keys. Values are shown in both digital ' \
     'frequency and angstroms.'
 
+EM_ROOT_VAR = 'EM_ROOT'

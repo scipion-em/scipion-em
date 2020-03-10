@@ -28,7 +28,6 @@ This modules contains classes related with EM
 """
 
 import os
-import sys
 
 import pyworkflow as pw
 from pyworkflow.protocol import Protocol
@@ -47,7 +46,7 @@ class Config(pw.Config):
     _get = pw.Config._get
     _join = pw.Config._join
 
-    EM_ROOT = _join(_get('EM_ROOT', _join(pw.Config.SCIPION_SOFTWARE, 'em')))
+    EM_ROOT = _join(_get(EM_ROOT_VAR, _join(pw.Config.SCIPION_SOFTWARE, 'em')))
 
     # Default XMIPP_HOME: needed here for ShowJ viewers
     XMIPP_HOME = _join(EM_ROOT, _get('XMIPP_HOME', 'xmipp'))
@@ -79,6 +78,7 @@ class Domain(pyworkflow.plugin.Domain):
 
 class Plugin(pyworkflow.plugin.Plugin):
     _url = URL
+
     @classmethod
     def _defineEmVar(cls, varName, defaultValue):
         """ Shortcut method to define variables prepending EM_ROOT if variable is not absolute"""
@@ -97,6 +97,7 @@ class Plugin(pyworkflow.plugin.Plugin):
 
     @classmethod
     def _defineVariables(cls):
+        cls._defineVar(EM_ROOT_VAR, pwem.Config.EM_ROOT)
         cls._defineEmVar(MAXIT_HOME, 'maxit-10.1')
 
     @classmethod
