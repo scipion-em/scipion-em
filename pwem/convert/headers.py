@@ -300,18 +300,14 @@ class Ccp4Header:
     def computeSampling(self):
         return self._header['Zlength'] / self._header['NZ']
 
-    def copyCCP4Header(self, inFileName, scipionOriginShifts,
-                       sampling, originField=START):
+    def copyCCP4Header(self, scipionOriginShifts, sampling, originField=START):
         """This function updates the values of sampling and
         origin in the header and save the header to disk.
         It  has been designed for Volumes, it will NOT work for sets
         of volumes or images."""
-        # x, y, z, ndim = ImageHandler().getDimensions(inFileName)
         if not self.loaded:
             self.readHeader()
         x, y, z = self.getDims()
-        # x, y, z, ndim = self.getXYZN()
-        # self.setGridSampling(x, y, z)  # set dimensions
         self.setCellDimensions(x * sampling, y * sampling, z * sampling)
 
         if originField == self.ORIGIN:

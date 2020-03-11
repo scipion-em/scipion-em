@@ -31,9 +31,9 @@ import threading
 import pyworkflow.utils as pwutils
 import pyworkflow.tests as pwtests
 
-from pwem import Domain
-import pwem.convert as emconv
+from pwem import Domain, emlib
 import pwem.protocols as emprot
+import relion
 
 
 # Load the number of movies for the simulation, by default equal 5, but
@@ -270,17 +270,15 @@ class TestRelionExtractStreaming(TestBaseRelionStreaming):
         # Now pick particles on the micrographs with Relion
         print("Performing Relion Autopicking (LoG)...")
 
-        ProtRelion2Autopick = Domain.importFromPlugin('relion.protocols',
-                                                      'ProtRelion2Autopick')
-        protPick = self.newProtocol(ProtRelion2Autopick,
-                                    runType=1,
-                                    referencesType=1,
-                                    inputReferences=None,
-                                    refsHaveInvertedContrast=True,
-                                    particleDiameter=380)
-        protPick.inputMicrographs.set(protImport.outputMicrographs)
-        protPick.ctfRelations.set(protCTF.outputCTF)
-        protPick.setObjLabel('Streaming Auto-picking')
+        ProtRelionAutopickLoG = Domain.importFromPlugin(
+            'relion.protocols', 'ProtRelionAutopickLoG')
+
+        protPick = self.newProtocol(
+            ProtRelionAutopickLoG,
+            objLabel='Streaming relion - autopic (LoG)',
+            inputMicrographs=protImport.outputMicrographs,
+            minDiameter=260,
+            maxDiameter=380)
         self.proj.launchProtocol(protPick, wait=False)
         self._waitOutput(protPick, 'outputCoordinates')
 
@@ -328,6 +326,7 @@ class TestRelionPickStreaming(TestBaseRelionStreaming):
         # First, import a set of micrographs
         print("Importing a set of micrographs...")
         protImport = self.newProtocol(emprot.ProtImportMicrographs,
+                                      objLabel='import 20 mics (streaming)',
                                       filesPath=os.path.abspath(self.proj.getTmpPath()),
                                       filesPattern="*%s" % self.ext,
                                       samplingRateMode=1,
@@ -337,7 +336,6 @@ class TestRelionPickStreaming(TestBaseRelionStreaming):
                                       dataStreaming=True,
                                       fileTimeout=10,
                                       timeout=60)
-        protImport.setObjLabel('import 20 mics (streaming)')
         self.proj.launchProtocol(protImport, wait=False)
         self._waitOutput(protImport, 'outputMicrographs')
 
@@ -345,35 +343,30 @@ class TestRelionPickStreaming(TestBaseRelionStreaming):
         print("Performing CTFfind...")
         ProtCTFFind = Domain.importFromPlugin('cistem.protocols',
                                               'CistemProtCTFFind', doRaise=True)
-        protCTF = self.newProtocol(ProtCTFFind,
-                                   minDefocus=12000, maxDefocus=30000,
-                                   runMode=1,
-                                   numberOfMpi=1, numberOfThreads=1)
-        protCTF.inputMicrographs.set(protImport.outputMicrographs)
-        protCTF.setObjLabel('CTF ctffind')
-        self.proj.launchProtocol(protCTF, wait=False)
-        self._waitOutput(protCTF, 'outputCTF')
+        protCtf = self.newProtocol(
+            ProtCTFFind,
+            objLabel='ctffind',
+            inputMicrographs=protImport.outputMicrographs,
+            minDefocus=12000, maxDefocus=30000,
+            slowSearch=False,
+            resamplePix=False,
+        )
+        self.proj.launchProtocol(protCtf, wait=False)
+        self._waitOutput(protCtf, 'outputCTF')
 
-        self._waitUntilMinSize(protCTF.outputCTF)
+        self._waitUntilMinSize(protCtf.outputCTF)
 
         # Select some good averages from the iterations mrcs a
 
         ProtRelion2Autopick = Domain.importFromPlugin('relion.protocols',
                                                       'ProtRelion2Autopick')
-        protPick = self.newProtocol(ProtRelion2Autopick,
-                                    objLabel='autopick refs',
-                                    runType=0,
-                                    micrographsNumber=3,
-                                    referencesType=0,
-                                    refsHaveInvertedContrast=True,
-                                    particleDiameter=380
-                                    )
-        protPick.inputMicrographs.set(protImport.outputMicrographs)
-        protPick.ctfRelations.set(protCTF.outputCTF)
-        protPick.inputReferences.set(protAvgs.outputAverages)
-        self.launchProtocol(protPick)
-
-        protPick.runType.set(1)
+        protPick = self.newProtocol(
+            ProtRelion2Autopick, objLabel='autopick refs',
+            inputMicrographs=protImport.outputMicrographs,
+            ctfRelations=protCtf.outputCTF,
+            runType=relion.RUN_COMPUTE,
+            inputReferences=protAvgs.outputAverages
+        )
         self.launchProtocol(protPick)
 
 
