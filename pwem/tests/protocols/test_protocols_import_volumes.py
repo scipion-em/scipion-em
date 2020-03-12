@@ -309,8 +309,8 @@ class TestImportVolumes(TestImportBase):
         volMapNamehalf1 = '/tmp/Icosahedron_map_half1.vol'
         volMapNamehalf2 = '/tmp/Icosahedron_map_half2.map'
         createFeatVolume(volFeatName, volMapNamefull, sym=emcts.SYM_I222r)
-        createFeatVolume(volFeatName, volMapNamehalf1, sym=emcts.SYM_I222r)
-        createFeatVolume(volFeatName, volMapNamehalf2, sym=emcts.SYM_I222r)
+        createFeatVolume(volFeatName, volMapNamehalf1, sym=emcts.SYM_I2n3)
+        createFeatVolume(volFeatName, volMapNamehalf2, sym=emcts.SYM_In25r)
         _samplingRate = 1.0
         ORIG_X = 10
         ORIG_Y = 20
