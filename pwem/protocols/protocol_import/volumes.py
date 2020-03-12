@@ -57,7 +57,7 @@ class ProtImportVolumes(ProtImportImages):
         by subclasses to change what parameters to include.
         """
         form.addParam('setHalfMaps', params.BooleanParam,
-                      label='Set Half Maps',
+                      label='Set half maps',
                       help='Option YES:\nAssign two half maps to the imported map.',
                       default=False)
         form.addParam('half1map', params.PathParam,
@@ -171,6 +171,8 @@ class ProtImportVolumes(ProtImportImages):
                     newFileName2 = abspath(self._getVolumeFileName(self.half2map.get(), "mrc"))
                     emconv.Ccp4Header.fixFile(fileName, newFileName2, origin.getShifts(),
                                               samplingRate, emconv.Ccp4Header.ORIGIN)
+
+                    vol.setHalfMaps([relpath(newFileName1), relpath(newFileName2)])
             else:
                 newFileName = abspath(self._getVolumeFileName(fileName))
 
@@ -183,6 +185,11 @@ class ProtImportVolumes(ProtImportImages):
                                           abspath(self._getVolumeFileName(self.half1map.get())))
                     pwutils.createAbsLink(self.half2map.get(),
                                           abspath(self._getVolumeFileName(self.half2map.get())))
+
+
+                    vol.setHalfMaps([relpath(self._getVolumeFileName(self.half1map.get())),
+                                     relpath(self._getVolumeFileName(self.half2map.get()))
+                                     ])
 
             # Make newFileName relative
             # https://github.com/I2PC/scipion/issues/1935
@@ -197,10 +204,6 @@ class ProtImportVolumes(ProtImportImages):
                     vol.setLocation(index, newFileName)
                     volSet.append(vol)
 
-        if self.setHalfMaps.get():
-            vol.setHalfMaps([relpath(self._getVolumeFileName(self.half1map.get())),
-                             relpath(self._getVolumeFileName(self.half2map.get()))
-                             ])
         if volSet.getSize() > 1:
             self._defineOutputs(outputVolumes=volSet)
         else:
@@ -243,6 +246,14 @@ class ProtImportVolumes(ProtImportImages):
 
     def _getOrigCoord(self):
         return -1. * self.x.get(), -1. * self.y.get(), -1. * self.z.get()
+
+    def _validate(self):
+        errors = super(ProtImportVolumes, self)._validate()
+        if (not self.filesPattern.empty()) and self.setHalfMaps.get():
+            errors.append("You can not use the options 'Pattern' "
+                          "and 'Set half maps' simultaneously")
+
+        return errors
 
 
 class ProtImportPdb(ProtImportFiles):
