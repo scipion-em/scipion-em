@@ -166,10 +166,10 @@ class ProtImportVolumes(ProtImportImages):
                                           samplingRate, emconv.Ccp4Header.ORIGIN)
                 if self.setHalfMaps.get():
                     newFileName1 = abspath(self._getVolumeFileName(self.half1map.get(), "mrc"))
-                    emconv.Ccp4Header.fixFile(fileName, newFileName1, origin.getShifts(),
+                    emconv.Ccp4Header.fixFile(self.half1map.get(), newFileName1, origin.getShifts(),
                                               samplingRate, emconv.Ccp4Header.ORIGIN)
                     newFileName2 = abspath(self._getVolumeFileName(self.half2map.get(), "mrc"))
-                    emconv.Ccp4Header.fixFile(fileName, newFileName2, origin.getShifts(),
+                    emconv.Ccp4Header.fixFile(self.half2map.get(), newFileName2, origin.getShifts(),
                                               samplingRate, emconv.Ccp4Header.ORIGIN)
             else:
                 newFileName = abspath(self._getVolumeFileName(fileName))
