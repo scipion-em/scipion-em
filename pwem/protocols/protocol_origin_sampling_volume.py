@@ -76,7 +76,7 @@ class ProtOrigSampling(EMProtocol):
                            "the given ORIGIN of coordinates. "
                            "This ORIGIN will NOT be set in the map file header.\n\n",
                       default=False)
-        line = form.addLine('Offset',
+        line = form.addLine('Offset(%s)' % UNIT_ANGSTROM_SYMBOL,
                             help="A wizard will suggest you possible "
                                  "coordinates for the ORIGIN. In MRC volume "
                                  "files, the ORIGIN coordinates will be "
@@ -87,13 +87,13 @@ class ProtOrigSampling(EMProtocol):
                                  "Angstroms (pixels x sampling).\n",
                             condition='setOrigCoord')
         line.addParam('x', params.FloatParam, condition='setOrigCoord',
-                      label="x(%s)" % UNIT_ANGSTROM_SYMBOL,
+                      label="x",
                       help="offset along x axis (Angstroms)")
         line.addParam('y', params.FloatParam, condition='setOrigCoord',
-                      label="y(%s)" % UNIT_ANGSTROM_SYMBOL,
+                      label="  y",
                       help="offset along y axis (Angstroms)")
         line.addParam('z', params.FloatParam, condition='setOrigCoord',
-                      label="z(%s)" % UNIT_ANGSTROM_SYMBOL,
+                      label="  z",
                       help="offset along z axis (Angstroms)")
 
     # --------------------------- INSERT steps functions ----------------------
