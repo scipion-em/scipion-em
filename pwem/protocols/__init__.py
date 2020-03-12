@@ -54,3 +54,6 @@ from .protocol_import import *
 from .monitors import *
 from .protocol_export import *
 from .protocol_tests import *
+
+from .protocol_origin_sampling_volume import ProtOrigSampling
+
