@@ -76,13 +76,13 @@ class ProtImportFiles(ProtImport):
                            "The path can also contain wildcards to select"
                            "from several folders. \n\n"
                            "Examples:\n"
-                           "  ~/Particles/data/day??_micrographs/\n"
+                           "  ~/project/data/day??_files/\n"
                            "Each '?' represents one unknown character\n\n"
-                           "  ~/Particles/data/day*_micrographs/\n"
+                           "  ~/project/data/day*_files/\n"
                            "'*' represents any number of unknown characters\n\n"
-                           "  ~/Particles/data/day#_micrographs/\n"
-                           "'#' represents one digit that will be used as "
-                           "micrograph ID\n\n"
+                           "  ~/project/data/day##_files/\n"
+                           "'##' represents two digits that will be used as "
+                           "file ID\n\n"
                            "NOTE: wildcard characters ('*', '?', '#') "
                            "cannot appear in the actual path.)")
         form.addParam('filesPattern', params.StringParam,

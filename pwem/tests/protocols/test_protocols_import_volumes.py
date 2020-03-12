@@ -27,6 +27,8 @@ import pyworkflow.tests as pwtests
 import pwem.protocols as emprot
 import pwem.constants as emcts
 import pwem.convert as emconv
+from pwem.convert import Ccp4Header
+from pwem.objects import Volume
 
 
 class TestImportBase(pwtests.BaseTest):
@@ -295,6 +297,60 @@ class TestImportVolumes(TestImportBase):
         self.assertEqual(-90.0, x)
         self.assertEqual(-90.0, y)
         self.assertEqual(-90.0, z)
+
+
+    def test_import_volume3(self):
+        """
+        Test to import a full map (Icosahedron) and two maps (half1 and half2)
+        to compute the FSC
+        """
+        volFeatName = '/tmp/Icosahedron_map.txt'
+        volMapNamefull = '/tmp/Icosahedron_map_full.mrc'
+        volMapNamehalf1 = '/tmp/Icosahedron_map_half1.vol'
+        volMapNamehalf2 = '/tmp/Icosahedron_map_half2.map'
+        createFeatVolume(volFeatName, volMapNamefull, sym=emcts.SYM_I222r)
+        createFeatVolume(volFeatName, volMapNamehalf1, sym=emcts.SYM_I222r)
+        createFeatVolume(volFeatName, volMapNamehalf2, sym=emcts.SYM_I222r)
+        _samplingRate = 1.0
+        ORIG_X = 10
+        ORIG_Y = 20
+        ORIG_Z = 30
+        args = {'filesPath': volMapNamefull,
+                'filesPattern': '',
+                'setHalfMaps': True,
+                'half1map': volMapNamehalf1,
+                'half2map': volMapNamehalf2,
+                'samplingRate': _samplingRate,
+                'setOrigCoord': True,
+                'x': ORIG_X,
+                'y': ORIG_Y,
+                'z': ORIG_Z,
+                }
+        prot5 = self.newProtocol(emprot.ProtImportVolumes, **args)
+        prot5.setObjLabel('import phantom icosahedron,\n half1 and half2 set origin')
+        self.launchProtocol(prot5)
+        volume = prot5.outputVolume
+        self.assertVolumeOrigin(volume, -ORIG_X, -ORIG_Y, -ORIG_Z)
+
+        #DO NOT REMOVE this print because it triggers the loading of the get of halfmaps
+        print(volume.getHalfMaps())
+        newHalf1Fn = volume.getHalfMaps().split(",")[0]
+        self.assertNotEqual(volMapNamehalf1, newHalf1Fn)
+
+        halfHeader = Ccp4Header(newHalf1Fn, readHeader=True)
+        self.assertEqual((-ORIG_X, -ORIG_Y, -ORIG_Z), halfHeader.getOrigin(), "Origin in half map not set.")
+
+    def assertVolumeOrigin(self, volume, x, y, z):
+        # The volume has no origin
+        t = volume.getOrigin()
+        currx, curry, currz = t.getShifts()
+        # x, y, z in Angstroms
+        # Chimera will show (x, y, z) divided by the samplingRate
+        # in pixels = ()
+        self.assertEqual(x, currx)
+        self.assertEqual(y, curry)
+        self.assertEqual(z, currz)
+
 
 def __runXmippProgram(program, args):
     """ Internal shortcut function to launch a Xmipp program.

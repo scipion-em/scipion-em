@@ -26,6 +26,7 @@
 # **************************************************************************
 """ This module is for Actual wizards to be able to be discovered from the
 Domain. wizard.py is left for wizard models and base classes."""
+import decimal
 import os
 import requests
 
@@ -135,6 +136,31 @@ class ImportOriginVolumeWizard(pwizard.Wizard):
         y = ydim / 2. * sampling
         z = zdim * sampling
         return x, y, z
+
+
+class ChangeOriginSamplingWizard(pwizard.Wizard):
+    _targets = [(emprot.ProtOrigSampling, ['x', 'y', 'z', 'samplingRate'])]
+
+    def show(self, form, *params):
+        protocol = form.protocol
+        vol = protocol.inVolume.get()
+        fullPattern = vol.getLocation()
+        sampling = vol.getSamplingRate()
+        if ((str(fullPattern)).endswith('mrc') or
+           (str(fullPattern)).endswith('map')):
+            ccp4header = emconv.Ccp4Header(fullPattern, readHeader=True)
+            x, y, z = ccp4header.getOrigin(changeSign=True)  # In Angstroms
+        else:
+            x, y, z = \
+                ImportOriginVolumeWizard._halfOriginCoordinates(vol, sampling)
+
+        def remove_tail_zeros(number):
+            return decimal.Decimal(number).normalize()
+
+        form.setVar('x', remove_tail_zeros(x))
+        form.setVar('y', remove_tail_zeros(y))
+        form.setVar('z', remove_tail_zeros(z))
+        form.setVar('samplingRate', remove_tail_zeros(sampling))
 
 
 class GetStructureChainsWizard(pwizard.Wizard):
