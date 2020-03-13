@@ -252,12 +252,6 @@ class ProtImportVolumes(ProtImportImages):
         if (not self.filesPattern.empty()) and self.setHalfMaps.get():
             errors.append("You can not use the options 'Pattern' "
                           "and 'Set half maps' simultaneously")
-        # Check that files are proper EM volumes, only when importing from
-        # files and not using streaming. In the later case we could
-        # have partial files not completed.
-        if (self.importFrom == self.IMPORT_FROM_FILES and
-                not self.dataStreaming):
-            errors += self._validateImages()
 
         return errors
 
