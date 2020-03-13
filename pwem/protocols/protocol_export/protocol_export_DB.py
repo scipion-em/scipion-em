@@ -30,6 +30,7 @@
 import os
 
 import pyworkflow.protocol.params as params
+from pwem.convert import Ccp4Header
 from pyworkflow import VERSION_1_2
 
 from pwem.convert.atom_struct import fromPDBToCIF, fromCIFTommCIF, \
@@ -133,26 +134,42 @@ class ProtExportDataBases(EMProtocol):
                 raise
 
     def exportVolumeStep(self):
-        ih = ImageHandler()
-        ih.convert(self.exportVolume.get().getLocation(),
-                   os.path.join(self.dirName, self.VOLUMENAME))
+        inVolFileName = self.exportVolume.get().getFileName()
+        inVol = self.exportVolume.get()
+        outVolFileName = os.path.join(self.dirName, self.VOLUMENAME)
+        shifts = inVol.getOrigin(force=True).getShifts()
+        sampling = inVol.getSamplingRate()
+
+        print ("inVolFileName", inVolFileName)
+        ccp4header = Ccp4Header(inVolFileName)
+        ccp4header.fixFile(inVolFileName, outVolFileName, shifts,
+                           sampling=sampling)
+
         # Do we have half volumes?
         if self.exportVolume.get().hasHalfMaps():
             ih = ImageHandler()
             for counter, half_map in enumerate(
                     self.exportVolume.get().getHalfMaps().split(','), 1):
-                ih.convert(half_map,
-                       os.path.join(self.dirName,
-                                    self.HALFVOLUMENAME % counter))
+                outVolFileName = os.path.join(self.dirName,
+                             self.HALFVOLUMENAME % counter)
+                ccp4header.fixFile(half_map, outVolFileName, shifts,
+                                   sampling=sampling)
 
     def exportAdditionalVolumeStep(self):
         outputDir = os.path.join(self.dirName, self.ADDITIONALVOLUMEDIR)
         self.createDirectoryStep(outputDir)
         ih = ImageHandler()
         for counter, map in enumerate(self.exportAdditionalVolumes, 1):
-            ih.convert(map.get().getLocation(),
-                       os.path.join(outputDir,
-                                    self.ADDITIONALVOLUMENAME % counter))
+            map = map.get()
+            inVolFileName = map.getFileName()
+            outVolFileName = os.path.join(outputDir,
+                                    self.ADDITIONALVOLUMENAME % counter)
+            shifts = map.getOrigin(force=True).getShifts()
+            sampling = map.getSamplingRate()
+
+            ccp4header = Ccp4Header(inVolFileName)
+            ccp4header.fixFile(inVolFileName, outVolFileName, shifts,
+                               sampling=sampling)
 
     def exportFSCStep(self):
         exportFSC = self.exportFSC.get()
@@ -181,11 +198,19 @@ class ProtExportDataBases(EMProtocol):
     def exportMasksStep(self):
         outputDir = os.path.join(self.dirName, self.MASKDIR)
         self.createDirectoryStep(outputDir)
-        ih = ImageHandler()
+
         for counter, mask in enumerate(self.exportMasks, 1):
-            ih.convert(mask.get().getLocation(),
-                       os.path.join(outputDir,
-                                    self.MASKNAME % counter))
+            mask = mask.get()
+            inVolFileName = mask.getFileName()
+            outVolFileName = os.path.join(outputDir,
+                                    self.MASKNAME % counter)
+            shifts = mask.getOrigin(force=True).getShifts()
+            sampling = mask.getSamplingRate()
+
+            ccp4header = Ccp4Header(inVolFileName)
+            ccp4header.fixFile(inVolFileName, outVolFileName, shifts,
+                               sampling=sampling)
+
 
     def exportAtomStructStep(self):
         exportAtomStruct = self.exportAtomStruct.get()
