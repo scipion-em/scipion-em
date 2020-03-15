@@ -28,8 +28,6 @@ import pyworkflow as pw
 import pwem
 import os
 
-LIB = "lib"
-
 ghostStr = """
  >>> WARNING: Image library not found!
   > Please install Xmipp to get full functionality. 
@@ -42,7 +40,7 @@ def linkXmippBinding():
 
         # Link the binding
         xmippBindingPath = os.path.join(xmipp_home,"bindings", "python", "xmippLib.so")
-        dest = os.path.join(pw.Config.SCIPION_BINDINGS, "xmippLib.so")
+        dest = os.path.join(pw.Config.getBindingsFolder(), "xmippLib.so")
         if not os.path.exists(dest):
             createLink(xmippBindingPath, dest)
 
@@ -50,14 +48,14 @@ def linkXmippBinding():
 
             # Link the libraries
             createLink(os.path.join(xmippLibFolder, "libXmipp.so"),
-                   os.path.join(pw.Config.SCIPION_LIBS, "libXmipp.so"))
+                   os.path.join(pw.Config.getLibFolder(), "libXmipp.so"))
             createLink(os.path.join(xmippLibFolder, "libXmippCore.so"),
-                   os.path.join(pw.Config.SCIPION_LIBS, "libXmippCore.so"))
+                   os.path.join(pw.Config.getLibFolder(), "libXmippCore.so"))
 
             print("Xmipp bindings registered in Scipion. You will need to restart.")
 
-        if os.path.abspath(pw.Config.SCIPION_LIBS) not in os.environ.get("LD_LIBRARY_PATH", ""):
-            print("LD_LIBRARY_PATH must contain scipion lib folder (%s).  Please, add it." % os.path.abspath(pw.Config.SCIPION_LIBS))
+        if os.path.abspath(pw.Config.getLibFolder()) not in os.environ.get("LD_LIBRARY_PATH", ""):
+            print("LD_LIBRARY_PATH must contain scipion lib folder (%s).  Please, add it." % os.path.abspath(pw.Config.getLibFolder()))
 
 
 print(ghostStr)

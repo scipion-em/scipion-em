@@ -8,6 +8,7 @@ https://github.com/pypa/sampleproject
 # Always prefer setuptools over distutils
 from pwem import EM_PROGRAM_ENTRY_POINT, CHIMERA_ENTRY_POINT, \
     CONVERT_ENTRY_POINT
+from pwem.constants import URL
 from setuptools import setup, find_packages
 # To use a consistent encoding
 from codecs import open
@@ -32,7 +33,7 @@ setup(
     version='1.a',  # Required
     description='This modules contains classes related with EM',  # Required
     long_description=long_description,  # Optional
-    url='https://github.com/scipion-em/scipion-em',  # Optional
+    url= URL,  # Optional
     author='J.M. De la Rosa Trevin, '
            'Roberto Marabini, '
            'Grigory Sharov, '
