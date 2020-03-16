@@ -140,7 +140,6 @@ class ProtExportDataBases(EMProtocol):
         shifts = inVol.getOrigin(force=True).getShifts()
         sampling = inVol.getSamplingRate()
 
-        print ("inVolFileName", inVolFileName)
         ccp4header = Ccp4Header(inVolFileName)
         ccp4header.fixFile(inVolFileName, outVolFileName, shifts,
                            sampling=sampling)
