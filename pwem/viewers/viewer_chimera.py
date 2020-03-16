@@ -49,8 +49,8 @@ from pwem import getCmdPath, Config as emConfig
 
 from .showj import (CHIMERA_PORT, MODE, MODE_MD, INVERTY)
 
-chimeraPdbTemplateFileName = "chimeraOut%04d.pdb"
-chimeraMapTemplateFileName = "chimeraOut%04d.mrc"
+chimeraPdbTemplateFileName = "Atom_struct__%s.pdb"
+chimeraMapTemplateFileName = "Map__%s.mrc"
 chimeraScriptFileName = "chimeraScript.py"
 sessionFile = "SESSION.py"
 
