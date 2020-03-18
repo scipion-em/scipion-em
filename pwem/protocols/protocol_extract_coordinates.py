@@ -167,7 +167,9 @@ class ProtExtractCoords(ProtParticlePickingAuto):
                 x, y = coord.getPosition()
                 if self.applyShifts:
                     shifts = self.getShifts(part.getTransform(), alignType)
-                    xCoor, yCoor = x - int(shifts[0]), y - int(shifts[1])
+                    # round(np.float64) results in np.float64 and int(float) behaves the same as math.floor, so
+                    # int(round) is required
+                    xCoor, yCoor = x - int(round(shifts[0])), y - int(round(shifts[1]))
                     newCoord.setPosition(xCoor * scale, yCoor * scale)
                 else:
                     newCoord.setPosition(x * scale, y * scale)
