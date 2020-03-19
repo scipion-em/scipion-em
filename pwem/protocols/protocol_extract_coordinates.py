@@ -70,6 +70,7 @@ class ProtExtractCoords(ProtParticlePickingAuto):
 
         form.addParam('applyShifts', params.BooleanParam, default=False,
                       label='Apply particle shifts?',
+                      expertLevel=params.LEVEL_ADVANCED,
                       help='Apply particle shifts from 2D alignment to '
                            'recalculate new coordinates. This can be useful '
                            'for re-centering particle coordinates.')
@@ -167,9 +168,7 @@ class ProtExtractCoords(ProtParticlePickingAuto):
                 x, y = coord.getPosition()
                 if self.applyShifts:
                     shifts = self.getShifts(part.getTransform(), alignType)
-                    # round(np.float64) results in np.float64 and int(float) behaves the same as math.floor, so
-                    # int(round) is required
-                    xCoor, yCoor = x - int(round(shifts[0])), y - int(round(shifts[1]))
+                    xCoor, yCoor = x - int(shifts[0]), y - int(shifts[1])
                     newCoord.setPosition(xCoor * scale, yCoor * scale)
                 else:
                     newCoord.setPosition(x * scale, y * scale)
@@ -390,3 +389,12 @@ class ProtExtractCoords(ProtParticlePickingAuto):
             errors.append('Input particles do not have alignment information!')
 
         return errors
+
+    def _warnings(self):
+        validateMsgs = []
+        if self.applyShifts.get():
+            validateMsgs.append("Only the integer part of the shifts will be applied in order to avoid " +
+                                "extra interpolation processes. If you are re-extracting particles and " +
+                                "want to apply the remaining decimal part of the shifts, choose advance " +
+                                "option 'Not apply shifts' in alinment assign protocol (ProtAlignmentAssign).")
+        return validateMsgs

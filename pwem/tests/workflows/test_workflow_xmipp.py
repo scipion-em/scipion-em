@@ -119,19 +119,19 @@ class TestXmippWorkflow(TestWorkflow):
         self.validateFiles('protExtract', protExtract)
 
         print("Run Extract Coordinates without applying shifts")
-        protExtractCorrds = self.newProtocol(emprot.ProtExtractCoords)
-        protExtractCorrds.inputParticles.set(protExtract.outputParticles)
-        protExtractCorrds.inputMicrographs.set(protImport.outputMicrographs)
-        self.launchProtocol(protExtractCorrds)
+        protExtractCoords = self.newProtocol(emprot.ProtExtractCoords)
+        protExtractCoords.inputParticles.set(protExtract.outputParticles)
+        protExtractCoords.inputMicrographs.set(protImport.outputMicrographs)
+        self.launchProtocol(protExtractCoords)
         # The size of the set of coordinates must be the same as the input set of particles
-        self.assertSetSize(protExtractCorrds.outputCoordinates,
+        self.assertSetSize(protExtractCoords.outputCoordinates,
                            size=protExtract.outputParticles.getSize(),
                            msg="There was a problem with the coordinates extraction")
         # Check if the scaling factor is being calculated and applied correctly
         scale = protExtract.outputParticles.getSamplingRate() / protImport.outputMicrographs.getSamplingRate()
         inParticleCoord = protExtract.outputParticles.getFirstItem().getCoordinate()
         x, y = inParticleCoord.getPosition()
-        self.assertAlmostEqual(protExtractCorrds.outputCoordinates.getFirstItem().getPosition(),
+        self.assertAlmostEqual(protExtractCoords.outputCoordinates.getFirstItem().getPosition(),
                                (int(x * scale), int(y * scale)))
 
         print("Run Screen Particles")
@@ -193,7 +193,7 @@ class TestXmippWorkflow(TestWorkflow):
         shifts = protExtractCoordsShifts.getShifts(inputParticles.getFirstItem().getTransform(),
                                                    inputParticles.getAlignment())
         x, y = inParticleCoord.getPosition()
-        xCoor, yCoor = x - int(round(shifts[0])), y - int(round(shifts[1]))
+        xCoor, yCoor = x - int(shifts[0]), y - int(shifts[1])
         self.assertAlmostEqual(protExtractCoordsShifts.outputCoordinates.getFirstItem().getPosition(),
                                (int(xCoor * scale), int(yCoor * scale)))
 
