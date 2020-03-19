@@ -47,6 +47,12 @@ class ProtAlignmentAssign(ProtAlign2D):
         form.addParam('inputAlignment', params.PointerParam, pointerClass='SetOfParticles',
                       label="Input alignments",
                       help='Select the particles with alignment to be apply to the other particles.')
+        form.addParam('shiftsAppliedBefore', params.BooleanParam, default=False,
+                      label='Were particle shifts applied?',
+                      expertLevel=params.LEVEL_ADVANCED,
+                      help='This option should be set to Yes only if the particle shifts have been applied ' +
+                      'before, like in the case of re-extracting particles after extracting coordenates ' +
+                      'with the advanced option Apply particle shifts set to Yes.')
 
         form.addParallelSection(threads=0, mpi=0)
 
@@ -71,7 +77,7 @@ class ProtAlignmentAssign(ProtAlign2D):
         # on the output particle, if not do not write that item
         if alignedParticle is not None:
             alignment = alignedParticle.getTransform()
-            alignment.scaleShifts(scale)
+            alignment.scaleShifts(scale, shiftsAppliedBefore=self.shiftsAppliedBefore.get())
             item.setTransform(alignment)
         else:
             item._appendItem = False
@@ -136,3 +142,12 @@ class ProtAlignmentAssign(ProtAlign2D):
             
         # Add some errors if input is not valid
         return errors
+
+    def _warnings(self):
+        validateMsgs = []
+        if self.shiftsAppliedBefore.get():
+            validateMsgs.append("This option should be set to Yes only if the particle shifts have been applied "
+                                "before.\nIf selected, only the remaining decimal part of the shifts will be applied " +
+                                " for 'x' and 'y'  in the translation component of the transformation matrix. This " +
+                                "will carry longer execution times. Please read the help for further information.")
+        return validateMsgs
