@@ -36,7 +36,7 @@ import pyworkflow.utils as pwutils
 import pyworkflow.protocol.params as params
 
 from pwem import Domain
-import pwem.convert as emconv
+from pwem.emlib.image import ImageHandler
 import pwem.constants as emcts
 
 
@@ -381,7 +381,6 @@ class ProtImportMicrographs(ProtImportMicBase):
     
     # --------------------------- INFO functions ------------------------------
     def _validate(self):
-        from pwem.emlib.image import ImageHandler
         ci = self.getImportClass()
         if ci is None:
             errors = ProtImportMicBase._validate(self)
@@ -645,7 +644,7 @@ class ProtImportMovies(ProtImportMicBase):
             frameDict[prefix].append((frameid, fileName))
         
         suffix = self.movieSuffix.get()
-        ih = emlib.image.ImageHandler()
+        ih = ImageHandler()
         
         for movieFn in self.createdStacks:
             uniqueFn = basename(movieFn)
