@@ -177,6 +177,7 @@ class TestXmippWorkflow(TestWorkflow):
 
         print("Run Extract Coordinates applying shifts")
         protExtractCoordsShifts = self.newProtocol(emprot.ProtExtractCoords, applyShifts=True)
+        protExtractCoordsShifts.setObjLabel('Extract Coordinates applying shifts')
         inputParticles = protOnlyAlign.outputParticles
         inputMics = protDownsampling.outputMicrographs
         protExtractCoordsShifts.inputParticles.set(inputParticles)
