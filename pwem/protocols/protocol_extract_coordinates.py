@@ -388,7 +388,7 @@ class ProtExtractCoords(ProtParticlePickingAuto):
         validateMsgs = []
         if self.applyShifts.get():
             validateMsgs.append("Only the integer part of the shifts will be applied in order to avoid " +
-                                "extra interpolation processes. If you are re-extracting particles and " +
-                                "want to apply the remaining decimal part of the shifts, choose advance " +
-                                "option 'Not apply shifts' in alinment assign protocol (ProtAlignmentAssign).")
+                                "interpolation. If you are re-extracting particles and " +
+                                "want to apply the remaining decimal part of the shifts, ask yes to the advance "
+                                "option 'Were particle shifts applied?' in alignment assign protocol.")
         return validateMsgs

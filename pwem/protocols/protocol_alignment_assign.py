@@ -50,9 +50,8 @@ class ProtAlignmentAssign(ProtAlign2D):
         form.addParam('shiftsAppliedBefore', params.BooleanParam, default=False,
                       label='Were particle shifts applied?',
                       expertLevel=params.LEVEL_ADVANCED,
-                      help='This option should be set to Yes only if the particle shifts have been applied ' +
-                      'before, like in the case of re-extracting particles after extracting coordenates ' +
-                      'with the advanced option Apply particle shifts set to Yes.')
+                      help='TActivate this option only if the advanced option "Apply particle shifts" was set to Yes '
+                           'at the extract coordinates protocol.')
 
         form.addParallelSection(threads=0, mpi=0)
 
