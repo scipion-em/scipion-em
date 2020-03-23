@@ -722,7 +722,7 @@ def toCIF(inFileName, outCIFFile):
 
 
 def getEnviron():
-    environ = pwutils.Environ()
+    environ = pwutils.Environ(os.environ)
     environ.update({'RCSBROOT': os.path.join(Plugin.getMaxitHome()),
                     'PATH': os.path.join(Plugin.getMaxitHome(), 'bin')
                     }, position=pwutils.Environ.BEGIN)
