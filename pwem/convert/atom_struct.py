@@ -722,9 +722,10 @@ def toCIF(inFileName, outCIFFile):
 
 
 def getEnviron():
-    environ = pwutils.Environ()
-    environ.update({'RCSBROOT': os.path.join(Plugin.getMaxitHome()),
-                    'PATH': os.path.join(Plugin.getMaxitHome(), 'bin')
+    environ = pwutils.Environ(os.environ)
+    environ.update({'RCSBROOT': os.path.join(Plugin.getMaxitHome())
+                    }, position=pwutils.Environ.REPLACE)
+    environ.update({'PATH': os.path.join(Plugin.getMaxitHome(), 'bin')
                     }, position=pwutils.Environ.BEGIN)
     return environ
 
@@ -749,6 +750,7 @@ def _frombase(inFileName, outFileName, log, oParam=1):
         log.info('Launching: ' + Plugin.getMaxitBin() + args)
         # run in the background
         env = getEnviron()
+        print(env)
         pwutils.runJob(None, Plugin.getMaxitBin(), args, env=env)
     else:
         # this is not the ideal conversion but it is better
