@@ -51,6 +51,7 @@ import re
 import os
 import numpy
 import pyworkflow.utils as pwutils
+import shutil
 
 
 class OutOfChainsError(Exception):
@@ -779,6 +780,16 @@ def retry(runEnvirom, program, args, cwd, listAtomStruct=[], log=None, clean_dir
         # raise ValueError('force maxit to be executed')  # delete this line
         runEnvirom(program, args, cwd=cwd)
     except:
+        # first remove every file or directory in the extra folder,
+        # except maps
+        l1 = os.listdir(cwd)
+        if (len(l1) > 1 and ((l1[0]).endswith(".map") or (l1[0]).endswith(".mrc"))):
+            for item in l1[1:]:
+                if os.path.exists(os.path.join(cwd, item)):
+                    try:
+                        os.remove(os.path.join(cwd, item))
+                    except:
+                        shutil.rmtree(os.path.join(cwd, item))
         # something went wrong, may be bad atomStruct format
         log.info('retry with maxit conversion')
 
@@ -795,7 +806,8 @@ def retry(runEnvirom, program, args, cwd, listAtomStruct=[], log=None, clean_dir
             else:
                 try:
                     if atomStructName.endswith(".pdb"):
-                        newAtomStructName = os.path.join(cwd, "retrypdb%d.cif" % i)
+                        newAtomStructName = os.path.abspath(
+                            os.path.join(cwd, "retrypdb%d.cif" % i))
                         fromPDBToCIF(atomStructName, newAtomStructName, log)
                         _args = args.replace(atomStructName, newAtomStructName)
                         runEnvirom(program, _args, cwd=cwd)
@@ -811,6 +823,16 @@ def retry(runEnvirom, program, args, cwd, listAtomStruct=[], log=None, clean_dir
                             _args = args.replace(atomStructName, newAtomStructName)
                             runEnvirom(program, _args, cwd=cwd)
                 except:
+                    # first remove every file or directory in the extra folder,
+                    # except maps
+                    l1 = os.listdir(cwd)
+                    if (len(l1) > 1 and ((l1[0]).endswith(".map") or (l1[0]).endswith(".mrc"))):
+                        for item in l1[1:]:
+                            if os.path.exists(os.path.join(cwd, item)):
+                                try:
+                                    os.remove(os.path.join(cwd, item))
+                                except:
+                                    shutil.rmtree(os.path.join(cwd, item))
                     # biopython conversion
                     aSH = AtomicStructHandler()
                     if atomStructName.endswith(".pdb") or atomStructName.endswith(".ent"):
@@ -819,7 +841,7 @@ def retry(runEnvirom, program, args, cwd, listAtomStruct=[], log=None, clean_dir
                     else:
                         newAtomStructName = atomStructName
                     try:
-                        aSH.read(newAtomStructName)
+                        aSH.read(atomStructName)
                         aSH.write(newAtomStructName)
                         _args = args.replace(atomStructName, newAtomStructName)
                         runEnvirom(program, _args, cwd=cwd)
