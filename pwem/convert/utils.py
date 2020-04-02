@@ -45,7 +45,7 @@ def getSubsetByDefocus(inputCTFs, inputMics, nMics):
             sortedMicIds.append(ctfId)
 
     # Take an equally spaced subset of micrographs
-    space = len(sortedMicIds) / (nMics - 1)
+    space = len(sortedMicIds) // (nMics - 1)
     micIds = [sortedMicIds[0], sortedMicIds[-1]]
     pos = 0
     while len(micIds) < nMics:  # just add first and last

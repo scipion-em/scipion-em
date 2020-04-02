@@ -30,7 +30,7 @@ This modules contains constants related to EM
 # ------------------ Constants values --------------------------------------
 
 NO_INDEX = 0  # This is the index value for single images
-
+URL = 'https://github.com/scipion-em/scipion-em'
 # Sampling rate input modes
 SAMPLING_FROM_IMAGE = 0
 SAMPLING_FROM_SCANNER = 1
@@ -165,3 +165,4 @@ FREQ_BANDPASS_WIZ_MSG = \
     'click and drag the corresponding slider or use up and down keys. Values are shown in both digital ' \
     'frequency and angstroms.'
 
+EM_ROOT_VAR = 'EM_ROOT'

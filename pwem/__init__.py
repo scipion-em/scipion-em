@@ -28,7 +28,6 @@ This modules contains classes related with EM
 """
 
 import os
-import sys
 
 import pyworkflow as pw
 from pyworkflow.protocol import Protocol
@@ -40,20 +39,20 @@ from .constants import *
 from .objects import EMObject
 from .utils import *
 
+_logo = "scipion_icon.gif"
 _references = ["delaRosaTrevin201693"]
-
 
 class Config(pw.Config):
     _get = pw.Config._get
     _join = pw.Config._join
 
-    EM_ROOT = _join(_get('EM_ROOT', _join(pw.Config.SCIPION_SOFTWARE, 'em')))
+    EM_ROOT = _join(_get(EM_ROOT_VAR, _join(pw.Config.SCIPION_SOFTWARE, 'em')))
 
     # Default XMIPP_HOME: needed here for ShowJ viewers
-    XMIPP_HOME = _join(EM_ROOT, _get('XMIPP_HOME', 'xmipp'))
+    XMIPP_HOME = _join(_get('XMIPP_HOME', os.path.join(EM_ROOT,'xmipp')))
 
     # Needed by Chimera viewer.
-    CHIMERA_HOME = _join(EM_ROOT, _get('CHIMERA_HOME', 'chimera-1.13.1'))
+    CHIMERA_HOME = _join(_get('CHIMERA_HOME', os.path.join(EM_ROOT,'chimera-1.13.1')))
 
     # Get java home, we might need to provide correct default value
     JAVA_HOME = _get('JAVA_HOME', '')
@@ -78,14 +77,30 @@ class Domain(pyworkflow.plugin.Domain):
 
 
 class Plugin(pyworkflow.plugin.Plugin):
+    _url = URL
 
     @classmethod
     def _defineEmVar(cls, varName, defaultValue):
-        """ Shortcut method to define variables by prepending EM_ROOT
-        to the default value.
-        """
-        value = os.path.join(Config.EM_ROOT,
-                             os.environ.get(varName, defaultValue))
+        """ Shortcut method to define variables prepending EM_ROOT if variable is not absolute"""
+
+        # Get the value, either whatever is in the environment or a join of EM_ROOT + defaultValue
+        value = os.environ.get(varName, os.path.join(Config.EM_ROOT,defaultValue))
+
+        # CASE-1 : Users might have used ~ and that has to be expanded
+        value = os.path.expanduser(value)
+
+        # CASE-2 :Old configs 2.0 will likely have:
+        # EM_ROOT = software/em
+        # CHIMERA_HOME = %(EM_ROOT)s/chimera-13.0.1
+        #  ...
+        #
+        # this end up in the environment resolved like: software/em/chimera-13.0.1
+        # whereas as default values will come as absolute:
+        # /<scipion_home>/software/em/chimera-13.0.1
+        # In any case we join it (absolute paths will not join)
+        value = os.path.join(pw.Config.SCIPION_HOME, value)
+
+
         cls._addVar(varName, value)
 
     @classmethod
@@ -98,6 +113,7 @@ class Plugin(pyworkflow.plugin.Plugin):
 
     @classmethod
     def _defineVariables(cls):
+        cls._defineVar(EM_ROOT_VAR, pwem.Config.EM_ROOT)
         cls._defineEmVar(MAXIT_HOME, 'maxit-10.1')
 
     @classmethod
@@ -106,13 +122,18 @@ class Plugin(pyworkflow.plugin.Plugin):
 
     @classmethod
     def defineBinariesMaxit(cls, default, env):
-        MAXIT_URL = 'https://sw-tools.rcsb.org/apps/MAXIT/maxit-v10.100-prod-src.tar.gz'
-        MAXIT_TAR = 'maxit-v10.100-prod-src.tar.gz'
-        maxit_commands = [('make -j 1 binary ', ['bin/maxit'])]
-        env.addPackage(MAXIT, version='10.1',
+
+        # If not defined already (several plugins needs this and call this but has to be added once
+        if not env.hasPackage(MAXIT):
+            MAXIT_URL = 'https://sw-tools.rcsb.org/apps/MAXIT/maxit-v10.100-prod-src.tar.gz'
+            MAXIT_TAR = 'maxit-v10.100-prod-src.tar.gz'
+            maxit_commands = [('make -j 1 binary ', ['bin/maxit'])]
+            env.addPackage(MAXIT, version='10.1',
                        tar=MAXIT_TAR,
                        url=MAXIT_URL,
                        commands=maxit_commands,
                        default=default)  # scipion installb maxit
-        # requirements bison, flex, gcc
+            # requirements bison, flex, gcc
 
+        maxit10 = env.getTarget(env._getExtName(MAXIT, "10.1"))
+        maxit10.setDefault(default)

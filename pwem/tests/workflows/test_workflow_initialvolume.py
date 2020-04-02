@@ -42,7 +42,7 @@ from os.path import exists
 
 import pyworkflow.tests as pwtests
 
-from pwem import Domain
+from pwem import Domain, Config
 from pwem.protocols import ProtImportAverages
 
 
@@ -297,7 +297,7 @@ class TestSignificant(pwtests.BaseTest):
     def test_significant(self):
         """ Run an Import particles protocol. """
         cpus = os.environ.get('SCIPION_TEST_CPU', 4)
-        gpuFlag = exists(os.environ.get('CUDA_BIN'))
+        gpuFlag = exists(Config.CUDA_BIN)
         # 1. Run import of averages
         avg = self.ds.getFile('groel')
 
