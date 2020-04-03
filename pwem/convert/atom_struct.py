@@ -785,11 +785,12 @@ def retry(runEnvirom, program, args, cwd, listAtomStruct=[], log=None, clean_dir
         l1 = os.listdir(cwd)
         if (len(l1) > 1 and ((l1[0]).endswith(".map") or (l1[0]).endswith(".mrc"))):
             for item in l1[1:]:
-                if os.path.exists(os.path.join(cwd, item)):
-                    try:
-                        os.remove(os.path.join(cwd, item))
-                    except:
-                        shutil.rmtree(os.path.join(cwd, item))
+                path1 = os.path.join(cwd, item)
+                if os.path.exists(path1):
+                    if (os.path.isfile(path1) or os.path.islink(path1)):
+                        os.remove(path1)
+                    elif os.path.isdir(path1):
+                        shutil.rmtree(path1)
         # something went wrong, may be bad atomStruct format
         log.info('retry with maxit conversion')
 
@@ -812,13 +813,15 @@ def retry(runEnvirom, program, args, cwd, listAtomStruct=[], log=None, clean_dir
                         _args = args.replace(atomStructName, newAtomStructName)
                         runEnvirom(program, _args, cwd=cwd)
                     elif atomStructName.endswith(".cif"):
-                        newAtomStructName = os.path.join(cwd, "retrycif%d.cif" % i)
+                        newAtomStructName = os.path.abspath(
+                            os.path.join(cwd, "retrycif%d.cif" % i))
                         fromCIFTommCIF(atomStructName, newAtomStructName, log)
                         _args = args.replace(atomStructName, newAtomStructName)
                         try:
                             runEnvirom(program, _args, cwd=cwd)
                         except:
-                            newAtomStructName = os.path.join(cwd, "retrycif%d.pdb" % i)
+                            newAtomStructName = os.path.abspath(
+                                os.path.join(cwd, "retrycif%d.pdb" % i))
                             fromCIFToPDB(atomStructName, newAtomStructName, log)
                             _args = args.replace(atomStructName, newAtomStructName)
                             runEnvirom(program, _args, cwd=cwd)
@@ -828,11 +831,12 @@ def retry(runEnvirom, program, args, cwd, listAtomStruct=[], log=None, clean_dir
                     l1 = os.listdir(cwd)
                     if (len(l1) > 1 and ((l1[0]).endswith(".map") or (l1[0]).endswith(".mrc"))):
                         for item in l1[1:]:
-                            if os.path.exists(os.path.join(cwd, item)):
-                                try:
-                                    os.remove(os.path.join(cwd, item))
-                                except:
-                                    shutil.rmtree(os.path.join(cwd, item))
+                            path1 = os.path.join(cwd, item)
+                            if os.path.exists(path1):
+                                if (os.path.isfile(path1) or os.path.islink(path1)):
+                                    os.remove(path1)
+                                elif os.path.isdir(path1):
+                                    shutil.rmtree(path1)
                     # biopython conversion
                     aSH = AtomicStructHandler()
                     if atomStructName.endswith(".pdb") or atomStructName.endswith(".ent"):
