@@ -750,7 +750,6 @@ def _frombase(inFileName, outFileName, log, oParam=1):
         log.info('Launching: ' + Plugin.getMaxitBin() + args)
         # run in the background
         env = getEnviron()
-        print(env)
         pwutils.runJob(None, Plugin.getMaxitBin(), args, env=env)
     else:
         # this is not the ideal conversion but it is better
