@@ -170,7 +170,7 @@ class GetStructureChainsWizard(pwizard.Wizard):
                 # NOTE: be careful if you change this class since
                 # chimera-wizard inherits from it.
                 # (ChimeraModelFromTemplate, ['inputStructureChain'])
-                # (bioinformatics, ['inputStructureChain'])
+                # (atomstructutils, ['inputStructureChain'])
                 ]
 
     @classmethod
