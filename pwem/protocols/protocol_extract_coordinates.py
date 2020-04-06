@@ -70,6 +70,7 @@ class ProtExtractCoords(ProtParticlePickingAuto):
 
         form.addParam('applyShifts', params.BooleanParam, default=False,
                       label='Apply particle shifts?',
+                      expertLevel=params.LEVEL_ADVANCED,
                       help='Apply particle shifts from 2D alignment to '
                            'recalculate new coordinates. This can be useful '
                            'for re-centering particle coordinates.')
@@ -320,19 +321,13 @@ class ProtExtractCoords(ProtParticlePickingAuto):
             if flip:
                 matrix[0, :2] *= -1.  # invert only the first two columns keep x
                 matrix[2, 2] = 1.  # set 3D rot
-            else:
-                pass
 
         elif alignType == emcts.ALIGN_3D:
             flip = bool(np.linalg.det(matrix[0:3, 0:3]) < 0)
             if flip:
                 matrix[0, :4] *= -1.  # now, invert first line including x
                 matrix[3, 3] = 1.  # set 3D rot
-            else:
-                pass
 
-        else:
-            pass
             # flip = bool(numpy.linalg.det(matrix[0:3,0:3]) < 0)
             # if flip:
             #    matrix[0,:4] *= -1.#now, invert first line including x
@@ -388,3 +383,12 @@ class ProtExtractCoords(ProtParticlePickingAuto):
             errors.append('Input particles do not have alignment information!')
 
         return errors
+
+    def _warnings(self):
+        validateMsgs = []
+        if self.applyShifts.get():
+            validateMsgs.append("Only the integer part of the shifts will be applied in order to avoid " +
+                                "interpolation. If you are re-extracting particles and " +
+                                "want to apply the remaining decimal part of the shifts, ask yes to the advance "
+                                "option 'Were particle shifts applied?' in alignment assign protocol.")
+        return validateMsgs
