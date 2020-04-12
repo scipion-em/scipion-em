@@ -276,9 +276,9 @@ class TestImportVolumes(TestImportBase):
         # The volume has no origin
         t = volume.getOrigin(force=True)
         x, y, z = t.getShifts()
-        # x, y, z in Angstroms
-        # Chimera will show (x, y, z) divided by the samplingRate
-        # in pixels = (32, 32, 32)
+        self.assertTrue(os.path.exists(prot5._getExtraPath('emd_10676.map')))
+        # TODO: I should chech origin but all 3D map
+        # I have tried to download have origin =0 :-(
         # self.assertEqual(-67.2, x)
         # self.assertEqual(-67.2, y)
         # self.assertEqual(-67.2, z)
