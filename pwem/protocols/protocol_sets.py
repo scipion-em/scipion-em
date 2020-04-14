@@ -636,7 +636,7 @@ class ProtSubSet(ProtSets):
 
 class ProtSubSetByMic(ProtSets):
     """
-    Create a subset of those particles comes from a particular set of micrographs
+    Create a subset of those particles that come from a particular set of micrographs
     """
     _label = 'particles subset by micrograph'
 
@@ -685,6 +685,82 @@ class ProtSubSetByMic(ProtSets):
         if not self.inputParticles.get().getFirstItem().hasMicId():
             return ['The _Input Particles_ must come from some Micrographs '
                     'of the workflow, i.e. particles must have micId.']
+
+    def _summary(self):
+        if not hasattr(self, 'outputParticles'):
+            summary = ["Protocol has not finished yet."]
+        else:
+            summary = ['A subset of *%d* particles is made from a total of *%d*'
+                       ' particles.' % (self.outputParticles.getSize(),
+                                        self.inputParticles.get().getSize())]
+        return summary
+
+
+class ProtSubSetByCoord(ProtSets):
+    """
+    Create a subset of those particles that have a particular set of coordinates
+    """
+    _label = 'particles subset by coordinates'
+
+    # --------------------------- DEFINE param functions ----------------------
+    def _defineParams(self, form):
+        form.addSection(label='Input')
+
+        add = form.addParam  # short notation
+        add('inputParticles', pwprot.params.PointerParam,
+            pointerClass='SetOfParticles', label="Input particles",
+            help='Set of particles from which the subset will be taken')
+        add('inputCoordinates', pwprot.params.PointerParam,
+            pointerClass='SetOfCoordinates', label="Input coordinates",
+            help='Only the particles with this set of coordinates will be output')
+        add('coordTolerance', pwprot.params.FloatParam,
+            label='Coordinate tolerance (px)', default=0,
+            help='Two coordinates are supposed to be the same if their X and Y distance'
+                 ' is smaller or equal this value')
+
+    # --------------------------- INSERT steps functions ----------------------
+    def _insertAllSteps(self):
+        self._insertFunctionStep('createOutputStep',
+                                 self.inputParticles.getObjId(),
+                                 self.inputCoordinates.getObjId(),
+                                 self.coordTolerance.get())
+
+    # --------------------------- STEPS functions -----------------------------
+    def createOutputStep(self, partsId, micsId, tolerance):
+        inputParticles = self.inputParticles.get()
+        inputCoordinates = self.inputCoordinates.get()
+
+        outputSet = self._createSetOfParticles()
+        outputSet.copyInfo(inputParticles)
+
+        micCoordinates = {}
+        for coord in inputCoordinates.iterCoordinates():
+            micId = coord.getMicId()
+            x,y=coord.getPosition()
+            if micId not in micCoordinates:
+                micCoordinates[micId] = []
+            micCoordinates[micId].append((x,y))
+
+        for particle in inputParticles:
+            if particle.getMicId() in micCoordinates:
+                x0, y0 = particle.getCoordinate().getPosition()
+                okToAdd=False
+                for x,y in micCoordinates[particle.getMicId()]:
+                    if abs(x-x0)<=tolerance and abs(y-y0)<=tolerance:
+                        okToAdd=True
+                        break
+                if okToAdd:
+                    outputSet.append(particle)
+
+        self._defineOutputs(outputParticles=outputSet)
+        self._defineTransformRelation(inputParticles, outputSet)
+
+    # --------------------------- INFO functions ------------------------------
+    def _validate(self):
+        """Make sure the input data make sense, i.e. hasMicId.
+        Thus they come from some Mic"""
+        if not self.inputParticles.get().getFirstItem().hasCoordinate():
+            return ['The _Input Particles_ must have coordinates']
 
     def _summary(self):
         if not hasattr(self, 'outputParticles'):
