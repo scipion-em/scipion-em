@@ -30,18 +30,14 @@ from os.path import exists, basename, abspath, relpath
 
 import pyworkflow.utils as pwutils
 import pyworkflow.protocol.params as params
-
 import pwem.objects as emobj
 import pwem.convert as emconv
 from pwem import emlib
-from pwem.convert.atom_struct import fromPDBToCIF
 
 from .base import ProtImportFiles
 from .images import ProtImportImages
 
-from pyworkflow.utils.path import copyFile
 
-from pwem.convert.atom_struct import AtomicStructHandler
 
 
 class ProtImportVolumes(ProtImportImages):
@@ -315,7 +311,7 @@ Format may be PDB or MMCIF"""
         localPath = abspath(self._getExtraPath(baseName))
 
         if str(atomStructPath) != str(localPath):  # from local file
-            copyFile(atomStructPath, localPath)
+            pwutils.copyFile(atomStructPath, localPath)
 
         localPath = relpath(localPath)
 

@@ -348,8 +348,7 @@ class TestRelionPickStreaming(TestBaseRelionStreaming):
             objLabel='ctffind',
             inputMicrographs=protImport.outputMicrographs,
             minDefocus=12000, maxDefocus=30000,
-            slowSearch=False,
-            resamplePix=False,
+            slowSearch=False
         )
         self.proj.launchProtocol(protCtf, wait=False)
         self._waitOutput(protCtf, 'outputCTF')

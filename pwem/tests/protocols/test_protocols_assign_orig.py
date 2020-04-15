@@ -24,9 +24,7 @@ import os
 from tempfile import mkstemp
 
 import pyworkflow.tests as pwtests
-
 import pwem.protocols as emprot
-from pwem.wizards import ChangeOriginSamplingWizard
 
 from xmipp3.protocols import XmippProtCreateMask3D
 
