@@ -26,7 +26,10 @@
 # **************************************************************************
 
 
-from os.path import exists, basename, abspath, relpath
+from os.path import exists, basename, abspath, relpath, join
+from os import stat
+from numpy import array
+from numpy.linalg import norm
 
 import pyworkflow.utils as pwutils
 import pyworkflow.protocol.params as params
@@ -35,14 +38,11 @@ import pwem.objects as emobj
 import pwem.convert as emconv
 from pwem import emlib
 from pwem.convert import Ccp4Header
-from pwem.convert.atom_struct import fromPDBToCIF
 
 from .base import ProtImportFiles
 from .images import ProtImportImages
 
 from pyworkflow.utils.path import copyFile
-
-from pwem.convert.atom_struct import AtomicStructHandler
 
 
 class ProtImportVolumes(ProtImportImages):
@@ -208,7 +208,6 @@ class ProtImportVolumes(ProtImportImages):
                         pwutils.createAbsLink(self.half2map.get(),
                                               abspath(self._getVolumeFileName(self.half2map.get())))
 
-
                         vol.setHalfMaps([relpath(self._getVolumeFileName(self.half1map.get())),
                                          relpath(self._getVolumeFileName(self.half2map.get()))
                                          ])
@@ -227,23 +226,26 @@ class ProtImportVolumes(ProtImportImages):
                         volSet.append(vol)
         else:  # import from EMDB
             self.info("Downloading map with ID = %s" % self.emdbId)
-            localFileName = fetch_emdb_map(self.emdbId,
-                                           self._getExtraPath(),
-                                           self._getTmpPath())
-
+            try:
+                localFileName, sampling, origin = \
+                    fetch_emdb_map(self.emdbId,
+                                   self._getExtraPath(),
+                                   self._getTmpPath())
+            except Exception as e:
+                print(e)
+                return
             # open volume and fill sampling and origin
-            ccp4header = Ccp4Header(localFileName, readHeader=True)
-            sampling = ccp4header.computeSampling()
             vol.setSamplingRate(sampling)
-            origin = ccp4header.getOrigin()
-            vol.setOrigin(origin)
             vol.setFileName(localFileName)
+            from pwem.objects.data import Transform
+            originMat = Transform()
+            originMat.setShifts(origin[0], origin[1], origin[2])
+            vol.setOrigin(originMat)
 
         if volSet.getSize() > 1:
             self._defineOutputs(outputVolumes=volSet)
         else:
             self._defineOutputs(outputVolume=vol)
-
 
     # --------------------------- INFO functions ------------------------------
 
@@ -335,8 +337,8 @@ Format may be PDB or MMCIF"""
         aSH = emconv.AtomicStructHandler()
         print("retrieving atomic structure with ID = %s" % self.pdbId.get())
         atomStructPath = aSH.readFromPDBDatabase(self.pdbId.get(),
-                                          type='mmCif',
-                                          dir=self._getExtraPath())
+                                                 type='mmCif',
+                                                 dir=self._getExtraPath())
         self.createOutputStep(atomStructPath)
 
     #        downloadPdb(self.pdbId.get(), pdbPath, self._log)
@@ -390,6 +392,7 @@ Format may be PDB or MMCIF"""
         # TODO: maybe also validate that if exists is a valid PDB file
         return errors
 
+
 ######################################
 
 
@@ -399,7 +402,9 @@ def fetch_emdb_map(id, directory, tmpDirectory):
     :return: local 3Dmap filename
     """
     import socket
+
     # get computer name and select server
+    url_rest_api = "https://www.ebi.ac.uk/pdbe/api/emdb/entry/map/EMD-%d"
     hname = socket.gethostname()
     if hname.endswith('.edu') or hname.endswith('.gov'):
         site = 'ftp.wwpdb.org'
@@ -414,29 +419,56 @@ def fetch_emdb_map(id, directory, tmpDirectory):
     map_name = 'emd_%s.map' % id
     map_gz_name = map_name + '.gz'
     map_url = url_pattern % (site, id, map_gz_name)
-    name = 'EMDB %d' % id
-    minimum_map_size = 8192       # bytes
+    name = 'EMD-%d' % id
+    minimum_map_size = 8192  # bytes
+    url_rest_api = url_rest_api % id
 
     try:
-        map_path = fetch_file(map_url,
-                              minimum_map_size,
-                              directory,
-                              tmpDirectory,
-                              map_name
-                              )
+        map_path, samplingAPI, originAPI = fetch_file(map_url,
+                                                url_rest_api,
+                                                name,
+                                                minimum_map_size,
+                                                directory,
+                                                tmpDirectory,
+                                                map_name
+                                                )
     except Exception as e:
-        print("Error message goes here", e)
+        raise Exception ("Cannot retrieve File from EMDB", e)
 
-    return  map_path
+    originAPI = array(originAPI) * samplingAPI  # convert to Angstrom
+    #check consistency between file header and rest API
+    ccp4header = Ccp4Header(map_path, readHeader=True)
+    samplingHeader = ccp4header.computeSampling()  # unit = A/px
+    originHeader = array(ccp4header.getOrigin())   # unit = A
 
-def fetch_file(url,
-               minimum_file_size = None,
-               save_dir = '',
-               tmp_dir = '',
-               save_name = ''):
+    if abs(samplingHeader - samplingAPI) >= 0.01:
+        print("###########################\n"
+              "WARNING: sampling rate stored in EMDB\n"
+              "database and 3D map header file do not match\n"
+              "API=%f, header=%f\n"
+              "###########################\n" % (samplingAPI, samplingHeader))
+
+    if norm(originHeader - originAPI) >= 0.1:
+        print("###########################\n"
+              "WARNING: origin  stored in EMDB\n"
+              "database and 3D map header file do not match\n"
+              "API=%f, header=%f\n"
+              "###########################\n" % (originAPI, originHeader))
+    return map_path, samplingAPI, originAPI
+
+
+def fetch_file(url, url_rest_api, name,
+               minimum_file_size=8192,
+               save_dir='',
+               tmp_dir='',
+               save_name=''):
     """
     Download 3DMAPfile from EMDB
 
+    :param name: EMB name id, format -> EMD-id
+    :param url_rest_api: EMDB rest api, here we ay ask for 3D map properties
+    :param tmp_dir: directory in which the compressed
+                    file will be saved temporarily
     :param url:  3D map url
     :param minimum_file_size:
     :param save_dir: save file in this directory
@@ -444,30 +476,47 @@ def fetch_file(url,
     :return: local file name
     """
     import urllib.request
-    import os
-    noCompressName = os.path.join(save_dir, save_name)
-    compressName = os.path.join(tmp_dir, save_name + ".gz")
+    import requests
+    noCompressName = join(save_dir, save_name)
+    compressName = join(tmp_dir, save_name + ".gz")
 
     try:
         urllib.request.urlretrieve(url, filename=compressName)
         # if retrieval fails retry another time
-        if not os.path.exists(compressName):
+        if not exists(compressName):
             urllib.request.urlretrieve(url, filename=compressName)
-            if not os.path.exists(compressName):
+            if not exists(compressName):
                 raise Exception("Can not download file from EMDB")
-    except Exception as e:
-        print(e)
 
-    if os.stat(compressName).st_size < minimum_file_size:
+        json_results = requests.get(url_rest_api).json()
+        sampling_tag = "pixel_spacing"
+        sampling_x_tag = "x"
+        origin_tag = "origin"
+        origin_x_tag = "column"
+        origin_y_tag = "row"
+        origin_z_tag = "section"
+
+        # units A/px
+        results = json_results[name][0]['map']
+        sampling = results[sampling_tag][sampling_x_tag]['value']
+        # units unknown may be pixels since this is integer
+        x = results[origin_tag][origin_x_tag]
+        y = results[origin_tag][origin_y_tag]
+        z = results[origin_tag][origin_z_tag]
+    except Exception as e:
+        print("Error retriving data from EMDB", str(e))
+
+    if stat(compressName).st_size < minimum_file_size:
         raise Exception("File Downloaded from EMDB is empty")
 
     gunzip(compressName, noCompressName)
-    return noCompressName
+    return noCompressName, sampling, (x, y, z)
+
 
 def gunzip(gzpath, path):
-        import gzip
-        gzf = gzip.open(gzpath)
-        f = open(path, 'wb')
-        f.write(gzf.read())
-        f.close()
-        gzf.close()
+    import gzip
+    gzf = gzip.open(gzpath)
+    f = open(path, 'wb')
+    f.write(gzf.read())
+    f.close()
+    gzf.close()
