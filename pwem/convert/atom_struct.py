@@ -51,6 +51,7 @@ import re
 import os
 import numpy
 import pyworkflow.utils as pwutils
+import shutil
 
 
 class OutOfChainsError(Exception):
@@ -722,9 +723,10 @@ def toCIF(inFileName, outCIFFile):
 
 
 def getEnviron():
-    environ = pwutils.Environ()
-    environ.update({'RCSBROOT': os.path.join(Plugin.getMaxitHome()),
-                    'PATH': os.path.join(Plugin.getMaxitHome(), 'bin')
+    environ = pwutils.Environ(os.environ)
+    environ.update({'RCSBROOT': os.path.join(Plugin.getMaxitHome())
+                    }, position=pwutils.Environ.REPLACE)
+    environ.update({'PATH': os.path.join(Plugin.getMaxitHome(), 'bin')
                     }, position=pwutils.Environ.BEGIN)
     return environ
 
@@ -779,6 +781,9 @@ def retry(runEnvirom, program, args, cwd, listAtomStruct=[], log=None, clean_dir
         # raise ValueError('force maxit to be executed')  # delete this line
         runEnvirom(program, args, cwd=cwd)
     except:
+        # first remove every file or directory in the extra folder,
+        # except maps
+        partiallyCleaningFolder(cwd)
         # something went wrong, may be bad atomStruct format
         log.info('retry with maxit conversion')
 
@@ -795,22 +800,28 @@ def retry(runEnvirom, program, args, cwd, listAtomStruct=[], log=None, clean_dir
             else:
                 try:
                     if atomStructName.endswith(".pdb"):
-                        newAtomStructName = os.path.join(cwd, "retrypdb%d.cif" % i)
+                        newAtomStructName = os.path.abspath(
+                            os.path.join(cwd, "retrypdb%d.cif" % i))
                         fromPDBToCIF(atomStructName, newAtomStructName, log)
                         _args = args.replace(atomStructName, newAtomStructName)
                         runEnvirom(program, _args, cwd=cwd)
                     elif atomStructName.endswith(".cif"):
-                        newAtomStructName = os.path.join(cwd, "retrycif%d.cif" % i)
+                        newAtomStructName = os.path.abspath(
+                            os.path.join(cwd, "retrycif%d.cif" % i))
                         fromCIFTommCIF(atomStructName, newAtomStructName, log)
                         _args = args.replace(atomStructName, newAtomStructName)
                         try:
                             runEnvirom(program, _args, cwd=cwd)
                         except:
-                            newAtomStructName = os.path.join(cwd, "retrycif%d.pdb" % i)
+                            newAtomStructName = os.path.abspath(
+                                os.path.join(cwd, "retrycif%d.pdb" % i))
                             fromCIFToPDB(atomStructName, newAtomStructName, log)
                             _args = args.replace(atomStructName, newAtomStructName)
                             runEnvirom(program, _args, cwd=cwd)
                 except:
+                    # first remove every file or directory in the extra folder,
+                    # except maps
+                    partiallyCleaningFolder(cwd)
                     # biopython conversion
                     aSH = AtomicStructHandler()
                     if atomStructName.endswith(".pdb") or atomStructName.endswith(".ent"):
@@ -819,9 +830,20 @@ def retry(runEnvirom, program, args, cwd, listAtomStruct=[], log=None, clean_dir
                     else:
                         newAtomStructName = atomStructName
                     try:
-                        aSH.read(newAtomStructName)
+                        aSH.read(atomStructName)
                         aSH.write(newAtomStructName)
                         _args = args.replace(atomStructName, newAtomStructName)
                         runEnvirom(program, _args, cwd=cwd)
                     except:
                         print("CIF file standarization failed.")
+
+def partiallyCleaningFolder(cwd):
+    l1 = os.listdir(cwd)
+    if (len(l1) > 1 and ((l1[0]).endswith(".map") or (l1[0]).endswith(".mrc"))):
+        for item in l1[1:]:
+            path1 = os.path.join(cwd, item)
+            if os.path.exists(path1):
+                if (os.path.isfile(path1) or os.path.islink(path1)):
+                    os.remove(path1)
+                elif os.path.isdir(path1):
+                    shutil.rmtree(path1)

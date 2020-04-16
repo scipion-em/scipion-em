@@ -135,6 +135,9 @@ class SequenceHandler:
             print("read the sequence first")
             exit(0)
 
+def sequenceLength(filename, format='fasta'):
+    handler=SequenceHandler()
+    return len(handler.downloadSeqFromFile(filename,format))
 
 def cleanSequenceScipion(isAminoacid, iUPACAlphabet, sequence):
     return cleanSequence(indexToAlphabet(isAminoacid, iUPACAlphabet), sequence)

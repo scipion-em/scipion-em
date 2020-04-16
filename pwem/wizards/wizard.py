@@ -217,7 +217,7 @@ class MaskRadiusWizard(EmWizard):
                                   maskRadius=value,
                                   unit=units)
             if d.resultYes():
-                self.setVar(form, label, d.getRadius())
+                self.setVar(form, label, d.getRadius(d.radiusSlider))
         else:
             dialog.showWarning("Empty input", "Select elements first", form.root)
 
@@ -944,9 +944,6 @@ class MaskPreviewDialog(ImagePreviewDialog):
         if abs(new_val - self.iniRadius) >= 1:
             self.iniRadius = new_val
             self.manageMaskVals()
-
-    def getRadius(self):
-        return int(self.radiusSlider.get())
 
     def showValues(self, var2set, radiusSlider):
         """
