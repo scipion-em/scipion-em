@@ -33,16 +33,12 @@ from numpy.linalg import norm
 
 import pyworkflow.utils as pwutils
 import pyworkflow.protocol.params as params
-
 import pwem.objects as emobj
 import pwem.convert as emconv
 from pwem import emlib
-from pwem.convert import Ccp4Header
 
 from .base import ProtImportFiles
 from .images import ProtImportImages
-
-from pyworkflow.utils.path import copyFile
 
 
 class ProtImportVolumes(ProtImportImages):
@@ -353,7 +349,7 @@ Format may be PDB or MMCIF"""
         localPath = abspath(self._getExtraPath(baseName))
 
         if str(atomStructPath) != str(localPath):  # from local file
-            copyFile(atomStructPath, localPath)
+            pwutils.copyFile(atomStructPath, localPath)
 
         localPath = relpath(localPath)
 

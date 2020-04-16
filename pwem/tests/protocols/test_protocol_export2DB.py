@@ -32,7 +32,6 @@ import pyworkflow.tests as pwtest
 
 import pwem.protocols as emprot
 import pwem.constants as emcts
-import pwem.convert as emconv
 from .test_protocols_import_volumes import createFeatVolume
 
 class TestExport2DataBases(pwtest.BaseTest):

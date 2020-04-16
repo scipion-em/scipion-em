@@ -12,7 +12,6 @@ from pyworkflow import SCIPION_DEBUG_NOCLEAN
 from pyworkflow.tests import *
 import pyworkflow.utils as pwutils
 
-import pwem.convert as emconv
 import pwem.objects as emobj
 from pwem import emlib
 from pwem.emlib import metadata as md
@@ -234,7 +233,6 @@ class TestImageHandler(unittest.TestCase):
         # Labelled as volume
         X, Y, Z, N = ih.getDimensions(sVolFn + volLabel)
         self.assertEqual([X, Y, Z, N], expectedSize_Svol)
-
 
     def test_convertMicrographs(self):
         """ Convert micrograhs to different formats.

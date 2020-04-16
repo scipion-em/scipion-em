@@ -34,7 +34,6 @@ import pyworkflow.object as pwobj
 from pyworkflow.gui import dialog
 import pyworkflow.wizard as pwizard
 from pyworkflow.gui.tree import ListTreeProviderString
-from pyworkflow.utils import redStr
 
 import pwem.convert as emconv
 

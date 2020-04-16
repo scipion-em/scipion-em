@@ -41,7 +41,6 @@ from pyworkflow.gui.plotter import Plotter
 import pyworkflow.protocol.params as params
 import pyworkflow.protocol.constants as pwcts
 
-import pwem.convert as emconv
 import pwem.objects as emobj
 from pwem import emlib
 
