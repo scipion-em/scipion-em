@@ -26,6 +26,7 @@
 
 
 import pyworkflow.protocol.params as params
+from pyworkflow.object import Integer
 
 from .protocol_2d import ProtAlign2D
 
@@ -50,8 +51,14 @@ class ProtAlignmentAssign(ProtAlign2D):
         form.addParam('shiftsAppliedBefore', params.BooleanParam, default=False,
                       label='Were particle shifts applied?',
                       expertLevel=params.LEVEL_ADVANCED,
-                      help='TActivate this option only if the advanced option "Apply particle shifts" was set to Yes '
+                      help='Activate this option only if the advanced option "Apply particle shifts" was set to Yes '
                            'at the extract coordinates protocol.')
+        form.addParam('assignRandomSubsets', params.BooleanParam, default=True,
+                      expertLevel=params.LEVEL_ADVANCED,
+                      label="Assign random subsets?",
+                      help="If yes, the random subset information from the "
+                           "assignment input will be transferred to the output "
+                           "particles.")
 
         form.addParallelSection(threads=0, mpi=0)
 
@@ -78,6 +85,11 @@ class ProtAlignmentAssign(ProtAlign2D):
             alignment = alignedParticle.getTransform()
             alignment.scaleShifts(scale, shiftsAppliedBefore=self.shiftsAppliedBefore.get())
             item.setTransform(alignment)
+
+            if self.assignRandomSubsets:
+                subset = alignedParticle.getAttributeValue('_rlnRandomSubset', None)
+                if subset is not None:
+                    item._rlnRandomSubset = Integer(subset)
         else:
             item._appendItem = False
 
