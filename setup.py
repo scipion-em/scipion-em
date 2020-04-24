@@ -81,8 +81,8 @@ setup(
             '%s = pwem.cmd.convert:main' % CONVERT_ENTRY_POINT,
         ],
         'pyworkflow.plugin': 'pwem = pwem'
+    },
+    package_data={
+      'pwem':['templates/*']
     }
-    # package_data={  # Optional
-    # #    '': [''],
-    # }
 )
