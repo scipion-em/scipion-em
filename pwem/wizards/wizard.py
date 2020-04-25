@@ -542,8 +542,8 @@ class DownsampleDialog(ImagePreviewDialog):
         using the self.lastObj that was selected
         """
         emlib.fastEstimateEnhancedPSD(self.rightImage,
-                                         self.lastObj.getFileName(),
-                                         self.getDownsample(), self.dim, 2)
+                                      self.lastObj.getFileName(),
+                                      self.getDownsample(), self.dim, 2)
 
 
 class CtfDialog(DownsampleDialog):
@@ -856,8 +856,8 @@ class GaussianFilterDialog(BandPassFilterDialog):
         using the self.lastObj that was selected
         """
         emlib.gaussianFilter(self.rightImage,
-                                emlib.image.ImageHandler.locationToXmipp(self.lastObj),
-                                self.getFreqSigma(), self.dim)
+                             emlib.image.ImageHandler.locationToXmipp(self.lastObj),
+                             self.getFreqSigma(), self.dim)
 
 
 class MaskPreviewDialog(ImagePreviewDialog):

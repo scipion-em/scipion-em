@@ -28,7 +28,6 @@ import pwem.protocols as emprot
 import pwem.constants as emcts
 import pwem.convert as emconv
 from pwem.convert import Ccp4Header
-from pwem.objects import Volume
 
 
 class TestImportBase(pwtests.BaseTest):
@@ -383,6 +382,7 @@ def __runXmippProgram(program, args):
     except ImportError:
         return False
     return True
+
 
 def createFeatVolume(volFeatName, volMapName, sym=emcts.SYM_I222r, factor=1.):
     f = open(volFeatName, "w")

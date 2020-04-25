@@ -34,6 +34,7 @@ import numpy as np
 from pyworkflow.tests import *
 
 import pwem.convert as emconv
+from pwem.emlib.image import ImageHandler
 
 
 class TestAtomicStructHandler(unittest.TestCase):
@@ -298,7 +299,7 @@ class TestAtomicStructHandler(unittest.TestCase):
             # if rotation move to center
             aSH = emconv.AtomicStructHandler(pdbFileName)
             if angles[0] != 0. or angles[1] != 0. or angles[2] != 0.:
-                ih = emlib.image.ImageHandler()
+                ih = ImageHandler()
                 x, y, z, n = ih.getDimensions("emd_%s.map" % EMDBID)
                 x /= 2.
                 y /= 2.
