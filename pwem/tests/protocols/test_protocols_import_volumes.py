@@ -28,7 +28,6 @@ import pwem.protocols as emprot
 import pwem.constants as emcts
 import pwem.convert as emconv
 from pwem.convert import Ccp4Header
-from pwem.objects import Volume
 
 
 class TestImportBase(pwtests.BaseTest):
@@ -262,6 +261,27 @@ class TestImportVolumes(TestImportBase):
         # self.assertEqual(7.88, y)
         # self.assertEqual(-10.90, z)
 
+        # """ 9) Import 3D map from EMDB """
+        from pwem.protocols.protocol_import.volumes import ProtImportVolumes
+        args = {'importFrom': ProtImportVolumes.IMPORT_FROM_EMDB,
+                'emdbId': 10676
+                }
+
+        prot5 = self.newProtocol(emprot.ProtImportVolumes, **args)
+        prot5.setObjLabel('import vol,\n import from EMDB')
+        self.launchProtocol(prot5)
+        volume = prot5.outputVolume
+        #volume.setOrigin(None)
+        # The volume has no origin
+        t = volume.getOrigin(force=True)
+        x, y, z = t.getShifts()
+        self.assertTrue(os.path.exists(prot5._getExtraPath('emd_10676.map')))
+        # TODO: I should chech origin but all 3D map
+        # I have tried to download have origin =0 :-(
+        # self.assertEqual(-67.2, x)
+        # self.assertEqual(-67.2, y)
+        # self.assertEqual(-67.2, z)
+
     def test_import_volume2(self):
         """
         Test to import a full map (Icosahedron) and two maps (half1 and half2)
@@ -362,6 +382,7 @@ def __runXmippProgram(program, args):
     except ImportError:
         return False
     return True
+
 
 def createFeatVolume(volFeatName, volMapName, sym=emcts.SYM_I222r, factor=1.):
     f = open(volFeatName, "w")

@@ -723,9 +723,10 @@ def toCIF(inFileName, outCIFFile):
 
 
 def getEnviron():
-    environ = pwutils.Environ()
-    environ.update({'RCSBROOT': os.path.join(Plugin.getMaxitHome()),
-                    'PATH': os.path.join(Plugin.getMaxitHome(), 'bin')
+    environ = pwutils.Environ(os.environ)
+    environ.update({'RCSBROOT': os.path.join(Plugin.getMaxitHome())
+                    }, position=pwutils.Environ.REPLACE)
+    environ.update({'PATH': os.path.join(Plugin.getMaxitHome(), 'bin')
                     }, position=pwutils.Environ.BEGIN)
     return environ
 
@@ -838,11 +839,11 @@ def retry(runEnvirom, program, args, cwd, listAtomStruct=[], log=None, clean_dir
 
 def partiallyCleaningFolder(cwd):
     l1 = os.listdir(cwd)
-    if (len(l1) > 1 and ((l1[0]).endswith(".map") or (l1[0]).endswith(".mrc"))):
+    if len(l1) > 1 and ((l1[0]).endswith(".map") or (l1[0]).endswith(".mrc")):
         for item in l1[1:]:
             path1 = os.path.join(cwd, item)
             if os.path.exists(path1):
-                if (os.path.isfile(path1) or os.path.islink(path1)):
+                if os.path.isfile(path1) or os.path.islink(path1):
                     os.remove(path1)
                 elif os.path.isdir(path1):
                     shutil.rmtree(path1)
