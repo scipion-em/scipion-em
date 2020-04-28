@@ -277,6 +277,7 @@ class TestRelionExtractStreaming(TestBaseRelionStreaming):
             ProtRelionAutopickLoG,
             objLabel='Streaming relion - autopic (LoG)',
             inputMicrographs=protImport.outputMicrographs,
+            boxSize=60,
             minDiameter=260,
             maxDiameter=380)
         self.proj.launchProtocol(protPick, wait=False)
