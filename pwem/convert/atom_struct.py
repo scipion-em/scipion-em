@@ -777,12 +777,11 @@ def fromCIFTommCIF(inFileName, outFileName, log):
 
 def retry(runEnvirom, program, args, cwd, listAtomStruct=[], log=None, clean_dir=None):
     try:
-        # raise ValueError('force maxit to be executed')  # delete this line
         runEnvirom(program, args, cwd=cwd)
     except:
-        # first remove every file or directory in the extra folder,
+        # first remove every files or directories in the extra folder,
         # except maps
-        partiallyCleaningFolder(cwd)
+        partiallyCleaningFolder(program, cwd)
         # something went wrong, may be bad atomStruct format
         log.info('retry with maxit conversion')
 
@@ -791,9 +790,6 @@ def retry(runEnvirom, program, args, cwd, listAtomStruct=[], log=None, clean_dir
                 aSH = AtomicStructHandler()
                 aSH.read(atomStructName)
                 aSH.write(atomStructName)
-                # if clean_dir is not None:
-                #     if os.path.exists(clean_dir):
-                #         shutil.rmtree(clean_dir, ignore_errors=True)
 
                 runEnvirom(program, args, cwd=cwd)
             else:
@@ -818,9 +814,9 @@ def retry(runEnvirom, program, args, cwd, listAtomStruct=[], log=None, clean_dir
                             _args = args.replace(atomStructName, newAtomStructName)
                             runEnvirom(program, _args, cwd=cwd)
                 except:
-                    # first remove every file or directory in the extra folder,
+                    # first remove files or directories in the extra folder,
                     # except maps
-                    partiallyCleaningFolder(cwd)
+                    partiallyCleaningFolder(program, cwd)
                     # biopython conversion
                     aSH = AtomicStructHandler()
                     if atomStructName.endswith(".pdb") or atomStructName.endswith(".ent"):
@@ -836,10 +832,26 @@ def retry(runEnvirom, program, args, cwd, listAtomStruct=[], log=None, clean_dir
                     except:
                         print("CIF file standarization failed.")
 
-def partiallyCleaningFolder(cwd):
+def partiallyCleaningFolder(program, cwd):
     l1 = os.listdir(cwd)
-    if (len(l1) > 1 and ((l1[0]).endswith(".map") or (l1[0]).endswith(".mrc"))):
-        for item in l1[1:]:
+    l2 = ['molprobity.out', 'molprobity_probe.txt', 'molprobity_coot.py']
+    l3 = ['validation_cryoem.pkl']
+    l4 = ['placed_model.pdb', 'placed_model.cif']
+
+    for item in l1:
+        if (program.endswith('real_space_refine.py') and
+                (item.endswith('geo') or
+                 item.endswith('real_space_refined.log') or
+                 item.endswith('real_space_refine.pdb') or
+                 item.endswith('real_space_refined.cif'))) or \
+           (program.endswith('molprobity.py') and item in l2)  or \
+           (program.endswith('validation_cryoem.py') and item in l3) or \
+           (program.endswith('emringer.py') and
+                (item.endswith("emringer.csv") or \
+                 item.endswith("emringer.pkl") or \
+                 item.endswith("emringer_plots") or \
+                 item.startswith('emringer_transfer'))) or \
+           (program.endswith('dock_in_map.py') and item in l4):
             path1 = os.path.join(cwd, item)
             if os.path.exists(path1):
                 if (os.path.isfile(path1) or os.path.islink(path1)):
