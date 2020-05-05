@@ -30,7 +30,7 @@ try:
 except ImportError:
     izip = zip
 
-from _pickle import dumps, loads
+from json import dumps, loads
 
 from pyworkflow.protocol.params import (PointerParam, FileParam, StringParam)
 from pyworkflow.utils import moveFile

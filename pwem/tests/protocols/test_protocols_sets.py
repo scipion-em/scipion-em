@@ -298,6 +298,23 @@ class TestSets(pwtests.BaseTest):
         checkAsserts(partByMic2, 2638, 4330, 16)
         checkAsserts(partByMic3, 270, 725, 3)
 
+    def testSubsetByCoord(self):
+        """Test that the subset by Coord operation works as expected."""
+        print("\n", pwutils.greenStr(" Test Subset by Coord".center(75, '-')))
+
+        p_extract_coordinates = self.newProtocol(emprot.ProtExtractCoords)
+        p_extract_coordinates.inputParticles.set(self.partMicId)
+        p_extract_coordinates.inputMicrographs.set(self.micsMicId)
+        self.launchProtocol(p_extract_coordinates)
+
+        p_subset_by_coords = self.newProtocol(emprot.ProtSubSetByCoord)
+        p_subset_by_coords.inputParticles.set(self.partMicId)
+        p_subset_by_coords.inputCoordinates.set(p_extract_coordinates.outputCoordinates)
+        self.launchProtocol(p_subset_by_coords)
+        self.assertIsNotNone(p_subset_by_coords.outputParticles, "Output SetOfParticles were not created.")
+        self.assertEqual(p_subset_by_coords.outputParticles.getSize(), 5236,
+                         "The number of created particles is incorrect.")
+
     def testMerge(self):
         """Test that the union operation works as expected."""
 

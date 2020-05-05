@@ -359,6 +359,7 @@ class ProtExtractParticles(ProtParticles):
             self.debug("Loading other Mics.")
             oMicDict, oMicClosed = _loadMics(self.inputMicrographs.get())
             self.micsClosed = self.micsClosed and oMicClosed
+            micDictNew={}
             for micKey, mic in micDict.items():
                 if micKey in oMicDict:
                     oMic = oMicDict[micKey]
@@ -366,19 +367,20 @@ class ProtExtractParticles(ProtParticles):
                     # we want to have the id coming from the coordinates
                     # to match each coordinate to its micrograph
                     oMic.copyObjId(mic)
-                    micDict[micKey] = oMic
-                else:
-                    del micDict[micKey]
+                    micDictNew[micKey] = oMic
+            micDict=micDictNew
 
         self.debug("Mics are closed? %s" % self.micsClosed)
         if self._useCTF():
             self.debug("Loading CTFs.")
             ctfDict, ctfClosed = _loadCTFs(self.ctfRelations.get())
+            micDictNew={}
             for micKey, mic in micDict.items():
                 if micKey in ctfDict:
                     mic.setCTF(ctfDict[micKey])
-                else:
-                    del micDict[micKey]
+                    micDictNew[micKey]=mic
+            micDict=micDictNew
+
         # if not use CTF, self.ctfsClosed is True
         self.ctfsClosed = ctfClosed if self._useCTF() else True
         self.debug("CTFs are closed? %s" % self.ctfsClosed)

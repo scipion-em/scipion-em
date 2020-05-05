@@ -18,3 +18,4 @@
 *.egg-info
 
 dist/*
+/pwem/templates/testOrigSampling.json.template

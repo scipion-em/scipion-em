@@ -95,8 +95,8 @@ class TestXmippWorkflow(TestWorkflow):
         print("Performing CTF...")
         protCTF = self.newProtocol(xmippProtcols.XmippProtCTFMicrographs,
                                    numberOfThreads=4,
-                                   minDefocus=22000,
-                                   maxDefocus=25000)
+                                   minDefocus=2.2,
+                                   maxDefocus=2.5)  # Defocus is in microns
         protCTF.inputMicrographs.set(protDownsampling.outputMicrographs)
         self.launchProtocol(protCTF)
         self.assertSetSize(protCTF.outputCTF, 3)
@@ -117,6 +117,22 @@ class TestXmippWorkflow(TestWorkflow):
         self.assertIsNotNone(protExtract.outputParticles,
                              "There was a problem with the extract particles")
         self.validateFiles('protExtract', protExtract)
+
+        print("Run Extract Coordinates without applying shifts")
+        protExtractCoords = self.newProtocol(emprot.ProtExtractCoords)
+        protExtractCoords.inputParticles.set(protExtract.outputParticles)
+        protExtractCoords.inputMicrographs.set(protImport.outputMicrographs)
+        self.launchProtocol(protExtractCoords)
+        # The size of the set of coordinates must be the same as the input set of particles
+        self.assertSetSize(protExtractCoords.outputCoordinates,
+                           size=protExtract.outputParticles.getSize(),
+                           msg="There was a problem with the coordinates extraction")
+        # Check if the scaling factor is being calculated and applied correctly
+        scale = protExtract.outputParticles.getSamplingRate() / protImport.outputMicrographs.getSamplingRate()
+        inParticleCoord = protExtract.outputParticles.getFirstItem().getCoordinate()
+        x, y = inParticleCoord.getPosition()
+        self.assertAlmostEqual(protExtractCoords.outputCoordinates.getFirstItem().getPosition(),
+                               (int(x * scale), int(y * scale)))
 
         print("Run Screen Particles")
         protScreen = self.newProtocol(xmippProtcols.XmippProtScreenParticles,
@@ -158,6 +174,29 @@ class TestXmippWorkflow(TestWorkflow):
         self.launchProtocol(protOnlyAlign)
         self.assertIsNotNone(protOnlyAlign.outputParticles, "There was a problem with Only align2d")
         self.validateFiles('protOnlyAlign', protOnlyAlign)
+
+        print("Run Extract Coordinates applying shifts")
+        protExtractCoordsShifts = self.newProtocol(emprot.ProtExtractCoords, applyShifts=True)
+        protExtractCoordsShifts.setObjLabel('Extract Coordinates applying shifts')
+        inputParticles = protOnlyAlign.outputParticles
+        inputMics = protDownsampling.outputMicrographs
+        protExtractCoordsShifts.inputParticles.set(inputParticles)
+        protExtractCoordsShifts.inputMicrographs.set(inputMics)
+        self.launchProtocol(protExtractCoordsShifts)
+        # The size of the set of coordinates must be the same as the input set of particles
+        outputParticles = protExtractCoordsShifts.outputCoordinates
+        self.assertSetSize(outputParticles,
+                           size=protExtract.outputParticles.getSize(),
+                           msg="There was a problem with the coordinates extraction")
+        # Check if the scaling factor is being calculated and applied correctly
+        scale = inputParticles.getSamplingRate() / protDownsampling.outputMicrographs.getSamplingRate()
+        inParticleCoord = inputParticles.getFirstItem().getCoordinate()
+        shifts = protExtractCoordsShifts.getShifts(inputParticles.getFirstItem().getTransform(),
+                                                   inputParticles.getAlignment())
+        x, y = inParticleCoord.getPosition()
+        xCoor, yCoor = x - int(shifts[0]), y - int(shifts[1])
+        self.assertAlmostEqual(protExtractCoordsShifts.outputCoordinates.getFirstItem().getPosition(),
+                               (int(xCoor * scale), int(yCoor * scale)))
 
         print("Run kerdensom")
         ProtKerdensom = self.newProtocol(xmippProtcols.XmippProtKerdensom,

@@ -277,6 +277,7 @@ class TestRelionExtractStreaming(TestBaseRelionStreaming):
             ProtRelionAutopickLoG,
             objLabel='Streaming relion - autopic (LoG)',
             inputMicrographs=protImport.outputMicrographs,
+            boxSize=60,
             minDiameter=260,
             maxDiameter=380)
         self.proj.launchProtocol(protPick, wait=False)
@@ -348,8 +349,7 @@ class TestRelionPickStreaming(TestBaseRelionStreaming):
             objLabel='ctffind',
             inputMicrographs=protImport.outputMicrographs,
             minDefocus=12000, maxDefocus=30000,
-            slowSearch=False,
-            resamplePix=False,
+            slowSearch=False
         )
         self.proj.launchProtocol(protCtf, wait=False)
         self._waitOutput(protCtf, 'outputCTF')

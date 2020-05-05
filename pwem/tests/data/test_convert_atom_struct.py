@@ -34,6 +34,7 @@ import numpy as np
 from pyworkflow.tests import *
 
 import pwem.convert as emconv
+from pwem.emlib.image import ImageHandler
 
 
 class TestAtomicStructHandler(unittest.TestCase):
@@ -93,7 +94,7 @@ class TestAtomicStructHandler(unittest.TestCase):
         _dict = aSH.readLowLevel(self.CIFFileName)
 
         for k, v in solDict.items():
-            self.assertEqual(_dict[k].strip().lower(), v.lower())
+            self.assertEqual(_dict[k][0].strip().lower(), v.lower())
 
     def testRenameToChains(self):
         aSH = emconv.AtomicStructHandler(self.PDBFileName)
@@ -298,7 +299,7 @@ class TestAtomicStructHandler(unittest.TestCase):
             # if rotation move to center
             aSH = emconv.AtomicStructHandler(pdbFileName)
             if angles[0] != 0. or angles[1] != 0. or angles[2] != 0.:
-                ih = emlib.image.ImageHandler()
+                ih = ImageHandler()
                 x, y, z, n = ih.getDimensions("emd_%s.map" % EMDBID)
                 x /= 2.
                 y /= 2.
@@ -405,6 +406,8 @@ class TestAtomicStructHandler(unittest.TestCase):
         #
         fileName1 = aSH1.readFromPDBDatabase(pdbID1, type='mmCif', dir='/tmp')
         fileName2 = aSH2.readFromPDBDatabase(pdbID2, type='mmCif', dir='/tmp')
+        aSH1.read(fileName1)
+        aSH2.read(fileName2)
         atomsNum1 = len([atom.id for atom in aSH1.getStructure().get_atoms()])
         atomsNum2 = len([atom.id for atom in aSH2.getStructure().get_atoms()])
         #
@@ -432,6 +435,8 @@ class TestAtomicStructHandler(unittest.TestCase):
         #
         fileName1 = aSH1.readFromPDBDatabase(pdbID1, type='mmCif', dir='/tmp')
         fileName2 = aSH2.readFromPDBDatabase(pdbID2, type='mmCif', dir='/tmp')
+        aSH1.read(fileName1)
+        aSH2.read(fileName2)
         atomsNum1 = len([atom.id for atom in aSH1.getStructure().get_atoms()])
         atomsNum2 = len([atom.id for atom in aSH2.getStructure().get_atoms()])
         #
@@ -458,6 +463,8 @@ class TestAtomicStructHandler(unittest.TestCase):
         #
         fileName1 = aSH1.readFromPDBDatabase(pdbID1, type='mmCif', dir='/tmp')
         fileName2 = aSH2.readFromPDBDatabase(pdbID2, type='mmCif', dir='/tmp')
+        aSH1.read(fileName1)
+        aSH2.read(fileName2)
         atomsNum1 = len([atom.id for atom in aSH1.getStructure().get_atoms()])
         atomsNum2 = len([atom.id for atom in aSH2.getStructure().get_atoms()])
         #
@@ -483,6 +490,7 @@ class TestAtomicStructHandler(unittest.TestCase):
         aSH2 = emconv.AtomicStructHandler()
         #
         fileName1 = aSH1.readFromPDBDatabase(pdbID1, type='mmCif', dir='/tmp')
+        aSH1.read(fileName1)
         atomsNum1 = len([atom.id for atom in aSH1.getStructure().get_atoms()])
         #
         chainID = 'A'

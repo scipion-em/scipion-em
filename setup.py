@@ -30,7 +30,7 @@ with open('requirements.txt') as f:
 
 setup(
     name='scipion-em',  # Required
-    version='1.a',  # Required
+    version='1.0.1',  # Required
     description='This modules contains classes related with EM',  # Required
     long_description=long_description,  # Optional
     url= URL,  # Optional
@@ -81,8 +81,8 @@ setup(
             '%s = pwem.cmd.convert:main' % CONVERT_ENTRY_POINT,
         ],
         'pyworkflow.plugin': 'pwem = pwem'
+    },
+    package_data={
+      'pwem':['templates/*']
     }
-    # package_data={  # Optional
-    # #    '': [''],
-    # }
 )

@@ -26,28 +26,17 @@
 # **************************************************************************
 
 import os
-import ast
-import shlex
-import socket
-import sys
 from multiprocessing.connection import Client
 import threading
-from numpy import flipud
 
-import pyworkflow as pw
 import pyworkflow.utils as pwutils
 import pyworkflow.viewer as pwviewer
-
-import pyworkflow.gui.matplotlib_image as pwgui
-
 import pwem.constants as emcts
 import pwem.emlib.metadata as md
-import pwem.convert as emconv
 import pwem.objects as emobj
 from pwem import emlib
 from pwem import getCmdPath, Config as emConfig
 
-from .showj import (CHIMERA_PORT, MODE, MODE_MD, INVERTY)
 
 chimeraPdbTemplateFileName = "Atom_struct__%s.pdb"
 chimeraMapTemplateFileName = "Map__%s.mrc"
@@ -301,7 +290,7 @@ class ChimeraAngDistClient(ChimeraClient):
             weight = mdAngDist.getValue(md.MDL_WEIGHT, id)
             # Avoid zero division
             weight = 0 if interval == 0 else (weight - minweight) / interval
-            weight = weight + 0.5  # add 0.5 to avoid cero weight
+            weight = weight + 0.5  # add 0.5 to avoid zero weight
             x, y, z = emlib.Euler_direction(rot, tilt, psi)
             radius = weight * self.spheresMaxRadius
 
