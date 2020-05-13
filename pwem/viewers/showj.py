@@ -286,6 +286,13 @@ def runJavaIJapp(memory, appName, args, env=None):
     getEnviron = Config.getDomain().importFromPlugin('xmipp3', 'Plugin').getEnviron
     env.update(getEnviron(xmippFirst=False))
 
+    # Try chimera
+    try:
+        chimeraPlugin = Config.getDomain().importFromPlugin('chimera', 'Plugin', doRaise=True)
+        env["CHIMERA_LAUNCHER"] = chimeraPlugin.getProgram() + " %s"
+    except Exception as e:
+        pass
+
     args = getJavaIJappArguments(memory, appName, args)
     print('java %s' % args)
     # return subprocess.Popen('java ' + args, shell=True, env=env)
