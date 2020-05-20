@@ -121,7 +121,7 @@ class ReportInflux:
         from influxdb import InfluxDBClient
         from pwem.protocols.monitors.secrets import (dataBase, passwordInflux,
                                                      usernameInflux,
-                                                     host, port, ssl, verify_ssl)
+                                                     hostinflux, port, ssl, verify_ssl)
 
         self.dataBaseName = dataBase
         try:
@@ -131,12 +131,7 @@ class ReportInflux:
             urllib3.disable_warnings()
 
             #  open conection to influx
-            print("databse", host, port, usernameInflux,
-                  deCrypt(usernameInflux), deCrypt(usernameInflux),
-                  deCrypt(passwordInflux), deCrypt(passwordInflux),
-                  ssl, verify_ssl
-                  )
-            self.client = InfluxDBClient(host=host,
+            self.client = InfluxDBClient(host=hostinflux,
                                          port=port,
                                          username=deCrypt(usernameInflux),
                                          password=deCrypt(passwordInflux),
@@ -149,17 +144,18 @@ class ReportInflux:
             # self.client.create_database("scipion")
             self.client.switch_database(self.dataBaseName)
 
-            # replication -> number of copies of the DB stored in the cluster
-            # 12w -> delete data after 12 weeks
-            self.client.create_retention_policy("ret_pol", "12w",
-                                                replication=1,
-                                                default=True)
             self.projectName = slugify(self.protocol.getProject().getShortName())
 
             # delete meassurement
             # project names may contain forbiden character
             # IF this is a problem we will need to slugify the projName
             self.client.drop_measurement(self.projectName)
+            print("dropping meassurement:", self.projectName) 
+            # replication -> number of copies of the DB stored in the cluster
+            # 12w -> delete data after 12 weeks
+            self.client.create_retention_policy("ret_pol", "12w",
+                                                replication=1,
+                                                default=True)
 
         except Exception as e:
             print("Error:", e)
@@ -176,7 +172,7 @@ class ReportInflux:
         # Project Properties Section
         # Do not delete this variables. We are using them
         # in an eval command
-        projectName = project.getShortName()
+        self.projectName = project.getShortName()
         startTime = pwutils.dateStr(project.getCreationTime(), secs=True),
         tnow = datetime.now()
         _now = project.getCreationTime()
@@ -398,9 +394,10 @@ class ReportInflux:
                    order by time desc
                    limit 10'''% self.projectName
         from pwem.protocols.monitors.secrets import (usernameParamiko, keyfilepath,
-                                                     keyfiletype, remote_path)
+                                                     keyfiletype, remote_path,
+                                                     hostparamiko)
 
-        connect = Connect(host='nolan.cnb.csic.es',
+        connect = Connect(host=hostparamiko,
                           port=22,
                           username= deCrypt(usernameParamiko),
                           password=None,

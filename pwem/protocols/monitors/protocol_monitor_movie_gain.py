@@ -120,7 +120,7 @@ class MonitorMovieGain(Monitor):
     It will internally handle a database to store produced
     movie gain values.
     """
-    def __init__(self, protocol, **kwargs):
+    def __init__(self, protocol, influx=False, **kwargs):
         Monitor.__init__(self, **kwargs)
 
         # The movieGain protocol to monitor
@@ -129,6 +129,7 @@ class MonitorMovieGain(Monitor):
         self.stddevValue = kwargs['stddevValue']
         self.ratio1Value = kwargs['ratio1Value']
         self.ratio2Value = kwargs['ratio2Value']
+        self.influx = influx
 
     def warning(self, msg):
         self.notify("Scipion Movie Gain Monitor WARNING", msg)
@@ -178,7 +179,37 @@ class MonitorMovieGain(Monitor):
         fhWarning.close()
         return prot.getStatus() != STATUS_RUNNING
 
-    def getData(self):
+    def getData(self, lastId=-1):
+        if self.influx:
+            return self.getDataInflux(lastId)
+        else:
+            return self.getDataHtml()
+
+
+    def getDataInflux(self, lastId=None):
+        """retuen data as a list of dictionaries"""
+        prot = self.protocol
+        fnSummary = prot._getPath("summaryForMonitor.txt")
+        data = []
+        if not os.path.exists(fnSummary) < 1:
+            fhSummary = open(fnSummary, "r")
+            for idx, line in enumerate(fhSummary.readlines(), 1):  # star idx in 1
+                                             # in other protocols index start in 1
+                idx = int(idx)
+                if idx > lastId:  # where id > last_id
+                    row={}
+                    stddev, perc25, perc975, maxVal = map(float, line.split()[1:])
+                    row['idx'] = idx
+                    row['stddev'] = stddev
+                    row['ratio1'] = perc975 / perc25
+                    row['ratio2'] = maxVal / perc975
+                    data.append(row)
+            fhSummary.close()
+        # movie_000001: 0.016680 0.976350 1.028174 17.423561
+        return data
+
+
+    def getDataHtml(self):
         idValues = []
         stddevValues = []
         ratio1Values = []

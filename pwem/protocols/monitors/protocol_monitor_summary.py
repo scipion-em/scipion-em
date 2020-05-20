@@ -31,6 +31,7 @@ from pyworkflow import VERSION_1_1
 
 from pwem.protocols import ProtCTFMicrographs, ProtAlignMovies
 from pwem import Domain
+from .report_influx import ReportInflux
 from .report_html import ReportHtml
 from .protocol_monitor import ProtMonitor, Monitor
 from .protocol_monitor_ctf import MonitorCTF
@@ -135,7 +136,13 @@ class ProtMonitorSummary(ProtMonitor):
         ProtMonitor._sendMailParams(self, form)
 
         form.addSection('HTML Report')
+
+        form.addParam("doInflux", params.BooleanParam,
+                      label="use grafana/influx",
+                      default=False,
+                      help="Use grafana and influx vs apacha for reports")
         form.addParam('publishCmd', params.StringParam, default='',
+                      condition='doInflux == False',
                       label="Publish command",
                       help="Specify a command to publish the template. "
                            "You can use the special token %(REPORT_FOLDER)s "
@@ -242,6 +249,7 @@ class ProtMonitorSummary(ProtMonitor):
 
         movieGainMonitor = MonitorMovieGain(
                 movieGainProt,
+                influx=self.doInflux,
                 workingDir=self.workingDir.get(),
                 samplingInterval=self.samplingInterval.get(),
                 monitorTime=self.monitorTime.get(),
@@ -261,6 +269,7 @@ class ProtMonitorSummary(ProtMonitor):
         ctfProt.setProject(self.getProject())
 
         ctfMonitor = MonitorCTF(ctfProt,
+                                influx=self.doInflux,
                                 workingDir=self.workingDir.get(),
                                 samplingInterval=self.samplingInterval.get(),
                                 monitorTime=self.monitorTime.get(),
@@ -275,6 +284,7 @@ class ProtMonitorSummary(ProtMonitor):
         protocols = self.getInputProtocols()
 
         sysMon = MonitorSystem(protocols,
+                               influx=self.doInflux,
                                workingDir=self.workingDir.get(),
                                samplingInterval=self.samplingInterval.get(),
                                monitorTime=self.monitorTime.get(),
@@ -301,9 +311,14 @@ class ProtMonitorSummary(ProtMonitor):
         sysMonitor = sysMonitor or self.createSystemMonitor()
         movieGainMonitor = movieGainMonitor or self.createMovieGainMonitor()
         self.createReportDir()
-        htmlReport = ReportHtml(self, ctfMonitor, sysMonitor, movieGainMonitor,
+        if self.doInflux:
+            htmlReport = ReportInflux(self, ctfMonitor, sysMonitor, movieGainMonitor,
+                                    self.publishCmd.get(),
+                                    refreshSecs=self.samplingInterval.get())
+        else:
+            htmlReport = ReportHtml(self, ctfMonitor, sysMonitor, movieGainMonitor,
                                 self.publishCmd.get(),
                                 refreshSecs=self.samplingInterval.get())
-        htmlReport.setUp()
+            htmlReport.setUp()
 
         return htmlReport

@@ -28,6 +28,9 @@ import os
 import sys
 import time
 import sqlite3 as lite
+import datetime
+import pytz
+from pwem.protocols.monitors.secrets import timeZone
 
 try:
     import psutil
@@ -199,7 +202,7 @@ class MonitorSystem(Monitor):
             cls._nifsNameList = [nif.getName() for nif in nifs]
         return cls._nifsNameList
 
-    def __init__(self, protocols, **kwargs):
+    def __init__(self, protocols, influx=False, **kwargs):
         Monitor.__init__(self, **kwargs)
         self.protocols = protocols
         self.cpuAlert = kwargs['cpuAlert']
@@ -244,8 +247,16 @@ class MonitorSystem(Monitor):
         else:
             pass
 
-        self.conn = lite.connect(os.path.join(self.workingDir, self._dataBase),
+        self.conn = lite.connect(os.path.join(self.workingDir,
+                                              self._dataBase),
                                  isolation_level=None)
+        self.influx = influx
+        if influx:
+            # get results as a list of dictionaries
+            # versus a list of tuples
+            self.conn.row_factory = \
+                lambda c, r: dict([(col[0], r[idx])
+                                   for idx, col in enumerate(c.description)])
         self.cur = self.conn.cursor()
 
     def warning(self, msg):
@@ -355,7 +366,7 @@ class MonitorSystem(Monitor):
         sqlCommand = """CREATE TABLE IF NOT EXISTS  %s(
                                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                                 timestamp DATE DEFAULT
-                                     (datetime('now','localtime')),
+                                     (datetime('now')),
                                 """ % self._tableName
         for label in self.labelList:
             sqlCommand += "%s FLOAT,\n" % label
@@ -367,9 +378,46 @@ class MonitorSystem(Monitor):
     def getLabels(self):
         return self.labelList
 
-    def getData(self):
+    def getData(self, lastId=-1):
+        if self.influx:
+            return self.getDataInflux(lastId)
+        else:
+            return self.getDataHtml()
+
+
+    def getDataInflux(self, lastId=-1):
+        "get resulset as a a list of dictionaries"
+        try:
+            self.cur.execute("select * from %s where id > %d "
+                             "order by id" % (self._tableName, lastId))
+        except Exception as e:
+            print("MonitorCTF, ERROR reading data from db: %s" %
+                  os.path.join(self.workingDir, self._dataBase))
+        # As we are using a row factory, fetchall returns a list of
+        # dictionaries, each item in list(each dictionary)
+        # represents a row of the table
+        listOfDictionaries = self.cur.fetchall()
+        for item in listOfDictionaries:
+            local = pytz.timezone(timeZone)
+            # convert dates from scipion to datetime.datetime
+            for d in listOfDictionaries:
+                datum = d['timestamp']
+                              # string -> date time
+                              # oposite -> strftime
+                if isinstance(datum, str):
+                    naive = datetime.datetime.strptime(datum, "%Y-%m-%d %H:%M:%S")
+                elif isinstance(datum, datetime.datetime):
+                    continue
+                else:
+                    raise Exception('Error: (CTF:getData()) Can not convert timestamp')
+                local_dt = local.localize(naive, is_dst=None)
+                d['timestamp'] = local_dt.astimezone(pytz.utc)
+
+        return listOfDictionaries
+
+    def getDataHtml(self):
         """Fill a dictionary for each label in self.labeldisk.
-        The key is the label name. Teh value a list with
+        The key is the label name. The value a list with
         data read from the database"""
         cur = self.cur
 
@@ -405,6 +453,12 @@ class MonitorSystem(Monitor):
             else:
                 return [r[0] for r in data]
 
+        # TODO: this multiple calls to get may raise a
+        # race condition. That is data may be added to the DB
+        # between two get call and therefore the lengths of
+        # the list can be different. IT would be better to do a single
+        # call to the database and retrieve all at the same time
+        # see getDataInflux for details
         data = {'initTime': initTime,
                 'initTimeTitle': initTimeTitle,
                 'idValues': idValues}

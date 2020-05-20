@@ -28,12 +28,16 @@ import os
 import sys
 from math import isinf
 import sqlite3 as lite
+import datetime
+import time
+import math
+import pytz
 
 import pyworkflow.protocol.params as params
 from pyworkflow import VERSION_1_1
 from pyworkflow.protocol.constants import STATUS_RUNNING
 from pyworkflow.protocol import getUpdatedProtocol
-
+from pwem.protocols.monitors.secrets import timeZone
 from .protocol_monitor import ProtMonitor, Monitor
 
 PHASE_SHIFT = 'phaseShift'
@@ -113,7 +117,7 @@ class MonitorCTF(Monitor):
     It will internally handle a database to store produced
     CTF values.
     """
-    def __init__(self, protocol, **kwargs):
+    def __init__(self, protocol, influx=False, **kwargs):
         Monitor.__init__(self, **kwargs)
 
         # The CTF protocol to monitor
@@ -128,6 +132,12 @@ class MonitorCTF(Monitor):
 
         self.conn = lite.connect(os.path.join(self.workingDir, self._dataBase),
                                  isolation_level=None)
+        self.influx = influx
+        if self.influx:
+            # get results as a list of dictionaries
+            self.conn.row_factory = \
+                lambda c, r: dict([(col[0], r[idx])
+                                   for idx, col in enumerate(c.description)])
         self.cur = self.conn.cursor()
 
     def warning(self, msg):
@@ -196,10 +206,24 @@ class MonitorCTF(Monitor):
 
             # get CTFs with this ids a fill table
             # do not forget to compute astigmatism
-            sql = """INSERT INTO %s(timestamp, ctfID, defocusU, defocusV, astigmatism, ratio, resolution, fitQuality, phaseShift, micPath, psdPath, shiftPlotPath)
-                     VALUES("%s",%d,%f,%f,%f,%f,%f,%f,%f,"%s","%s","%s");""" % (self._tableName, ctfCreationTime, ctfID, defocusU,
-                                                                                defocusV, astig, defocusU / defocusV, resolution,
-                                                                                fitQuality, phaseShift,  micPath, psdPath, shiftPlotPath)
+            defocus = math.sqrt(defocusV*defocusV + defocusU * defocusU)
+            sql = """INSERT INTO %s(timestamp
+                                    , ctfID
+                                    , defocusU
+                                    , defocusV
+                                    , defocus
+                                    , astigmatism
+                                    , ratio
+                                    , resolution
+                                    , fitQuality
+                                    , phaseShift
+                                    , micPath
+                                    , psdPath
+                                    , shiftPlotPath)
+                     VALUES("%s",%d,%f,%f,%f,%f,%f,%f,%f,%f,"%s","%s","%s");""" %\
+                  (self._tableName, ctfCreationTime, ctfID, defocusU,
+                   defocusV, defocus, astig, defocusU / defocusV, resolution,
+                   fitQuality, phaseShift,  micPath, psdPath, shiftPlotPath)
             try:
                 self.cur.execute(sql)
             except Exception as e:
@@ -228,7 +252,7 @@ class MonitorCTF(Monitor):
     def _createTable(self):
         self.cur.execute("""CREATE TABLE IF NOT EXISTS  %s(
                                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                                timestamp DATE DEFAULT (datetime('now','localtime')),
+                                timestamp DATE DEFAULT (datetime('now', 'localtime')),
                                 ctfID INTEGER,
                                 defocusU FLOAT,
                                 defocusV FLOAT,
@@ -236,14 +260,56 @@ class MonitorCTF(Monitor):
                                 astigmatism FLOAT,
                                 ratio FLOAT,
                                 resolution FLOAT,
-				                fitQuality FLOAT,
-				                phaseShift FLOAT,
+                                fitQuality FLOAT,
+                                phaseShift FLOAT,
                                 micPath STRING,
                                 psdPath STRING,
                                 shiftPlotPath STRING)
                                 """ % self._tableName)
 
-    def getData(self):
+    def getData(self, lastId=-1):
+        if self.influx:
+            return self.getDataInflux(lastId)
+        else:
+            return self.getDataHtml()
+
+
+    def getDataInflux(self, lastId=-1):
+        "retuen quey as a list of dictionaries"
+        try:
+            command = "select * from %s where id > %d " \
+                      "order by id" % (self._tableName, lastId)
+            self.cur.execute(command)
+        except Exception as e:
+            print("MonitorCTF, ERROR reading data from db: %s" %
+                  os.path.join(self.workingDir, self._dataBase))
+        # As we are using a row factory, fetchall returns a list of
+        # dictionaries, each item in list(each dictionary)
+        # represents a row of the table
+        listOfDictionaries = self.cur.fetchall()
+        for item in listOfDictionaries:
+            local = pytz.timezone(timeZone)
+            # convert dates from scipion to datetime.datetime
+            for d in listOfDictionaries:
+                datum = d['timestamp']
+                              # string -> date time
+                              # oposite -> strftime
+                if isinstance(datum, str):
+                    naive = datetime.datetime.strptime(datum, "%Y-%m-%d %H:%M:%S")
+                elif isinstance(datum, datetime.datetime):
+                    continue
+                else:
+                    raise Exception('Error: (CTF:getData()) Can not convert timestamp')
+                local_dt = local.localize(naive, is_dst=None)
+                d['timestamp'] = local_dt.astimezone(pytz.utc)
+
+
+        return listOfDictionaries
+
+    def getDataHtml(self):
+        """Fill a dictionary for each label in self.labeldisk.
+        The key is the label name. The value a list with
+        data read from the database"""
         def get(name):
             try:
                 self.cur.execute("select %s from %s" % (name, self._tableName))
@@ -252,6 +318,12 @@ class MonitorCTF(Monitor):
                       os.path.join(self.workingDir, self._dataBase))
             return [r[0] for r in self.cur.fetchall()]
 
+        # TODO: this multiple calls to get may raise a
+        # race condition. That is data may be added to the DB
+        # between two get call and therefore the lengths of
+        # the list can be different. IT would be better to do a single
+        # call to the database and retrieve all at the same time
+        # see getDataInflux for details
         data = {
             DEFOCUS_U: get('defocusU'),
             'defocusV': get('defocusV'),
