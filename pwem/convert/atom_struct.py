@@ -800,7 +800,11 @@ def retry(runEnvirom, program, args, cwd, listAtomStruct=[], log=None, clean_dir
                             os.path.join(cwd, "retrypdb%d.cif" % i))
                         fromPDBToCIF(atomStructName, newAtomStructName, log)
                         _args = args.replace(atomStructName, newAtomStructName)
-                        runEnvirom(program, _args, cwd=cwd)
+                        try:
+                            runEnvirom(program, _args, cwd=cwd)
+                        except:
+                            fromCIFTommCIF(newAtomStructName, newAtomStructName, log)
+                            runEnvirom(program, _args, cwd=cwd)
                     elif atomStructName.endswith(".cif"):
                         newAtomStructName = os.path.abspath(
                             os.path.join(cwd, "retrycif%d.cif" % i))
@@ -832,6 +836,7 @@ def retry(runEnvirom, program, args, cwd, listAtomStruct=[], log=None, clean_dir
                         runEnvirom(program, _args, cwd=cwd)
                     except:
                         print("CIF file standarization failed.")
+                        # atomStructName = newAtomStructName
 
 def partiallyCleaningFolder(program, cwd):
     l1 = os.listdir(cwd)
