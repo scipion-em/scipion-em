@@ -6,9 +6,16 @@ https://github.com/pypa/sampleproject
 """
 
 # Always prefer setuptools over distutils
-from pwem import EM_PROGRAM_ENTRY_POINT, CHIMERA_ENTRY_POINT, \
-    CONVERT_ENTRY_POINT
-from pwem.constants import URL
+# Avoid importing pwem at setup time. TODO: Extract constants to another module like pwemconstants?
+# from pwem import EM_PROGRAM_ENTRY_POINT, CHIMERA_ENTRY_POINT, \
+#     CONVERT_ENTRY_POINT
+# from pwem.constants import URL
+
+CONVERT_ENTRY_POINT = 'emconvert'
+CHIMERA_ENTRY_POINT = 'emchimera'
+EM_PROGRAM_ENTRY_POINT = 'emprogram'
+URL = 'https://github.com/scipion-em/scipion-em'
+
 from setuptools import setup, find_packages
 # To use a consistent encoding
 from codecs import open
@@ -30,7 +37,7 @@ with open('requirements.txt') as f:
 
 setup(
     name='scipion-em',  # Required
-    version='1.0.1',  # Required
+    version='1.0.2',  # Required
     description='This modules contains classes related with EM',  # Required
     long_description=long_description,  # Optional
     url= URL,  # Optional
