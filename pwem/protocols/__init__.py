@@ -51,7 +51,6 @@ from .protocol_create_stream_data import SET_OF_RANDOM_MICROGRAPHS
 
 from .protocol_import import *
 
-from .monitors import *
 from .protocol_export import *
 from .protocol_tests import *
 

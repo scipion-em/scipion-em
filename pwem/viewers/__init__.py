@@ -40,8 +40,6 @@ from .viewer_pdf import PDFReportViewer
 from .viewer_chimera import (Chimera, ChimeraView, ChimeraClientView,
                              ChimeraDataView, ChimeraViewer,
                              ChimeraClient)
-from .viewer_monitors import (ProtMonitorCTFViewer, ProtMonitorSystemViewer,
-                              ProtMonitorMovieGainViewer, ViewerMonitorSummary)
 from .viewer_sequence import SequenceViewer
 from .viewer_volumes import viewerProtImportVolumes
 from .showj import *
