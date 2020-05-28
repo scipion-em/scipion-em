@@ -944,10 +944,10 @@ class TestCootRefinement(TestImportData):
             self.launchProtocol(protCoot)
         except Exception as ex:
             print("second call to coot ended")
-        self.assertIsNotNone(protCoot.cootImol_0000_version_0002.getFileName(),
+        self.assertIsNotNone(protCoot.coot_001138_Imol_0000_version_0002.getFileName(),
                              "There was a problem with the alignment")
         self.assertTrue(os.path.exists(
-            protCoot.cootImol_0000_version_0002.getFileName()))
+            protCoot.coot_001138_Imol_0000_version_0002.getFileName()))
         self.assertTrue(
             os.path.exists(protCoot.output3DMap_0001.getFileName()))
 
