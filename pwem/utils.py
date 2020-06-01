@@ -24,7 +24,7 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-from os.path import join, dirname
+from os.path import join, dirname, basename
 import pyworkflow.utils as pwutils
 import pwem
 
@@ -39,19 +39,25 @@ def loadSetFromDb(dbName, dbPrefix=''):
 
 
 def runProgram(program, params):
+    """ Runs a em program setting its environment matching a prefix"""
     env = None
+
+    # Allow passing absolute paths
+    programName = basename(program)
+
     from pwem import Domain
-    if program.startswith('xmipp'):
-        xmipp3 = Domain.importFromPlugin('xmipp3', 'Plugin')
+    if programName.startswith('xmipp'):
+        xmipp3 = Domain.getPlugin('xmipp3').Plugin
         env = xmipp3.getEnviron()
-    if program.startswith('relion'):
-        relion = Domain.importFromPlugin('relion', 'Plugin')
+    if programName.startswith('relion'):
+        relion = Domain.getPlugin("relion").Plugin
         env = relion.getEnviron()
-    elif (program.startswith('e2') or
-          program.startswith('sx')):
+        print(env)
+    elif (programName.startswith('e2') or
+          programName.startswith('sx')):
         eman2 = Domain.importFromPlugin('eman2', 'Plugin')
         env = eman2.getEnviron()
-    elif program.startswith('b'):
+    elif programName.startswith('b'):
         bsoft = Domain.importFromPlugin('bsoft', 'Plugin')
         env = bsoft.getEnviron()
 
