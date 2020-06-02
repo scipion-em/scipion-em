@@ -30,14 +30,16 @@ Launch main project window
 
 import sys
 from pwem import runProgram
-
+from pyworkflow import Config
 
 def main():
     program = sys.argv[1]
     params = ' '.join('"%s"' % x for x in sys.argv[2:])
 
-    runProgram(program, params)
+    # Initialize plugin discovery and initialization
+    Config.getDomain().getPlugins()
 
+    runProgram(program, params)
 
 if __name__ == '__main__':
     main()
