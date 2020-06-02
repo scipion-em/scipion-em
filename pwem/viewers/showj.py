@@ -31,6 +31,7 @@ became xmipp_showj.
 """
 
 import os
+import sys
 from os.path import join
 from collections import OrderedDict
 import subprocess
@@ -286,6 +287,13 @@ def runJavaIJapp(memory, appName, args, env=None):
     getEnviron = Config.getDomain().importFromPlugin('xmipp3', 'Plugin').getEnviron
     env.update(getEnviron(xmippFirst=False))
 
+    # Add scipion variables
+    from pyworkflow.constants import SCIPION_DOMAIN,SCIPION_HOME_VAR
+    env[SCIPION_DOMAIN] = Config.SCIPION_DOMAIN
+    env[SCIPION_HOME_VAR]= Config.SCIPION_HOME
+    
+    # Add out python path to the PATH
+    env["PATH"] = ":".join([sys.executable, env.get("PATH", "")])
     # Try chimera
     try:
         chimeraPlugin = Config.getDomain().importFromPlugin('chimera', 'Plugin', doRaise=True)
