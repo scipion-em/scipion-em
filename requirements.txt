@@ -1,2 +1,2 @@
 scipion-pyworkflow
-biopython
+biopython==1.76

@@ -39,6 +39,7 @@ from pwem import emlib
 
 from .base import ProtImportFiles
 from .images import ProtImportImages
+from ...convert import Ccp4Header
 
 
 class ProtImportVolumes(ProtImportImages):
