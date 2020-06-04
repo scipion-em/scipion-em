@@ -42,6 +42,7 @@ from pwem import Config as emConfig
 import threading
 import shlex
 import socketserver
+from pyworkflow.constants import SCIPION_DOMAIN, SCIPION_HOME_VAR, SCIPION_DEBUG
 
 
 # ----------------------- Showj constants ---------------------------
@@ -288,9 +289,11 @@ def runJavaIJapp(memory, appName, args, env=None):
     env.update(getEnviron(xmippFirst=False))
 
     # Add scipion variables
-    from pyworkflow.constants import SCIPION_DOMAIN,SCIPION_HOME_VAR
     env[SCIPION_DOMAIN] = Config.SCIPION_DOMAIN
     env[SCIPION_HOME_VAR]= Config.SCIPION_HOME
+
+    if Config.debugOn():
+        env[SCIPION_DEBUG] = "1"
     
     # Add out python path to the PATH
     env["PATH"] = ":".join([sys.executable, env.get("PATH", "")])
