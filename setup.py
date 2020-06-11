@@ -37,7 +37,7 @@ with open('requirements.txt') as f:
 
 setup(
     name='scipion-em',  # Required
-    version='3.0.0',  # Required
+    version='3.0.1a1',  # Required
     description='This modules contains classes related with EM',  # Required
     long_description=long_description,  # Optional
     url= URL,  # Optional
