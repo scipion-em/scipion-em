@@ -121,7 +121,7 @@ def __unzipPdb(pdbGz, pdbFile, log, cleanFile=True):
     success = True
     try:
         f = gzip.open(pdbGz, 'r')
-        g = open(pdbFile, 'w')
+        g = open(pdbFile, 'wb')
         g.writelines(f.readlines())
         f.close()
         g.close()
