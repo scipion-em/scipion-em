@@ -123,7 +123,7 @@ class TestImportSequence(TestImportBase):
                           'structure')
         self.launchProtocol(prot3)
         sequence = prot3.outputSequence
-        self.assertEqual("205d_A", sequence.getId())
+        self.assertEqual("205d__0_A", sequence.getId())
         self.assertEqual("USER_SEQ", sequence.getSeqName())
         self.assertEqual("User description",
                          sequence.getDescription())
@@ -180,7 +180,7 @@ class TestImportSequence(TestImportBase):
                           'structure')
         self.launchProtocol(prot5)
         sequence = prot5.outputSequence
-        self.assertEqual("1aoi_I", sequence.getId())
+        self.assertEqual("1aoi__0_I", sequence.getId())
         self.assertEqual("USER_SEQ", sequence.getSeqName())
         self.assertEqual("User description",
                          sequence.getDescription())
@@ -441,7 +441,7 @@ class TestImportSequence(TestImportBase):
         self.launchProtocol(prot15)
         sequence = prot15.outputSequence
 
-        self.assertEqual("3lqd_B", sequence.getId())
+        self.assertEqual("3lqd__0_B", sequence.getId())
         self.assertEqual("USER_SEQ", sequence.getSeqName())
         self.assertEqual("User description", sequence.getDescription())
         self.assertEqual("VHLSGEEKSA", sequence.getSequence()[:10])
