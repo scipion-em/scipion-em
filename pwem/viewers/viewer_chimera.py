@@ -101,7 +101,7 @@ class Chimera:
         return environ
 
     @classmethod
-    def getProgram(cls, progName="chimera"):
+    def getProgram(cls, progName="chimerax"):
         """ Return the program binary that will be used. """
         home = cls.getHome()
         if home is None:
