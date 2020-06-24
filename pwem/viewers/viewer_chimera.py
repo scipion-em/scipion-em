@@ -308,7 +308,7 @@ class ChimeraView(pwviewer.CommandView):
     """ View for calling an external command. """
 
     def __init__(self, inputFile, **kwargs):
-        pwviewer.CommandView.__init__(self, 'chimera "%s" &' % inputFile,
+        pwviewer.CommandView.__init__(self, 'chimerax "%s" &' % inputFile,
                                       env=Chimera.getEnviron(), **kwargs)
 
 
