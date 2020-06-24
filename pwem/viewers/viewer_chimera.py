@@ -228,7 +228,7 @@ class ChimeraClient:
         if msg == 'exit_server':
             self.listen = False
 
-
+# TODO: Is this used in someplace CHIMERAX
 class ChimeraAngDistClient(ChimeraClient):
 
     def __init__(self, volfile, **kwargs):
@@ -355,7 +355,7 @@ class ChimeraViewer(pwviewer.Viewer):
                 tmpPath = self.protocol._getTmpPath()
                 if not os.path.exists(tmpPath):
                     tmpPath = "/tmp"
-                fnCmd = os.path.join(tmpPath, "chimera.cmd")
+                fnCmd = os.path.join(tmpPath, "chimera.cxc")
                 f = open(fnCmd, 'w')
                 f.write("cofr 0,0,0\n")  # set center of coordinates
                 if obj.hasVolume():
