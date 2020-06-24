@@ -104,7 +104,8 @@ class viewerProtImportVolumes(EmProtocolViewer):
 
     def _showVolumesChimera(self):
         """ Create a chimera script to visualize selected volumes. """
-        tmpFileNameCMD = self.protocol._getTmpPath("chimera.cmd")
+        # tmpFileNameCMD = self.protocol._getTmpPath("chimera.cmd")
+        tmpFileNameCMD = self.protocol._getTmpPath("chimera.cxc")
         f = open(tmpFileNameCMD, "w")
         sampling, _setOfVolumes = self._createSetOfVolumes()
         count = 0  # first model in chimera is a volume
