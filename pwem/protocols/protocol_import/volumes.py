@@ -434,7 +434,7 @@ def fetch_emdb_map(id, directory, tmpDirectory):
 
     originAPI = array(originAPI) * samplingAPI  # convert to Angstrom
     #check consistency between file header and rest API
-    ccp4header = Ccp4Header(map_path, readHeader=True)
+    ccp4header = emconv.Ccp4Header(map_path, readHeader=True)
     samplingHeader = ccp4header.computeSampling()  # unit = A/px
     originHeader = array(ccp4header.getOrigin())   # unit = A
 
