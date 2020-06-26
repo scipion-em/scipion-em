@@ -131,7 +131,7 @@ class viewerProtImportVolumes(EmProtocolViewer):
             if localVol.endswith("stk"):
                 errorWindow(None, "Extension .stk is not supported")
             f.write("open %s\n" % localVol)
-            f.write("volume #%d style surface voxelSize %f\n" %
+            f.write("volume #%d style surface level 0.001 voxelSize %f\n" %
                     (count, sampling))
             count += 1
 
@@ -146,7 +146,7 @@ class viewerProtImportVolumes(EmProtocolViewer):
                         f.write("open %s\n" % (os.path.abspath(halfMap).split(".")[0] + ".mrc"))
                     else:
                         f.write("open %s\n" % os.path.abspath(halfMap))
-                    f.write("volume #%d style surface voxelSize %f\n" %
+                    f.write("volume #%d style surface level 0.001 voxelSize %f\n" %
                             (count, sampling))
                     f.write("volume #%d origin %0.2f,%0.2f,%0.2f\n" %
                             (count, x, y, z))
