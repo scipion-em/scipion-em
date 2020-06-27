@@ -362,7 +362,7 @@ class ChimeraViewer(pwviewer.Viewer):
                 f = open(fnCmd, 'w')
                 f.write("cofr 0,0,0\n")  # set center of coordinates
                 if obj.hasVolume():
-                    volID = 0
+                    volID = 1
                     volumeObject = obj.getVolume()
                     dim = volumeObject.getDim()[0]
                     sampling = volumeObject.getSamplingRate()
