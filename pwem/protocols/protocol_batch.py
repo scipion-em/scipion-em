@@ -312,11 +312,14 @@ class ProtUserSubSet(BatchProtocol):
         """
         inputImages = inputClasses.getImages()
         className = inputImages.getClassName()
-        createFunc = getattr(self, '_create' + className)
+        try:
+            createFunc = getattr(self, '_create' + className)
+            output = createFunc()
+        except Exception as e:
+            output = inputImages.create(self._getPath())
+
         modifiedSet = inputClasses.getClass()(filename=self._dbName, prefix=self._dbPrefix)
         self.info("Creating subset of images from classes, sqlite file: %s" % self._dbName)
-
-        output = createFunc()
         self._copyInfoAndSetAlignment(inputClasses, output)
         output.appendFromClasses(modifiedSet)
         # Register outputs
@@ -340,11 +343,16 @@ class ProtUserSubSet(BatchProtocol):
         """
         # inputImages = inputClasses.getImages()
         className = inputClasses.getClassName()
-        createFunc = getattr(self, '_create' + className)
+        # createFunc = getattr(self, '_create' + className)
+
+        try:
+            createFunc = getattr(self, '_create' + className)
+            output = createFunc()
+        except Exception as e:
+            output = inputClasses.getClass().create(self._getPath())
+
         modifiedSet = inputClasses.getClass()(filename=self._dbName, prefix=self._dbPrefix)
         self.info("Creating subset of classes from classes, sqlite file: %s" % self._dbName)
-
-        output = createFunc(inputClasses.getImages())
         output.appendFromClasses(modifiedSet)
         # Register outputs
         self._defineOutput(className, output)
