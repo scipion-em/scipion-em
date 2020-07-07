@@ -113,7 +113,9 @@ class TestCtfConsensus(pwtests.BaseTest):
                                        useDefocus=False,
                                        useAstigmatism=False,
                                        useResolution=False,
-                                       calculateConsensus=True)
+                                       calculateConsensus=True,
+                                       averageDefocus = False,
+                                       includeSecondary = False)
         protCTFcons.inputCTF.set(protCTF1.outputCTF)
         protCTFcons.inputCTF2.set(protCTF2.outputCTF)
         self.launchProtocol(protCTFcons)
@@ -129,7 +131,10 @@ class TestCtfConsensus(pwtests.BaseTest):
                                         useDefocus=False,
                                         useAstigmatism=False,
                                         useResolution=False,
-                                        calculateConsensus=True)
+                                        calculateConsensus=True,
+                                       averageDefocus = False,
+                                       includeSecondary = False)
+        
         protCTFcons2.inputCTF.set(protCTF1.outputCTF)
         protCTFcons2.inputCTF2.set(protCTF3.outputCTF)
         self.launchProtocol(protCTFcons2)
