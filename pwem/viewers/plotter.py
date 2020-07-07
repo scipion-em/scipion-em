@@ -41,7 +41,7 @@ class EmPlotter(Plotter):
 
     def plotAngularDistribution(self, title, rot, 
                                 tilt, weight=[], max_p=40, 
-                                min_p=5, max_w=2, min_w=1, color='blue'):
+                                min_p=5, color='blue'):
         """ Create an special type of subplot, representing the angular
         distribution of weight projections. """
         if weight:
