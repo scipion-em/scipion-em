@@ -14,9 +14,9 @@ class TestWorkflow(pwtest.BaseTest):
         """
         # FIXME: This is disabled until changes of CTF and Relations
         return True
-        self.protDict[key] = prot
-        filesSet = self.getProtocolFiles(key)
-        self.assertEqual(prot.getFiles(), filesSet)
+        # self.protDict[key] = prot
+        # filesSet = self.getProtocolFiles(key)
+        # self.assertEqual(prot.getFiles(), filesSet)
         
     def printSet(self, msg, s):
         print("============= %s ==========" % msg)
