@@ -25,6 +25,9 @@
 # **************************************************************************
 
 from math import radians
+import numpy as np
+import matplotlib.cm as cm
+from scipy.ndimage.filters import gaussian_filter
 
 from pyworkflow.gui.plotter import Plotter, plt
 import pwem.emlib.metadata as md
@@ -38,7 +41,7 @@ class EmPlotter(Plotter):
 
     def plotAngularDistribution(self, title, rot, 
                                 tilt, weight=[], max_p=40, 
-                                min_p=5, max_w=2, min_w=1, color='blue'):
+                                min_p=5, color='blue'):
         """ Create an special type of subplot, representing the angular
         distribution of weight projections. """
         if weight:
@@ -54,7 +57,23 @@ class EmPlotter(Plotter):
             a = self.createSubPlot(title, 'Empty plot', '', projection='polar')
             for r, t in zip(rot, tilt):
                 a.plot(r, t, markerfacecolor=color, marker='.', markersize=10)
+        return a
                 
+    def plotAngularDistributionHistogram(self, title, rot, tilt):
+        """ Create an special type of subplot, representing the angular
+        distribution of weight projections. """
+        heatmap, xedges, yedges = np.histogram2d(rot, tilt, bins=100)
+        sigma = min(max(xedges)-min(xedges),max(yedges)-min(yedges))/20
+        heatmap = gaussian_filter(heatmap, sigma=sigma)
+        heatmapImage = heatmap.T
+        extent = [xedges[0], xedges[-1], yedges[0], yedges[-1]]
+
+        a = self.createSubPlot(title, 'Angular distribution', '')
+        mappable = a.imshow(heatmapImage, extent=extent, origin='lower', cmap=cm.jet, aspect='auto')
+        a.set_xlabel('Rotational angle')
+        a.set_ylabel('Tilt angle')
+        return mappable
+
     def plotAngularDistributionFromMd(self, mdFile, title, **kwargs):
         """ Read the values of rot, tilt and weights from
         the medata and plot the angular distribution.
@@ -67,17 +86,24 @@ class EmPlotter(Plotter):
         angMd = md.MetaData(mdFile)
         rot = []
         tilt = []
-        weight = []
-        
-        for row in md.iterRows(angMd):
-            rot.append(radians(row.getValue(md.MDL_ANGLE_ROT)))
-            tilt.append(row.getValue(md.MDL_ANGLE_TILT))
-            weight.append(row.getValue(md.MDL_WEIGHT))
-        return self.plotAngularDistribution(title, rot, tilt, weight, **kwargs)
-        
+
+        if 'histogram' in kwargs:
+            for row in md.iterRows(angMd):
+                rot.append(row.getValue(md.MDL_ANGLE_ROT))
+                tilt.append(row.getValue(md.MDL_ANGLE_TILT))
+            return self.plotAngularDistributionHistogram(title, rot, tilt)
+        else:
+            weight = []
+            for row in md.iterRows(angMd):
+                rot.append(radians(row.getValue(md.MDL_ANGLE_ROT)))
+                tilt.append(row.getValue(md.MDL_ANGLE_TILT))
+                weight.append(row.getValue(md.MDL_WEIGHT))
+            return self.plotAngularDistribution(title, rot, tilt, weight, **kwargs)
+
     def plotHist(self, yValues, nbins, color='blue', **kwargs):
         """ Create an histogram. """
-        self.hist(yValues, nbins, facecolor=color, **kwargs)
+        # In some cases yValues is a generator, which cannot be indexed
+        self.hist(list(yValues), nbins, facecolor=color, **kwargs)
 
     def plotScatter(self, xValues, yValues, color='blue', **kwargs):
         """ Create an scatter plot. """

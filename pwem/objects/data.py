@@ -68,11 +68,8 @@ class Acquisition(EMObject):
         self._doseInitial = Float(kwargs.get('doseInitial', 0))
         self._dosePerFrame = Float(kwargs.get('dosePerFrame', None))
 
-        self.opticsGroupName = String()
-        self.beamTiltX = Float()
-        self.beamTiltY = Float()
-        self.mtfFile = String()
-        self.defectFile = String()
+        # Generic string to store information about optics groups
+        self.opticsGroupInfo = String()
 
     def copyInfo(self, other):
         self.copy(other, copyId=False)
@@ -149,8 +146,6 @@ class CTFModel(EMObject):
                   self._fitQuality.get()
                   )
 
-        if self._micObj:
-            ctfStr + " mic=%s" % self._micObj
         return ctfStr
 
     def getPhaseShift(self):
