@@ -146,8 +146,6 @@ class CTFModel(EMObject):
                   self._fitQuality.get()
                   )
 
-        if self._micObj:
-            ctfStr + " mic=%s" % self._micObj
         return ctfStr
 
     def getPhaseShift(self):
