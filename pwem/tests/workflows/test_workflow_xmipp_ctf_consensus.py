@@ -188,7 +188,7 @@ class TestCtfConsensus(pwtests.BaseTest):
                        refCTFs=protCTF1.outputCTF,
                        avgCTF=ctfAveraged)
 
-        # Averaging Metadata
+        # merging Metadata columns
         protCTFcons4 = self.newProtocol(XmippProtCTFConsensus,
                                         objLabel='metadata merge',
                                         useDefocus=False,
