@@ -254,6 +254,10 @@ class ImageHandler(object):
                     doRaise=True)
                 return getImageDimensions(fn)  # we are ignoring index here
             else:
+                if ext == '.rec' or ext == '.st':
+                    location = list(location)
+                    location[1] += ":.mrc"
+                    location = tuple(location)
                 self._img.read(location, lib.HEADER)
                 return self._img.getDimensions()
         else:
