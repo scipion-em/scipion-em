@@ -74,33 +74,33 @@ class ProtImportMicBase(ProtImportImages):
         """ Options to blacklist certain items when launching the
         import protocol.
         """
-        form.addSection(label="Blacklist")
+        form.addSection(label="Rejection")
         form.addParam("blacklistSet", params.PointerParam,
                       pointerClass=self._getBlacklistSetClass(),
                       allowsNull=True,
-                      label="Blacklist Set",
+                      label="Reject from Set",
                       help="Files on this set will not be imported")
         form.addParam('blacklistDateFrom', params.StringParam,
-                      label="Blacklist from date",
+                      label="Reject from",
                       allowsNull=True,
                       help="Files acquired after this date will not be imported. "
                            "Must follow format: YYYY-mm-dd HH:MM:SS \n"
                            "e.g: 2019-01-14 14:18:05")
         form.addParam('blacklistDateTo', params.StringParam,
-                      label="Blacklist to date",
+                      label="Reject before",
                       allowsNull=True,
                       help="Files acquired before this date will not be imported. "
                            "Must follow format: YYYY-mm-dd HH:MM:SS \n"
                            "e.g: 2019-01-14 14:18:05")
         form.addParam('useRegexps', params.BooleanParam,
                       default=True,
-                      label='Blacklist file has RegExps',
-                      help="Choose Yes if the black list file contains regular expressions. Set to No if "
-                           "the black list file contains file names. Ignore if not entering a blacklist file")
+                      label='Rejection file has RegExps',
+                      help="Choose Yes if the rejection file contains regular expressions. Set to No if "
+                           "the rejection file contains file names. Ignore if not using a rejection file")
         form.addParam('blacklistFile', params.FileParam,
                       label="Blacklist File",
                       allowsNull=True,
-                      help="Blacklist everything included in this file. If Use RegExps is True,"
+                      help="Reject everything included in this file. If Use RegExps is True,"
                            "lines will be interpreted as regular expressions. E.g: \n"
                            "(.*)GRID_0[1-5](.*)\n"
                            "(.*)/GRID_10/Falcon_2019_01_14-16_(.*)\n"
