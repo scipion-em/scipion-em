@@ -35,8 +35,7 @@ import pwem.constants as emcts
 import pwem.emlib.metadata as md
 import pwem.objects as emobj
 from pwem import emlib
-from pwem import getCmdPath, Config as emConfig
-
+from pwem import Config as emConfig
 
 chimeraPdbTemplateFileName = "Atom_struct__%s.pdb"
 chimeraMapTemplateFileName = "Map__%s.mrc"
@@ -92,7 +91,7 @@ class Chimera:
         CHIMERA_HOME variable is read from the ~/.config/scipion.conf file.
         """
         environ = pwutils.Environ(os.environ)
-        environ.set('PATH', os.path.join(cls.getHome(), 'bin'),
+        environ.set('PATH', os.path.join(cls.getHome(), 'chimerax-1.0', 'bin'),
                     position=pwutils.Environ.BEGIN)
 
         if "REMOTE_MESA_LIB" in os.environ:
@@ -149,20 +148,72 @@ def printCmd(cmd):
     # print cmd
 
 
-class ChimeraClient:
+class ChimeraAngDist(pwviewer.CommandView):
 
-    def openVolumeOnServer(self, volume, sendEnd=True):
-        self.send('open_volume', volume)
-        if self.voxelSize is not None:
-            self.send('voxel_size', self.voxelSize)
-        if sendEnd:
-            self.client.send('end')
+    def __init__(self, volFile, tmpFilesPath, **kwargs):
+        self.kwargs = kwargs
+        self.volfile = os.path.abspath(os.path.join(volFile))
+        self.cmdFile = os.path.join(tmpFilesPath,
+                                    "chimera_angular_distribution.cxc")
+        self.axis = os.path.abspath(os.path.join(tmpFilesPath, "axis.bild"))
+        self.spheres = os.path.abspath(os.path.join(tmpFilesPath,
+                                                    "spheres.bild"))
 
-    def __init__(self, volfile, sendEnd=True, **kwargs):
+        self.angularDistributionList = []
+        self.angularDistFile = kwargs.get('angularDistFile', None)
+        if self.angularDistFile:
+            fileName = self.angularDistFile
+            if '@' in self.angularDistFile:
+                fileName = self.angularDistFile.split("@")[1]
+            if not (os.path.exists(fileName)):  # check blockname:
+                raise Exception("Path %s does not exists" %
+                                self.angularDistFile)
+
+        self.volOrigin = kwargs.get('volOrigin', None)
+        self.spheresColor = kwargs.get('spheresColor', 'orange')
+        spheresDistance = kwargs.get('spheresDistance', -1)
+        spheresMaxRadius = kwargs.get('spheresMaxRadius', None)
+        self.initVolumeData(self.volfile)
+        self.spheresDistance = (float(spheresDistance) if spheresDistance != -1
+                                else (0.75 * self.voxelSize * max(self.xdim,
+                                                                  self.ydim,
+                                                                  self.zdim))/2)
+        self.spheresMaxRadius = (float(spheresMaxRadius) if spheresMaxRadius
+                                 else 0.02 * self.spheresDistance)
+        self.readAngularDistFile()
+        self._createChimeraScript(self.cmdFile)
+        pwviewer.CommandView.__init__(self, 'ChimeraX "%s" &' % self.cmdFile,
+                                      env=Chimera.getEnviron(), **kwargs)
+
+    def _createChimeraScript(self, scriptFile):
+
+        Chimera.createCoordinateAxisFile(self.xdim,
+                                         bildFileName=self.axis,
+                                         sampling=self.voxelSize)
+        self.createAngularDistributionFile(bildFileName=self.spheres)
+
+        fhCmd = open(scriptFile, 'w')
+        fhCmd.write("open %s\n" % self.axis)
+        fhCmd.write("open %s\n" % self.spheres)
+        fhCmd.write("cofr 0,0,0\n")
+        fhCmd.write("open %s\n" % self.volfile)
+        fhCmd.write("volume #3 voxelSize %s\n" % self.voxelSize)
+        x, y, z = self.volOrigin
+        fhCmd.write("volume #3 origin %s,%s,%s\n" % (x, y, z))
+
+        fhCmd.close()
+
+    def createAngularDistributionFile(self, bildFileName="/tmp/spheres.bild"):
+        ff = open(bildFileName, "w")
+        for angulardist in self.angularDistributionList:
+            ff.write("%s\n" % angulardist)
+
+        ff.close()
+
+    def initVolumeData(self, volfile):
         if volfile.endswith('.mrc'):
             volfile += ':mrc'
 
-        self.kwargs = kwargs
         if volfile is None:
             raise ValueError(volfile)
         if '@' in volfile:
@@ -174,89 +225,11 @@ class ChimeraClient:
         if not os.path.exists(file):
             raise Exception("File %s does not exists" % file)
 
-        self.volfile = volfile
-        self.voxelSize = self.kwargs.get('voxelSize', None)
-        # ChimeraServer is the basic server. There are other
-        # than inherit from it.
-        serverName = self.kwargs.get('ChimeraServer', 'ChimeraServer')
-        self.address = ''
-        self.port = pwutils.getFreePort()
-
-        serverfile = getCmdPath('chimera_server.py')
-        command = pwviewer.CommandView("chimera --script '%s %s %s' &" %
-                                       (serverfile, self.port, serverName),
-                                       env=Chimera.getEnviron(), ).show()
-        self.authkey = 'test'
-        self.client = Client((self.address, self.port), authkey=self.authkey)
-        self.initVolumeData()
-        # self.openVolumeOnServer(self.vol,sendEnd)
-        self.openVolumeOnServer(self.vol)
-        self.initListenThread()
-
-    def send(self, cmd, data):
-        self.client.send(cmd)
-        self.client.send(data)
-
-    def initListenThread(self):
-        self.listen_thread = threading.Thread(name="ChimeraCli.listenTh",
-                                              target=self.listen)
-        # self.listen_thread.daemon = True
-        self.listen_thread.start()
-
-    def listen(self):
-
-        self.listen = True
-        try:
-            while self.listen:
-                msg = self.client.recv()
-                self.answer(msg)
-        except EOFError:
-            print('Lost connection to server')
-        finally:
-            self.exit()
-
-    def exit(self):
-        self.client.close()
-
-    def initVolumeData(self):
+        self.voxelSize = self.kwargs.get('voxelSize', 1.0)
         self.image = emlib.Image(self.volfile)
         self.image.convert2DataType(md.DT_DOUBLE)
         self.xdim, self.ydim, self.zdim, self.n = self.image.getDimensions()
         self.vol = self.image.getData()
-
-    def answer(self, msg):
-        if msg == 'exit_server':
-            self.listen = False
-
-
-class ChimeraAngDistClient(ChimeraClient):
-
-    def __init__(self, volfile, **kwargs):
-        self.angularDistFile = kwargs.get('angularDistFile', None)
-
-        if self.angularDistFile:
-            fileName = self.angularDistFile
-            if '@' in self.angularDistFile:
-                fileName = self.angularDistFile.split("@")[1]
-            if not (os.path.exists(fileName)):  # check blockname:
-                raise Exception("Path %s does not exists" %
-                                self.angularDistFile)
-        self.spheresColor = kwargs.get('spheresColor', 'red')
-        spheresDistance = kwargs.get('spheresDistance', None)
-        spheresMaxRadius = kwargs.get('spheresMaxRadius', None)
-        ChimeraClient.__init__(self, volfile, sendEnd=False, **kwargs)
-        self.spheresDistance = float(spheresDistance) \
-            if spheresDistance else 0.75 * max(self.xdim, self.ydim, self.zdim)
-        self.spheresMaxRadius = float(spheresMaxRadius) \
-            if spheresMaxRadius else 0.02 * self.spheresDistance
-        self.loadAngularDist(True)
-
-    def loadAngularDist(self, sendEnd=True):
-        if self.angularDistFile:
-            self.readAngularDistFile()
-            self.send('command_list', self.angulardist)
-        if sendEnd:
-            self.client.send('end')
 
     def readAngularDistFile(self):
         angleRotLabel = md.MDL_ANGLE_ROT
@@ -276,13 +249,9 @@ class ChimeraAngDistClient(ChimeraClient):
         maxweight = mdAngDist.aggregateSingle(md.AGGR_MAX, md.MDL_WEIGHT)
         minweight = mdAngDist.aggregateSingle(md.AGGR_MIN, md.MDL_WEIGHT)
         interval = maxweight - minweight
-
-        self.angulardist = []
         x2 = self.xdim / 2
         y2 = self.ydim / 2
         z2 = self.zdim / 2
-        # cofr does not seem to work!
-        # self.angulardist.append('cofr %d,%d,%d'%(x2,y2,z2))
         for id in mdAngDist:
             rot = mdAngDist.getValue(angleRotLabel, id)
             tilt = mdAngDist.getValue(angleTiltLabel, id)
@@ -294,21 +263,20 @@ class ChimeraAngDistClient(ChimeraClient):
             x, y, z = emlib.Euler_direction(rot, tilt, psi)
             radius = weight * self.spheresMaxRadius
 
-            x = x * self.spheresDistance + x2
-            y = y * self.spheresDistance + y2
-            z = z * self.spheresDistance + z2
-            command = 'shape sphere radius %s center %s,%s,%s color %s ' % \
-                      (radius, x, y, z, self.spheresColor)
-            self.angulardist.append(command)
-            # printCmd(command)
-
+            x = x * self.spheresDistance  # + x2
+            y = y * self.spheresDistance  # + y2
+            z = z * self.spheresDistance  # + z2
+            command = ('.color %s\n'
+                       '.sphere %s %s %s %s' %
+                       (self.spheresColor, x, y, z, radius))
+            self.angularDistributionList.append(command)
 
 
 class ChimeraView(pwviewer.CommandView):
     """ View for calling an external command. """
 
     def __init__(self, inputFile, **kwargs):
-        pwviewer.CommandView.__init__(self, 'chimera "%s" &' % inputFile,
+        pwviewer.CommandView.__init__(self, 'ChimeraX "%s" &' % inputFile,
                                       env=Chimera.getEnviron(), **kwargs)
 
 
