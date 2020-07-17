@@ -39,9 +39,10 @@ class TestCtfConsensus(pwtests.BaseTest):
         cls.dataset = pwtests.DataSet.getDataSet('xmipp_tutorial')
         cls.micsFn = cls.dataset.getFile('allMics')
 
-    def checkCTFs(self, protConsensus, refCTFs, refMics, label=''):
-        outputCTF = getattr(protConsensus, "outputCTF"+label)
-        outputMicrographs = getattr(protConsensus, "outputMicrographs"+label)
+    def checkCTFs(self, protConsensus, refCTFs, refMics, label='',
+                  avgCTF=None, MDmerging=False):
+        outputCTF = getattr(protConsensus, "outputCTF"+label, None)
+        outputMicrographs = getattr(protConsensus, "outputMicrographs"+label, None)
 
         self.assertIsNotNone(outputCTF,
                              "There was a problem with the CTF-Consensus. "
@@ -57,11 +58,31 @@ class TestCtfConsensus(pwtests.BaseTest):
         self.assertTupleEqual(outputMicrographs.getDim(), refMics.getDim(),
                               "The outputMicrographs%s dimension is wrong." % label)
 
+        # we will check that the first CTF in the set make sense.
         firstCTF = outputCTF.getFirstItem()
-        refCTF = refCTFs.getFirstItem()
-        self.assertTrue(firstCTF.equalAttributes(refCTF),
-                        "The outputCTF%s has different attributes than the input."
-                        % label)
+
+        if not avgCTF:
+            refCTF = refCTFs.getFirstItem()
+            self.assertTrue(firstCTF.equalAttributes(refCTF),
+                            "The outputCTF%s has different attributes "
+                            "than the input." % label)
+        else:
+            self.assertAlmostEqual(avgCTF['defocusU'], firstCTF.getDefocusU(), delta=100,
+                                   msg="DefocusU doesn't match when defocus averaging.")
+            self.assertAlmostEqual(avgCTF['defocusV'], firstCTF.getDefocusV(), delta=100,
+                                   msg="DefocusV doesn't match when defocus averaging.")
+            self.assertAlmostEqual(avgCTF['defocusAngle'], firstCTF.getDefocusAngle(), delta=1,
+                                   msg="DefocusAngle doesn't match when defocus averaging.")
+
+        if MDmerging:
+            for label in ['CritCorr13', 'CritIceness', 'CritCtfMargin',
+                          'CritPsdCorr90', 'Q0', 'CritNonAstigmaticValidty',
+                          'CritfirstZeroRatio', 'CritFirstZero']:
+                MDlabel = '_xmipp_ctf' + label
+                self.assertTrue(MDlabel in firstCTF.getObjDict().keys(),
+                                "'%s' metadata not found in the result. "
+                                "Bad merging" % MDlabel)
+
 
     def test1(self):
         # Import a set of micrographs
@@ -110,6 +131,7 @@ class TestCtfConsensus(pwtests.BaseTest):
                                                         'XmippProtCTFConsensus',
                                                         doRaise=True)
         protCTFcons = self.newProtocol(XmippProtCTFConsensus,
+                                       objLabel='default (pass)',
                                        useDefocus=False,
                                        useAstigmatism=False,
                                        useResolution=False,
@@ -128,6 +150,7 @@ class TestCtfConsensus(pwtests.BaseTest):
         # Computes the Consensus comparing a good CTF to a RANDOM one
         self._waitOutput(protCTF3, "outputCTF")
         protCTFcons2 = self.newProtocol(XmippProtCTFConsensus,
+                                        objLabel='default (block)',
                                         useDefocus=False,
                                         useAstigmatism=False,
                                         useResolution=False,
@@ -142,3 +165,44 @@ class TestCtfConsensus(pwtests.BaseTest):
                        refMics=protImport.outputMicrographs,
                        refCTFs=protCTF1.outputCTF,
                        label="Discarded")
+
+        # Averaging CTF parameters
+        protCTFcons3 = self.newProtocol(XmippProtCTFConsensus,
+                                        objLabel='defocus average',
+                                        useDefocus=False,
+                                        useAstigmatism=False,
+                                        useResolution=False,
+                                        calculateConsensus=True,
+                                        averageDefocus=True)
+        protCTFcons3.inputCTF.set(protCTF1.outputCTF)
+        protCTFcons3.inputCTF2.set(protCTF2.outputCTF)
+        self.launchProtocol(protCTFcons3)
+
+        protCTF1.outputCTF.load()  # Needed to update the set
+        protCTF2.outputCTF.load()  # Needed to update the set
+        ctfAveraged = {'defocusU': 24140.0898,
+                       'defocusV': 23569.0801,
+                       'defocusAngle': 58.3429}
+        self.checkCTFs(protCTFcons3,
+                       refMics=protImport.outputMicrographs,
+                       refCTFs=protCTF1.outputCTF,
+                       avgCTF=ctfAveraged)
+
+        # merging Metadata columns
+        protCTFcons4 = self.newProtocol(XmippProtCTFConsensus,
+                                        objLabel='metadata merge',
+                                        useDefocus=False,
+                                        useAstigmatism=False,
+                                        useResolution=False,
+                                        calculateConsensus=True,
+                                        includeSecondary=True)
+        protCTFcons4.inputCTF.set(protCTF2.outputCTF)
+        protCTFcons4.inputCTF2.set(protCTF1.outputCTF)
+        self.launchProtocol(protCTFcons4)
+
+        protCTF1.outputCTF.load()  # Needed to update the set
+        protCTF2.outputCTF.load()  # Needed to update the set
+        self.checkCTFs(protCTFcons4,
+                       refMics=protImport.outputMicrographs,
+                       refCTFs=protCTF2.outputCTF,
+                       MDmerging=True)

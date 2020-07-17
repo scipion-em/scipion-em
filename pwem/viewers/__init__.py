@@ -38,8 +38,7 @@ from .viewer_vmd import Vmd, VmdView, VmdViewer
 from .viewer_fsc import FscViewer
 from .viewer_pdf import PDFReportViewer
 from .viewer_chimera import (Chimera, ChimeraView, ChimeraClientView,
-                             ChimeraDataView, ChimeraViewer,
-                             ChimeraClient)
+                             ChimeraDataView, ChimeraViewer, ChimeraAngDist)
 from .viewer_sequence import SequenceViewer
 from .viewer_volumes import viewerProtImportVolumes
 from .showj import *
