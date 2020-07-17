@@ -91,7 +91,7 @@ class Chimera:
         CHIMERA_HOME variable is read from the ~/.config/scipion.conf file.
         """
         environ = pwutils.Environ(os.environ)
-        environ.set('PATH', os.path.join(cls.getHome(), 'chimerax-1.0', 'bin'),
+        environ.set('PATH', os.path.join(cls.getHome(), 'bin'),
                     position=pwutils.Environ.BEGIN)
 
         if "REMOTE_MESA_LIB" in os.environ:
