@@ -49,7 +49,7 @@ class ProtMetadataEditor(EMProtocol):
                       label='Set to edit',
                       help='Set which items will be modified.')
         form.addParam('formula', params.StringParam, label="Formula", important = True,
-                      help='A python  code compatible with eval, where item represents each of '
+                      help='A python code compatible with eval, where item represents each of '
                            'the elements of the set. E.g.: item._resolution.set(item._resolution.get() +1)')
 
     def _insertAllSteps(self):
@@ -62,9 +62,10 @@ class ProtMetadataEditor(EMProtocol):
         inputSet = self.inputSet.get()
 
         modifiedSet = inputSet.create(self._getExtraPath())
-        modifiedSet.copyInfo(modifiedSet)
+        modifiedSet.copyInfo(inputSet)
 
-        for item in inputSet.iterItems():
+        for sourceItem in inputSet.iterItems():
+            item = sourceItem.clone()
             eval(self.formula.get())
             modifiedSet.append(item)
 
