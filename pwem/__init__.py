@@ -38,7 +38,7 @@ import pyworkflow.plugin
 from .constants import *
 from .objects import EMObject
 from .utils import *
-__version__ = '3.0.1b3'
+__version__ = '3.0.1'
 _logo = "scipion_icon.gif"
 _references = ["delaRosaTrevin201693"]
 
