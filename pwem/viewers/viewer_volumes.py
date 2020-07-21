@@ -104,13 +104,12 @@ class viewerProtImportVolumes(EmProtocolViewer):
 
     def _showVolumesChimera(self):
         """ Create a chimera script to visualize selected volumes. """
-        tmpFileNameCMD = self.protocol._getTmpPath("chimera.cmd")
+        tmpFileNameCMD = self.protocol._getTmpPath("chimera.cxc")
         f = open(tmpFileNameCMD, "w")
         sampling, _setOfVolumes = self._createSetOfVolumes()
-        count = 0  # first model in chimera is a volume
+        count = 1  # chimeraX stars counting in 1 (chimera in 0)
 
         if len(_setOfVolumes) == 1:
-            count = 1  # first model in chimera is the bild file
             # if we have a single volume then create axis
             # as bild file. Chimera must read the bild file first
             # otherwise system of coordinates will not
@@ -124,7 +123,7 @@ class viewerProtImportVolumes(EmProtocolViewer):
                                              sampling=sampling)
             f.write("open %s\n" % tmpFileNameBILD)
             f.write("cofr 0,0,0\n")  # set center of coordinates
-            count = 1  # skip first model because is not a 3D map
+            count = 2  # skip first model because is not a 3D map
 
         for vol in _setOfVolumes:
             localVol = os.path.abspath(image.ImageHandler.removeFileType(
@@ -132,7 +131,7 @@ class viewerProtImportVolumes(EmProtocolViewer):
             if localVol.endswith("stk"):
                 errorWindow(None, "Extension .stk is not supported")
             f.write("open %s\n" % localVol)
-            f.write("volume#%d style surface voxelSize %f\n" %
+            f.write("volume #%d style surface level 0.001 voxelSize %f\n" %
                     (count, sampling))
             count += 1
 
@@ -140,17 +139,18 @@ class viewerProtImportVolumes(EmProtocolViewer):
             f.write('tile\n')
         else:
             x, y, z = vol.getShiftsFromOrigin()
-            f.write("volume#1 origin %0.2f,%0.2f,%0.2f\n" % (x, y, z))
+            f.write("volume #2 origin %0.2f,%0.2f,%0.2f\n" % (x, y, z))
             if vol.getHalfMaps():
                 for halfMap in vol.getHalfMaps().split(','):
                     if not os.path.abspath(halfMap).endswith(".mrc"):
                         f.write("open %s\n" % (os.path.abspath(halfMap).split(".")[0] + ".mrc"))
                     else:
                         f.write("open %s\n" % os.path.abspath(halfMap))
-                    f.write("volume#%d style surface voxelSize %f\n" %
+                    f.write("volume #%d style surface level 0.001 voxelSize %f\n" %
                             (count, sampling))
-                    f.write("volume#%d origin %0.2f,%0.2f,%0.2f\n" %
+                    f.write("volume #%d origin %0.2f,%0.2f,%0.2f\n" %
                             (count, x, y, z))
+                    f.write("tile\n")
                     count += 1
         f.close()
         return [ChimeraView(tmpFileNameCMD)]

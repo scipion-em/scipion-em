@@ -37,10 +37,12 @@ import pwem.objects as emobj
 from pwem import emlib
 from pwem import Config as emConfig
 
-chimeraPdbTemplateFileName = "Atom_struct__%s.pdb"
-chimeraMapTemplateFileName = "Map__%s.mrc"
-chimeraScriptFileName = "chimeraScript.py"
-sessionFile = "SESSION.py"
+chimeraPdbTemplateFileName = "Atom_struct__%06d.cif"
+chimeraMapTemplateFileName = "Map__%06d.mrc"
+chimeraScriptFileName = "chimeraScript.cxc"
+chimeraConfigFileName = "chimera.ini"
+sessionFile = "SESSION.cxs"
+
 
 symMapperScipionchimera = {}
 symMapperScipionchimera[emcts.SYM_CYCLIC] = "Cn"
@@ -100,7 +102,7 @@ class Chimera:
         return environ
 
     @classmethod
-    def getProgram(cls, progName="chimera"):
+    def getProgram(cls, progName="ChimeraX"):
         """ Return the program binary that will be used. """
         home = cls.getHome()
         if home is None:
@@ -108,10 +110,11 @@ class Chimera:
         return os.path.join(home, 'bin', os.path.basename(progName))
 
     @classmethod
-    def runProgram(cls, program=None, args=""):
+    def runProgram(cls, program=None, args="", cwd=None):
         """ Internal shortcut function to launch chimera program. """
         prog = program or cls.getProgram()
-        pwutils.runJob(None, prog, args, env=cls.getEnviron())
+        pwutils.runJob(None, prog, args, env=cls.getEnviron(),
+                       cwd=cwd)
 
     @classmethod
     def createCoordinateAxisFile(cls, dim, bildFileName="/tmp/axis.bild",
@@ -327,7 +330,7 @@ class ChimeraViewer(pwviewer.Viewer):
                 f = open(fnCmd, 'w')
                 f.write("cofr 0,0,0\n")  # set center of coordinates
                 if obj.hasVolume():
-                    volID = 0
+                    volID = 1
                     volumeObject = obj.getVolume()
                     dim = volumeObject.getDim()[0]
                     sampling = volumeObject.getSamplingRate()

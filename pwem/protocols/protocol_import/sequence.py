@@ -319,7 +319,7 @@ class ProtImportSequence(ProtImportFiles):
         if self.pdbId.get() is not None:
             # PDB from remote database
             pdbID = self.pdbId.get()
-            tmpFilePath = os.path.join("/tmp", pdbID + ".cif")
+            tmpFilePath = os.path.join("/tmp", pdbID + ".cif").lower()
             if exists(tmpFilePath):
                 # wizard already downloaded the file
                 self.structureHandler.read(tmpFilePath)
