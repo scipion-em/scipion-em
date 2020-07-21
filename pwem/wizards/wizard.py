@@ -867,14 +867,8 @@ class MaskPreviewDialog(ImagePreviewDialog):
         self.unit = getattr(self, 'unit', emcts.UNIT_PIXEL)
         self.samplingRate = self.firstItem.getSamplingRate()
         first_item_dim = self.firstItem.getDim()[0]
-
-        if self.unit == emcts.UNIT_PIXEL:
-            self.dim_par = first_item_dim
-        else:
-            self.dim_par = first_item_dim * self.samplingRate
-
+        self.dim_par = first_item_dim
         self.ratio = self.dim / float(self.dim_par)
-
         self.previewLabel = 'Central slice'
 
     def _createPreview(self, frame):
