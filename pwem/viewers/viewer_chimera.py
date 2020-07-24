@@ -37,10 +37,12 @@ import pwem.objects as emobj
 from pwem import emlib
 from pwem import Config as emConfig
 
-chimeraPdbTemplateFileName = "Atom_struct__%s.pdb"
-chimeraMapTemplateFileName = "Map__%s.mrc"
-chimeraScriptFileName = "chimeraScript.py"
-sessionFile = "SESSION.py"
+chimeraPdbTemplateFileName = "Atom_struct__%06d.cif"
+chimeraMapTemplateFileName = "Map__%06d.mrc"
+chimeraScriptFileName = "chimeraScript.cxc"
+chimeraConfigFileName = "chimera.ini"
+sessionFile = "SESSION.cxs"
+
 
 symMapperScipionchimera = {}
 symMapperScipionchimera[emcts.SYM_CYCLIC] = "Cn"
@@ -100,7 +102,7 @@ class Chimera:
         return environ
 
     @classmethod
-    def getProgram(cls, progName="chimera"):
+    def getProgram(cls, progName="ChimeraX"):
         """ Return the program binary that will be used. """
         home = cls.getHome()
         if home is None:
@@ -108,10 +110,11 @@ class Chimera:
         return os.path.join(home, 'bin', os.path.basename(progName))
 
     @classmethod
-    def runProgram(cls, program=None, args=""):
+    def runProgram(cls, program=None, args="", cwd=None):
         """ Internal shortcut function to launch chimera program. """
         prog = program or cls.getProgram()
-        pwutils.runJob(None, prog, args, env=cls.getEnviron())
+        pwutils.runJob(None, prog, args, env=cls.getEnviron(),
+                       cwd=cwd)
 
     @classmethod
     def createCoordinateAxisFile(cls, dim, bildFileName="/tmp/axis.bild",
@@ -182,7 +185,9 @@ class ChimeraAngDist(pwviewer.CommandView):
                                  else 0.02 * self.spheresDistance)
         self.readAngularDistFile()
         self._createChimeraScript(self.cmdFile)
-        pwviewer.CommandView.__init__(self, 'ChimeraX "%s" &' % self.cmdFile,
+        program = Chimera.getProgram()
+        pwviewer.CommandView.__init__(self, '%s "%s" &' % (program,
+                                                           self.cmdFile),
                                       env=Chimera.getEnviron(), **kwargs)
 
     def _createChimeraScript(self, scriptFile):
@@ -191,12 +196,11 @@ class ChimeraAngDist(pwviewer.CommandView):
                                          bildFileName=self.axis,
                                          sampling=self.voxelSize)
         self.createAngularDistributionFile(bildFileName=self.spheres)
-
         fhCmd = open(scriptFile, 'w')
         fhCmd.write("open %s\n" % self.axis)
         fhCmd.write("open %s\n" % self.spheres)
         fhCmd.write("cofr 0,0,0\n")
-        fhCmd.write("open %s\n" % self.volfile)
+        fhCmd.write("open %s\n" % self.volfile.replace(":mrc",""))
         fhCmd.write("volume #3 voxelSize %s\n" % self.voxelSize)
         x, y, z = self.volOrigin
         fhCmd.write("volume #3 origin %s,%s,%s\n" % (x, y, z))
@@ -205,6 +209,7 @@ class ChimeraAngDist(pwviewer.CommandView):
 
     def createAngularDistributionFile(self, bildFileName="/tmp/spheres.bild"):
         ff = open(bildFileName, "w")
+
         for angulardist in self.angularDistributionList:
             ff.write("%s\n" % angulardist)
 
@@ -252,6 +257,7 @@ class ChimeraAngDist(pwviewer.CommandView):
         x2 = self.xdim / 2
         y2 = self.ydim / 2
         z2 = self.zdim / 2
+        self.angularDistributionList.append('.color %s\n'% self.spheresColor)
         for id in mdAngDist:
             rot = mdAngDist.getValue(angleRotLabel, id)
             tilt = mdAngDist.getValue(angleTiltLabel, id)
@@ -266,9 +272,8 @@ class ChimeraAngDist(pwviewer.CommandView):
             x = x * self.spheresDistance  # + x2
             y = y * self.spheresDistance  # + y2
             z = z * self.spheresDistance  # + z2
-            command = ('.color %s\n'
-                       '.sphere %s %s %s %s' %
-                       (self.spheresColor, x, y, z, radius))
+            command = ('.sphere %s %s %s %s' %
+                       (x, y, z, radius))
             self.angularDistributionList.append(command)
 
 
@@ -276,7 +281,9 @@ class ChimeraView(pwviewer.CommandView):
     """ View for calling an external command. """
 
     def __init__(self, inputFile, **kwargs):
-        pwviewer.CommandView.__init__(self, 'ChimeraX "%s" &' % inputFile,
+        program = Chimera.getProgram()
+        inputFile = inputFile.replace(":mrc","")
+        pwviewer.CommandView.__init__(self, '%s "%s" &' % (program, inputFile),
                                       env=Chimera.getEnviron(), **kwargs)
 
 
@@ -323,11 +330,11 @@ class ChimeraViewer(pwviewer.Viewer):
                 tmpPath = self.protocol._getTmpPath()
                 if not os.path.exists(tmpPath):
                     tmpPath = "/tmp"
-                fnCmd = os.path.join(tmpPath, "chimera.cmd")
+                fnCmd = os.path.join(tmpPath, "chimera.cxc")
                 f = open(fnCmd, 'w')
                 f.write("cofr 0,0,0\n")  # set center of coordinates
                 if obj.hasVolume():
-                    volID = 0
+                    volID = 1
                     volumeObject = obj.getVolume()
                     dim = volumeObject.getDim()[0]
                     sampling = volumeObject.getSamplingRate()
