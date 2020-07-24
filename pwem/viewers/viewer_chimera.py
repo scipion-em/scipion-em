@@ -185,7 +185,9 @@ class ChimeraAngDist(pwviewer.CommandView):
                                  else 0.02 * self.spheresDistance)
         self.readAngularDistFile()
         self._createChimeraScript(self.cmdFile)
-        pwviewer.CommandView.__init__(self, 'ChimeraX "%s" &' % self.cmdFile,
+        program = Chimera.getProgram()
+        pwviewer.CommandView.__init__(self, '%s "%s" &' % (program,
+                                                           self.cmdFile),
                                       env=Chimera.getEnviron(), **kwargs)
 
     def _createChimeraScript(self, scriptFile):
@@ -194,12 +196,11 @@ class ChimeraAngDist(pwviewer.CommandView):
                                          bildFileName=self.axis,
                                          sampling=self.voxelSize)
         self.createAngularDistributionFile(bildFileName=self.spheres)
-
         fhCmd = open(scriptFile, 'w')
         fhCmd.write("open %s\n" % self.axis)
         fhCmd.write("open %s\n" % self.spheres)
         fhCmd.write("cofr 0,0,0\n")
-        fhCmd.write("open %s\n" % self.volfile)
+        fhCmd.write("open %s\n" % self.volfile.replace(":mrc",""))
         fhCmd.write("volume #3 voxelSize %s\n" % self.voxelSize)
         x, y, z = self.volOrigin
         fhCmd.write("volume #3 origin %s,%s,%s\n" % (x, y, z))
@@ -208,6 +209,7 @@ class ChimeraAngDist(pwviewer.CommandView):
 
     def createAngularDistributionFile(self, bildFileName="/tmp/spheres.bild"):
         ff = open(bildFileName, "w")
+
         for angulardist in self.angularDistributionList:
             ff.write("%s\n" % angulardist)
 
@@ -255,6 +257,7 @@ class ChimeraAngDist(pwviewer.CommandView):
         x2 = self.xdim / 2
         y2 = self.ydim / 2
         z2 = self.zdim / 2
+        self.angularDistributionList.append('.color %s\n'% self.spheresColor)
         for id in mdAngDist:
             rot = mdAngDist.getValue(angleRotLabel, id)
             tilt = mdAngDist.getValue(angleTiltLabel, id)
@@ -269,9 +272,8 @@ class ChimeraAngDist(pwviewer.CommandView):
             x = x * self.spheresDistance  # + x2
             y = y * self.spheresDistance  # + y2
             z = z * self.spheresDistance  # + z2
-            command = ('.color %s\n'
-                       '.sphere %s %s %s %s' %
-                       (self.spheresColor, x, y, z, radius))
+            command = ('.sphere %s %s %s %s' %
+                       (x, y, z, radius))
             self.angularDistributionList.append(command)
 
 
