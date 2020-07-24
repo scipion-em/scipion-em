@@ -282,6 +282,7 @@ class ChimeraView(pwviewer.CommandView):
 
     def __init__(self, inputFile, **kwargs):
         program = Chimera.getProgram()
+        inputFile = inputFile.replace(":mrc","")
         pwviewer.CommandView.__init__(self, '%s "%s" &' % (program, inputFile),
                                       env=Chimera.getEnviron(), **kwargs)
 
