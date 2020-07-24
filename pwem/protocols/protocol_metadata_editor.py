@@ -57,7 +57,9 @@ class ProtMetadataEditor(EMProtocol):
 
     def editItemsStep(self):
         """
-        Goes through all items in the input set and applies the formula to each of them.
+        Goes through all items in the input set and applies the formula to each of them using exec.
+        Complex python code could be run separating lines with ;  To use numpy you could do
+        import numpy; item._resolution.set(numpy.random.randint(10))
         """
         inputSet = self.inputSet.get()
 
@@ -66,7 +68,7 @@ class ProtMetadataEditor(EMProtocol):
 
         for sourceItem in inputSet.iterItems():
             item = sourceItem.clone()
-            eval(self.formula.get())
+            exec(self.formula.get())
             modifiedSet.append(item)
 
         outputArgs = {self.inputSet.getExtended(): modifiedSet}
