@@ -351,7 +351,7 @@ class Ccp4Header:
 def getFileFormat(fileName):
 
     ext = getExt(fileName)
-    if ext in ['.mrc', '.map', '.mrcs', '.mrc:mrc', '.mrc:mrcs']:
+    if ext in ['.mrc', '.map', '.mrcs', '.mrc:mrc', '.mrc:mrcs', '.st', '.rec']:
         return MRC
     elif ext == '.spi' or ext == '.vol':
         return SPIDER

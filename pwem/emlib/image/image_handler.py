@@ -495,7 +495,7 @@ class ImageHandler(object):
             :param inputFile: path location of the input image
             :param outputFile: path location of the output image
             :param transformMatrix: transformation matrix to be applied to the image. It should be a numpy array data type.
-            :param shape: dimensions of the output image given as a tuple (xDim, yDim)
+            :param shape: dimensions of the output image given as a tuple (yDim, xDim)
             :param fillValue: value with which the empty regions due to wrapping will be filled.
             :param doWrap: if True the empty regions will be filled with the wrapped values of the input image.
         """

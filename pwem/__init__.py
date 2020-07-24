@@ -38,7 +38,7 @@ import pyworkflow.plugin
 from .constants import *
 from .objects import EMObject
 from .utils import *
-__version__ = '3.0.1b3'
+__version__ = '3.0.1'
 _logo = "scipion_icon.gif"
 _references = ["delaRosaTrevin201693"]
 
@@ -52,7 +52,7 @@ class Config(pw.Config):
     XMIPP_HOME = _join(_get('XMIPP_HOME', os.path.join(EM_ROOT,'xmipp')))
 
     # Needed by Chimera viewer.
-    CHIMERA_HOME = _join(_get('CHIMERA_HOME', os.path.join(EM_ROOT,'chimera-1.13.1')))
+    CHIMERA_HOME = _join(_get('CHIMERA_HOME', os.path.join(EM_ROOT,'chimerax-1.0')))
 
     # Get java home, we might need to provide correct default value
     JAVA_HOME = _get('JAVA_HOME', '')

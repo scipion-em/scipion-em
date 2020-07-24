@@ -41,7 +41,7 @@ class EmPlotter(Plotter):
 
     def plotAngularDistribution(self, title, rot, 
                                 tilt, weight=[], max_p=40, 
-                                min_p=5, max_w=2, min_w=1, color='blue'):
+                                min_p=5, color='blue'):
         """ Create an special type of subplot, representing the angular
         distribution of weight projections. """
         if weight:
@@ -102,7 +102,8 @@ class EmPlotter(Plotter):
 
     def plotHist(self, yValues, nbins, color='blue', **kwargs):
         """ Create an histogram. """
-        self.hist(yValues, nbins, facecolor=color, **kwargs)
+        # In some cases yValues is a generator, which cannot be indexed
+        self.hist(list(yValues), nbins, facecolor=color, **kwargs)
 
     def plotScatter(self, xValues, yValues, color='blue', **kwargs):
         """ Create an scatter plot. """
