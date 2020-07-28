@@ -24,7 +24,7 @@
 import csv
 import os
 import re
-
+from pyworkflow.config import Config as pwConfig
 from pyworkflow.gui import getDefaultFont, openTextFileEditor
 
 import tkinter as tk
@@ -86,8 +86,12 @@ class DataView(pwviewer.View):
     def getShowJParams(self):
         tableName = '%s@' % self._tableName if self._tableName else ''
         params = '-i "%s%s"' % (tableName, self._path)
+
         for key, value in self._viewParams.items():
             params = "%s --%s %s" % (params, key, value)
+
+        if pwConfig.debugOn():
+            params += " --debug"
 
         return params
 
