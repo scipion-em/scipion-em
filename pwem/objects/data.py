@@ -1667,6 +1667,11 @@ class SetOfClasses(EMSet):
         self._representatives = Boolean(False)
         self._imagesPointer = Pointer()
 
+    def copyInfo(self, other):
+        """ Copy basic information from other set of classes to current one"""
+        self.copyAttributes(other, '_representatives', '_imagesPointer')
+
+
     def iterClassItems(self, iterDisabled=False):
         """ Iterate over the images of a class.
         Params:
