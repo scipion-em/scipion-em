@@ -353,6 +353,7 @@ class ProtUserSubSet(BatchProtocol):
 
         modifiedSet = inputClasses.getClass()(filename=self._dbName, prefix=self._dbPrefix)
         self.info("Creating subset of classes from classes, sqlite file: %s" % self._dbName)
+        output.copyInfo(inputClasses)
         output.appendFromClasses(modifiedSet)
         # Register outputs
         self._defineOutput(className, output)
