@@ -28,6 +28,8 @@ import pyworkflow.viewer as pwviewer
 
 import pwem.constants as emcts
 from pwem import emlib
+from pwem.viewers.viewer_chimera import mapVolsWithColorkey
+
 
 class LocalResolutionViewer(pwviewer.ProtocolViewer):
     """
@@ -41,14 +43,18 @@ class LocalResolutionViewer(pwviewer.ProtocolViewer):
 
     def getImgData(self, imgFile):
         import numpy as np
+        # if image ends in .mrc or .map :mrc
+        if imgFile[-4:] == ".mrc" or imgFile[-4:] == ".map":
+            imgFile += ":mrc"
         img = emlib.image.ImageHandler().read(imgFile)
         imgData = img.getData()
+        voldim = (img.getDimensions())[:-1]
 
         maxRes = np.amax(imgData)
         imgData2 = np.ma.masked_where(imgData < 0.1, imgData, copy=True)
         minRes = np.amin(imgData2)
 
-        return imgData2, minRes, maxRes
+        return imgData2, minRes, maxRes, voldim
 
     def getSlice(self, index, volumeData):
         return int(index*volumeData.shape[0] / 9)
@@ -63,50 +69,30 @@ class LocalResolutionViewer(pwviewer.ProtocolViewer):
 
         return imgSlice
 
-    def createChimeraScript(self, scriptFile, fnResVol, fnOrigMap, sampRate):
+    def createChimeraScript(self, scriptFile, fnResVol,
+                            fnOrigMap, sampRate, numColors=13):
         import pyworkflow.gui.plotter as plotter
         import os
-        try:
-            from itertools import izip
-        except ImportError:
-            izip = zip
-        fhCmd = open(scriptFile, 'w')
         imageFile = os.path.abspath(fnResVol)
 
-        _, minRes, maxRes = self.getImgData(imageFile)
-
-        stepColors = self._getStepColors(minRes, maxRes)
+        _, minRes, maxRes, voldim = self.getImgData(imageFile)
+        stepColors = self._getStepColors(minRes, maxRes,
+                                         numberOfColors=numColors)
         colorList = plotter.getHexColorList(stepColors, self._getColorName())
 
         fnVol = os.path.abspath(fnOrigMap)
 
-        fhCmd.write("background solid white\n")
-
-        fhCmd.write("open %s\n" % fnVol)
-        fhCmd.write("open %s\n" % imageFile)
-
-        fhCmd.write("volume #0 voxelSize %s\n" % (str(sampRate)))
-        fhCmd.write("volume #1 voxelSize %s\n" % (str(sampRate)))
-        fhCmd.write("volume #1 hide\n")
-
-        scolorStr = ''
-        for step, color in izip(stepColors, colorList):
-            scolorStr += '%s,%s:' % (step, color)
-        scolorStr = scolorStr[:-1]
-        line = ("scolor #0 volume #1 perPixel false cmap " + scolorStr + "\n")
-        fhCmd.write(line)
-
-        scolorStr2 = ''
-        for step, color in izip(stepColors, colorList):
-            indx = stepColors.index(step)
-            if (indx % 4) != 0:
-                scolorStr2 += '" " %s ' % color
-            else:
-                scolorStr2 += '%s %s ' % (step, color)
-        line = ("colorkey 0.01,0.05 0.02,0.95 labelColor None "
-                + scolorStr2 + " \n")
-        fhCmd.write(line)
-        fhCmd.close()
+        mapVolsWithColorkey(fnVol,
+                            imageFile,
+                            stepColors,
+                            colorList,
+                            voldim,
+                            volOrigin=None,
+                            step = -1,
+                            sampling=sampRate,
+                            scriptFileName=scriptFile,
+                            bgColorImage='white',
+                            showAxis=True)
 
     def _getStepColors(self, minRes, maxRes, numberOfColors=13):
         inter = (maxRes - minRes) / (numberOfColors - 1)
