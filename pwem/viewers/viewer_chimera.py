@@ -184,13 +184,14 @@ class ChimeraAngDist(pwviewer.CommandView):
         self.spheresMaxRadius = (float(spheresMaxRadius) if spheresMaxRadius
                                  else 0.02 * self.spheresDistance)
         self.readAngularDistFile()
-        self._createChimeraScript(self.cmdFile)
+        format = kwargs.get('format', None)
+        self._createChimeraScript(self.cmdFile, format)
         program = Chimera.getProgram()
         pwviewer.CommandView.__init__(self, '%s "%s" &' % (program,
                                                            self.cmdFile),
                                       env=Chimera.getEnviron(), **kwargs)
 
-    def _createChimeraScript(self, scriptFile):
+    def _createChimeraScript(self, scriptFile, format):
 
         Chimera.createCoordinateAxisFile(self.xdim,
                                          bildFileName=self.axis,
@@ -200,7 +201,11 @@ class ChimeraAngDist(pwviewer.CommandView):
         fhCmd.write("open %s\n" % self.axis)
         fhCmd.write("open %s\n" % self.spheres)
         fhCmd.write("cofr 0,0,0\n")
-        fhCmd.write("open %s\n" % self.volfile.replace(":mrc",""))
+        if format is not None:
+            fhCmd.write("open %s format %s\n" % (self.volfile.replace(":mrc",""),
+                                                 format))
+        else:
+            fhCmd.write("open %s\n" % self.volfile.replace(":mrc", ""))
         fhCmd.write("volume #3 voxelSize %s\n" % self.voxelSize)
         x, y, z = self.volOrigin
         fhCmd.write("volume #3 origin %s,%s,%s\n" % (x, y, z))
@@ -272,7 +277,7 @@ class ChimeraAngDist(pwviewer.CommandView):
             x = x * self.spheresDistance  # + x2
             y = y * self.spheresDistance  # + y2
             z = z * self.spheresDistance  # + z2
-            command = ('.sphere %s %s %s %s' %
+            command = ('.sphere %.1f %.1f %.1f %.1f' %
                        (x, y, z, radius))
             self.angularDistributionList.append(command)
 
