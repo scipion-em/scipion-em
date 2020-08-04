@@ -480,12 +480,20 @@ class ImageHandler(object):
                               % (inputFn, outputFn, scaleFactor))
 
     @classmethod
-    def scaleSplines(cls, inputFn, outputFn, scaleFactor):
+    def scaleSplines(cls, inputFn, outputFn, scaleFactor, finalDimension=None,
+                     forceVolume=False):
         """ Scale an image using splines. """
-        I = lib.Image(inputFn)
-        x, y, z, _ = I.getDimensions()
-        I.scale(int(x * scaleFactor), int(y * scaleFactor),
-                int(z * scaleFactor))
+        I = lib.Image()
+        I.read(inputFn)
+        x, y, z, n = I.getDimensions()
+        if forceVolume:
+            z = max(z, n)
+        if finalDimension is not None:
+            x, y, z = int(finalDimension), int(finalDimension), int(finalDimension)
+        else:
+            x, y, z = int(x * scaleFactor), int(y * scaleFactor), int(z * scaleFactor)
+
+        I.scale(x, y, z, 1 if forceVolume else 0)
         I.write(outputFn)
 
     @staticmethod
