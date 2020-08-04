@@ -156,13 +156,30 @@ class ProtExtractCoords(ProtParticlePickingAuto):
         suffix = self.getSuffix(partsIds[0]) if partsIds is not None else ''
         outputCoords = self._createSetOfCoordinates(inMics, suffix=suffix)
 
+        # Prepare a double key dictionary to do the match: micname and micId
+        micDict = dict()
+        for mic in inMics.iterItems():
+            # Clone the mics! otherwise we will get pointers and
+            # will end up with the same mic in the dictionary.
+            clonedMic = mic.clone()
+            micDict[clonedMic.getObjId()]= clonedMic
+            micDict[clonedMic.getMicName()] = clonedMic
+
+
         def appendCoordFromParticle(part):
             coord = part.getCoordinate()
-            micKey = coord.getMicId()
-            mic = inMics[micKey]
+
+            # Try micname
+            micName = coord.getMicName()
+            mic = micDict.get(micName, None)
+
+            # Try micid
+            if mic is None:
+                micKey = coord.getMicId()
+                mic = micDict.get(micKey, None)
 
             if mic is None:
-                print("Skipping particle, key %s not found" % micKey)
+                print("Skipping particle, %s or id %s not found" % (micName,micKey))
             else:
                 newCoord.copyObjId(part)
                 x, y = coord.getPosition()
