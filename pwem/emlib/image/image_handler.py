@@ -486,14 +486,16 @@ class ImageHandler(object):
         I = lib.Image()
         I.read(inputFn)
         x, y, z, n = I.getDimensions()
+        setDimensions = 0
         if forceVolume:
             z = max(z, n)
+            setDimensions = 1
         if finalDimension is not None:
             x, y, z = int(finalDimension), int(finalDimension), int(finalDimension)
         else:
             x, y, z = int(x * scaleFactor), int(y * scaleFactor), int(z * scaleFactor)
 
-        I.scale(x, y, z, 1 if forceVolume else 0)
+        I.scale(x, y, z, setDimensions)
         I.write(outputFn)
 
     @staticmethod
