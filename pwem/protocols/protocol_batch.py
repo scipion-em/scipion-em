@@ -277,7 +277,9 @@ class ProtUserSubSet(BatchProtocol):
             if cls.isEnabled():
                 img = cls.getRepresentative()
                 if not output.getSamplingRate():
-                    output.setSamplingRate(img.getSamplingRate())
+                    output.setSamplingRate(cls.getSamplingRate()
+                                           if img.getSamplingRate() is None
+                                           else img.getSamplingRate())
                 img.copyObjId(cls)
                 output.append(img)
                 count += 1
