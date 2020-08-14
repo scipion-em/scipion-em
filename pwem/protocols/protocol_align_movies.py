@@ -105,6 +105,13 @@ class ProtAlignMovies(ProtProcessMovies):
                       label="Save aligned micrograph",
                       expertLevel=pwcts.LEVEL_ADVANCED)
 
+        form.addParam('splitEvenOdd', params.BooleanParam,
+                      default=False,
+                      label='Split & sum odd/even frames?',
+                      condition='doSaveAveMic',
+                      expertLevel=pwcts.LEVEL_ADVANCED,
+                      help='TODO')
+
         form.addParam('doSaveMovie', params.BooleanParam, default=False,
                       label="Save movie", expertLevel=pwcts.LEVEL_ADVANCED,
                       help="Save Aligned movie")
