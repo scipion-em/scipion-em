@@ -105,12 +105,15 @@ class ProtAlignMovies(ProtProcessMovies):
                       label="Save aligned micrograph",
                       expertLevel=pwcts.LEVEL_ADVANCED)
 
+        form.addHidden('tomographySplitFrames', params.BooleanParam,
+                       default=getattr(self, 'tomographySplitFrames', False))
         form.addParam('splitEvenOdd', params.BooleanParam,
                       default=False,
                       label='Split & sum odd/even frames?',
-                      condition='doSaveAveMic',
+                      condition='tomographySplitFrames',
                       expertLevel=pwcts.LEVEL_ADVANCED,
-                      help='TODO')
+                      help='(Used for cryoCARE denoising data preparation). If set to Yes, 2 additional tilt series '
+                           'will be generated, one generated from the even frames and the other from the odd ones.')
 
         form.addParam('doSaveMovie', params.BooleanParam, default=False,
                       label="Save movie", expertLevel=pwcts.LEVEL_ADVANCED,
