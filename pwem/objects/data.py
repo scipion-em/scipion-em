@@ -1747,7 +1747,7 @@ class SetOfClasses(EMSet):
     def getSamplingRate(self):
         return self.getImages().getSamplingRate()
 
-    def appendFromClasses(self, classesSet, filterClassFunc=None):
+    def appendFromClasses(self, classesSet, filterClassFunc=None, updateClassCallback=None):
         """ Iterate over the classes and the elements inside each
         class and append classes and items that are enabled.
         """
@@ -1759,6 +1759,8 @@ class SetOfClasses(EMSet):
                 newCls = self.ITEM_TYPE()
                 newCls.copyInfo(cls)
                 newCls.setObjId(cls.getObjId())
+                if updateClassCallback:
+                    updateClassCallback(newCls)
                 self.append(newCls)
                 for img in cls:
                     if img.isEnabled():
@@ -1778,6 +1780,14 @@ class SetOfClasses(EMSet):
         the iterator in itemDataIterator. The callback function should
         set the classId of the image that will be used to classify it.
         It is also possible to pass a callback to update the class properties.
+
+        :param updateItemCallback: callback to be invoked on each item's loop (e.g.: 2d image in a 2d classification)
+        :param updateClassCallback: callback to be invoked when a item.getClassId() changes
+        :param itemDataIterator: an iterator (usually on metadata files, star, xmd,..) that will be called on each loop.
+        usually has that same lines as items and iteration is kept in sync
+        :param classifyDisabled: classify disabled items. By default they are skipped.
+        :param iterParams: Parameters for self.getImages() to leave oot images/filter
+        :param doClone: Make a clone of the item (defaults to true)
         """
         itemDataIter = itemDataIterator  # shortcut
 
