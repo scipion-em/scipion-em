@@ -217,7 +217,11 @@ class MaskRadiusWizard(EmWizard):
                                   maskRadius=value,
                                   unit=units)
             if d.resultYes():
-                self.setVar(form, label, d.getRadius(d.radiusSlider))
+                if units == emcts.UNIT_ANGSTROM:
+                    value = round(d.getRadiusAngstroms(d.radiusSlider))  # Must be an integer
+                else:
+                    value = d.getRadius(d.radiusSlider)
+                self.setVar(form, label, value)
         else:
             dialog.showWarning("Empty input", "Select elements first", form.root)
 
@@ -238,8 +242,12 @@ class MaskRadiiWizard(EmWizard):
                                        outerRadius=value[1],
                                        unit=units)
             if d.resultYes():
-                form.setVar(label[0], d.getRadius(d.radiusSliderIn))
-                form.setVar(label[1], d.getRadius(d.radiusSliderOut))
+                if units == emcts.UNIT_ANGSTROM:
+                    form.setVar(label[0], d.getRadiusAngstroms(d.radiusSliderIn))
+                    form.setVar(label[1], d.getRadiusAngstroms(d.radiusSliderOut))
+                else:
+                    form.setVar(label[0], d.getRadius(d.radiusSliderIn))
+                    form.setVar(label[1], d.getRadius(d.radiusSliderOut))
         else:
             dialog.showWarning("Empty input", "Select elements first", form.root)
 
@@ -866,8 +874,7 @@ class MaskPreviewDialog(ImagePreviewDialog):
         self.dim = 256
         self.unit = getattr(self, 'unit', emcts.UNIT_PIXEL)
         self.samplingRate = self.firstItem.getSamplingRate()
-        first_item_dim = self.firstItem.getDim()[0]
-        self.dim_par = first_item_dim
+        self.dim_par = self.firstItem.getDim()[0]
         self.ratio = self.dim / float(self.dim_par)
         self.previewLabel = 'Central slice'
 
@@ -885,6 +892,9 @@ class MaskPreviewDialog(ImagePreviewDialog):
             self.iniRadius = self.dim_par / 2
         else:
             self.iniRadius = self.maskRadius
+
+        if self.unit == emcts.UNIT_ANGSTROM:
+            self.iniRadius = self.iniRadius/self.samplingRate
 
         listeners = {"<Button-4>": self.makeBigger, "<Button-5>": self.makeSmaller}
 
@@ -944,20 +954,24 @@ class MaskPreviewDialog(ImagePreviewDialog):
         Show the values selected for the inner and outer radius. If the units are angstroms (sampling_rate = 1,
         it will show only one value to avoid redundancies
         """
+        pixVal = self.getRadius(radiusSlider)
         if self.samplingRate == 1:
-            var2set.set('{:6.1f} {}'.format(radiusSlider.slider.get(), emcts.UNIT_PIXEL))
+            var2set.set('{:6.1f} {}'.format(pixVal, emcts.UNIT_PIXEL))
         else:
-            var2set.set('{:5.0f} pix | {:6.1f} {}'.format(radiusSlider.slider.get(),
-                                                          convertPixToLength(radiusSlider.get(), self.samplingRate),
+            var2set.set('{:5.0f} pix | {:6.1f} {}'.format(pixVal,
+                                                          self.getRadiusAngstroms(radiusSlider),
                                                           emcts.UNIT_ANGSTROM_SYMBOL))
 
     @staticmethod
     def getRadius(radiusSlider):
-        return int(radiusSlider.get())
+        return radiusSlider.get()
 
     @staticmethod
     def setRadius(radiusSlider, val):
-        radiusSlider.slider.set(int(val))
+        radiusSlider.slider.set(val)
+
+    def getRadiusAngstroms(self, radiusSlider):
+        return convertPixToLength(self.samplingRate, radiusSlider.get())
 
 
 class MaskRadiiPreviewDialog(MaskPreviewDialog):
@@ -974,6 +988,10 @@ class MaskRadiiPreviewDialog(MaskPreviewDialog):
             self.innerRadius = 1
         if self.outerRadius is None or self.outerRadius == -1 or self.outerRadius > self.dim_par / 2:
             self.outerRadius = int(self.dim_par / 2)
+
+        if self.unit == emcts.UNIT_ANGSTROM:
+            self.innerRadius = self.innerRadius/self.samplingRate
+            self.outerRadius = self.innerRadius / self.samplingRate
 
         listeners = {"<Button-4>": self.makeBigger, "<Button-5>": self.makeSmaller,
                      "<Up>": self.upKeyPress, "<Down>": self.downKeyPress}
@@ -1104,9 +1122,4 @@ class MaskRadiiPreviewDialog(MaskPreviewDialog):
 
             self.innerRadius = new_val
             self.manageMaskVals()
-
-# Moved to pyworkflow.gui.tree
-# class ListTreeProviderString(ListTreeProvider):
-#     def getText(self, obj):
-#         return obj.get()
 
