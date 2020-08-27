@@ -531,12 +531,17 @@ class DownsampleDialog(ImagePreviewDialog):
     def getDownsample(self):
         return float(self.downVar.get())
 
+    def manageMaskVals(self):
+        # To be coded by each child, if necessary
+        pass
+
     def _itemSelected(self, obj):
         self.lastObj = obj
         ImagePreviewDialog._itemSelected(self, obj)
 
         dialog.FlashMessage(self, self.message, func=self._computeRightPreview)
         self.rightPreview.updateData(self.rightImage.getData())
+        self.manageMaskVals()
 
     def _doPreview(self, e=None):
         if self.lastObj is None:
@@ -669,8 +674,8 @@ class CtfDialog(DownsampleDialog):
         # Update both mask and sliders with the initial values
         self.manageMaskVals()
 
-    def getDownsample(self):
-        return 1.0  # Micrograph previously downsample, not taken into account here
+    # def getDownsample(self):
+    #     return 1.0  # Micrograph previously downsample, not taken into account here
 
     def updateFreqRing(self):
         self.rightPreview.updateFreq(self.getLowFreq(), self.getHighFreq())
@@ -719,7 +724,7 @@ class CtfDialog(DownsampleDialog):
         else:
             var2set.set('{:2.2f} rad/{} | {:5.1f} {}'.format(labSlider.slider.get(),
                                                              emcts.UNIT_ANGSTROM_SYMBOL,
-                                                             sr/freqVal,
+                                                             self.getDownsample()*sr/freqVal,
                                                              emcts.UNIT_ANGSTROM_SYMBOL))
 
     def getLowFreq(self):
