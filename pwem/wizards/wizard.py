@@ -25,7 +25,9 @@
 # *
 # **************************************************************************
 """
-This module implement some wizards
+This module implement some base classes and utils for wizards
+The content of this module is not discovered at runtime by pyworkflow.
+Usage of this content is though importing it
 """
 
 import tkinter as tk
@@ -35,14 +37,21 @@ import pyworkflow as pw
 import pyworkflow.object as pwobj
 import pyworkflow.wizard as pwizard
 import pyworkflow.gui.dialog as dialog
-from pwem import convertPixToLength
+from matplotlib import cm
+from pwem import convertPixToLength, splitRange
+from pyworkflow.gui.plotter import getHexColorList
 from pyworkflow.gui.tree import BoundTree, ListTreeProvider
 from pyworkflow.gui.widgets import LabelSlider, ExplanationText
 
 import pwem.constants as emcts
 import pwem.objects as emobj
 from pwem import emlib
-
+from pyworkflow.protocol import IntParam, StringParam, FloatParam, LEVEL_ADVANCED
+# Color map wizard constants
+HIGHEST_ATTR = 'highest'
+LOWEST_ATTR = 'lowest'
+INTERVAL_ATTR = 'intervals'
+COLORMAP_ATTR = 'colorMap'
 
 # ===============================================================================
 #    Wizard EM base class
@@ -121,37 +130,6 @@ class EmWizard(pwizard.Wizard):
             return label, value
         else:
             return label[0], value[0]
-
-
-# ===============================================================================
-#    Provider class (for objects used in the wizards)
-# ===============================================================================
-
-# Candidate to be moved to pyworkflow? Nothing em related and generic enough to be there.
-# class ListTreeProvider(TreeProvider):
-#     """ Simple list tree provider. """
-#
-#     def __init__(self, objList=None):
-#         TreeProvider.__init__(self)
-#         self.objList = objList
-#         self.getColumns = lambda: [('Object', 150)]
-#         self.getObjects = lambda: self.objList
-#
-#     def getObjectInfo(self, obj):
-#         info = {'key': obj.getObjId(), 'text': self.getText(obj), 'values': ()}
-#         return info
-#
-#     def getText(self, obj):
-#         """ Get the text to display for an object. """
-#         index, fn = obj.getLocation()
-#         name = os.path.basename(fn)
-#         if index:
-#             name = "%03d@%s" % (index, name)
-#         return name
-#
-#     def getObjs(self):
-#         """ Get the objects. """
-#         return self.objList
 
 
 # ===============================================================================
@@ -360,6 +338,59 @@ class PDBVolumeWizard(EmWizard):
                 ptr.setExtended(ptr.getExtended() + "._volume")
                 #                 ptr.set(pdb.getVolume())
                 form.setVar('inputVol', ptr)
+
+
+class ColorScaleWizardBase(EmWizard):
+    """ Base wizard to edit color scale parameters
+    Usage:
+        1.- define new class inheriting this one
+        2.- declare _targets = ColorScaleWizardBase.defineTargets(youviewer) in a class scope, right after class definition.
+        3.- call ColorScaleWizardBase.defineColorScaleParams(group) in your viewer._defineParams
+        4.- use attributes in your plotting method
+    """
+    @classmethod
+    def defineTargets(cls, *viewersClass):
+        """ :return targets list per each viewer class passed"""
+        targets = []
+        for viewer in viewersClass:
+            targets.append( (viewer, [HIGHEST_ATTR, LOWEST_ATTR, INTERVAL_ATTR, COLORMAP_ATTR]))
+
+        return targets
+
+    def show(self, form):
+        viewer = form.protocol
+
+        d = ColorScaleDialog(form.root, viewer.lowest.get(), viewer.highest.get(), viewer.intervals.get(), viewer.colorMap.get())
+
+        # If accepted
+        if d.resultYes():
+            form.setVar(LOWEST_ATTR, d.getLowest())
+            form.setVar(HIGHEST_ATTR, d.getHighest())
+            form.setVar(INTERVAL_ATTR, d.getIntervals())
+            form.setVar(COLORMAP_ATTR, d.getColorPalette())
+
+    @staticmethod
+    def defineColorScaleParams(form, defaultHighest=10, defaultLowest=0, defaultIntervals=11, defaultColorMap="jet"):
+
+        line = form.addLine("Color scale options:",
+                            help="Options to define the color scale limits, intervals (advanced) and color set. Useful when you have outliers ruinning your "
+                                 "visualization/plot.")
+        line.addParam(HIGHEST_ATTR, FloatParam, default=defaultHighest,
+                       label="Highest",
+                       help="Highest value for the scale")
+
+        line.addParam(LOWEST_ATTR, FloatParam, default=defaultLowest,
+                       label="Lowest",
+                       help="lowest value of the scale.")
+
+        line.addParam(INTERVAL_ATTR, IntParam, default=defaultIntervals,
+                       label="Intervals",
+                       help="Number of labels of the scale",
+                       expertLevel=LEVEL_ADVANCED)
+
+        line.addParam(COLORMAP_ATTR, StringParam, default=defaultColorMap,
+                       label="Color set",
+                       help="Combination of color for the scale")
 
 
 # ===============================================================================
@@ -1127,4 +1158,155 @@ class MaskRadiiPreviewDialog(MaskPreviewDialog):
 
             self.innerRadius = new_val
             self.manageMaskVals()
+
+class ColorScaleDialog(dialog.Dialog):
+    """ This will assist users to choose the color scale and range for
+    local resolution viewers
+    """
+
+    def __init__(self, parentWindow, lowest, highest, intervals, colorPalette):
+        """
+            :param highest: highest resolution value for the scale
+            :param lowest: lowest resolution value for the scale
+            :param intervals: number of labels for the scale
+            :param colorPalette: color palette to use
+        """
+        self.highest = tk.DoubleVar(value=highest)
+        self.lowest = tk.DoubleVar(value=lowest)
+        self.intervals = tk.IntVar(value=intervals)
+        self.colorPalette = tk.StringVar(value=colorPalette)
+        self.info = tk.StringVar()
+
+        # GUI attributes initialization
+        self.palette = None
+        self.params = None
+
+        dialog.Dialog.__init__(self, parentWindow, "Color scale wizard", default="None")
+
+    # Getters
+    def getIntervals(self):
+        return int(self.intervals.get())
+
+    def getHighest(self):
+        return float(self.highest.get())
+
+    def getLowest(self):
+        return float(self.lowest.get())
+
+    def getColorPalette(self):
+        return self.colorPalette.get()
+
+    ### ----- GUI methods ------ ###
+    def body(self, master):
+        """ Draws the main frame of the dialog"""
+        body = tk.Frame(self)
+        body.grid(row=0, column=0, sticky="news")
+        body.grid_columnconfigure(1, weight=10)
+
+        # GUI attributes
+        self.palette = tk.Frame(body)
+        self.palette.grid(row=0, column=0, sticky='nes',
+                          padx=5, pady=5)
+
+        # Params
+        self.params = tk.Frame(body)
+        self.params.grid(row=0, column=1, sticky='news',
+                      padx=5, pady=5)
+        self.params.bind("<Key>", self._keyPressedOnParams)
+
+        self._drawPalette()
+        self._fillParams()
+
+    def _drawLabel(self, color, value, count):
+        label = tk.Label(self.palette, text=value)
+        label.config(bg=color)
+        label.grid(row=count, column=0, sticky='news')
+
+    def _fillParams(self):
+
+        # Add highest scale value
+        highValueLabel = tk.Label(self.params, text="Highest:")
+        highValueLabel.grid(row=0, column=0, sticky="e")
+        self._addEntry(0,1,self.highest)
+
+        # Add lowest value
+        lowValueLabel = tk.Label(self.params, text="Lowest:")
+        lowValueLabel.grid(row=1, column=0, sticky="e")
+        self._addEntry(1,1,self.lowest)
+
+
+        intervalsLabel = tk.Label(self.params, text="Intervals:")
+        intervalsLabel.grid(row=2, column=0, sticky="e")
+        self._addEntry(2, 1, self.intervals)
+
+        # Palettes
+        paletteLabel = tk.Label(self.params, text="Color set:")
+        paletteLabel.grid(row=3, column=0, sticky="e")
+
+        availablePalettes = self.getAvailablePalettes()
+        opt = ttk.Combobox(self.params, textvariable=self.colorPalette, values= availablePalettes)
+        opt.grid(row=3, column=1, sticky="news")
+        self.colorPalette.trace("w", self._paletteChanged)
+
+        # Label to store information: number of color of the color map, e.g.
+        infoLabel = tk.Label(self.params, textvariable=self.info, text="")
+        infoLabel.grid(row=4, column=0, columnspan=2, sticky="news")
+
+
+    def _addEntry(self, row, column, var):
+        newEntry = tk.Entry(self.params, textvariable=var)
+        newEntry.grid(row=row, column=column, sticky="news")
+        newEntry.lift()
+        # Bind events
+        newEntry.bind("<Return>", self._paramChanged)
+        newEntry.bind("<FocusIn>", self._selectAllText)
+        newEntry.bind("<Button-1>", self._selectAllText)
+        newEntry.bind("<FocusOut>", self._paramChanged)
+
+    def _paletteChanged(self, *args):
+        self._drawPalette()
+        info = "%s has %s colors." % (self.getColorPalette(), cm.get_cmap(self.getColorPalette()).N)
+        self.info.set(info)
+
+    def _drawPalette(self):
+        """ Draws the palette using current values: palette, highest, lowest and intervals"""
+        # clean first
+        for widget in self.palette.winfo_children():
+            widget.destroy()
+
+        # get the colors
+        colorList = getHexColorList(self.getIntervals(), colorName=self.getColorPalette())
+
+        # Get the label values
+        labelValues = splitRange(self.getLowest(), self.getHighest(), self.getIntervals())
+
+        # Draw it
+        count = 0
+        for color, value in zip(colorList, labelValues):
+            self._drawLabel(color, value, count)
+            count = count + 1
+
+    ### Events handling
+    def _paramChanged(self, event):
+        # Handles change in palette Option
+        self._drawPalette()
+
+    def _keyPressedOnParams(self, event):
+        # handles keypress on params frame
+        print("PASA key press")
+        self.colorPalette.set("jet")
+
+    def getAvailablePalettes(self):
+        """ Returns a list of all available palettes"""
+        return list(cm.cmap_d.keys())
+
+    def _selectAllText(self, event):
+        """ Select all the text of the widget that triggered the event"""
+        # select text
+        event.widget.select_range(0, 'end')
+        # move cursor to the end
+        event.widget.icursor('end')
+        # stop propagation
+        # return 'break'
+
 
