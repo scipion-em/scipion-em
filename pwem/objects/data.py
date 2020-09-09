@@ -1577,8 +1577,8 @@ class Transform(EMObject):
     def scaleShifts(self, factor, shiftsAppliedBefore=False):
         m = self.getMatrix()
         if shiftsAppliedBefore:
-            m[0, 3] = m[0, 3] % 1  # Decimal part of X translation
-            m[1, 3] = m[1, 3] % 1  # Decimal part of Y translation
+            m[0, 3] -= int(m[0,3])  # Decimal part of X translation
+            m[1, 3] -= int(m[1,3])  # Decimal part of Y translation
         m[0, 3] *= factor
         m[1, 3] *= factor
         m[2, 3] *= factor
