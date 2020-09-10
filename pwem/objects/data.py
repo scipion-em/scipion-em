@@ -136,8 +136,8 @@ class CTFModel(EMObject):
 
     def __str__(self):
         phaseShift = self.getPhaseShift() if self.hasPhaseShift() else 0
-        ctfStr = "defocus(U,V,ast,psh,res,fit) = " \
-                 "(%0.2f,%0.2f,%0.2f,%0.2f,%0.2f,%0.2f)" % \
+        ctfStr = "defU=%0.2f, defV=%0.2f, ast=%0.2f, " \
+                 "psh=%0.2f, res=%0.2f, fit=%0.2f"  % \
                  (self._defocusU.get(-1),
                   self._defocusV.get(-1),
                   self._defocusAngle.get(-1),

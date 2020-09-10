@@ -6,6 +6,8 @@ Created on May 20, 2013
 
 from glob import iglob
 import sqlite3
+from unittest import TestCase
+
 import numpy as np
 
 from pyworkflow import SCIPION_DEBUG_NOCLEAN
@@ -964,3 +966,10 @@ class TestCoordinatesTiltPair(BaseTest):
         # and two sets of coordinates but the person who
         # added that data type Should provide a clear test
         # when this is done then I will finish the test_mapper
+
+class TestCTFModel(TestCase):
+    def test_stringContext(self):
+
+        ctf = emobj.CTFModel()
+        # All values to None should be printable without exception
+        print(ctf)
