@@ -75,7 +75,7 @@ class ProtExtractCoords(ProtParticlePickingAuto):
                            'for re-centering particle coordinates.\n'
                            'IMPORTANT: Only the integer part of the shifts will be applied in '
                            'order to avoid interpolation. If you are re-extracting particles and '
-                           'want to apply the remaining decimal part of the shifts, set to  "yes" the advance '
+                           'want to apply the remaining decimal part of the shifts, set to  "yes" the '
                            'option "Were particle shifts applied?" in alignment assign protocol.'
         )
         
