@@ -51,8 +51,8 @@ class Config(pw.Config):
     # Default XMIPP_HOME: needed here for ShowJ viewers
     XMIPP_HOME = _join(_get('XMIPP_HOME', os.path.join(EM_ROOT,'xmipp')))
 
-    # Needed by Chimera viewer.
-    CHIMERA_HOME = _join(_get('CHIMERA_HOME', os.path.join(EM_ROOT,'chimerax-1.0')))
+    # Needed by Chimera viewer: (TODO: Take the value from the plugin)
+    CHIMERA_HOME = _join(_get('CHIMERA_HOME', os.path.join(EM_ROOT,'chimerax-1.1')))
 
     # Get java home, we might need to provide correct default value
     JAVA_HOME = _get('JAVA_HOME', '')
