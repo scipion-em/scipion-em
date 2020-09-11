@@ -24,11 +24,13 @@
 # *
 # **************************************************************************
 
-import pyworkflow.viewer as pwviewer
+import os
 
+import pyworkflow.viewer as pwviewer
 import pwem.constants as emcts
 from pwem import emlib, splitRange
 from pwem.viewers.viewer_chimera import mapVolsWithColorkey
+import pyworkflow.gui.plotter as plotter
 
 
 class LocalResolutionViewer(pwviewer.ProtocolViewer):
@@ -74,9 +76,8 @@ class LocalResolutionViewer(pwviewer.ProtocolViewer):
         return imgSlice
 
     def createChimeraScript(self, scriptFile, fnResVol,
-                            fnOrigMap, sampRate, numColors=13, lowResLimit=None, highResLimit=None):
-        import pyworkflow.gui.plotter as plotter
-        import os
+                            fnOrigMap, sampRate, numColors=13, lowResLimit=None, highResLimit=None, showAxis=False):
+
         imageFile = os.path.abspath(fnResVol)
 
         _, minRes, maxRes, voldim = self.getImgData(imageFile)
@@ -103,7 +104,7 @@ class LocalResolutionViewer(pwviewer.ProtocolViewer):
                             sampling=sampRate,
                             scriptFileName=scriptFile,
                             bgColorImage='white',
-                            showAxis=True)
+                            showAxis=showAxis)
 
     def _getColorName(self):
         return self.colorMap.get()

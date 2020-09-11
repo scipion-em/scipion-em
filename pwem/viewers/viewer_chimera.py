@@ -396,22 +396,27 @@ def mapVolsWithColorkey(displayVolFileName,
     fhCmd.write("from PyQt5.QtGui import QFont\n")
     fhCmd.write("run(session, 'set bgColor %s')\n" % bgColorImage)
 
-    bildFileName = scriptFile.replace(".py",".bild")
-    Chimera.createCoordinateAxisFile(voldim[0],
-                                     bildFileName=bildFileName,
-                                     sampling=sampling)
-    # axis
     chimeraVolId = 1
+
     if showAxis:
+
+        bildFileName = scriptFile.replace(".py",".bild")
+        Chimera.createCoordinateAxisFile(voldim[0],
+                                         bildFileName=bildFileName,
+                                         sampling=sampling)
+        # axis
         fhCmd.write("run(session, 'open %s')\n" % bildFileName)
         fhCmd.write("run(session, 'cofr 0,0,0')\n")  # set center of coordinates
         chimeraVolId += 1
 
     # first volume
     if volOrigin is None:
-        x = -voldim[0] * sampling // 2
-        y = -voldim[1] * sampling // 2
-        z = -voldim[2] * sampling // 2
+        if showAxis:
+            x = -voldim[0] * sampling // 2
+            y = -voldim[1] * sampling // 2
+            z = -voldim[2] * sampling // 2
+        else:
+            x = y = z = 0
     else:
         #TODO, not sure about sign
         x = volOrigin[0]
@@ -421,10 +426,10 @@ def mapVolsWithColorkey(displayVolFileName,
     fhCmd.write("run(session, 'open %s')\n" % displayVolFileName)
     if step == -1:
         fhCmd.write("run(session, 'volume #%d voxelSize %s')\n" %
-                (chimeraVolId, str(sampling)))
+                    (chimeraVolId, str(sampling)))
     else:
         fhCmd.write("run(session, 'volume #%d voxelSize %s step %d')\n" %
-                (chimeraVolId, str(sampling), step))
+                    (chimeraVolId, str(sampling), step))
     fhCmd.write("run(session, 'volume #%d origin %0.2f,%0.2f,%0.2f')\n"
                 % (chimeraVolId, x, y, z))
     # second volume
@@ -468,11 +473,11 @@ def mapVolsWithColorkey(displayVolFileName,
         else:
             step = "{:05.2f}".format(step)
         command ='run(session, "2dlabel text ' + step + \
-        ' bgColor ' + color + \
-        ' xpos 0.01 ypos %f' + \
-        ' size ' + str(ptSize) + \
-        '" % ' +\
-       '(_firstY - %f*_height))\n' % (labelCount)
+                 ' bgColor ' + color + \
+                 ' xpos 0.01 ypos %f' + \
+                 ' size ' + str(ptSize) + \
+                 '" % ' + \
+                 '(_firstY - %f*_height))\n' % (labelCount)
         fhCmd.write(command)
         labelCount += 1
     fhCmd.close()
