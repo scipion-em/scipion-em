@@ -1,51 +1,10 @@
 import unittest
 from unittest.mock import Mock, patch, MagicMock
 from pwem.protocols.protocol_particles import ProtExtractParticles
-from pwem.objects import Micrograph, SetOfMicrographs, CTFModel, SetOfCTF
+from pwem.tests.utils import getSoCTFsMock, getSoMMock
 
 
 class TestExtractParticles(unittest.TestCase):
-
-    @staticmethod
-    def getSoMMock(start=1, end=3):
-        """ Mocks a set of micrographs"""
-        som = MagicMock()
-        som.__iter__.return_value = TestExtractParticles.getMicList(start, end).values()
-        return som
-
-    @staticmethod
-    def getMicList(start=1, end = 3):
-        """ Mocks a mic dict"""
-
-        newMicDict = {}
-
-        for index in range(start, end+1):
-            mic = Micrograph()
-            mic.setMicName("mic%s" % index)
-            newMicDict[mic.getMicName()]= mic
-
-        return newMicDict
-
-    @staticmethod
-    def getSoCTFsMock(start=1, end=3):
-        """ Mocks a set of CTFs"""
-        som = MagicMock()
-        som.__iter__.return_value = TestExtractParticles.getCTFList(start, end).values()
-        return som
-
-    @staticmethod
-    def getCTFList(start=1, end = 3):
-        """ Mocks a CTF dict"""
-        newCtfDict = {}
-
-        for index in range(start, end+1):
-            ctf = CTFModel()
-            mic = Micrograph()
-            mic.setMicName("mic%s" % index)
-            ctf.setMicrograph(mic)
-            newCtfDict[mic.getMicName()]= ctf
-
-        return newCtfDict
 
     def test_simpleLoadInputList(self):
 
@@ -153,7 +112,7 @@ class TestExtractParticles(unittest.TestCase):
 
                 # If ctfs are passed
                 if ctfs:
-                    ctfs = self.getSoCTFsMock(ctfs[0], ctfs[1])
+                    ctfs = getSoCTFsMock(ctfs[0], ctfs[1])
 
                     #  Make SoCtf return items
                     side_effects = [ctfs]
@@ -164,10 +123,10 @@ class TestExtractParticles(unittest.TestCase):
                     setOfCtfPatcher = None
 
                 if micOthers:
-                    micOthers = self.getSoMMock(micOthers[0],micOthers[1])
+                    micOthers = getSoMMock(micOthers[0],micOthers[1])
 
                 micDict = self.loadInputListRunner(setOfMicPatcher,
-                                                   self.getSoMMock(mics[0], mics[1]),
+                                                   getSoMMock(mics[0], mics[1]),
                                                    othersMics= micOthers,
                                                    ctfsPatcher=setOfCtfPatcher)
 
