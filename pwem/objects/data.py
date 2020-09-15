@@ -135,15 +135,18 @@ class CTFModel(EMObject):
         self._fitQuality = Float()
 
     def __str__(self):
-        phaseShift = self.getPhaseShift() if self.hasPhaseShift() else 0
-        ctfStr = "defocus(U,V,ast,psh,res,fit) = " \
-                 "(%0.2f,%0.2f,%0.2f,%0.2f,%0.2f,%0.2f)" % \
-                 (self._defocusU.get(),
-                  self._defocusV.get(),
-                  self._defocusAngle.get(),
-                  phaseShift,
-                  self._resolution.get(),
-                  self._fitQuality.get()
+
+        def strEx(value):
+            return "None" if value is None else "%0.2f" % value
+
+        ctfStr = "defU={}, defV={}, ast={}, " \
+                 "psh={}, res={}, fit={}".format(
+                  strEx(self._defocusU.get()),
+                  strEx(self._defocusV.get()),
+                  strEx(self._defocusAngle.get()),
+                  strEx(self.getPhaseShift()),
+                  strEx(self._resolution.get()),
+                  strEx(self._fitQuality.get())
                   )
 
         return ctfStr
