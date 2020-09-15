@@ -50,7 +50,6 @@ class ProtAlignmentAssign(ProtAlign2D):
                       help='Select the particles with alignment to be apply to the other particles.')
         form.addParam('shiftsAppliedBefore', params.BooleanParam, default=False,
                       label='Were particle shifts applied?',
-                      expertLevel=params.LEVEL_ADVANCED,
                       help='Activate this option only if the advanced option "Apply particle shifts" was set to Yes '
                            'at the extract coordinates protocol.')
         form.addParam('assignRandomSubsets', params.BooleanParam, default=True,
