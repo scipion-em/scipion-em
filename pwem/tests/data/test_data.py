@@ -973,3 +973,7 @@ class TestCTFModel(TestCase):
         ctf = emobj.CTFModel()
         # All values to None should be printable without exception
         print(ctf)
+
+        ctf.setDefocusU(2.4545)
+        print(ctf)
+        self.assertTrue("2.45," in str(ctf))
