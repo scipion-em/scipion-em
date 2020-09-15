@@ -135,7 +135,6 @@ class CTFModel(EMObject):
         self._fitQuality = Float()
 
     def __str__(self):
-        phaseShift = self.getPhaseShift() if self.hasPhaseShift() else 0
 
         def strEx(value):
             return "None" if value is None else "%0.2f" % value
@@ -145,7 +144,7 @@ class CTFModel(EMObject):
                   strEx(self._defocusU.get()),
                   strEx(self._defocusV.get()),
                   strEx(self._defocusAngle.get()),
-                  strEx(phaseShift),
+                  strEx(self.getPhaseShift()),
                   strEx(self._resolution.get()),
                   strEx(self._fitQuality.get())
                   )
