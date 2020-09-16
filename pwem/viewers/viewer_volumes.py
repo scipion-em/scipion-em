@@ -58,13 +58,13 @@ class viewerProtImportVolumes(EmProtocolViewer):
     def _defineParams(self, form):
         form.addSection(label='Visualization of input volumes')
         form.addParam('displayVol', params.EnumParam,
-                      choices=['chimera', 'slices'],
+                      choices=['chimerax', 'slices'],
                       default=VOLUME_CHIMERA,
                       display=params.EnumParam.DISPLAY_HLIST,
                       label='Display volume with',
-                      help='*chimera*: display volumes as surface with '
-                           'Chimera.\n *slices*: display volumes as 2D slices '
-                           'along z axis.\n If number of volumes == 1, '
+                      help='*chimerax*: display volumes as surfaces with '
+                           'ChimeraX.\n *slices*: display volumes as 2D slices '
+                           'along z axis.\n If the number of volumes is equal to 1, '
                            'a system of coordinates is shown'
                       )
 
