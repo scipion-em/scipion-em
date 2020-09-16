@@ -135,15 +135,18 @@ class CTFModel(EMObject):
         self._fitQuality = Float()
 
     def __str__(self):
-        phaseShift = self.getPhaseShift() if self.hasPhaseShift() else 0
-        ctfStr = "defocus(U,V,ast,psh,res,fit) = " \
-                 "(%0.2f,%0.2f,%0.2f,%0.2f,%0.2f,%0.2f)" % \
-                 (self._defocusU.get(),
-                  self._defocusV.get(),
-                  self._defocusAngle.get(),
-                  phaseShift,
-                  self._resolution.get(),
-                  self._fitQuality.get()
+
+        def strEx(value):
+            return "None" if value is None else "%0.2f" % value
+
+        ctfStr = "defU={}, defV={}, ast={}, " \
+                 "psh={}, res={}, fit={}".format(
+                  strEx(self._defocusU.get()),
+                  strEx(self._defocusV.get()),
+                  strEx(self._defocusAngle.get()),
+                  strEx(self.getPhaseShift()),
+                  strEx(self._resolution.get()),
+                  strEx(self._fitQuality.get())
                   )
 
         return ctfStr
@@ -1577,8 +1580,8 @@ class Transform(EMObject):
     def scaleShifts(self, factor, shiftsAppliedBefore=False):
         m = self.getMatrix()
         if shiftsAppliedBefore:
-            m[0, 3] = m[0, 3] % 1  # Decimal part of X translation
-            m[1, 3] = m[1, 3] % 1  # Decimal part of Y translation
+            m[0, 3] -= int(m[0,3])  # Decimal part of X translation
+            m[1, 3] -= int(m[1,3])  # Decimal part of Y translation
         m[0, 3] *= factor
         m[1, 3] *= factor
         m[2, 3] *= factor
@@ -1747,7 +1750,7 @@ class SetOfClasses(EMSet):
     def getSamplingRate(self):
         return self.getImages().getSamplingRate()
 
-    def appendFromClasses(self, classesSet, filterClassFunc=None):
+    def appendFromClasses(self, classesSet, filterClassFunc=None, updateClassCallback=None):
         """ Iterate over the classes and the elements inside each
         class and append classes and items that are enabled.
         """
@@ -1759,6 +1762,8 @@ class SetOfClasses(EMSet):
                 newCls = self.ITEM_TYPE()
                 newCls.copyInfo(cls)
                 newCls.setObjId(cls.getObjId())
+                if updateClassCallback:
+                    updateClassCallback(newCls)
                 self.append(newCls)
                 for img in cls:
                     if img.isEnabled():
@@ -1778,6 +1783,14 @@ class SetOfClasses(EMSet):
         the iterator in itemDataIterator. The callback function should
         set the classId of the image that will be used to classify it.
         It is also possible to pass a callback to update the class properties.
+
+        :param updateItemCallback: callback to be invoked on each item's loop (e.g.: 2d image in a 2d classification)
+        :param updateClassCallback: callback to be invoked when a item.getClassId() changes
+        :param itemDataIterator: an iterator (usually on metadata files, star, xmd,..) that will be called on each loop.
+        usually has that same lines as items and iteration is kept in sync
+        :param classifyDisabled: classify disabled items. By default they are skipped.
+        :param iterParams: Parameters for self.getImages() to leave oot images/filter
+        :param doClone: Make a clone of the item (defaults to true)
         """
         itemDataIter = itemDataIterator  # shortcut
 

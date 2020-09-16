@@ -127,9 +127,9 @@ class Chimera:
         ff = open(bildFileName, "w")
         arrowDict = {}
         arrowDict["x"] = arrowDict["y"] = arrowDict["z"] = \
-            sampling * dim * 3. / 4.
+            sampling * dim * 1. / 2.
         arrowDict["r1"] = r1 * dim / 50.
-        arrowDict["r2"] = 4 * r1
+        arrowDict["r2"] = 2 * arrowDict["r1"]
         arrowDict["rho"] = 0.75  # axis thickness
 
         ff.write(".color 1 0 0\n"
@@ -184,13 +184,14 @@ class ChimeraAngDist(pwviewer.CommandView):
         self.spheresMaxRadius = (float(spheresMaxRadius) if spheresMaxRadius
                                  else 0.02 * self.spheresDistance)
         self.readAngularDistFile()
-        self._createChimeraScript(self.cmdFile)
+        format = kwargs.get('format', None)
+        self._createChimeraScript(self.cmdFile, format)
         program = Chimera.getProgram()
         pwviewer.CommandView.__init__(self, '%s "%s" &' % (program,
                                                            self.cmdFile),
                                       env=Chimera.getEnviron(), **kwargs)
 
-    def _createChimeraScript(self, scriptFile):
+    def _createChimeraScript(self, scriptFile, format):
 
         Chimera.createCoordinateAxisFile(self.xdim,
                                          bildFileName=self.axis,
@@ -200,7 +201,11 @@ class ChimeraAngDist(pwviewer.CommandView):
         fhCmd.write("open %s\n" % self.axis)
         fhCmd.write("open %s\n" % self.spheres)
         fhCmd.write("cofr 0,0,0\n")
-        fhCmd.write("open %s\n" % self.volfile.replace(":mrc",""))
+        if format is not None:
+            fhCmd.write("open %s format %s\n" % (self.volfile.replace(":mrc",""),
+                                                 format))
+        else:
+            fhCmd.write("open %s\n" % self.volfile.replace(":mrc", ""))
         fhCmd.write("volume #3 voxelSize %s\n" % self.voxelSize)
         x, y, z = self.volOrigin
         fhCmd.write("volume #3 origin %s,%s,%s\n" % (x, y, z))
@@ -272,7 +277,7 @@ class ChimeraAngDist(pwviewer.CommandView):
             x = x * self.spheresDistance  # + x2
             y = y * self.spheresDistance  # + y2
             z = z * self.spheresDistance  # + z2
-            command = ('.sphere %s %s %s %s' %
+            command = ('.sphere %.1f %.1f %.1f %.1f' %
                        (x, y, z, radius))
             self.angularDistributionList.append(command)
 
@@ -391,19 +396,26 @@ def mapVolsWithColorkey(displayVolFileName,
     fhCmd.write("from PyQt5.QtGui import QFont\n")
     fhCmd.write("run(session, 'set bgColor %s')\n" % bgColorImage)
 
+    chimeraVolId = 1
+
+
+
     bildFileName = scriptFile.replace(".py",".bild")
     Chimera.createCoordinateAxisFile(voldim[0],
                                      bildFileName=bildFileName,
                                      sampling=sampling)
     # axis
-    counter = 1
-    if showAxis:
-        fhCmd.write("run(session, 'open %s')\n" % bildFileName)
-        fhCmd.write("run(session, 'cofr 0,0,0')\n")  # set center of coordinates
-        counter += 1
+    fhCmd.write("run(session, 'open %s')\n" % bildFileName)
+    if not showAxis:
+        fhCmd.write("run(session, 'hide #1')\n")
+
+    fhCmd.write("run(session, 'cofr 0,0,0')\n")  # set center of coordinates
+
+    chimeraVolId += 1
 
     # first volume
     if volOrigin is None:
+
         x = -voldim[0] * sampling // 2
         y = -voldim[1] * sampling // 2
         z = -voldim[2] * sampling // 2
@@ -413,25 +425,23 @@ def mapVolsWithColorkey(displayVolFileName,
         y = volOrigin[1]
         z = volOrigin[2]
 
-    print("x y z", x, y, z)
-
     fhCmd.write("run(session, 'open %s')\n" % displayVolFileName)
     if step == -1:
         fhCmd.write("run(session, 'volume #%d voxelSize %s')\n" %
-                (counter, str(sampling)))
+                    (chimeraVolId, str(sampling)))
     else:
         fhCmd.write("run(session, 'volume #%d voxelSize %s step %d')\n" %
-                (counter, str(sampling), step))
+                    (chimeraVolId, str(sampling), step))
     fhCmd.write("run(session, 'volume #%d origin %0.2f,%0.2f,%0.2f')\n"
-                % (counter, x, y, z))
+                % (chimeraVolId, x, y, z))
     # second volume
-    counter += 1
+    chimeraVolId += 1
     fhCmd.write("run(session, 'open %s')\n" % mapVolFileName)
     # TODO: Why no step here?
-    fhCmd.write("run(session, 'volume #%d voxelSize %f')\n" % (counter, sampling))
+    fhCmd.write("run(session, 'volume #%d voxelSize %f')\n" % (chimeraVolId, sampling))
     fhCmd.write("run(session, 'volume #%d origin %0.2f,%0.2f,%0.2f')\n"
-                % (counter, x, y, z))
-    fhCmd.write("run(session, 'vol #%d hide')\n" % (counter))
+                % (chimeraVolId, x, y, z))
+    fhCmd.write("run(session, 'vol #%d hide')\n" % (chimeraVolId))
 
     # replace scolor + colorkey which has been discontinued in chimerax
     scolorStr = ''
@@ -439,30 +449,38 @@ def mapVolsWithColorkey(displayVolFileName,
         scolorStr += '%s,%s:' % (step, color)
     scolorStr = scolorStr[:-1]
     fhCmd.write("run(session, 'color sample #%d map #%d "
-                "palette "% (counter -1, counter) +
+                "palette "% (chimeraVolId -1, chimeraVolId) +
                 scolorStr + "')\n"
                 )
+    # get window size so we can place labels properly
+
+    fhCmd.write("v = session.main_view\n")
+    fhCmd.write("vx,vy=v.window_size\n")
+
+    # Calculate heights and Y positions: font, scale height and firstY
     ptSize = fontSize  # default size chimera font
     fhCmd.write('font = QFont("Ariel", %d)\n' % ptSize)
     fhCmd.write('f = QFontMetrics(font)\n')
-    fhCmd.write('_height =  1 * f.height()\n')
-    fhCmd.write("v = session.main_view\n")
-    # get window size so we can place labels properlly
-    fhCmd.write("vx,vy=v.window_size\n")
+    fhCmd.write('_height =  1 * f.height()/vy\n') # Font height
+    fhCmd.write('_half_scale_height = _height * %f/2\n' % len(stepColors)) # Full height of the scale
+    fhCmd.write("_firstY= 0.5 + _half_scale_height\n")  # Y location for first label
+
     fhCmd.write("step = ")
     # place labels in right place
-    # unfortunatelly chimera has no colorbar
+    # unfortunately chimera has no colorbar
+    labelCount=0
     for step, color in zip(stepColors, colorList):
         if step > 99.9:
             step = "%.2f" % step
         else:
             step = "{:05.2f}".format(step)
         command ='run(session, "2dlabel text ' + step + \
-        ' bgColor ' + color + \
-        ' xpos 0.01 ypos %f' + \
-        ' size ' + str(ptSize) + \
-        '" % ' +\
-       '(%f*_height/vx))\n' % (counter)
+                 ' bgColor ' + color + \
+                 ' xpos 0.01 ypos %f' + \
+                 ' size ' + str(ptSize) + \
+                 '" % ' + \
+                 '(_firstY - %f*_height))\n' % (labelCount)
+
         fhCmd.write(command)
-        counter += 2
+        labelCount += 1
     fhCmd.close()
