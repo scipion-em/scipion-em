@@ -76,7 +76,7 @@ class LocalResolutionViewer(pwviewer.ProtocolViewer):
         return imgSlice
 
     def createChimeraScript(self, scriptFile, fnResVol,
-                            fnOrigMap, sampRate, numColors=13, lowResLimit=None, highResLimit=None, showAxis=False):
+                            fnOrigMap, sampRate, numColors=13, lowResLimit=None, highResLimit=None, showAxis=True):
 
         imageFile = os.path.abspath(fnResVol)
 

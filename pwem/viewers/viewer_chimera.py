@@ -127,9 +127,9 @@ class Chimera:
         ff = open(bildFileName, "w")
         arrowDict = {}
         arrowDict["x"] = arrowDict["y"] = arrowDict["z"] = \
-            sampling * dim * 3. / 4.
+            sampling * dim * 1. / 2.
         arrowDict["r1"] = r1 * dim / 50.
-        arrowDict["r2"] = 4 * r1
+        arrowDict["r2"] = 2 * arrowDict["r1"]
         arrowDict["rho"] = 0.75  # axis thickness
 
         ff.write(".color 1 0 0\n"
@@ -398,25 +398,27 @@ def mapVolsWithColorkey(displayVolFileName,
 
     chimeraVolId = 1
 
-    if showAxis:
 
-        bildFileName = scriptFile.replace(".py",".bild")
-        Chimera.createCoordinateAxisFile(voldim[0],
-                                         bildFileName=bildFileName,
-                                         sampling=sampling)
-        # axis
-        fhCmd.write("run(session, 'open %s')\n" % bildFileName)
-        fhCmd.write("run(session, 'cofr 0,0,0')\n")  # set center of coordinates
-        chimeraVolId += 1
+
+    bildFileName = scriptFile.replace(".py",".bild")
+    Chimera.createCoordinateAxisFile(voldim[0],
+                                     bildFileName=bildFileName,
+                                     sampling=sampling)
+    # axis
+    fhCmd.write("run(session, 'open %s')\n" % bildFileName)
+    if not showAxis:
+        fhCmd.write("run(session, 'hide #1')\n")
+
+    fhCmd.write("run(session, 'cofr 0,0,0')\n")  # set center of coordinates
+
+    chimeraVolId += 1
 
     # first volume
     if volOrigin is None:
-        if showAxis:
-            x = -voldim[0] * sampling // 2
-            y = -voldim[1] * sampling // 2
-            z = -voldim[2] * sampling // 2
-        else:
-            x = y = z = 0
+
+        x = -voldim[0] * sampling // 2
+        y = -voldim[1] * sampling // 2
+        z = -voldim[2] * sampling // 2
     else:
         #TODO, not sure about sign
         x = volOrigin[0]
@@ -478,6 +480,7 @@ def mapVolsWithColorkey(displayVolFileName,
                  ' size ' + str(ptSize) + \
                  '" % ' + \
                  '(_firstY - %f*_height))\n' % (labelCount)
+
         fhCmd.write(command)
         labelCount += 1
     fhCmd.close()
