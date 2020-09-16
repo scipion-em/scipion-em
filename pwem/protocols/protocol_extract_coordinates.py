@@ -70,10 +70,14 @@ class ProtExtractCoords(ProtParticlePickingAuto):
 
         form.addParam('applyShifts', params.BooleanParam, default=False,
                       label='Apply particle shifts?',
-                      expertLevel=params.LEVEL_ADVANCED,
-                      help='Apply particle shifts from 2D alignment to '
+                      help='Apply particle shifts (ONLY INTEGER PART) from 2D alignment to '
                            'recalculate new coordinates. This can be useful '
-                           'for re-centering particle coordinates.')
+                           'for re-centering particle coordinates.\n'
+                           'IMPORTANT: Only the integer part of the shifts will be applied in '
+                           'order to avoid interpolation. If you are re-extracting particles and '
+                           'want to apply the remaining decimal part of the shifts, set to  "yes" the '
+                           'option "Were particle shifts applied?" in alignment assign protocol.'
+        )
         
         form.addParallelSection(threads=0, mpi=0)
 
@@ -156,13 +160,30 @@ class ProtExtractCoords(ProtParticlePickingAuto):
         suffix = self.getSuffix(partsIds[0]) if partsIds is not None else ''
         outputCoords = self._createSetOfCoordinates(inMics, suffix=suffix)
 
+        # Prepare a double key dictionary to do the match: micname and micId
+        micDict = dict()
+        for mic in inMics.iterItems():
+            # Clone the mics! otherwise we will get pointers and
+            # will end up with the same mic in the dictionary.
+            clonedMic = mic.clone()
+            micDict[clonedMic.getObjId()]= clonedMic
+            micDict[clonedMic.getMicName()] = clonedMic
+
+
         def appendCoordFromParticle(part):
             coord = part.getCoordinate()
-            micKey = coord.getMicId()
-            mic = inMics[micKey]
+
+            # Try micname
+            micName = coord.getMicName()
+            mic = micDict.get(micName, None)
+
+            # Try micid
+            if mic is None:
+                micKey = coord.getMicId()
+                mic = micDict.get(micKey, None)
 
             if mic is None:
-                print("Skipping particle, key %s not found" % micKey)
+                print("Skipping particle, %s or id %s not found" % (micName,micKey))
             else:
                 newCoord.copyObjId(part)
                 x, y = coord.getPosition()
@@ -383,12 +404,3 @@ class ProtExtractCoords(ProtParticlePickingAuto):
             errors.append('Input particles do not have alignment information!')
 
         return errors
-
-    def _warnings(self):
-        validateMsgs = []
-        if self.applyShifts.get():
-            validateMsgs.append("Only the integer part of the shifts will be applied in order to avoid " +
-                                "interpolation. If you are re-extracting particles and " +
-                                "want to apply the remaining decimal part of the shifts, ask yes to the advance "
-                                "option 'Were particle shifts applied?' in alignment assign protocol.")
-        return validateMsgs
