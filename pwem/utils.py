@@ -78,3 +78,18 @@ def getCmdPath(*paths):
 
 def convertPixToLength(samplingRate, length):
     return samplingRate * length
+
+def splitRange(minValue, maxValue, splitNum=10, roundTo=2):
+    """
+    returns a list of "splitNum" items with values ranging from minValue to maxValue, equally divided
+    :param minValue: value to start from
+    :param maxValue: value to stop
+    :param splitNum: number of splits, limits included
+    :param roundTo: default to 2, rounding decimal value
+    :return: list with the split
+    """
+    inter = (maxValue - minValue) / (splitNum - 1)
+    rangeList = []
+    for step in range(0, splitNum):
+        rangeList.append(round(minValue + step * inter, roundTo))
+    return rangeList

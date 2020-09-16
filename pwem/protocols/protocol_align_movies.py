@@ -117,8 +117,8 @@ class ProtAlignMovies(ProtProcessMovies):
             break
 
         if output.getSize() == 0 and len(self.listOfMovies) != 0:
-            raise Exception(pwutils.redStr("All movies failed, didn't create outputMicrographs."
-                                           "Please review movie processing steps above."))
+            raise Exception("All movies failed, didn't create outputMicrographs."
+                                           "Please review movie processing steps above.")
         elif output.getSize() < len(self.listOfMovies):
             self.warning(pwutils.yellowStr("WARNING - Failed to align %d movies."
                                            % (len(self.listOfMovies) - output.getSize())))
