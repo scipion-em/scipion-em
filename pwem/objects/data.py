@@ -135,15 +135,18 @@ class CTFModel(EMObject):
         self._fitQuality = Float()
 
     def __str__(self):
-        phaseShift = self.getPhaseShift() if self.hasPhaseShift() else 0
-        ctfStr = "defocus(U,V,ast,psh,res,fit) = " \
-                 "(%0.2f,%0.2f,%0.2f,%0.2f,%0.2f,%0.2f)" % \
-                 (self._defocusU.get(),
-                  self._defocusV.get(),
-                  self._defocusAngle.get(),
-                  phaseShift,
-                  self._resolution.get(),
-                  self._fitQuality.get()
+
+        def strEx(value):
+            return "None" if value is None else "%0.2f" % value
+
+        ctfStr = "defU={}, defV={}, ast={}, " \
+                 "psh={}, res={}, fit={}".format(
+                  strEx(self._defocusU.get()),
+                  strEx(self._defocusV.get()),
+                  strEx(self._defocusAngle.get()),
+                  strEx(self.getPhaseShift()),
+                  strEx(self._resolution.get()),
+                  strEx(self._fitQuality.get())
                   )
 
         return ctfStr
@@ -1577,8 +1580,8 @@ class Transform(EMObject):
     def scaleShifts(self, factor, shiftsAppliedBefore=False):
         m = self.getMatrix()
         if shiftsAppliedBefore:
-            m[0, 3] = m[0, 3] % 1  # Decimal part of X translation
-            m[1, 3] = m[1, 3] % 1  # Decimal part of Y translation
+            m[0, 3] -= int(m[0,3])  # Decimal part of X translation
+            m[1, 3] -= int(m[1,3])  # Decimal part of Y translation
         m[0, 3] *= factor
         m[1, 3] *= factor
         m[2, 3] *= factor
