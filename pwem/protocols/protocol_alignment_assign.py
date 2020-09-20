@@ -23,7 +23,7 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-
+import time
 
 import pyworkflow.protocol.params as params
 from pyworkflow.object import Integer
@@ -58,6 +58,12 @@ class ProtAlignmentAssign(ProtAlign2D):
                       help="If yes, the random subset information from the "
                            "assignment input will be transferred to the output "
                            "particles.")
+        form.addParam('invertHand', params.BooleanParam, default=False,
+                      expertLevel=params.LEVEL_ADVANCED,
+                      label="Invert Hand?",
+                      help="If yes, the transformation matrix will "
+                           " be modified so a reconstruction with "
+                           "the inverted hand is created")
 
         form.addParallelSection(threads=0, mpi=0)
 
@@ -78,23 +84,53 @@ class ProtAlignmentAssign(ProtAlign2D):
         scale = inputAlignment.getSamplingRate()/self.inputParticles.get().getSamplingRate()
 
         alignedParticle = inputAlignment[item.getObjId()]
-        # If alignment is found for this particle set the alignment info
-        # on the output particle, if not do not write that item
+        # If alignment is found for this particle set the
+        # alignment info on the output particle, if not do
+        # not write that item
         if alignedParticle is not None:
             alignment = alignedParticle.getTransform()
-            alignment.scaleShifts(scale, shiftsAppliedBefore=self.shiftsAppliedBefore.get())
+            alignment.scaleShifts(
+                scale, shiftsAppliedBefore=self.shiftsAppliedBefore.get())
+            if self.invertHand:
+                m = alignment.getMatrix()
+                m[0, 2] *= -1.
+                m[1, 2] *= -1.
+                m[2, 1] *= -1.
+                m[2, 0] *= -1.
             item.setTransform(alignment)
 
             if self.assignRandomSubsets:
                 subset = alignedParticle.getAttributeValue('_rlnRandomSubset', None)
                 if subset is not None:
                     item._rlnRandomSubset = Integer(subset)
+
         else:
             item._appendItem = False
 
     def createOutputStep(self):
         inputParticles = self.inputParticles.get()
         inputAlignment = self.inputAlignment.get()
+        # if input and alignment is the same
+        # setOfParticles the program will not work
+        # because the same pointer is used in two different
+        # places. Just make a copy.
+        # I think it only makes sense to use the same 
+        # set of particles as inputparticels and input alignment
+        # if invertHand == True
+        if self.invertHand and inputParticles.getObjId() ==\
+                inputAlignment.getObjId():
+            print("duplicate set of particles")
+            tmpParticles = self._createSetOfParticles(suffix="tmp")
+            tmpParticles.copyInfo(inputAlignment)
+            tmpParticles.setAlignment(inputAlignment.getAlignment())
+            tmpParticles.copyItems(inputAlignment)
+            self.inputAlignment.set(tmpParticles)
+            inputAlignment = tmpParticles
+            saveAssigment = False
+        else:
+            saveAssigment = True
+
+
         outputParticles = self._createSetOfParticles()
         outputParticles.copyInfo(inputParticles)
         outputParticles.setAlignment(inputAlignment.getAlignment())
@@ -104,7 +140,8 @@ class ProtAlignmentAssign(ProtAlign2D):
 
         self._defineOutputs(outputParticles=outputParticles)
         self._defineSourceRelation(self.inputParticles, outputParticles)
-        self._defineSourceRelation(self.inputAlignment, outputParticles)
+        if saveAssigment:
+            self._defineSourceRelation(self.inputAlignment, outputParticles)
 
     def _summary(self):
         summary = []
