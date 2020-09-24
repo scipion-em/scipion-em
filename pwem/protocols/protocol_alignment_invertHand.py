@@ -64,7 +64,6 @@ class ProtAlignmentInvertHand(ProtAlign2D):
         pb = ProgressBar(total=total, width=width)
         from time import sleep
         for counter, particle in enumerate(inputParticles):
-            sleep(0.01)
             if counter % step ==0:
                 pb.update(counter)
             t = particle.getTransform()
