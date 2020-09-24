@@ -837,7 +837,7 @@ def retry(runEnvirom, program, args, cwd, listAtomStruct=[], log=None, clean_dir
                     except:
                         print("CIF file standarization failed.")
                         # atomStructName = newAtomStructName
-
+# TODO this should no be here, ROB
 def partiallyCleaningFolder(program, cwd):
     l1 = os.listdir(cwd)
     l2 = ['molprobity.out', 'molprobity_probe.txt', 'molprobity_coot.py']
