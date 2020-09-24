@@ -25,11 +25,11 @@ from tempfile import mkstemp
 import numpy as np
 import os
 
-from pwem.objects import Matrix
 from pyworkflow.tests import BaseTest, setupTestProject
 from pyworkflow.utils import runJob
 from xmipp3 import Plugin
 import pwem.protocols as emprot
+
 
 def createFeatFile(fd):
     # create feat file
@@ -47,7 +47,7 @@ def createFeatFile(fd):
 # Ellipsoid : [xradius yradius zradius rot tilt psi]
 # Cone : [radius height rot tilt psi]
 data_block1
- _dimensions3D  '99 99 99'
+ _dimensions3D  '100 100 100'
  _phantomBGDensity  0.
  _scale  1.
 data_block2
@@ -59,14 +59,15 @@ loop_
  _featureSpecificVector
 """)
     theta_max = 8 * np.pi
-    nPoints= 100
+    nPoints = 100
     thetaStep = theta_max/nPoints/1.2
     for theta in np.arange(-theta_max/2.4, theta_max/2.4, thetaStep):
-       z = theta * 3.
-       x =  np.sin(theta) * theta_max*1.3
-       y =  np.cos(theta) * theta_max*1.3
-       f.write("sph = 1 '%f %f %f' '5'\n" % (x, y, z))
+        z = theta * 3.
+        x = np.sin(theta) * theta_max*1.3
+        y = np.cos(theta) * theta_max*1.3
+        f.write("sph = 1 '%f %f %f' '5'\n" % (x, y, z))
     f.close()
+
 
 def createParamFile(fd):
     f = os.fdopen(fd, "w")
@@ -87,7 +88,7 @@ def createParamFile(fd):
 # Noise applied to particle center coordenates [noise (bias)]
 
 data_block1
-_dimensions2D   '99 99'
+_dimensions2D   '100 100'
 _projRotRange    '0 360 4'
 _projRotNoise   '0.0 0.0'
 _projRotRandomness   random
@@ -105,6 +106,7 @@ def projectPhantom(featFileName, paramFileName, particlesFileName):
     args = "-i %s -o %s" % (featFileName, particlesFileName)
     args += " --params %s" % (paramFileName)
     runJob(None, "xmipp_phantom_project", args, env=Plugin.getEnviron())
+
 
 class TestProtAssignAngles(BaseTest):
     @classmethod
@@ -164,46 +166,4 @@ class TestProtAssignAngles(BaseTest):
                                  part3.getTransform().getMatrix())
             self.assertFalse(result)
         self.assertEqual(len(prot3.outputParticles),
-                        len(prot1.outputParticles))
-
-    def test_01_autoaligment(self):
-        # import first set of particles
-        prot1 = self.newProtocol(emprot.ProtImportParticles,
-                                 importFrom=emprot.ProtImportParticles.IMPORT_FROM_XMIPP3,
-                                 mdFile=self.xmdFileName,
-                                 magnification=10000,
-                                 samplingRate=1,
-                                 haveDataBeenPhaseFlipped=False
-                                 )
-        prot1.setObjLabel('import Particles 1')
-        self.launchProtocol(prot1)
-
-
-        # aasign transformation from 1 set to second set
-        prot3 = self.newProtocol(emprot.ProtAlignmentAssign,
-                                 inputParticles=prot1.outputParticles,
-                                 inputAlignment=prot1.outputParticles,
-                                 invertHand=True,
-                                 )
-        prot3.setObjLabel('assign angle 1 -> 2')
-        self.launchProtocol(prot3)
-        for part1, part3 in emprot.izip(
-                prot1.outputParticles,
-                prot3.outputParticles):
-            matrix = Matrix()
-            matrix.copy(part1.getTransform())
-            m = matrix.getMatrix()
-            m[0, 2] *= -1.
-            m[1, 2] *= -1.
-            m[2, 1] *= -1.
-            m[2, 0] *= -1.
-            result = np.allclose(m,
-                                 part3.getTransform().getMatrix())
-            self.assertTrue(result)
-            result = np.allclose(part1.getTransform().getMatrix(),
-                                 part3.getTransform().getMatrix())
-            self.assertFalse(result)
-        self.assertEqual(len(prot3.outputParticles),
-                        len(prot1.outputParticles))
-
-
+                         len(prot1.outputParticles))
