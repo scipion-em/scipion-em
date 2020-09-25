@@ -689,13 +689,13 @@ class AtomicStructHandler:
         io.set_structure(self.structure)
         io.save(filename, sel)
 
-    def reNameChain(self, chainID, newChainName, modelID='0',
+    def renameChain(self, chainID, newChainName, modelID='0',
                     filename="output.mmcif"):
         self.structure[modelID][chainID].id = newChainName
         self.write(filename)
 
 
-    def reNumberChain(self, chainID, offset=0, modelID='0',
+    def renumberChain(self, chainID, offset=0, modelID='0',
                     filename="output.mmcif"):
         # get chain object
         chain = self.structure[modelID][chainID]
