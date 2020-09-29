@@ -151,7 +151,8 @@ class TestExport2DataBases(pwtest.BaseTest):
         protChimera.setObjLabel('chimera fit\n volume and PDB\n save model')
         self.launchProtocol(protChimera)
 
-        protExp.exportAtomStruct.set(protChimera.DONOTSAVESESSION_Atom_struct__3_000603)
+        outputAttr = "DONOTSAVESESSION_Atom_struct__3_%06d" % protChimera.getObjId()
+        protExp.exportAtomStruct.set(getattr(protChimera, outputAttr))
 
         protExp.filesPath.set(os.getcwd() + "/dir2")
         self.launchProtocol(protExp)

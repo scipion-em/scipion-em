@@ -82,11 +82,13 @@ class ProtAlignmentAssign(ProtAlign2D):
         # on the output particle, if not do not write that item
         if alignedParticle is not None:
             alignment = alignedParticle.getTransform()
-            alignment.scaleShifts(scale, shiftsAppliedBefore=self.shiftsAppliedBefore.get())
+            alignment.scaleShifts(
+                scale, shiftsAppliedBefore=self.shiftsAppliedBefore.get())
             item.setTransform(alignment)
 
             if self.assignRandomSubsets:
-                subset = alignedParticle.getAttributeValue('_rlnRandomSubset', None)
+                subset = \
+                    alignedParticle.getAttributeValue('_rlnRandomSubset', None)
                 if subset is not None:
                     item._rlnRandomSubset = Integer(subset)
         else:

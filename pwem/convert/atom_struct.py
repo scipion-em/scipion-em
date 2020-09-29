@@ -689,6 +689,34 @@ class AtomicStructHandler:
         io.set_structure(self.structure)
         io.save(filename, sel)
 
+    def renameChain(self, chainID, newChainName, modelID='0',
+                    filename="output.mmcif"):
+        self.structure[modelID][chainID].id = newChainName
+        self.write(filename)
+
+
+    def renumberChain(self, chainID, offset=0, modelID='0',
+                    filename="output.mmcif"):
+        # get chain object
+        chain = self.structure[modelID][chainID]
+        # remove chain from model
+        self.structure[modelID].detach_child(chainID)
+        from Bio.PDB.Chain import Chain
+        # create new chain
+        newChain = Chain(chainID)
+        for residue in chain:
+            # remove residue, otherwise we cannot renumber it
+            residue.detach_parent()
+            rId = residue.id
+            res_id = list(rId)
+            res_id[1] = res_id[1] + offset
+            if res_id[1] <0 :
+                raise ValueError('Residue number cant be <= 0')
+            residue.id = tuple(res_id)
+            newChain.add(residue)
+        self.structure[modelID].add(newChain)
+        self.write(filename)
+
 
 def cifToPdb(fnCif, fnPdb):
     h = AtomicStructHandler()
@@ -837,7 +865,7 @@ def retry(runEnvirom, program, args, cwd, listAtomStruct=[], log=None, clean_dir
                     except:
                         print("CIF file standarization failed.")
                         # atomStructName = newAtomStructName
-
+# TODO this should no be here, ROB
 def partiallyCleaningFolder(program, cwd):
     l1 = os.listdir(cwd)
     l2 = ['molprobity.out', 'molprobity_probe.txt', 'molprobity_coot.py']
