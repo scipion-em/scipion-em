@@ -135,8 +135,8 @@ class TestExport2DataBases(pwtest.BaseTest):
 
         # run Chimera rigid fit ti get a PDB file
         extraCommands = ""
-        extraCommands += "runCommand('scipionwrite model #2 refmodel #1 prefix DONOTSAVESESSION_')\n"
-        extraCommands += "runCommand('stop')\n"
+        extraCommands += "scipionwrite #3 prefix DONOTSAVESESSION_\n"
+        extraCommands += "exit\n"
 
         args = {'extraCommands': extraCommands,
                 'inputVolume': self.protImportHalf1.outputVolume,
@@ -151,7 +151,7 @@ class TestExport2DataBases(pwtest.BaseTest):
         protChimera.setObjLabel('chimera fit\n volume and PDB\n save model')
         self.launchProtocol(protChimera)
 
-        protExp.exportAtomStruct.set(protChimera.DONOTSAVESESSION_Atom_struct__2)
+        protExp.exportAtomStruct.set(protChimera.DONOTSAVESESSION_Atom_struct__3_000603)
 
         protExp.filesPath.set(os.getcwd() + "/dir2")
         self.launchProtocol(protExp)
