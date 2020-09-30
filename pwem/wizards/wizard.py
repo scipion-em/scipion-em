@@ -560,7 +560,7 @@ class DownsampleDialog(ImagePreviewDialog):
         downButton.grid(row=1, column=1, padx=5, pady=5, sticky='ew')
 
     def getDownsample(self):
-        return float(self.downVar.get())
+        return 1
 
     def manageMaskVals(self):
         # To be coded by each child, if necessary
