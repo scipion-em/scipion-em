@@ -142,7 +142,7 @@ class ProtUnionSet(ProtSets):
             outputSetFunction = getattr(self, "_create%s" % set1.getClassName())
             outputSet = outputSetFunction()
         except Exception:
-            outputSet = set1.create(self._getPath())
+            outputSet = set1.createCopy(self._getPath())
 
         # Copy info from input sets (sampling rate, etc).
         outputSet.copyInfo(set1)  # all sets must have the same info as set1!
@@ -387,8 +387,8 @@ class ProtSplitSet(ProtSets):
             outputSetFunction = getattr(self, "_create%s" % inputClassName)
             subsets = [outputSetFunction(suffix=str(i)) for i in range(1, n+1)]
         except Exception:
-            subsets = [inputSet.create(self._getPath(), suffix=str(i)) for i in
-                       range(1, n + 1)]
+            subsets = [inputSet.createCopy(self._getPath(), suffix=str(i))
+                       for i in range(1, n + 1)]
 
         # Iterate over the elements in the input set and assign
         # to different subsets.
@@ -502,7 +502,7 @@ class ProtSubSet(ProtSets):
             outputSetFunction = getattr(self, "_create%s" % inputClassName)
             outputSet = outputSetFunction()
         except Exception:
-            outputSet = inputFullSet.create(self._getPath())
+            outputSet = inputFullSet.createCopy(self._getPath())
 
         outputSet.copyInfo(inputFullSet)
 

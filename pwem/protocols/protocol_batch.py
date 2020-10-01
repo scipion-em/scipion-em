@@ -83,13 +83,10 @@ class ProtUserSubSet(BatchProtocol):
 
         # New recommended way to create subsets: making the set responsible for his own subset process
         # Once all Sets implement appendFromSet and the if bellow is gone we can remove this "if"
-        if hasattr(markedSet, "appendFromSet"):
-            newSet = markedSet.create(self._getPath())
-
+        if getattr(markedSet, "USE_CREATE_COPY_FOR_SUBSET", False):
             markedSet.loadAllProperties()
-            newSet.copyInfo(markedSet)
-            # Copy items from input set
-            newSet.appendFromSet(markedSet)
+            newSet = markedSet.createCopy(self._getPath(),
+                                          copyInfo=True, copyItems=True)
 
             # Define outputs, may be use something more specific than "subset"
             self._defineOutputs(subset=newSet)
@@ -158,7 +155,7 @@ class ProtUserSubSet(BatchProtocol):
             createFunc = getattr(self, '_create' + className)
             output = createFunc()
         except Exception:
-            output = inputObj.create(self._getPath())
+            output = inputObj.createCopy(self._getPath())
 
         for item in modifiedSet:
             if item.isEnabled():
@@ -185,7 +182,7 @@ class ProtUserSubSet(BatchProtocol):
             createFunc = getattr(self, '_create' + className)
             output = createFunc()
         except Exception:
-            output = inputImages.create(self._getPath())
+            output = inputImages.createCopy(self._getPath())
 
         if copyInfoCallback is None:
             modifiedSet.loadAllProperties()
@@ -344,7 +341,7 @@ class ProtUserSubSet(BatchProtocol):
             createFunc = getattr(self, '_create' + className)
             output = createFunc()
         except Exception as e:
-            output = inputImages.create(self._getPath())
+            output = inputImages.createCopy(self._getPath())
 
         modifiedSet = inputClasses.getClass()(filename=self._dbName, prefix=self._dbPrefix)
         self.info("Creating subset of images from classes, sqlite file: %s" % self._dbName)
@@ -377,7 +374,7 @@ class ProtUserSubSet(BatchProtocol):
             createFunc = getattr(self, '_create' + className)
             output = createFunc()
         except Exception as e:
-            output = inputClasses.getClass().create(self._getPath())
+            output = inputClasses.getClass().createCopy(self._getPath())
 
         modifiedSet = inputClasses.getClass()(filename=self._dbName, prefix=self._dbPrefix)
         self.info("Creating subset of classes from classes, sqlite file: %s" % self._dbName)

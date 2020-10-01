@@ -33,12 +33,14 @@ import os
 import json
 import numpy as np
 
+import pyworkflow.utils as pwutils
 from pyworkflow.object import (OrderedObject, Float, Integer, String,
                                OrderedDict, CsvList, Boolean, Set, Pointer,
                                Scalar)
-
+import pwem
 from pwem.constants import (NO_INDEX, ALIGN_NONE, ALIGN_2D, ALIGN_3D,
                             ALIGN_PROJ, ALIGNMENTS)
+
 
 
 class EMObject(OrderedObject):
@@ -870,8 +872,7 @@ class PdbFile(AtomStruct):
 class EMSet(Set, EMObject):
 
     def _loadClassesDict(self):
-        from pwem import Domain
-        classDict = Domain.getObjects()
+        classDict = pwem.Domain.getObjects()
         classDict.update(globals())
 
         return classDict
@@ -930,6 +931,39 @@ class EMSet(Set, EMObject):
             else:
                 if itemDataIter is not None:
                     next(itemDataIter)  # just skip disabled data row
+
+    def createCopy(self, outputPath,
+                   prefix=None, suffix=None, ext=None,
+                   copyInfo=False, copyItems=False):
+        """ Make a copy of the current set to another location (e.g file).
+        Params:
+            outputPath: where the output file will be written.
+            prefix: prefix of the created file, if None, it will be deduced
+                from the ClassName.
+            suffix: additional suffix that will be added to the prefix with a
+                "_" in between.
+            ext: extension of the output file, be default will use the same
+                extension of this set filename.
+            copyInfo: if True the copyInfo will be called after set creation.
+            copyItems: if True the copyItems function will be called.
+        """
+        fn = prefix or self.getClassName().lower().replace('setof', '')
+
+        if suffix:
+            fn += '_%s' % suffix
+
+        fn += '.%s' % (ext or pwutils.getExt(self.getFileName()))
+
+        setPath = os.path.join(outputPath, fn)
+        pwutils.cleanPath(setPath)
+
+        setObj = self.getClass()(filename=setPath)
+
+        if copyInfo:
+            setObj.copyInfo(self)
+
+        if copyItems:
+            setObj.copyItems(self)
 
     def getFiles(self):
         return Set.getFiles(self)
