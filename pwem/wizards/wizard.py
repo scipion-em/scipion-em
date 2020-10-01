@@ -560,7 +560,7 @@ class DownsampleDialog(ImagePreviewDialog):
         downButton.grid(row=1, column=1, padx=5, pady=5, sticky='ew')
 
     def getDownsample(self):
-        return 1
+        return float(self.downVar.get())
 
     def manageMaskVals(self):
         # To be coded by each child, if necessary
@@ -705,8 +705,8 @@ class CtfDialog(DownsampleDialog):
         # Update both mask and sliders with the initial values
         self.manageMaskVals()
 
-    # def getDownsample(self):
-    #     return 1.0  # Micrograph previously downsample, not taken into account here
+    def getDownsample(self):
+        return 1.0  # Micrograph previously downsample, not taken into account here
 
     def updateFreqRing(self):
         self.rightPreview.updateFreq(self.getLowFreq(), self.getHighFreq())
