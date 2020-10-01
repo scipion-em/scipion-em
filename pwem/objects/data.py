@@ -819,7 +819,7 @@ class AtomStruct(EMFile):
         # origin stores a matrix that using as input the point (0,0,0)
         # provides  the position of the actual origin in the system of
         # coordinates of the default origin.
-        # _origin is an object of the class Transformor shifts
+        # _origin is an object of the class Transform shifts
         # units are Angstroms (in Image units are A)
         self._origin = None
 

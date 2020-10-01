@@ -114,7 +114,7 @@ class ProtExtractParticles(ProtParticles):
                       label="Input coordinates",
                       help='Select the SetOfCoordinates ')
     
-        # The name for the followig param is because historical reasons
+        # The name for the following param is because historical reasons
         # now it should be named better 'micsSource' rather than
         # 'downsampleType', but this could make inconsistent previous executions
         # of this protocols, we will keep the name
