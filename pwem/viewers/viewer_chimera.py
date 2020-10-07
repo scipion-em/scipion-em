@@ -362,6 +362,7 @@ class ChimeraViewer(pwviewer.Viewer):
                                                  sampling=sampling)
                 f.write("open %s\n" % bildFileName)
                 f.write("open %s\n" % os.path.abspath(fn))
+                f.write("style stick")
                 f.close()
                 ChimeraView(fnCmd).show()
             # FIXME: there is an asymmetry between ProtocolViewer and Viewer
