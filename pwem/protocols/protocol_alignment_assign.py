@@ -83,7 +83,7 @@ class ProtAlignmentAssign(ProtAlign2D):
         if alignedParticle is not None:
             alignment = alignedParticle.getTransform()
             alignment.scaleShifts(
-                scale, shiftsAppliedBefore=self.shiftsAppliedBefore.get())
+                scale, shiftsAppliedBefore=self.shiftsAppliedBefore.get(), invert=True)
             item.setTransform(alignment)
 
             if self.assignRandomSubsets:

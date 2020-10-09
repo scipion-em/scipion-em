@@ -40,7 +40,6 @@ from pyworkflow.object import (OrderedObject, Float, Integer, String,
 from pwem.constants import (NO_INDEX, ALIGN_NONE, ALIGN_2D, ALIGN_3D,
                             ALIGN_PROJ, ALIGNMENTS)
 
-
 class EMObject(OrderedObject):
     """Base object for all EM classes"""
     def __init__(self, **kwargs):
@@ -1577,14 +1576,30 @@ class Transform(EMObject):
         m *= factor
         m[3, 3] = 1.
 
-    def scaleShifts(self, factor, shiftsAppliedBefore=False):
+    def scaleShifts(self, factor, shiftsAppliedBefore=False, invert=False):
+        # Local import to avoid loop pwem --> data --> convert --> Plugin (at pwem)
+        from pwem.convert.transformations import inverse_matrix
+
+        # By default Scipion uses a coordinate system associated with the volume rather than the projection
         m = self.getMatrix()
+
+        # If shifts applied in the "projection", the matrix needs to be
+        # expressed in the system of coordinates associated to the projection
         if shiftsAppliedBefore:
+            if invert:
+                m = inverse_matrix(m)
+
             m[0, 3] -= int(m[0,3])  # Decimal part of X translation
             m[1, 3] -= int(m[1,3])  # Decimal part of Y translation
+
         m[0, 3] *= factor
         m[1, 3] *= factor
         m[2, 3] *= factor
+
+        # Revert the inversion done before to have it
+        # related to the coordinate system associated to the volume and not the projection
+        if invert:
+            m = inverse_matrix(m)
 
     def getShifts(self):
         m = self.getMatrix()
