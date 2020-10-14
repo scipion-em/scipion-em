@@ -34,6 +34,7 @@ from datetime import datetime
 import pyworkflow.protocol.params as params
 from pyworkflow.protocol.constants import STATUS_NEW
 import pyworkflow.utils as pwutils
+from pyworkflow.object import Float
 
 from pwem.protocols import ProtParticlePickingAuto
 import pwem.constants as emcts
@@ -187,12 +188,25 @@ class ProtExtractCoords(ProtParticlePickingAuto):
             else:
                 newCoord.copyObjId(part)
                 x, y = coord.getPosition()
+
                 if self.applyShifts:
+                    # Get the shifts, they are returned with the sign reverted
                     shifts = self.getShifts(part.getTransform(), alignType)
-                    xCoor, yCoor = x - int(shifts[0]), y - int(shifts[1])
-                    newCoord.setPosition(xCoor * scale, yCoor * scale)
-                else:
-                    newCoord.setPosition(x * scale, y * scale)
+
+                    # Add the shifts (values are inverted so subtract)
+                    x += shifts[0]
+                    y += shifts[1]
+
+                # Apply the scale
+                x *= scale
+                y *= scale
+
+                # Round coordinates to closer integer 39.9 --> 40 and not 39
+                finalX = round(x)
+                finalY = round(y)
+                newCoord.xFrac = Float(finalX - x)
+                newCoord.yFrac = Float(finalY-y)
+                newCoord.setPosition(finalX, finalY)
 
                 newCoord.setMicrograph(mic)
                 outputCoords.append(newCoord)

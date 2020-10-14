@@ -80,11 +80,23 @@ class ProtAlignmentAssign(ProtAlign2D):
         alignedParticle = inputAlignment[item.getObjId()]
         # If alignment is found for this particle set the alignment info
         # on the output particle, if not do not write that item
-        if alignedParticle is not None:
+        if item.hasCoordinate() and hasattr(item.getCoordinate(), "xFrac"):
+
+            coord = item.getCoordinate()
+
             alignment = alignedParticle.getTransform()
-            alignment.scaleShifts(
-                scale, shiftsAppliedBefore=self.shiftsAppliedBefore.get(), invert=True)
+            alignment.invert()
+            alignment.setShifts(-coord.xFrac.get(),
+                               -coord.yFrac.get(),
+                               0)
+            alignment.invert()
             item.setTransform(alignment)
+
+        # if alignedParticle is not None:
+        #     alignment = alignedParticle.getTransform()
+        #     alignment.scaleShifts(
+        #         scale, shiftsAppliedBefore=self.shiftsAppliedBefore.get(), invert=True)
+        #     item.setTransform(alignment)
 
             if self.assignRandomSubsets:
                 subset = \
