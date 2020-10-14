@@ -194,8 +194,8 @@ class ProtExtractCoords(ProtParticlePickingAuto):
                     shifts = self.getShifts(part.getTransform(), alignType)
 
                     # Add the shifts (values are inverted so subtract)
-                    x += shifts[0]
-                    y += shifts[1]
+                    x -= shifts[0]
+                    y -= shifts[1]
 
                 # Apply the scale
                 x *= scale

@@ -86,8 +86,8 @@ class ProtAlignmentAssign(ProtAlign2D):
 
             alignment = alignedParticle.getTransform()
             alignment.invert()
-            alignment.setShifts(-coord.xFrac.get(),
-                               -coord.yFrac.get(),
+            alignment.setShifts(coord.xFrac.get(),
+                               coord.yFrac.get(),
                                0)
             alignment.invert()
             item.setTransform(alignment)
