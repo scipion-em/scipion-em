@@ -48,10 +48,6 @@ class ProtAlignmentAssign(ProtAlign2D):
         form.addParam('inputAlignment', params.PointerParam, pointerClass='SetOfParticles',
                       label="Input alignments",
                       help='Select the particles with alignment to be apply to the other particles.')
-        form.addParam('shiftsAppliedBefore', params.BooleanParam, default=False,
-                      label='Were particle shifts applied?',
-                      help='Activate this option only if the advanced option "Apply particle shifts" was set to Yes '
-                           'at the extract coordinates protocol.')
         form.addParam('assignRandomSubsets', params.BooleanParam, default=True,
                       expertLevel=params.LEVEL_ADVANCED,
                       label="Assign random subsets?",
@@ -80,23 +76,24 @@ class ProtAlignmentAssign(ProtAlign2D):
         alignedParticle = inputAlignment[item.getObjId()]
         # If alignment is found for this particle set the alignment info
         # on the output particle, if not do not write that item
-        if item.hasCoordinate() and hasattr(item.getCoordinate(), "xFrac"):
-
-            coord = item.getCoordinate()
-
+        if alignedParticle is not None:
             alignment = alignedParticle.getTransform()
-            alignment.invert()
-            alignment.setShifts(coord.xFrac.get(),
-                               coord.yFrac.get(),
-                               0)
-            alignment.invert()
-            item.setTransform(alignment)
 
-        # if alignedParticle is not None:
-        #     alignment = alignedParticle.getTransform()
-        #     alignment.scaleShifts(
-        #         scale, shiftsAppliedBefore=self.shiftsAppliedBefore.get(), invert=True)
-        #     item.setTransform(alignment)
+            # If shifts Applied before at extraction coordinate time
+            if item.hasCoordinate() and hasattr(item.getCoordinate(), "xFrac"):
+                coord = item.getCoordinate()
+
+                alignedParticle = inputAlignment[item.getObjId()]
+
+                alignment.invert()
+                alignment.setShifts(-coord.xFrac.get(),
+                                -coord.yFrac.get(),
+                                0)
+                alignment.invert()
+            else:
+                alignment.scaleShifts(scale)
+
+            item.setTransform(alignment)
 
             if self.assignRandomSubsets:
                 subset = \
