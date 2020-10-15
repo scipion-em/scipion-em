@@ -163,12 +163,3 @@ class ProtAlignmentAssign(ProtAlign2D):
             
         # Add some errors if input is not valid
         return errors
-
-    def _warnings(self):
-        validateMsgs = []
-        if self.shiftsAppliedBefore.get():
-            validateMsgs.append("This option should be set to Yes only if the particle shifts have been applied "
-                                "before.\nIf selected, only the remaining decimal part of the shifts will be applied " +
-                                " for 'x' and 'y'  in the translation component of the transformation matrix. This " +
-                                "will carry longer execution times. Please read the help for further information.")
-        return validateMsgs
