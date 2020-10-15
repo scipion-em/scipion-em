@@ -204,8 +204,11 @@ class ProtExtractCoords(ProtParticlePickingAuto):
                 # Round coordinates to closer integer 39.9 --> 40 and not 39
                 finalX = round(x)
                 finalY = round(y)
-                newCoord.xFrac = Float(finalX - x)
-                newCoord.yFrac = Float(finalY-y)
+
+                # Annotate fractions if shifts applied
+                if self.applyShifts:
+                    newCoord.xFrac = Float(finalX - x)
+                    newCoord.yFrac = Float(finalY-y)
                 newCoord.setPosition(finalX, finalY)
 
                 newCoord.setMicrograph(mic)
