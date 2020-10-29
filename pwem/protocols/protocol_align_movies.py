@@ -8,7 +8,7 @@
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
-# * the Free Software Foundation; either version 2 of the License, or
+# * the Free Software Foundation; either version 3 of the License, or
 # * (at your option) any later version.
 # *
 # * This program is distributed in the hope that it will be useful,
@@ -118,7 +118,7 @@ class ProtAlignMovies(ProtProcessMovies):
 
         if output.getSize() == 0 and len(self.listOfMovies) != 0:
             raise Exception("All movies failed, didn't create outputMicrographs."
-                                           "Please review movie processing steps above.")
+                            "Please review movie processing steps above.")
         elif output.getSize() < len(self.listOfMovies):
             self.warning(pwutils.yellowStr("WARNING - Failed to align %d movies."
                                            % (len(self.listOfMovies) - output.getSize())))
@@ -278,8 +278,8 @@ class ProtAlignMovies(ProtProcessMovies):
 
         # Only validate about cropDimensions if the protocol supports them
         if (hasattr(self, 'cropDimX') and hasattr(self, 'cropDimY')
-            and (self.cropDimX > 0 >= self.cropDimY
-                 or self.cropDimX <= 0 < self.cropDimY)):
+                and (self.cropDimX > 0 >= self.cropDimY
+                     or self.cropDimX <= 0 < self.cropDimY)):
             errors.append("If you give cropDimX, you should also give "
                           "cropDimY and vice versa")
 
@@ -496,14 +496,14 @@ class ProtAlignMovies(ProtProcessMovies):
         """get and correct the pre-exposure dose. It is important for cases
         in which the first frame is different of one. The method support both
         movie and sets of movies"""
-        
+
         firstFrame, _, _ = movieSet.getFramesRange()
         preExp = movieSet.getAcquisition().getDoseInitial()
         dose = movieSet.getAcquisition().getDosePerFrame()
         preExp += dose * (firstFrame - 1)
-        
+
         return preExp, dose
-        
+
     def __runXmippProgram(self, program, args):
         """ Internal shortcut function to launch a Xmipp program. """
         from pwem import Domain
@@ -572,7 +572,7 @@ class ProtAlignMovies(ProtProcessMovies):
         ih = emlib.image.ImageHandler()
         psdImg1 = ih.read(inputMic)
         res = psdImg1.computePSD(overlap, dim, dim)
-        res.write(oroot+".psd")
+        res.write(oroot + ".psd")
 
     def composePSDImages(self, psdImg1, psdImg2, outputFn,
                          outputFnUncorrected=None, outputFnCorrected=None):
@@ -667,7 +667,7 @@ class ProtAlignMovies(ProtProcessMovies):
     def getThumbnailFn(self, inputFn):
         """ Returns the default name for a thumbnail image"""
         return pwutils.replaceExt(inputFn, "thumb.png")
-    
+
     def _getPsdCorr(self, movie):
         """ This should be implemented in subclasses."""
         pass
@@ -701,23 +701,23 @@ def createAlignmentPlot(meanX, meanY):
     ax.set_title('Cartesian representation')
     ax.set_xlabel('Drift x (pixels)')
     ax.set_ylabel('Drift y (pixels)')
-    
+
     # Max range of the plot of the two coordinates
-    plotRange = max(max(meanX)-min(meanX), max(meanY)-min(meanY))
-    i = 1 
+    plotRange = max(max(meanX) - min(meanX), max(meanY) - min(meanY))
+    i = 1
     skipLabels = ceil(len(meanX) / 10.0)
     for x, y in izip(meanX, meanY):
         if i % skipLabels == 0:
-            ax.text(x-0.02*plotRange, y+0.02*plotRange, str(i))
+            ax.text(x - 0.02 * plotRange, y + 0.02 * plotRange, str(i))
         i += 1
 
     ax.plot(meanX, meanY, color='b')
     ax.plot(meanX, meanY, 'yo')
 
     # setting the plot windows to properly see the data
-    ax.axis([min(meanX)-0.1*plotRange, max(meanX)+0.1*plotRange, 
-             min(meanY)-0.1*plotRange, max(meanY)+0.1*plotRange])
-    
+    ax.axis([min(meanX) - 0.1 * plotRange, max(meanX) + 0.1 * plotRange,
+             min(meanY) - 0.1 * plotRange, max(meanY) + 0.1 * plotRange])
+
     plotter.tightLayout()
 
     return plotter

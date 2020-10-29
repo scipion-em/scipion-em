@@ -4,7 +4,7 @@
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
-# * the Free Software Foundation; either version 2 of the License, or
+# * the Free Software Foundation; either version 3 of the License, or
 # * (at your option) any later version.
 # *
 # * This program is distributed in the hope that it will be useful,
@@ -29,10 +29,11 @@ import pwem.protocols as emprot
 
 
 class TestCtfConsensus(pwtests.BaseTest):
-    """ Check if the Xmipp-CTFconsensus rejects CTFs (and the coorrespondig mics)
+    """ Check if the Xmipp-CTFconsensus rejects CTFs (and the corresponding mics)
         when two CTF estimations give different results,
         and accept when the two estimations give similar results.
     """
+
     @classmethod
     def setUpClass(cls):
         pwtests.setupTestProject(cls)
@@ -41,8 +42,8 @@ class TestCtfConsensus(pwtests.BaseTest):
 
     def checkCTFs(self, protConsensus, refCTFs, refMics, label='',
                   avgCTF=None, MDmerging=False):
-        outputCTF = getattr(protConsensus, "outputCTF"+label, None)
-        outputMicrographs = getattr(protConsensus, "outputMicrographs"+label, None)
+        outputCTF = getattr(protConsensus, "outputCTF" + label, None)
+        outputMicrographs = getattr(protConsensus, "outputMicrographs" + label, None)
 
         self.assertIsNotNone(outputCTF,
                              "There was a problem with the CTF-Consensus. "
@@ -82,7 +83,6 @@ class TestCtfConsensus(pwtests.BaseTest):
                 self.assertTrue(MDlabel in firstCTF.getObjDict().keys(),
                                 "'%s' metadata not found in the result. "
                                 "Bad merging" % MDlabel)
-
 
     def test1(self):
         # Import a set of micrographs
@@ -136,8 +136,8 @@ class TestCtfConsensus(pwtests.BaseTest):
                                        useAstigmatism=False,
                                        useResolution=False,
                                        calculateConsensus=True,
-                                       averageDefocus = False,
-                                       includeSecondary = False)
+                                       averageDefocus=False,
+                                       includeSecondary=False)
         protCTFcons.inputCTF.set(protCTF1.outputCTF)
         protCTFcons.inputCTF2.set(protCTF2.outputCTF)
         self.launchProtocol(protCTFcons)
@@ -155,9 +155,9 @@ class TestCtfConsensus(pwtests.BaseTest):
                                         useAstigmatism=False,
                                         useResolution=False,
                                         calculateConsensus=True,
-                                       averageDefocus = False,
-                                       includeSecondary = False)
-        
+                                        averageDefocus=False,
+                                        includeSecondary=False)
+
         protCTFcons2.inputCTF.set(protCTF1.outputCTF)
         protCTFcons2.inputCTF2.set(protCTF3.outputCTF)
         self.launchProtocol(protCTFcons2)

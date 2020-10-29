@@ -6,7 +6,7 @@
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
-# * the Free Software Foundation; either version 2 of the License, or
+# * the Free Software Foundation; either version 3 of the License, or
 # * (at your option) any later version.
 # *
 # * This program is distributed in the hope that it will be useful,
@@ -33,13 +33,15 @@ ghostStr = """
   > Please install Xmipp to get full functionality. 
 (Configuration->Plugins->scipion-em-xmipp -> expand, in Scipion plugin manager window)\n
 """
+
+
 def linkXmippBinding():
     xmipp_home = pwem.Config.XMIPP_HOME
     # If exists xmipp
     if os.path.exists(xmipp_home):
 
         # Link the binding
-        xmippBindingPath = os.path.join(xmipp_home,"bindings", "python", "xmippLib.so")
+        xmippBindingPath = os.path.join(xmipp_home, "bindings", "python", "xmippLib.so")
         dest = os.path.join(pw.Config.getBindingsFolder(), "xmippLib.so")
         if not os.path.exists(dest):
             createLink(xmippBindingPath, dest)
@@ -48,14 +50,15 @@ def linkXmippBinding():
 
             # Link the libraries
             createLink(os.path.join(xmippLibFolder, "libXmipp.so"),
-                   os.path.join(pw.Config.getLibFolder(), "libXmipp.so"))
+                       os.path.join(pw.Config.getLibFolder(), "libXmipp.so"))
             createLink(os.path.join(xmippLibFolder, "libXmippCore.so"),
-                   os.path.join(pw.Config.getLibFolder(), "libXmippCore.so"))
+                       os.path.join(pw.Config.getLibFolder(), "libXmippCore.so"))
 
             print("Xmipp bindings registered in Scipion. You will need to restart.")
 
         if os.path.abspath(pw.Config.getLibFolder()) not in os.environ.get("LD_LIBRARY_PATH", ""):
-            print("LD_LIBRARY_PATH must contain scipion lib folder (%s).  Please, add it." % os.path.abspath(pw.Config.getLibFolder()))
+            print("LD_LIBRARY_PATH must contain scipion lib folder (%s).  Please, add it." % os.path.abspath(
+                pw.Config.getLibFolder()))
 
 
 print(ghostStr)

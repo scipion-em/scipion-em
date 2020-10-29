@@ -3,8 +3,8 @@
 import sys
 from pwem.viewers import Chimera
 
-def main():
 
+def main():
     fileName = sys.argv[1]
 
     # Clean filename in case it comes annotated like 1@xxxmrc:mrcs
@@ -15,6 +15,7 @@ def main():
         fileName = fileName.split("@")[1]
 
     Chimera().runProgram(args=fileName)
+
 
 if __name__ == '__main__':
     main()

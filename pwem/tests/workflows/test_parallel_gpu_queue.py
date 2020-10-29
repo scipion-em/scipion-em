@@ -6,7 +6,7 @@
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
-# * the Free Software Foundation; either version 2 of the License, or
+# * the Free Software Foundation; either version 3 of the License, or
 # * (at your option) any later version.
 # *
 # * This program is distributed in the hope that it will be useful,
@@ -154,16 +154,16 @@ class TestQueueBase(BaseTest):
     def _runRelionClassify2D(self, previousRun, label='', threads=1, MPI=1,
                              doGpu=False, GPUs='', useQueue=False, steps=False):
         """ :param previousRun: The outputParticles of that will be the input
-            :param label: For naming porposals
+            :param label: For naming purposes
             :param threads: How many threads to use
             :param MPI: How many MPIs to use
             :param doGpu: Use GPU or not
-            :param GPUs: Whichs GPUs to use (see Relion gpusToUse form param)
+            :param GPUs: Which GPUs to use (see Relion gpusToUse form param)
             :param useQueue: Use the queue system or not
             :return: the launched protocol
         """
         relionProtocols = Domain.importFromPlugin('relion.protocols',
-                                                   doRaise=True)
+                                                  doRaise=True)
         prot2D = self.newProtocol(relionProtocols.ProtRelionClassify2D,
                                   doCTF=False, maskDiameterA=340,
                                   numberOfMpi=MPI, numberOfThreads=threads)

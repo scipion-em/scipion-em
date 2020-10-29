@@ -29,17 +29,16 @@ class TestExtractParticles(unittest.TestCase):
 
         self.assertLoadInputList((1, 3),
                                  2, "Partial extraction of mics and ctf does not work.",
-                                 ctfs=(2,3))
+                                 ctfs=(2, 3))
 
         self.assertLoadInputList((1, 3),
                                  3, "Extraction of same mics and ctfs does not work.",
-                                 ctfs=(1,3))
+                                 ctfs=(1, 3))
 
         self.assertLoadInputList((1, 3),
                                  0, "Extraction of non overlapping mics and ctfs does "
-                                     "return mics and it shouldn't.",
-                                 ctfs= (4, 8))
-
+                                    "return mics and it shouldn't.",
+                                 ctfs=(4, 8))
 
     def test_LoadInputListWithAll(self):
 
@@ -47,13 +46,13 @@ class TestExtractParticles(unittest.TestCase):
         #  ctf ==
         self.assertLoadInputList((1, 3),
                                  3, "Extraction of mics = others = ctfs does not work.",
-                                 micOthers= (1,3),
+                                 micOthers=(1, 3),
                                  ctfs=(1, 3))
 
         # ctf partial
         self.assertLoadInputList((1, 3),
                                  1, "Extraction of overlapping mics, others and partial ctfs does not work.",
-                                 micOthers= (1,3),
+                                 micOthers=(1, 3),
                                  ctfs=(3, 4))
 
         # ctf excluded
@@ -100,7 +99,6 @@ class TestExtractParticles(unittest.TestCase):
                                  micOthers=(4, 8),
                                  ctfs=(9, 12))
 
-
     def assertLoadInputList(self, mics, expectedMicSize, msg, micOthers=None, ctfs=None):
         """ Asserts particle extraction using ctfs
             :parameter mics tuple with mic indexes  --> start and end
@@ -123,11 +121,11 @@ class TestExtractParticles(unittest.TestCase):
                     setOfCtfPatcher = None
 
                 if micOthers:
-                    micOthers = getSoMMock(micOthers[0],micOthers[1])
+                    micOthers = getSoMMock(micOthers[0], micOthers[1])
 
                 micDict = self.loadInputListRunner(setOfMicPatcher,
                                                    getSoMMock(mics[0], mics[1]),
-                                                   othersMics= micOthers,
+                                                   othersMics=micOthers,
                                                    ctfsPatcher=setOfCtfPatcher)
 
                 self.assertEqual(expectedMicSize, len(micDict), msg)
@@ -171,7 +169,6 @@ class TestExtractParticles(unittest.TestCase):
 
             # if testing ctf extraction
             if ctfsPatcher:
-
                 # Activate if _micOthers
                 extractParticles._useCTF = Mock
 
@@ -191,6 +188,3 @@ class TestExtractParticles(unittest.TestCase):
             extractParticles.micDict = processedMics
 
             return extractParticles._loadInputList()
-
-
-

@@ -7,7 +7,7 @@
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
-# * the Free Software Foundation; either version 2 of the License, or
+# * the Free Software Foundation; either version 3 of the License, or
 # * (at your option) any later version.
 # *
 # * This program is distributed in the hope that it will be useful,
@@ -91,7 +91,7 @@ SYM_CYCLIC = 0  # CN cyclic symmetry Cn around z axis
 SYM_DIHEDRAL = 1  # DN cyclic symmetry plus and extra 2fold symmetry axis around X
 SYM_DIHEDRAL_X = SYM_DIHEDRAL
 SYM_DIHEDRAL_Y = 2  # DN cyclic symmetry plus and extra 2fold symmetry axis around Y (cryoSparc)
-SYM_TETRAHEDRAL = 3  # T 222 Tetahedral symmetry with two-fold symmetry axes along the X, Y, 
+SYM_TETRAHEDRAL = 3  # T 222 Tetrahedral symmetry with two-fold symmetry axes along the X, Y,
 # and Z axes, a three-fold along axis (1,1,1)
 SYM_TETRAHEDRAL_Z3 = 4  # T  three-fold symmetry axis along Z, another three-fold axis 
 # in the YZ plane such that rotation about the X axis by ~110°
