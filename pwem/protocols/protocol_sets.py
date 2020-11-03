@@ -6,7 +6,7 @@
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
-# * the Free Software Foundation; either version 2 of the License, or
+# * the Free Software Foundation; either version 3 of the License, or
 # * (at your option) any later version.
 # *
 # * This program is distributed in the hope that it will be useful,
@@ -53,13 +53,13 @@ class ProtUnionSet(ProtSets):
     same type of elements (Micrographs, Particles or Volumes) 
     """
     _label = 'join sets'
-    _unionTypes = ['Particles', 
-                   'Micrographs', 
-                   'CTFs', 
-                   'Volumes', 
-                   'Averages', 
+    _unionTypes = ['Particles',
+                   'Micrographs',
+                   'CTFs',
+                   'Volumes',
+                   'Averages',
                    'All']
-    
+
     def __init__(self, **kwargs):
         ProtSets.__init__(self, **kwargs)
 
@@ -85,13 +85,13 @@ class ProtUnionSet(ProtSets):
                 pointerClass = '%s,CTFModel' % pointerClass[:-1]
 
             self.inputSetsParam.setPointerClass(pointerClass)
-        
+
         self.inputType.trace(onChangeInputType)
 
     # -------------------------- DEFINE param functions ------------------------
-    def _defineParams(self, form):    
+    def _defineParams(self, form):
         form.addSection(label='Input')
-        
+
         form.addParam('inputType', pwprot.params.EnumParam,
                       choices=self._unionTypes, default=5,  # All
                       label='Input type:',
@@ -215,12 +215,12 @@ class ProtUnionSet(ProtSets):
 
     def getObjDict(self, includeClass=False):
         return super(ProtUnionSet, self).getObjDict(includeClass)
-    
+
     def duplicatedIds(self):
         """ Check if there are duplicated ids to renumber from
         the beginning. """
         usedIds = set()  # to keep track of the object ids we have already seen
-        
+
         for itemSet in self.inputSets:
             for obj in itemSet.get():
                 objId = obj.getObjId()
@@ -261,10 +261,10 @@ class ProtUnionSet(ProtSets):
             return ["All objects should have the same type.",
                     "Types of objects found: %s" % ", ".join(classes)]
         if issubclass(type(self.inputSets[0].get()), emobj.SetOfClasses):
-            return["Is not possible to join different sets of classes.\n"
-                   "If you want to join different representative, extract them "
-                   "with the viewer and them run this protocol with the "
-                   "resulting averages."]
+            return ["Is not possible to join different sets of classes.\n"
+                    "If you want to join different representative, extract them "
+                    "with the viewer and them run this protocol with the "
+                    "resulting averages."]
 
         # Validate attributes like sampling rate or dimensions
         return self._checkSetsCompatibility()
@@ -317,7 +317,7 @@ class ProtUnionSet(ProtSets):
         for index, setAttributes in enumerate(allSetsAttributes):
             setAttributes = set(setAttributes)
             # Get the difference
-            lostAttributes = setAttributes-commonAttributes
+            lostAttributes = setAttributes - commonAttributes
 
             if len(lostAttributes) != 0:
                 warnings.append("Set #%d will loose following "
@@ -357,11 +357,11 @@ class ProtSplitSet(ProtSets):
                       label="Input set", important=True,
                       help='Select the set of elements (images, etc) that you '
                            'want to split.')
-        
+
         form.addParam('numberOfSets', pwprot.params.IntParam, default=2,
                       label="Number of subsets",
                       help='Select how many subsets do you want to create.')
-        
+
         form.addParam('randomize', pwprot.params.BooleanParam, default=False,
                       label="Randomize elements",
                       help='Put the elements at random in the different '
@@ -385,7 +385,7 @@ class ProtSplitSet(ProtSets):
         # Create as many subsets as requested by the user
         try:
             outputSetFunction = getattr(self, "_create%s" % inputClassName)
-            subsets = [outputSetFunction(suffix=str(i)) for i in range(1, n+1)]
+            subsets = [outputSetFunction(suffix=str(i)) for i in range(1, n + 1)]
         except Exception:
             subsets = [inputSet.create(self._getPath(), suffix=str(i)) for i in
                        range(1, n + 1)]
@@ -407,8 +407,8 @@ class ProtSplitSet(ProtSets):
             i += 1
 
         key = 'output' + inputClassName.replace('SetOf', '') + '%02d'
-        for i in range(1, n+1):
-            subset = subsets[i-1]
+        for i in range(1, n + 1):
+            subset = subsets[i - 1]
             subset.copyInfo(inputSet)
             self._defineOutputs(**{key % i: subset})
             self._defineTransformRelation(inputSet, subset)
@@ -448,21 +448,21 @@ class ProtSubSet(ProtSets):
     SET_DIFFERENCE = 1
 
     # -------------------------- DEFINE param functions -----------------------
-    def _defineParams(self, form):    
+    def _defineParams(self, form):
         form.addSection(label='Input')
 
         add = form.addParam  # short notation
         add('inputFullSet', pwprot.params.PointerParam, pointerClass='EMSet',
-            label="Full set of items", important=True, 
+            label="Full set of items", important=True,
             help='Even if the operation can be applied to two arbitrary sets,\n'
                  'the most common use-case is to retrieve a subset of\n'
                  'elements from an original full set.\n'
                  '*Note*: the elements of the resulting set will be the same\n'
                  'ones as this input set.')
-        add('chooseAtRandom', pwprot.params.BooleanParam, default=False, 
+        add('chooseAtRandom', pwprot.params.BooleanParam, default=False,
             label="Make random subset",
             help='Choose elements randomly form the full set.')
-        add('nElements', pwprot.params.IntParam, default=2, 
+        add('nElements', pwprot.params.IntParam, default=2,
             condition='chooseAtRandom',
             label="Number of elements",
             help='How many elements will be taken from the full set.')
@@ -525,16 +525,16 @@ class ProtSubSet(ProtSets):
                 checkElem = lambda e: e
             else:
                 checkElem = lambda e: not e
-            
+
             for origElem in inputFullSet:
                 # TODO: this can be improved if we perform
                 # intersection directly in sqlite
                 exists = origElem.getObjId() in inputSubSet
                 if checkElem(exists):
                     outputSet.append(origElem)
-            
+
         if outputSet.getSize():
-            key = 'output' + inputClassName.replace('SetOf', '') 
+            key = 'output' + inputClassName.replace('SetOf', '')
             self._defineOutputs(**{key: outputSet})
             self._defineTransformRelation(inputFullSet, outputSet)
             if not self.chooseAtRandom.get():
@@ -609,7 +609,7 @@ class ProtSubSet(ProtSets):
             ('SetOfVolumes',
              {'SetOfMicrographs', 'SetOfMovies', 'SetOfParticles', 'SetOfCoordinates'})]:
             if ((c1 == classA and c2 in classesIncompatible) or
-               (c2 == classA and c1 in classesIncompatible)):
+                    (c2 == classA and c1 in classesIncompatible)):
                 return ["The full set and the subset are of incompatible classes",
                         "%s and %s." % (c1, c2)]
         return []  # no errors
@@ -619,7 +619,7 @@ class ProtSubSet(ProtSets):
             return [self.summaryVar.get()]
 
         key = 'output' + self.inputFullSet.get().getClassName().replace('SetOf', '')
-        
+
         if not hasattr(self, key):
             return ["Protocol has not finished yet."]
         else:
@@ -736,18 +736,18 @@ class ProtSubSetByCoord(ProtSets):
         micCoordinates = {}
         for coord in inputCoordinates.iterCoordinates():
             micId = coord.getMicId()
-            x,y=coord.getPosition()
+            x, y = coord.getPosition()
             if micId not in micCoordinates:
                 micCoordinates[micId] = []
-            micCoordinates[micId].append((x,y))
+            micCoordinates[micId].append((x, y))
 
         for particle in inputParticles:
             if particle.getMicId() in micCoordinates:
                 x0, y0 = particle.getCoordinate().getPosition()
-                okToAdd=False
-                for x,y in micCoordinates[particle.getMicId()]:
-                    if abs(x-x0)<=tolerance and abs(y-y0)<=tolerance:
-                        okToAdd=True
+                okToAdd = False
+                for x, y in micCoordinates[particle.getMicId()]:
+                    if abs(x - x0) <= tolerance and abs(y - y0) <= tolerance:
+                        okToAdd = True
                         break
                 if okToAdd:
                     outputSet.append(particle)

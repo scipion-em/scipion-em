@@ -10,7 +10,7 @@
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
-# * the Free Software Foundation; either version 2 of the License, or
+# * the Free Software Foundation; either version 3 of the License, or
 # * (at your option) any later version.
 # *
 # * This program is distributed in the hope that it will be useful,
@@ -23,7 +23,7 @@
 # * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
 # * 02111-1307  USA
 # *
-# *  All comments concerning this program package may be sent to theesti
+# *  All comments concerning this program package may be sent to the
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
@@ -31,7 +31,6 @@
 from os.path import exists, getmtime
 from datetime import datetime
 from collections import OrderedDict
-
 
 import pyworkflow.object as pwobj
 import pyworkflow.protocol.constants as pwcts
@@ -75,11 +74,11 @@ class ProtCTFMicrographs(ProtMicrographs):
 
         form.addParam('AutoDownsampling', params.BooleanParam, default=False,
                       label='Automatic Downsampling Factor',
-                      help='Recomended value to downsample')
+                      help='Recommended value to downsample')
 
         form.addParam('ctfDownFactor', params.FloatParam, default=1.,
                       label='Manual CTF Downsampling factor',
-                      condition='not AutoDownsampling',    # 'not recalculate',
+                      condition='not AutoDownsampling',  # 'not recalculate',
                       help='Set to 1 for no downsampling. Non-integer downsample '
                            'factors are possible. This downsampling is only used '
                            'for estimating the CTF and it does not affect any '
@@ -451,7 +450,7 @@ class ProtCTFMicrographs(ProtMicrographs):
     def _ctfCounter(self, values):
         """ This function return the number of CTFs that was recalculated.
         """
-        numberOfCTF = len(values)/2
+        numberOfCTF = len(values) / 2
         msg = "CTF Re-estimation of %d micrographs" % numberOfCTF
         self.summaryVar.set(msg)
 
@@ -473,7 +472,7 @@ class ProtCTFMicrographs(ProtMicrographs):
             yield micFn, mic
 
     def _computeDefocusRange(self, ctfSet):
-        """ Compute the minimum and maximu defoucs in a set of CTFs.
+        """ Compute the minimum and maximu defocus in a set of CTFs.
         The protocol methodsVar will be updated with new values.
 
         Params:
@@ -517,7 +516,7 @@ class ProtCTFMicrographs(ProtMicrographs):
         #   1) new micrographs ready to be estimated
         #   2) new output ctfs that have been produced and add then
         #      to the output set.
-    
+
         # For now the streaming is not allowed for recalculate CTF
         if self.recalculate:
             return
@@ -573,7 +572,7 @@ class ProtCTFMicrographs(ProtMicrographs):
         self.finished = self.streamClosed and allDone == nMics
         streamMode = pwobj.Set.STREAM_CLOSED if self.finished else pwobj.Set.STREAM_OPEN
         self.debug('   streamMode: %s newDone: %s' % (streamMode,
-                                                      not(newDone == [])))
+                                                      not (newDone == [])))
 
         if newDone:
             newDoneUpdated = self._updateOutputCTFSet(newDone, streamMode)
@@ -604,8 +603,8 @@ class ProtCTFMicrographs(ProtMicrographs):
     def _loadInputList(self):
         """ Load the input set of micrographs that are ready to be estimated. """
         return self._loadSet(self.getInputMicrographs(), emobj.SetOfMicrographs,
-                        lambda mic: mic.getMicName())
-        
+                             lambda mic: mic.getMicName())
+
     def _loadSet(self, inputSet, SetClass, getKeyFunc):
         """ Load a given input set if their items are not already present
         in the self.micDict.
@@ -661,7 +660,7 @@ class ProtCTFMicrographs(ProtMicrographs):
         if doneFailed:
             self._writeFailedList(doneFailed)
 
-        if firstTime:  # define relation just onceget
+        if firstTime:  # define relation just once
             # Using a pointer to define the relations is more robust to
             # scheduling and id changes between the protocol run.db and
             # the main project database.get

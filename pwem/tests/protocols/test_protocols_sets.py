@@ -8,7 +8,7 @@
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
-# * the Free Software Foundation; either version 2 of the License, or
+# * the Free Software Foundation; either version 3 of the License, or
 # * (at your option) any later version.
 # *
 # * This program is distributed in the hope that it will be useful,
@@ -29,6 +29,7 @@
 
 import random
 import unittest
+
 try:
     from itertools import izip
 except ImportError:
@@ -231,8 +232,8 @@ class TestSets(pwtests.BaseTest):
                 output_diff = outputs[0]
                 # Check properties
                 self.assertTrue(set0.equalAttributes(output_diff,
-                                    ignore=['_mapperPath', '_size'],
-                                    verbose=True),
+                                                     ignore=['_mapperPath', '_size'],
+                                                     verbose=True),
                                 "In subset attributes are wrong")
 
                 n2 = len(output_diff)
@@ -420,7 +421,7 @@ class TestSets(pwtests.BaseTest):
             counter += 1
 
     def testMergeDifferentAttrs(self):
-        """ Test merge from subsets with different attritubes.
+        """ Test merge from subsets with different attributes.
         That is, M1(a,b,c) U M2(a,b,c,d)"""
 
         # create two set of particles
@@ -446,7 +447,7 @@ class TestSets(pwtests.BaseTest):
 
         for i in range(1, 3):
             # Increment Id
-            img1.setObjId(img1.getObjId()+1)
+            img1.setObjId(img1.getObjId() + 1)
             img1.setLocation(i, inFileNameData)
             img1.setMicId(i % 3)
             img1.setClassId(i % 5)
@@ -459,7 +460,7 @@ class TestSets(pwtests.BaseTest):
 
         for i in range(1, 3):
             # Increment Id
-            img2.setObjId(img2.getObjId()+1)
+            img2.setObjId(img2.getObjId() + 1)
             img2.setLocation(i, inFileNameData)
             img2.setClassId(i % 5)
             img2.setMicId(i % 3)
@@ -516,7 +517,7 @@ class TestSets(pwtests.BaseTest):
                              "CTF should not have non common attributes")
 
             # Assert ids
-            self.assertEqual(counter+5, img.getObjId(),
+            self.assertEqual(counter + 5, img.getObjId(),
                              "Object id's not kept.")
             counter += 1
 

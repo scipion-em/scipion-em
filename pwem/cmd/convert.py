@@ -19,7 +19,7 @@ def main():
 
     parser = argparse.ArgumentParser(prog=CONVERT_ENTRY_POINT,
                                      usage=
-                                     "pwem command to convert metatata "
+                                     "pwem command to convert metadata "
                                      "coordinates from several em formats "
                                      "(eman, relion, gautomatch "
                                      "and bsoft) to xmipp metadata")
