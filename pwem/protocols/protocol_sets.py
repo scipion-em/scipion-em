@@ -38,6 +38,7 @@ import pyworkflow.object as pwobj
 
 import pwem.objects as emobj
 from pwem.protocols import EMProtocol
+from pwem.objects import Volume
 
 
 class ProtSets(EMProtocol):
@@ -139,13 +140,19 @@ class ProtUnionSet(ProtSets):
 
         # Read ClassName and create the corresponding EMSet (SetOfParticles...)
         try:
-            outputSetFunction = getattr(self, "_create%s" % set1.getClassName())
+            if str(set1.getClassName()) is not 'Volume':
+                outputSetFunction = getattr(self, "_create%s" % set1.getClassName())
+            else:
+                outputSetFunction = getattr(self, "_createSetOfVolumes")
             outputSet = outputSetFunction()
         except Exception:
             outputSet = set1.create(self._getPath())
 
         # Copy info from input sets (sampling rate, etc).
-        outputSet.copyInfo(set1)  # all sets must have the same info as set1!
+        if str(set1.getClassName()) is not 'Volume':
+            outputSet.copyInfo(set1)  # all sets must have the same info as set1!
+        else:
+            outputSet.setSamplingRate(set1.getSamplingRate())
 
         # Renumber from the beginning if either the renumber option is selected
         # or we find duplicated ids in the sets
@@ -167,26 +174,39 @@ class ProtUnionSet(ProtSets):
         setNum = 0
         for itemSet in self.inputSets:
             setNum += 1
-            for obj in itemSet.get():
+            if str(itemSet.get().getClassName()) is not 'Volume':
+                for obj in itemSet.get():
+                    objId = obj.getObjId()
+                    if self.ignoreDuplicates.get():
+                        if objId in idsList:
+                            continue
+                        idsList.append(objId)
+
+                    if self.ignoreExtraAttributes:
+                        newObj = itemSet.get().ITEM_TYPE()
+                        newObj.copyAttributes(obj, *copyAttrs)
+
+                        self.cleanExtraAttributes(newObj, commonAttrs)
+                        if not cleanIds or setNum == 1:
+                            newObj.setObjId(objId)
+                    else:
+                        newObj = obj
+
+                    if (cleanIds and setNum > 1) or self.renumber.get():
+                        newObj.cleanObjId()
+
+                    outputSet.append(newObj)
+
+            else:
+                obj = itemSet.get()
                 objId = obj.getObjId()
                 if self.ignoreDuplicates.get():
                     if objId in idsList:
                         continue
                     idsList.append(objId)
-
-                if self.ignoreExtraAttributes:
-                    newObj = itemSet.get().ITEM_TYPE()
-                    newObj.copyAttributes(obj, *copyAttrs)
-
-                    self.cleanExtraAttributes(newObj, commonAttrs)
-                    if not cleanIds or setNum == 1:
-                        newObj.setObjId(objId)
-                else:
-                    newObj = obj
-
+                newObj = obj
                 if (cleanIds and setNum > 1) or self.renumber.get():
                     newObj.cleanObjId()
-
                 outputSet.append(newObj)
 
         self._defineOutputs(outputSet=outputSet)
@@ -222,8 +242,14 @@ class ProtUnionSet(ProtSets):
         usedIds = set()  # to keep track of the object ids we have already seen
         
         for itemSet in self.inputSets:
-            for obj in itemSet.get():
-                objId = obj.getObjId()
+            if str(itemSet.get().getClassName()) is not 'Volume':
+                for obj in itemSet.get():
+                    objId = obj.getObjId()
+                    if objId in usedIds:
+                        return True
+                    usedIds.add(objId)
+            else:
+                objId = itemSet.get().getObjId()
                 if objId in usedIds:
                     return True
                 usedIds.add(objId)
@@ -231,9 +257,11 @@ class ProtUnionSet(ProtSets):
 
     def getAllSetsAttributes(self):
         allSetsAttributes = list()
-
         for itemSet in self.inputSets:
-            item = itemSet.get().getFirstItem()
+            if str(itemSet.get().getClassName()) is not 'Volume':
+                item = itemSet.get().getFirstItem()
+            else:
+                item = itemSet.get()
             attrs = set(item.getObjDict().keys())
             allSetsAttributes.append(attrs)
 
