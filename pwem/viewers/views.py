@@ -345,7 +345,7 @@ class TableView(pwviewer.View):
         style.configure('Calendar.Treeview', font=font, rowheight=fontheight)
 
         # add a "save data" button
-        saveDataButton = ttk.Button(master=win , text="Save Data",
+        saveDataButton = ttk.Button(master=win, text="Save Data",
                                     command=self.saveData)
         # create treeview to store multi list with data
         tree = ttk.Treeview(columns=headerList,

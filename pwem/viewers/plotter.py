@@ -6,7 +6,7 @@
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
-# * the Free Software Foundation; either version 2 of the License, or
+# * the Free Software Foundation; either version 3 of the License, or
 # * (at your option) any later version.
 # *
 # * This program is distributed in the hope that it will be useful,
@@ -36,11 +36,12 @@ import numbers
 
 class EmPlotter(Plotter):
     """ Class to create several plots. """
+
     def __init__(self, x=1, y=1, mainTitle="", **kwargs):
         Plotter.__init__(self, x, y, mainTitle, **kwargs)
 
-    def plotAngularDistribution(self, title, rot, 
-                                tilt, weight=[], max_p=40, 
+    def plotAngularDistribution(self, title, rot,
+                                tilt, weight=[], max_p=40,
                                 min_p=5, color='blue'):
         """ Create an special type of subplot, representing the angular
         distribution of weight projections. """
@@ -51,19 +52,19 @@ class EmPlotter(Plotter):
                                    'Min weight=%(min_w).2f, Max weight=%(max_w).2f'
                                    % locals(), '', projection='polar')
             for r, t, w in zip(rot, tilt, weight):
-                pointsize = int((w - min_w)/(max_w - min_w + 0.001) * (max_p - min_p) + min_p)
+                pointsize = int((w - min_w) / (max_w - min_w + 0.001) * (max_p - min_p) + min_p)
                 a.plot(r, t, markerfacecolor=color, marker='.', markersize=pointsize)
         else:
             a = self.createSubPlot(title, 'Empty plot', '', projection='polar')
             for r, t in zip(rot, tilt):
                 a.plot(r, t, markerfacecolor=color, marker='.', markersize=10)
         return a
-                
+
     def plotAngularDistributionHistogram(self, title, rot, tilt):
         """ Create an special type of subplot, representing the angular
         distribution of weight projections. """
         heatmap, xedges, yedges = np.histogram2d(rot, tilt, bins=100)
-        sigma = min(max(xedges)-min(xedges),max(yedges)-min(yedges))/20
+        sigma = min(max(xedges) - min(xedges), max(yedges) - min(yedges)) / 20
         heatmap = gaussian_filter(heatmap, sigma=sigma)
         heatmapImage = heatmap.T
         extent = [xedges[0], xedges[-1], yedges[0], yedges[-1]]
@@ -76,7 +77,7 @@ class EmPlotter(Plotter):
 
     def plotAngularDistributionFromMd(self, mdFile, title, **kwargs):
         """ Read the values of rot, tilt and weights from
-        the medata and plot the angular distribution.
+        the metadata and plot the angular distribution.
         ANGLES are in DEGREES
         In the metadata:
             rot: MDL_ANGLE_ROT
@@ -108,17 +109,17 @@ class EmPlotter(Plotter):
     def plotScatter(self, xValues, yValues, color='blue', **kwargs):
         """ Create an scatter plot. """
         self.scatterP(xValues, yValues, c=color, **kwargs)
-  
+
     def plotMatrix(self, img
-                       , matrix
-                       , vminData
-                       , vmaxData
-                       , cmap='jet'
-                       , xticksLablesMajor=None
-                       , yticksLablesMajor=None
-                       , rotationX=90.
-                       , rotationY=0.
-                       , **kwargs):
+                   , matrix
+                   , vminData
+                   , vmaxData
+                   , cmap='jet'
+                   , xticksLablesMajor=None
+                   , yticksLablesMajor=None
+                   , rotationX=90.
+                   , rotationY=0.
+                   , **kwargs):
         interpolation = kwargs.get('interpolation', "none")
         plot = img.imshow(matrix, interpolation=interpolation, cmap=cmap,
                           vmin=vminData, vmax=vmaxData)
@@ -131,7 +132,7 @@ class EmPlotter(Plotter):
                        yticksLablesMajor[:len(yticksLablesMajor)],
                        rotation=rotationY)
         return plot
-    
+
     def plotData(self, xValues, yValues, color='blue', **kwargs):
         """ Shortcut function to plot some values.
         Params:
@@ -143,7 +144,7 @@ class EmPlotter(Plotter):
         """
 
         self.plot(xValues, yValues, color, **kwargs)
-        
+
     def plotDataBar(self, xValues, yValues, width, color='blue', **kwargs):
         """ Shortcut function to plot some values.
         Params:
@@ -186,15 +187,16 @@ class EmPlotter(Plotter):
         ax.legend()
 
         return plotter
-        
+
 
 class PlotData:
     """ Small wrapper around table data such as: sqlite or metadata
     files. """
+
     def __init__(self, fileName, tableName, orderColumn, orderDirection):
         self._orderColumn = orderColumn
         self._orderDirection = orderDirection
-        
+
         if fileName.endswith(".db") or fileName.endswith(".sqlite"):
             self._table = self._loadSet(fileName, tableName)
             self.getColumnValues = self._getValuesFromSet
@@ -203,7 +205,7 @@ class PlotData:
             self._table = self._loadMd(fileName, tableName)
             self.getColumnValues = self._getValuesFromMd
             self.getSize = self._table.size
-            
+
     def _loadSet(self, dbName, dbPreffix):
         from pyworkflow.mapper.sqlite import SqliteFlatDb
         db = SqliteFlatDb(dbName=dbName, tablePrefix=dbPreffix)
@@ -216,11 +218,12 @@ class PlotData:
         from pwem import Domain
         setObj = Domain.getObjects()[setClassName](filename=dbName, prefix=dbPreffix)
         return setObj
-    
+
     def _getValuesFromSet(self, columnName):
-        return [self._getValue(obj, columnName) 
+        return [self._getValue(obj, columnName)
                 for obj in self._table.iterItems(orderBy=self._orderColumn,
-                                       direction=self._orderDirection)]
+                                                 direction=self._orderDirection)]
+
     @staticmethod
     def _removeInfinites(values):
         newValues = []
@@ -235,13 +238,13 @@ class PlotData:
         tableMd.sort(label)  # FIXME: use order direction
         # TODO: sort metadata by self._orderColumn
         return tableMd
-    
+
     def _getValuesFromMd(self, columnName):
         label = md.str2Label(columnName)
         return [self._table.getValue(label, objId) for objId in self._table]
-    
+
     def _getValue(self, obj, column):
         if column == 'id':
             return obj.getObjId()
-        
+
         return obj.getNestedValue(column)

@@ -9,7 +9,7 @@
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
-# * the Free Software Foundation; either version 2 of the License, or
+# * the Free Software Foundation; either version 3 of the License, or
 # * (at your option) any later version.
 # *
 # * This program is distributed in the hope that it will be useful,
@@ -68,7 +68,7 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
             be converted.
 
         NOTE: Now by default this function use the CONVERT_TO_MRC property
-        for backward compatiblity reasons, but this method could be implemented
+        for backward compatibility reasons, but this method could be implemented
         in any subclass of ProtProcessMovies.
         """
         if (self.CONVERT_TO_MRC and not (filename.endswith("mrc") or

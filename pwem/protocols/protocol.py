@@ -6,7 +6,7 @@
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
-# * the Free Software Foundation; either version 2 of the License, or
+# * the Free Software Foundation; either version 3 of the License, or
 # * (at your option) any later version.
 # *
 # * This program is distributed in the hope that it will be useful,
@@ -209,7 +209,7 @@ class EMProtocol(pwprot.Protocol):
             streamingBatchSize: For some programs it is more efficient to process
                 many items at once and not one by one. So this parameter will
                 allow to group a number of items to be processed in the same
-                protocol step. This can also reduce some IO overhead and spawing
+                protocol step. This can also reduce some IO overhead and spawning
                 new OS processes.
         """
         form.addSection("Streaming")
