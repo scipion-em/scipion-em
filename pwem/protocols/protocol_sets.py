@@ -140,16 +140,16 @@ class ProtUnionSet(ProtSets):
 
         # Read ClassName and create the corresponding EMSet (SetOfParticles...)
         try:
-            if str(set1.getClassName()) is not 'Volume':
+            if str(set1.getClassName()) is not Volume.__name__:
                 outputSetFunction = getattr(self, "_create%s" % set1.getClassName())
             else:
-                outputSetFunction = getattr(self, "_createSetOfVolumes")
+                outputSetFunction = self._createSetOfVolumes
             outputSet = outputSetFunction()
         except Exception:
             outputSet = set1.create(self._getPath())
 
         # Copy info from input sets (sampling rate, etc).
-        if str(set1.getClassName()) is not 'Volume':
+        if str(set1.getClassName()) is not Volume.__name__:
             outputSet.copyInfo(set1)  # all sets must have the same info as set1!
         else:
             outputSet.setSamplingRate(set1.getSamplingRate())
@@ -174,7 +174,7 @@ class ProtUnionSet(ProtSets):
         setNum = 0
         for itemSet in self.inputSets:
             setNum += 1
-            if str(itemSet.get().getClassName()) is not 'Volume':
+            if str(itemSet.get().getClassName()) is not Volume.__name__:
                 for obj in itemSet.get():
                     objId = obj.getObjId()
                     if self.ignoreDuplicates.get():
@@ -242,7 +242,7 @@ class ProtUnionSet(ProtSets):
         usedIds = set()  # to keep track of the object ids we have already seen
 
         for itemSet in self.inputSets:
-            if str(itemSet.get().getClassName()) is not 'Volume':
+            if str(itemSet.get().getClassName()) is not Volume.__name__:
                 for obj in itemSet.get():
                     objId = obj.getObjId()
                     if objId in usedIds:
@@ -258,7 +258,7 @@ class ProtUnionSet(ProtSets):
     def getAllSetsAttributes(self):
         allSetsAttributes = list()
         for itemSet in self.inputSets:
-            if str(itemSet.get().getClassName()) is not 'Volume':
+            if str(itemSet.get().getClassName()) is not Volume.__name__:
                 item = itemSet.get().getFirstItem()
             else:
                 item = itemSet.get()
