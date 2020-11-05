@@ -41,6 +41,7 @@ from pwem.protocols import EMProtocol
 from pwem.objects import Volume
 
 
+
 class ProtSets(EMProtocol):
     """ Base class for all protocols related to subsets. """
     pass
@@ -54,10 +55,14 @@ class ProtUnionSet(ProtSets):
     same type of elements (Micrographs, Particles or Volumes) 
     """
     _label = 'join sets'
+    TYPE_CTF = 'CTFs'
+    TYPE_VOLUME='Volumes'
+    TYPE_VOLUME_INDEX = 3
+
     _unionTypes = ['Particles',
                    'Micrographs',
-                   'CTFs',
-                   'Volumes',
+                   TYPE_CTF,
+                   TYPE_VOLUME,
                    'Averages',
                    'All']
 
@@ -79,9 +84,9 @@ class ProtUnionSet(ProtSets):
             # For relatively small set we usually want to include
             # the single element type, this will allow, for example
             # to union SetOfVolumes and Volumes in the final set
-            if inputText in ['Volumes']:
+            if inputText in [self.TYPE_VOLUME]:
                 pointerClass += ',%s' % inputText[:-1]  # remove last 's'
-            elif inputText in ['CTFs']:
+            elif inputText in [self.TYPE_CTF]:
                 # remove last 's'
                 pointerClass = '%s,CTFModel' % pointerClass[:-1]
 
