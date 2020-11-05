@@ -28,6 +28,7 @@ import pwem.protocols as emprot
 import pwem.constants as emcts
 import pwem.convert as emconv
 from pwem.convert import Ccp4Header
+from pyworkflow.object import Pointer
 
 
 class TestImportBase(pwtests.BaseTest):
@@ -276,11 +277,24 @@ class TestImportVolumes(TestImportBase):
         t = volume.getOrigin(force=True)
         x, y, z = t.getShifts()
         self.assertTrue(os.path.exists(prot5._getExtraPath('emd_10676.map')))
-        # TODO: I should chech origin but all 3D map
+        # TODO: I should check origin but all 3D map
         # I have tried to download have origin =0 :-(
         # self.assertEqual(-67.2, x)
         # self.assertEqual(-67.2, y)
         # self.assertEqual(-67.2, z)
+
+        # Test join sets work with volumes
+
+        unionProt = self.newProtocol(emprot.ProtUnionSet,
+                                     inputType=emprot.ProtUnionSet.TYPE_VOLUME_INDEX)
+
+        # Set the input volumes
+        unionProt.inputSets.append (Pointer(prot2, extended="outputVolumes.1"))
+        unionProt.inputSets.append(Pointer(prot3, extended="outputVolumes.1"))
+        unionProt.setObjLabel("Single volumes union")
+        self.launchProtocol(unionProt)
+        self.assertSetSize(unionProt.outputSet, 2, msg="Union of 2 volumes does not work.")
+
 
     def test_import_volume2(self):
         """
