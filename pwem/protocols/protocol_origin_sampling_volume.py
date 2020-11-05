@@ -71,12 +71,12 @@ class ProtOrigSampling(EMProtocol):
                       condition='setSampling',
                       label=pwutils.Message.LABEL_SAMP_RATE)
         form.addParam('setOrigCoord', params.BooleanParam,
-                      label="Set origin of coordinates",
+                      label="Set origin of coordinates (%s)" % UNIT_ANGSTROM_SYMBOL,
                       help="Option YES:\nA new volume object will be created with "
                            "the given ORIGIN of coordinates. "
                            "This ORIGIN will NOT be set in the map file header.\n\n",
                       default=False)
-        line = form.addLine('Offset(%s)' % UNIT_ANGSTROM_SYMBOL,
+        line = form.addLine("",
                             help="A wizard will suggest you possible "
                                  "coordinates for the ORIGIN. In MRC volume "
                                  "files, the ORIGIN coordinates will be "
@@ -84,8 +84,7 @@ class ProtOrigSampling(EMProtocol):
                                  "In case you prefer set your own ORIGIN "
                                  "coordinates, write them here. You have to "
                                  "provide the map center coordinates in "
-                                 "Angstroms (pixels x sampling).\n",
-                            condition='setOrigCoord')
+                                 "Angstroms (pixels x sampling).\n")
         line.addParam('x', params.FloatParam, condition='setOrigCoord',
                       label="x",
                       help="offset along x axis (Angstroms)")
