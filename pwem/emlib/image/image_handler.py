@@ -34,6 +34,7 @@ from .. import lib
 
 class ImageHandler(object):
     """ Class to provide several Image manipulation utilities. """
+
     # TODO: remove dependency from Xmipp
 
     def __init__(self):
@@ -43,7 +44,7 @@ class ImageHandler(object):
         # our own image library
         self._img = lib.Image()
         self._imgClass = lib.Image
-    
+
     @classmethod
     def fixXmippVolumeFileName(cls, image):
         """ This method will add :mrc to .mrc volumes
@@ -61,9 +62,9 @@ class ImageHandler(object):
                 fn += ':mrcs'
             elif fn.endswith('.em'):
                 fn += ':ems'
-        
+
         return fn
-    
+
     @classmethod
     def locationToXmipp(cls, location):
         """ Convert an index and filename location
@@ -73,7 +74,7 @@ class ImageHandler(object):
         if index != emcts.NO_INDEX:
             return "%06d@%s" % (index, filename)
         return filename
-    
+
     @classmethod
     def _convertToLocation(cls, location):
         """ Get a location in a tuple format (index, filename).
@@ -84,10 +85,10 @@ class ImageHandler(object):
         """
         if isinstance(location, tuple):
             outLocation = location
-        
+
         elif isinstance(location, str):
             outLocation = (emcts.NO_INDEX, location)
-        
+
         elif hasattr(location, 'getLocation'):
             # This case includes Image and its subclasses
             outLocation = (location.getIndex(),
@@ -95,9 +96,9 @@ class ImageHandler(object):
         else:
             raise Exception('Can not convert object %s to (index, location)'
                             % type(location))
-        
+
         return outLocation
-    
+
     @classmethod
     def existsLocation(cls, locationObj):
         """ Return True if a given location exists. 
@@ -115,17 +116,17 @@ class ImageHandler(object):
         else:
             raise Exception('Can not match object %s to '
                             '(index, location)' % type(locationObj))
-        
+
         # If either the location is None or location
         if fn is None:
             return False
-        
+
         # Remove filename format specification such as :mrc, :mrcs or :ems
         if ':' in fn:
             fn = fn.split(':')[0]
-        
+
         return os.path.exists(fn)
-    
+
     @classmethod
     def getSupportedDataType(cls, inDataType, outputFilename):
         """ Returns the most similar data type supported by the
@@ -146,7 +147,7 @@ class ImageHandler(object):
         """
         inputLoc = self._convertToLocation(inputObj)
         outputLoc = self._convertToLocation(outputObj)
-        
+
         if outputLoc[1].lower().endswith('.img'):
             # FIXME Since now we can not read dm4 format in Scipion natively
             # we are opening an Eman2 process to read the dm4 file
@@ -165,7 +166,7 @@ class ImageHandler(object):
                 self._img.applyTransforMatScipion(transform.getMatrixAsList())
             # Write to output
             self._img.write(outputLoc)
-    
+
     def convertStack(self, inputFn, outputFn, firstImg=None, lastImg=None,
                      inFormat=None, outFormat=None):
         """ Convert an input stack file into another.
@@ -186,7 +187,7 @@ class ImageHandler(object):
                 # we are opening an Eman2 process to read the dm4 file
                 from pwem import Domain
                 convertImage = Domain.importFromPlugin('eman2.convert',
-                                                        'convertImage')
+                                                       'convertImage')
                 convertImage(inputFn, outputFn)
             else:
                 ext = os.path.splitext(outputFn)[1]
@@ -203,7 +204,7 @@ class ImageHandler(object):
         else:
             # get input dim
             (x, y, z, n) = lib.getImageSize(inputFn)
-            
+
             location = self._convertToLocation(inputFn)
             self._img.read(location, lib.HEADER)
             dataType = self.getSupportedDataType(self._img.getDataType(),
@@ -215,12 +216,12 @@ class ImageHandler(object):
                 lastImg = n
             else:
                 n = lastImg - firstImg + 1
-            
+
             # Create empty output stack file to reserve desired space
             lib.createEmptyFile(outputFn, x, y, 1, n, dataType)
-            for i, j in zip(range(firstImg, lastImg + 1), range(1, n+1)):
+            for i, j in zip(range(firstImg, lastImg + 1), range(1, n + 1)):
                 self.convert((i, inputFn), (j, outputFn))
-    
+
     def getDimensions(self, locationObj):
         """ It will return a tuple with the images dimensions.
         The tuple will contains:
@@ -258,7 +259,7 @@ class ImageHandler(object):
                 return self._img.getDimensions()
         else:
             return None, None, None, None
-    
+
     def getDataType(self, locationObj):
         if self.existsLocation(locationObj):
             location = self._convertToLocation(locationObj)
@@ -266,31 +267,31 @@ class ImageHandler(object):
             return self._img.getDataType()
         else:
             return None
-    
+
     def read(self, inputObj):
         """ Create a new Image class from inputObj 
         (inputObj can be tuple, str or Image subclass). """
         location = self._convertToLocation(inputObj)
-        
+
         return self._imgClass(location)
-    
+
     def createImage(self):
         return self._imgClass()
-    
+
     def write(self, image, outputObj):
         """ Write to disk an image from outputObj 
         (outputObj can be tuple, str or Image subclass). """
         location = self._convertToLocation(outputObj)
         image.write(location)
-    
+
     def compareData(self, locationObj1, locationObj2, tolerance=0.0001):
         """ Compare if two locations have the same binary data.
         """
         loc1 = self._convertToLocation(locationObj1)
         loc2 = self._convertToLocation(locationObj2)
-        
+
         return lib.compareTwoImageTolerance(loc1, loc2, tolerance)
-    
+
     def computeAverage(self, inputSet):
         """ Compute the average image either from filename or set.
         If inputSet is a filename, we will read the whole stack
@@ -302,11 +303,11 @@ class ImageHandler(object):
             _, _, _, n = self.getDimensions(inputSet)
             if n:
                 avgImage = self.read((1, inputSet))
-                
-                for i in range(2, n+1):
+
+                for i in range(2, n + 1):
                     self._img.read((i, inputSet))
                     avgImage.inplaceAdd(self._img)
-                
+
                 avgImage.inplaceDivide(n)
                 return avgImage
         else:
@@ -315,25 +316,25 @@ class ImageHandler(object):
                 imageIter = iter(inputSet)
                 img = next(imageIter)
                 avgImage = self.read(img)
-                
+
                 for img in imageIter:
                     self._img.read(self._convertToLocation(img))
                     avgImage.inplaceAdd(self._img)
-                
+
                 avgImage.inplaceDivide(n)
                 return avgImage
-        
+
         return None
-    
+
     def invertStack(self, inputFn, outputFn):
         # get input dim
         (x, y, z, n) = lib.getImageSize(inputFn)
         # Create empty output stack for efficiency
         lib.createEmptyFile(outputFn, x, y, z, n)
         # handle image formats
-        for i in range(1, n+1):
+        for i in range(1, n + 1):
             self.invert((i, inputFn), (i, outputFn))
-    
+
     def invert(self, inputObj, outputObj):
         """ invert the pixels.
         inputObj and outputObj can be: tuple, string, or Image subclass 
@@ -360,7 +361,7 @@ class ImageHandler(object):
         from pyworkflow.utils.process import runJob
         runJob(None, eman2.Plugin.getProgram(program), args,
                env=eman2.Plugin.getEnviron())
-    
+
     def createCircularMask(self, radius, refImage, outputFile):
         """ Create a circular mask with the given radius (pixels)
         and with the same dimensions of the refImage.
@@ -371,7 +372,7 @@ class ImageHandler(object):
         self.__runXmippProgram('xmipp_transform_mask',
                                '-i %s --create_mask  %s --mask circular -%d'
                                % (inputRef, outputFile, radius))
-    
+
     def addNoise(self, inputFile, outputFile, std=1., avg=0.):
         """ Add Gaussian noise to an input image (or stack)
         to produce noisy images.
@@ -458,10 +459,10 @@ class ImageHandler(object):
         else:
             raise Exception('Can not match object %s to (index, location)'
                             % type(location))
-        
+
         if fn.endswith('.mrc') or fn.endswith('.map'):
             fn += ':mrc'
-        
+
         return fn
 
     @classmethod

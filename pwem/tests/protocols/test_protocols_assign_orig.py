@@ -4,7 +4,7 @@
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
-# * the Free Software Foundation; either version 2 of the License, or
+# * the Free Software Foundation; either version 3 of the License, or
 # * (at your option) any later version.
 # *
 # * This program is distributed in the hope that it will be useful,
@@ -63,13 +63,14 @@ blo = 1 '0 0 0' '50 10.4 2'
             f.write(fileContent)
             f.close()
             return filename
+
         cls.inFileName = generate()
         pwtests.setupTestProject(cls)
 
     def test_assignOriginSampling(self):
         """ Create 3D mask
         """
-        args = {'source': 2, # mask from feature
+        args = {'source': 2,  # mask from feature
                 'featureFilePath': self.inFileName,
                 'samplingRate': 1.1
                 }
@@ -82,7 +83,9 @@ blo = 1 '0 0 0' '50 10.4 2'
 
         # execute protocol that modify sampling/origin
         _sampling = 2.1
-        _x = 11 ; _y = 22; _z = 33
+        _x = 11;
+        _y = 22;
+        _z = 33
         args = {'inVolume': prot.outputMask,
                 'copyFiles': False,
                 'setSampling': True,
@@ -104,14 +107,14 @@ blo = 1 '0 0 0' '50 10.4 2'
         self.assertAlmostEqual(x, _x)
         self.assertAlmostEqual(y, _y)
         self.assertAlmostEqual(z, _z)
-        print("sampling=%f"% sampling)
-        print("orig=%f %f %f"% (x, y, z))
-        self.assertTrue(os.path.islink(vol.getFileName()), "%s is not a link"%vol.getFileName())
+        print("sampling=%f" % sampling)
+        print("orig=%f %f %f" % (x, y, z))
+        self.assertTrue(os.path.islink(vol.getFileName()), "%s is not a link" % vol.getFileName())
 
     def test_assignOrigin(self):
         """ Create 3D mask
         """
-        args = {'source': 2, # mask from feature
+        args = {'source': 2,  # mask from feature
                 'featureFilePath': self.inFileName,
                 'samplingRate': 1.1
                 }
@@ -124,7 +127,9 @@ blo = 1 '0 0 0' '50 10.4 2'
 
         # execute protocol that modify sampling/origin
         _sampling = 2.1
-        _x = 11 ; _y = 22; _z = 33
+        _x = 11;
+        _y = 22;
+        _z = 33
         args = {'inVolume': prot.outputMask,
                 'copyFiles': False,
                 'setSampling': False,
@@ -144,14 +149,14 @@ blo = 1 '0 0 0' '50 10.4 2'
         self.assertAlmostEqual(x, _x)
         self.assertAlmostEqual(y, _y)
         self.assertAlmostEqual(z, _z)
-        print("sampling=%f"% sampling)
-        print("orig=%f %f %f"% (x, y, z))
+        print("sampling=%f" % sampling)
+        print("orig=%f %f %f" % (x, y, z))
         self.assertTrue(os.path.islink(vol.getFileName()))
 
     def test_assignSampling(self):
         """ Create 3D mask
         """
-        args = {'source': 2, # mask from feature
+        args = {'source': 2,  # mask from feature
                 'featureFilePath': self.inFileName,
                 'samplingRate': 1.1
                 }
@@ -179,14 +184,14 @@ blo = 1 '0 0 0' '50 10.4 2'
         sampling = vol.getSamplingRate()
         x, y, z = vol.getOrigin(force=True).getShifts()
         self.assertAlmostEqual(sampling, _sampling)
-        print("sampling=%f"% sampling)
-        print("orig=%f %f %f"% (x, y, z))
+        print("sampling=%f" % sampling)
+        print("orig=%f %f %f" % (x, y, z))
         self.assertTrue(os.path.islink(vol.getFileName()))
 
     def test_assignOriginSamplingCopyFile(self):
         """ Create 3D mask
         """
-        args = {'source': 2, # mask from feature
+        args = {'source': 2,  # mask from feature
                 'featureFilePath': self.inFileName,
                 'samplingRate': 1.1
                 }
@@ -199,7 +204,9 @@ blo = 1 '0 0 0' '50 10.4 2'
 
         # execute protocol that modify sampling/origin
         _sampling = 2.1
-        _x = 11 ; _y = 22; _z = 33
+        _x = 11;
+        _y = 22;
+        _z = 33
         args = {'inVolume': prot.outputMask,
                 'copyFiles': True,
                 'setSampling': True,
@@ -221,6 +228,6 @@ blo = 1 '0 0 0' '50 10.4 2'
         self.assertAlmostEqual(x, _x)
         self.assertAlmostEqual(y, _y)
         self.assertAlmostEqual(z, _z)
-        print("sampling=%f"% sampling)
-        print("orig=%f %f %f"% (x, y, z))
+        print("sampling=%f" % sampling)
+        print("orig=%f %f %f" % (x, y, z))
         self.assertFalse(os.path.islink(vol.getFileName()))

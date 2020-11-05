@@ -3,7 +3,7 @@
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
-# * the Free Software Foundation; either version 2 of the License, or
+# * the Free Software Foundation; either version 3 of the License, or
 # * (at your option) any later version.
 # *
 # * This program is distributed in the hope that it will be useful,
@@ -30,6 +30,7 @@ import pyworkflow.tests as pwtests
 import pwem.protocols as emprot
 
 # Class intentionally renamed to avoid muting this test
+
 class NotifierTest(pwtests.BaseTest):
     @classmethod
     def setUpClass(cls):
@@ -46,7 +47,7 @@ class NotifierTest(pwtests.BaseTest):
         # then store number of times protstress has been executed
         url = self._getUrl()
 
-        # Change periodicy in notification
+        # Change periodicity in notification
         os.environ["SCIPION_NOTIFY_SECONDS"] = "30"
         os.environ["SCIPION_NOTIFY"] = "True"
         url = url.replace("workflow/workflow/",

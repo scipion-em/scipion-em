@@ -7,7 +7,7 @@
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
-# * the Free Software Foundation; either version 2 of the License, or
+# * the Free Software Foundation; either version 3 of the License, or
 # * (at your option) any later version.
 # *
 # * This program is distributed in the hope that it will be useful,
@@ -59,7 +59,7 @@ class ProtImportVolumes(ProtImportImages):
         return ['local file', 'EMDBid']
 
     def _defineAcquisitionParams(self, form):
-        """ Define acquisition parameters, it can be overriden
+        """ Define acquisition parameters, it can be overwritten
         by subclasses to change what parameters to include.
         """
         param = form.getParam('importFrom')
@@ -422,21 +422,21 @@ def fetch_emdb_map(id, directory, tmpDirectory):
 
     try:
         map_path, samplingAPI, originAPI = fetch_file(map_url,
-                                                url_rest_api,
-                                                name,
-                                                minimum_map_size,
-                                                directory,
-                                                tmpDirectory,
-                                                map_name
-                                                )
+                                                      url_rest_api,
+                                                      name,
+                                                      minimum_map_size,
+                                                      directory,
+                                                      tmpDirectory,
+                                                      map_name
+                                                      )
     except Exception as e:
-        raise Exception ("Cannot retrieve File from EMDB", e)
+        raise Exception("Cannot retrieve File from EMDB", e)
 
     originAPI = array(originAPI) * samplingAPI  # convert to Angstrom
-    #check consistency between file header and rest API
+    # check consistency between file header and rest API
     ccp4header = emconv.Ccp4Header(map_path, readHeader=True)
     samplingHeader = ccp4header.computeSampling()  # unit = A/px
-    originHeader = array(ccp4header.getOrigin())   # unit = A
+    originHeader = array(ccp4header.getOrigin())  # unit = A
 
     if abs(samplingHeader - samplingAPI) >= 0.01:
         print("###########################\n"
@@ -501,7 +501,7 @@ def fetch_file(url, url_rest_api, name,
         y = results[origin_tag][origin_y_tag]
         z = results[origin_tag][origin_z_tag]
     except Exception as e:
-        print("Error retriving data from EMDB", str(e))
+        print("Error retrieving data from EMDB", str(e))
 
     if stat(compressName).st_size < minimum_file_size:
         raise Exception("File Downloaded from EMDB is empty")

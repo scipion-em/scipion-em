@@ -6,7 +6,7 @@
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
-# * the Free Software Foundation; either version 2 of the License, or
+# * the Free Software Foundation; either version 3 of the License, or
 # * (at your option) any later version.
 # *
 # * This program is distributed in the hope that it will be useful,
@@ -58,13 +58,13 @@ class ProtOrigSampling(EMProtocol):
         form.addParam('copyFiles', params.BooleanParam,
                       label="copy (true)/link(false) volume:",
                       help="Option YES:\nA new volume file will be copied "
-                      "otherwise a link to the input volume is made\n"
-                      "default = false", expertLevel=params.LEVEL_ADVANCED,
+                           "otherwise a link to the input volume is made\n"
+                           "default = false", expertLevel=params.LEVEL_ADVANCED,
                       default=False)
         form.addParam('setSampling', params.BooleanParam,
                       label="Set SamplingRate",
                       help="Option YES:\nA new volume object will be created with "
-                           "the given SamplinRate. "
+                           "the given SamplingRate. "
                            "This SamplingRate will NOT be set in the map file header.\n\n",
                       default=False)
         form.addParam('samplingRate', params.FloatParam,
@@ -148,17 +148,17 @@ class ProtOrigSampling(EMProtocol):
         # volume copy or linked
         message = []
         if self.setSampling.get():
-            message.append("New Sampling: %f\n"%
-                                   self.samplingRate)
+            message.append("New Sampling: %f\n" %
+                           self.samplingRate)
         if self.setOrigCoord.get():
-            message.append("New Origin: %f %f %f\n"%
-                               (self.x, self.y, self.z))
+            message.append("New Origin: %f %f %f\n" %
+                           (self.x, self.y, self.z))
         return message
 
     def _methods(self):
         return []
 
-# --------------------------- UTILS functions ---------------------------------
+    # --------------------------- UTILS functions ---------------------------------
 
     def getCopyOrLink(self):
         # Set a function to copyFile or createLink
@@ -171,4 +171,3 @@ class ProtOrigSampling(EMProtocol):
     def getFnPath(self, label='volume'):
         return os.path.join(self.filesPath.get(),
                             self._getFileName(label))
-

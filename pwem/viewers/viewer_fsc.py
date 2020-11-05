@@ -7,7 +7,7 @@
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
-# * the Free Software Foundation; either version 2 of the License, or
+# * the Free Software Foundation; either version 3 of the License, or
 # * (at your option) any later version.
 # *
 # * This program is distributed in the hope that it will be useful,
@@ -90,7 +90,7 @@ class FscViewer(pwviewer.Viewer):
             self.plotFsc(obj, **kwargs)
             self.fscList.append(obj.clone())
 
-        bcreateFSC = self._plotButton()  # if you do not asign the result
+        bcreateFSC = self._plotButton()  # if you do not assign the result
         # to something it will be
         # delete
         self.show()
