@@ -6,7 +6,7 @@
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
-# * the Free Software Foundation; either version 2 of the License, or
+# * the Free Software Foundation; either version 3 of the License, or
 # * (at your option) any later version.
 # *
 # * This program is distributed in the hope that it will be useful,
@@ -115,6 +115,7 @@ class Ccp4Header:
     characters (i.e. symmetry operators do not cross the ends of the
     80-character 'lines' and the 'lines' do not terminate in a ``*``).
     """
+
     def __init__(self, fileName, readHeader=False):
         self.isMovie = False
         self._header = collections.OrderedDict()
@@ -162,8 +163,8 @@ class Ccp4Header:
         self._header['Zlength'] = self._header['NZ'] * sampling
 
     def getSampling(self):
-        return self._header['Xlength'] / self._header['NX'],\
-               self._header['Ylength'] / self._header['NY'],\
+        return self._header['Xlength'] / self._header['NX'], \
+               self._header['Ylength'] / self._header['NY'], \
                self._header['Zlength'] / self._header['NZ']
 
     def setMode(self, mode):
@@ -178,24 +179,24 @@ class Ccp4Header:
         self._header['NRSTART'] = originTransformShift[1]
         self._header['NSSTART'] = originTransformShift[2]
 
-    def setStartAngstrom(self,  originTransformShift, sampling):  # Angstrom
+    def setStartAngstrom(self, originTransformShift, sampling):  # Angstrom
         """input Angstroms"""
-        self.setStartPixel(tuple([int(round(x/sampling)) for x in
-                           originTransformShift]))
+        self.setStartPixel(tuple([int(round(x / sampling)) for x in
+                                  originTransformShift]))
 
     def getStartPixel(self):  # PIXEL
         """Returns pixels"""
-        return self._header['NCSTART'],\
+        return self._header['NCSTART'], \
                self._header['NRSTART'], \
                self._header['NSSTART']
 
     def getStartAngstrom(self, sampling):  # Angstrom
         """Returns Angstroms"""
-        return tuple([x*sampling for x in self.getStartPixel()])
+        return tuple([x * sampling for x in self.getStartPixel()])
 
     def getDims(self):
-        return self._header['NC'],\
-               self._header['NR'],\
+        return self._header['NC'], \
+               self._header['NR'], \
                self._header['NS']
 
     def setDims(self, col, row, sec):
@@ -209,8 +210,8 @@ class Ccp4Header:
         self._header['NZ'] = z
 
     def getGridSampling(self):
-        return self._header['NX'],\
-               self._header['NY'],\
+        return self._header['NX'], \
+               self._header['NY'], \
                self._header['NZ']
 
     def setCellDimensions(self, x, y, z):
@@ -220,8 +221,8 @@ class Ccp4Header:
 
     def getCellDimensions(self):
         """ Returns dimensions in Angstroms"""
-        return self._header['Xlength'],\
-               self._header['Ylength'],\
+        return self._header['Xlength'], \
+               self._header['Ylength'], \
                self._header['Zlength']
 
     def setISPG(self, value):
@@ -249,7 +250,7 @@ class Ccp4Header:
     def readHeader(self):
         # read header
         f = open(self._name, 'rb')
-        s = f.read(52*4)  # read header from word 0 to 51
+        s = f.read(52 * 4)  # read header from word 0 to 51
         f.close()
         a = struct.unpack(self.chain, s)
 
@@ -349,7 +350,6 @@ class Ccp4Header:
 
 
 def getFileFormat(fileName):
-
     ext = getExt(fileName)
     if ext in ['.mrc', '.map', '.mrcs', '.mrc:mrc', '.mrc:mrcs', '.st', '.rec']:
         return MRC

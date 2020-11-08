@@ -7,7 +7,7 @@
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
-# * the Free Software Foundation; either version 2 of the License, or
+# * the Free Software Foundation; either version 3 of the License, or
 # * (at your option) any later version.
 # *
 # * This program is distributed in the hope that it will be useful,
@@ -47,11 +47,13 @@ import pwem.constants as emcts
 import pwem.objects as emobj
 from pwem import emlib
 from pyworkflow.protocol import IntParam, StringParam, FloatParam, LEVEL_ADVANCED
+
 # Color map wizard constants
 HIGHEST_ATTR = 'highest'
 LOWEST_ATTR = 'lowest'
 INTERVAL_ATTR = 'intervals'
 COLORMAP_ATTR = 'colorMap'
+
 
 # ===============================================================================
 #    Wizard EM base class
@@ -348,19 +350,21 @@ class ColorScaleWizardBase(EmWizard):
         3.- call ColorScaleWizardBase.defineColorScaleParams(group) in your viewer._defineParams
         4.- use attributes in your plotting method
     """
+
     @classmethod
     def defineTargets(cls, *viewersClass):
         """ :return targets list per each viewer class passed"""
         targets = []
         for viewer in viewersClass:
-            targets.append( (viewer, [HIGHEST_ATTR, LOWEST_ATTR, INTERVAL_ATTR, COLORMAP_ATTR]))
+            targets.append((viewer, [HIGHEST_ATTR, LOWEST_ATTR, INTERVAL_ATTR, COLORMAP_ATTR]))
 
         return targets
 
     def show(self, form):
         viewer = form.protocol
 
-        d = ColorScaleDialog(form.root, viewer.lowest.get(), viewer.highest.get(), viewer.intervals.get(), viewer.colorMap.get())
+        d = ColorScaleDialog(form.root, viewer.lowest.get(), viewer.highest.get(), viewer.intervals.get(),
+                             viewer.colorMap.get())
 
         # If accepted
         if d.resultYes():
@@ -373,24 +377,24 @@ class ColorScaleWizardBase(EmWizard):
     def defineColorScaleParams(form, defaultHighest=10, defaultLowest=0, defaultIntervals=11, defaultColorMap="jet"):
 
         line = form.addLine("Color scale options:",
-                            help="Options to define the color scale limits, intervals (advanced) and color set. Useful when you have outliers ruinning your "
+                            help="Options to define the color scale limits, intervals (advanced) and color set. Useful when you have outliers ruining your "
                                  "visualization/plot.")
         line.addParam(HIGHEST_ATTR, FloatParam, default=defaultHighest,
-                       label="Highest",
-                       help="Highest value for the scale")
+                      label="Highest",
+                      help="Highest value for the scale")
 
         line.addParam(LOWEST_ATTR, FloatParam, default=defaultLowest,
-                       label="Lowest",
-                       help="lowest value of the scale.")
+                      label="Lowest",
+                      help="lowest value of the scale.")
 
         line.addParam(INTERVAL_ATTR, IntParam, default=defaultIntervals,
-                       label="Intervals",
-                       help="Number of labels of the scale",
-                       expertLevel=LEVEL_ADVANCED)
+                      label="Intervals",
+                      help="Number of labels of the scale",
+                      expertLevel=LEVEL_ADVANCED)
 
         line.addParam(COLORMAP_ATTR, StringParam, default=defaultColorMap,
-                       label="Color set",
-                       help="Combination of color for the scale")
+                      label="Color set",
+                      help="Combination of color for the scale")
 
 
 # ===============================================================================
@@ -639,13 +643,13 @@ class CtfDialog(DownsampleDialog):
     def manageMaskVals(self):
         if self.isMakingBigger:
             if self.isInnerRad and self.lf >= self.hf:  # Inner ring can't be bigger than outer ring
-                    # Subtract one step to go back to the nearest lower value
-                    self.lf = self.hf - self.step
+                # Subtract one step to go back to the nearest lower value
+                self.lf = self.hf - self.step
         else:
             if not self.isInnerRad and self.hf <= self.lf:  # Outer ring can't be smaller than inner
                 # ring
-                    # Add one step to go back to the nearest higher value
-                    self.hf = self.lf + self.step
+                # Add one step to go back to the nearest higher value
+                self.hf = self.lf + self.step
 
         # Set the ring sliders in case it comes from the mouse wheel
         self.setFreq(self.lfSlider, self.lf)
@@ -755,7 +759,7 @@ class CtfDialog(DownsampleDialog):
         else:
             var2set.set('{:2.2f} rad/{} | {:5.1f} {}'.format(labSlider.slider.get(),
                                                              emcts.UNIT_ANGSTROM_SYMBOL,
-                                                             self.getDownsample()*sr/freqVal,
+                                                             self.getDownsample() * sr / freqVal,
                                                              emcts.UNIT_ANGSTROM_SYMBOL))
 
     def getLowFreq(self):
@@ -850,9 +854,9 @@ class BandPassFilterDialog(DownsampleDialog):
         using the self.lastObj that was selected
         """
         emlib.bandPassFilter(self.rightImage,
-                                emlib.image.ImageHandler.locationToXmipp(self.lastObj),
-                                self.getLowFreq(), self.getHighFreq(),
-                                self.getFreqDecay(), self.dim)
+                             emlib.image.ImageHandler.locationToXmipp(self.lastObj),
+                             self.getLowFreq(), self.getHighFreq(),
+                             self.getFreqDecay(), self.dim)
 
     def getLowFreq(self):
         if self.showLowFreq:
@@ -930,7 +934,7 @@ class MaskPreviewDialog(ImagePreviewDialog):
             self.iniRadius = self.maskRadius
 
         if self.unit == emcts.UNIT_ANGSTROM:
-            self.iniRadius = self.iniRadius/self.samplingRate
+            self.iniRadius = self.iniRadius / self.samplingRate
 
         listeners = {"<Button-4>": self.makeBigger, "<Button-5>": self.makeSmaller}
 
@@ -957,7 +961,7 @@ class MaskPreviewDialog(ImagePreviewDialog):
         # Show values
         self.showValues(self.hfVar, self.radiusSlider)
         # Update mask
-        self.preview.updateMask(self.iniRadius*self.ratio)
+        self.preview.updateMask(self.iniRadius * self.ratio)
 
     def _createControls(self, frame):
         self.addRadiusBox(frame)
@@ -1026,7 +1030,7 @@ class MaskRadiiPreviewDialog(MaskPreviewDialog):
             self.outerRadius = int(self.dim_par / 2)
 
         if self.unit == emcts.UNIT_ANGSTROM:
-            self.innerRadius = self.innerRadius/self.samplingRate
+            self.innerRadius = self.innerRadius / self.samplingRate
             self.outerRadius = self.innerRadius / self.samplingRate
 
         listeners = {"<Button-4>": self.makeBigger, "<Button-5>": self.makeSmaller,
@@ -1077,13 +1081,13 @@ class MaskRadiiPreviewDialog(MaskPreviewDialog):
     def manageMaskVals(self):
         if self.isMakingBigger:
             if self.isInnerRad and self.innerRadius >= self.outerRadius:  # Inner ring can't be bigger than outer ring
-                    # Subtract one step to go back to the nearest lower value
-                    self.innerRadius = self.outerRadius - self.step
+                # Subtract one step to go back to the nearest lower value
+                self.innerRadius = self.outerRadius - self.step
         else:
             if not self.isInnerRad and self.outerRadius <= self.innerRadius:  # Outer ring can't be smaller than inner
                 # ring
-                    # Add one step to go back to the nearest higher value
-                    self.outerRadius = self.innerRadius + self.step
+                # Add one step to go back to the nearest higher value
+                self.outerRadius = self.innerRadius + self.step
 
         # Set the ring sliders in case it comes from the mouse wheel
         self.setRadius(self.radiusSliderIn, self.innerRadius)
@@ -1094,8 +1098,8 @@ class MaskRadiiPreviewDialog(MaskPreviewDialog):
         self.showValues(self.irVar, self.radiusSliderIn)
 
         # Update mask
-        self.preview.updateMask(self.outerRadius*self.ratio,
-                                self.innerRadius*self.ratio)
+        self.preview.updateMask(self.outerRadius * self.ratio,
+                                self.innerRadius * self.ratio)
 
     def _createControls(self, frame):
         self.step = 1
@@ -1159,6 +1163,7 @@ class MaskRadiiPreviewDialog(MaskPreviewDialog):
             self.innerRadius = new_val
             self.manageMaskVals()
 
+
 class ColorScaleDialog(dialog.Dialog):
     """ This will assist users to choose the color scale and range for
     local resolution viewers
@@ -1211,7 +1216,7 @@ class ColorScaleDialog(dialog.Dialog):
         # Params
         self.params = tk.Frame(body)
         self.params.grid(row=0, column=1, sticky='news',
-                      padx=5, pady=5)
+                         padx=5, pady=5)
         self.params.bind("<Key>", self._keyPressedOnParams)
 
         self._drawPalette()
@@ -1227,13 +1232,12 @@ class ColorScaleDialog(dialog.Dialog):
         # Add highest scale value
         highValueLabel = tk.Label(self.params, text="Highest:")
         highValueLabel.grid(row=0, column=0, sticky="e")
-        self._addEntry(0,1,self.highest)
+        self._addEntry(0, 1, self.highest)
 
         # Add lowest value
         lowValueLabel = tk.Label(self.params, text="Lowest:")
         lowValueLabel.grid(row=1, column=0, sticky="e")
-        self._addEntry(1,1,self.lowest)
-
+        self._addEntry(1, 1, self.lowest)
 
         intervalsLabel = tk.Label(self.params, text="Intervals:")
         intervalsLabel.grid(row=2, column=0, sticky="e")
@@ -1244,14 +1248,13 @@ class ColorScaleDialog(dialog.Dialog):
         paletteLabel.grid(row=3, column=0, sticky="e")
 
         availablePalettes = self.getAvailablePalettes()
-        opt = ttk.Combobox(self.params, textvariable=self.colorPalette, values= availablePalettes)
+        opt = ttk.Combobox(self.params, textvariable=self.colorPalette, values=availablePalettes)
         opt.grid(row=3, column=1, sticky="news")
         self.colorPalette.trace("w", self._paletteChanged)
 
         # Label to store information: number of color of the color map, e.g.
         infoLabel = tk.Label(self.params, textvariable=self.info, text="")
         infoLabel.grid(row=4, column=0, columnspan=2, sticky="news")
-
 
     def _addEntry(self, row, column, var):
         newEntry = tk.Entry(self.params, textvariable=var)
@@ -1308,5 +1311,3 @@ class ColorScaleDialog(dialog.Dialog):
         event.widget.icursor('end')
         # stop propagation
         # return 'break'
-
-

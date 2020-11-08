@@ -7,7 +7,7 @@
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
-# * the Free Software Foundation; either version 2 of the License, or
+# * the Free Software Foundation; either version 3 of the License, or
 # * (at your option) any later version.
 # *
 # * This program is distributed in the hope that it will be useful,
@@ -42,6 +42,7 @@ from pwem.constants import (NO_INDEX, ALIGN_NONE, ALIGN_2D, ALIGN_3D,
 
 class EMObject(OrderedObject):
     """Base object for all EM classes"""
+
     def __init__(self, **kwargs):
         OrderedObject.__init__(self, **kwargs)
 
@@ -55,6 +56,7 @@ class EMObject(OrderedObject):
 
 class Acquisition(EMObject):
     """Acquisition information"""
+
     def __init__(self, **kwargs):
         EMObject.__init__(self, **kwargs)
         self._magnification = Float(kwargs.get('magnification', None))
@@ -140,13 +142,13 @@ class CTFModel(EMObject):
 
         ctfStr = "defU={}, defV={}, ast={}, " \
                  "psh={}, res={}, fit={}".format(
-                  strEx(self._defocusU.get()),
-                  strEx(self._defocusV.get()),
-                  strEx(self._defocusAngle.get()),
-                  strEx(self.getPhaseShift()),
-                  strEx(self._resolution.get()),
-                  strEx(self._fitQuality.get())
-                  )
+            strEx(self._defocusU.get()),
+            strEx(self._defocusV.get()),
+            strEx(self._defocusAngle.get()),
+            strEx(self.getPhaseShift()),
+            strEx(self._resolution.get()),
+            strEx(self._fitQuality.get())
+        )
 
         return ctfStr
 
@@ -200,8 +202,8 @@ class CTFModel(EMObject):
 
     def copyInfo(self, other):
         self.copyAttributes(other, '_defocusU', '_defocusV', '_defocusAngle',
-                                   '_defocusRatio', '_psdFile', '_micFile',
-                                   '_resolution', '_fitQuality')
+                            '_defocusRatio', '_psdFile', '_micFile',
+                            '_resolution', '_fitQuality')
         if other.hasPhaseShift():
             self.setPhaseShift(other.getPhaseShift())
 
@@ -250,7 +252,7 @@ class CTFModel(EMObject):
             self._defocusAngle.sum(180.)
         # At this point defocusU is always greater than defocusV
         # following the EMX standard
-        self._defocusRatio.set(self.getDefocusU()/self.getDefocusV())
+        self._defocusRatio.set(self.getDefocusU() / self.getDefocusV())
 
     def equalAttributes(self, other, ignore=[], verbose=False):
         """ Override default behaviour to compare two
@@ -264,6 +266,7 @@ class CTFModel(EMObject):
 
 class DefocusGroup(EMObject):
     """ Groups CTFs by defocus"""
+
     def __init__(self, **kwargs):
         EMObject.__init__(self, **kwargs)
         self._defocusMin = Float()
@@ -301,6 +304,7 @@ class DefocusGroup(EMObject):
 
 class SetOfDefocusGroups:
     """ Store a set of several defocus groups."""
+
     def __init__(self, inputSet,
                  groupRange=1000,
                  groupMinSize=1,
@@ -371,6 +375,7 @@ class ImageDim(CsvList):
     """ Just a wrapper to a CsvList to store image dimensions
     as X, Y and Z.
     """
+
     def __init__(self, x=None, y=None, z=None):
         CsvList.__init__(self, pType=int)
         if x is not None and y is not None:
@@ -400,6 +405,7 @@ class ImageDim(CsvList):
 
 class Image(EMObject):
     """Represents an EM Image object"""
+
     def __init__(self, location=None, **kwargs):
         """
          Params:
@@ -609,6 +615,7 @@ class Image(EMObject):
 
 class Micrograph(Image):
     """ Represents an EM Micrograph object """
+
     def __init__(self, location=None, **kwargs):
         Image.__init__(self, location, **kwargs)
         self._micName = String()
@@ -630,10 +637,11 @@ class Micrograph(Image):
 
 class Particle(Image):
     """ Represents an EM Particle object """
+
     def __init__(self, location=None, **kwargs):
         Image.__init__(self, location, **kwargs)
         # This may be redundant, but make the Particle
-        # object more indenpent for tracking coordinates
+        # object more independent for tracking coordinates
         self._coordinate = None
         self._micId = Integer()
         self._classId = Integer()
@@ -684,6 +692,7 @@ class Mask(Particle):
 
 class Volume(Image):
     """ Represents an EM Volume object """
+
     def __init__(self, location=None, **kwargs):
         Image.__init__(self, location, **kwargs)
         self._classId = Integer()
@@ -731,6 +740,7 @@ class VolumeMask(Volume):
 
 class EMFile(EMObject):
     """ Class to link usually to text files. """
+
     def __init__(self, filename=None, **kwargs):
         EMObject.__init__(self, **kwargs)
         self._filename = String(filename)
@@ -1071,7 +1081,7 @@ class SetOfImages(EMSet):
         for i, img in enumerate(self.iterItems(orderBy=orderBy,
                                                direction=direction)):
             transform = img.getTransform() if applyTransform else None
-            ih.convert(img, (i+1, fnStack), transform=transform)
+            ih.convert(img, (i + 1, fnStack), transform=transform)
 
     # TODO: Check whether this function can be used.
     # for example: protocol_apply_mask
@@ -1081,7 +1091,7 @@ class SetOfImages(EMSet):
 
         _, _, _, ndim = ImageHandler().getDimensions(fnStack)
         img = self.ITEM_TYPE()
-        for i in range(1, ndim+1):
+        for i in range(1, ndim + 1):
             img.setObjId(None)
             img.setLocation(i, fnStack)
             if postprocessImage is not None:
@@ -1239,6 +1249,7 @@ class SetOfParticles(SetOfImages):
 class SetOfAverages(SetOfParticles):
     """Represents a set of Averages.
     It is a SetOfParticles but it is useful to differentiate outputs."""
+
     def __init__(self, **kwargs):
         SetOfParticles.__init__(self, **kwargs)
 
@@ -1319,6 +1330,7 @@ class SetOfAtomStructs(EMSet):
 
 class SetOfPDBs(SetOfAtomStructs):
     """ Set containing PDB items. """
+
     def __init__(self):
         SetOfAtomStructs.__init__(self)
         print("SetOfPDBs class has been renamed to SetOfAtomStructs. "
@@ -1333,6 +1345,7 @@ class SetOfSequences(EMSet):
 class Coordinate(EMObject):
     """This class holds the (x,y) position and other information
     associated with a coordinate"""
+
     def __init__(self, **kwargs):
         EMObject.__init__(self, **kwargs)
         self._micrographPointer = Pointer(objDoStore=False)
@@ -1481,7 +1494,7 @@ class SetOfCoordinates(EMSet):
             self._micrographsPointer.copy(micrographs)
         else:
             self._micrographsPointer.set(micrographs)
-        
+
     def getFiles(self):
         filePaths = set()
         filePaths.add(self.getFileName())
@@ -1617,6 +1630,7 @@ class Class2D(SetOfParticles):
     (some kind of average particle from the particles assigned
     to the class)
     """
+
     def copyInfo(self, other):
         """ Copy basic information (id and other properties) but
         not _mapperPath or _size from other set of micrographs to current one.
@@ -1660,6 +1674,7 @@ class ClassVol(SetOfVolumes):
     """ Represent a Class that groups Volume objects.
     Usually the representative of the class is another Volume.
     """
+
     def close(self):
         # Do nothing on close, since the db will be closed by SetOfClasses
         pass
@@ -1679,7 +1694,6 @@ class SetOfClasses(EMSet):
     def copyInfo(self, other):
         """ Copy basic information from other set of classes to current one"""
         self.copyAttributes(other, '_representatives', '_imagesPointer')
-
 
     def iterClassItems(self, iterDisabled=False):
         """ Iterate over the images of a class.
@@ -1858,7 +1872,7 @@ class SetOfClasses2D(SetOfClasses):
 
         for i, class2D in enumerate(self):
             img = class2D.getRepresentative()
-            ih.convert(img, (i+1, fnStack))
+            ih.convert(img, (i + 1, fnStack))
 
 
 class SetOfClasses3D(SetOfClasses):
@@ -1878,6 +1892,7 @@ class SetOfClassesVol(SetOfClasses3D):
 
 class NormalMode(EMObject):
     """ Store normal mode information. """
+
     def __init__(self, **kwargs):
         EMObject.__init__(self, **kwargs)
         self._modeFile = String(kwargs.get('modeFile', None))
@@ -1927,6 +1942,7 @@ class FramesRange(CsvList):
     """ Store first and last frames in a movie. The last element will be
      the index in the stack of the first frame.
     """
+
     def __init__(self, firstFrame=1, lastFrame=0, firstFrameIndex=1):
         """
         Frames numbering always refer to the initial movies imported into
@@ -1971,6 +1987,7 @@ class FramesRange(CsvList):
 class Movie(Micrograph):
     """ Represent a set of frames of micrographs.
     """
+
     def __init__(self, location=None, **kwargs):
         Micrograph.__init__(self, location, **kwargs)
 
@@ -2033,6 +2050,7 @@ class MovieAlignment(EMObject):
     """ Store the alignment between the different Movie frames.
     Also store the first and last frames used for alignment.
     """
+
     def __init__(self, first=-1, last=-1, **kwargs):
         EMObject.__init__(self, **kwargs)
         self._first = Integer(first)
@@ -2155,6 +2173,7 @@ class SetOfMovieParticles(SetOfParticles):
 
 class FSC(EMObject):
     """Store a Fourier Shell Correlation"""
+
     def __init__(self, **kwargs):
         EMObject.__init__(self, **kwargs)
         self._x = CsvList(pType=float)

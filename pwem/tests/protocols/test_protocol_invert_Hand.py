@@ -4,7 +4,7 @@
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
-# * the Free Software Foundation; either version 2 of the License, or
+# * the Free Software Foundation; either version 3 of the License, or
 # * (at your option) any later version.
 # *
 # * This program is distributed in the hope that it will be useful,
@@ -86,7 +86,7 @@ def createParamFile(fd):
 # Psi added noise
 # Type of range for Psi
 # Noise applied to pixels [noise (bias)]
-# Noise applied to particle center coordenates [noise (bias)]
+# Noise applied to particle center coordinates [noise (bias)]
 
 data_block1
 _dimensions2D   '100 100'
@@ -106,7 +106,7 @@ _noisePixelLevel   '0. 0.'
 
 def projectPhantom(featFileName, paramFileName, particlesFileName):
     args = "-i %s -o %s" % (featFileName, particlesFileName)
-    args += " --params %s" % (paramFileName)
+    args += " --params %s" % paramFileName
     runJob(None, "xmipp_phantom_project", args, env=Plugin.getEnviron())
 
 
@@ -139,7 +139,7 @@ class TestProtInvertHand(BaseTest):
         prot1.setObjLabel('import Particles 1')
         self.launchProtocol(prot1)
 
-        # aasign transformation from 1 set to second set
+        # assign transformation from 1 set to second set
         prot3 = self.newProtocol(emprot.ProtAlignmentInvertHand,
                                  inputParticles=prot1.outputParticles,
                                  )

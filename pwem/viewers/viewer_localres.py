@@ -6,7 +6,7 @@
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
-# * the Free Software Foundation; either version 2 of the License, or
+# * the Free Software Foundation; either version 3 of the License, or
 # * (at your option) any later version.
 # *
 # * This program is distributed in the hope that it will be useful,
@@ -43,7 +43,7 @@ class LocalResolutionViewer(pwviewer.ProtocolViewer):
     def __init__(self, *args, **kwargs):
         pwviewer.ProtocolViewer.__init__(self, **kwargs)
 
-    def getImgData(self, imgFile, minMaskValue = 0.1, maxMaskValue=None):
+    def getImgData(self, imgFile, minMaskValue=0.1, maxMaskValue=None):
         import numpy as np
         # if image ends in .mrc or .map :mrc
         if imgFile[-4:] == ".mrc" or imgFile[-4:] == ".map":
@@ -57,13 +57,13 @@ class LocalResolutionViewer(pwviewer.ProtocolViewer):
         maxRes = np.amax(imgData)
 
         if minMaskValue:
-            imgData= np.ma.masked_where(imgData < minMaskValue, imgData, copy=False)
+            imgData = np.ma.masked_where(imgData < minMaskValue, imgData, copy=False)
         minRes = np.amin(imgData)
 
         return imgData, minRes, maxRes, voldim
 
     def getSlice(self, index, volumeData):
-        return int(index*volumeData.shape[0] / 9)
+        return int(index * volumeData.shape[0] / 9)
 
     def getSliceImage(self, volumeData, sliceNumber, dataAxis):
         if dataAxis == 'y':
@@ -89,7 +89,7 @@ class LocalResolutionViewer(pwviewer.ProtocolViewer):
             highResLimit = minRes
 
         stepColors = splitRange(highResLimit, lowResLimit,
-                                      splitNum=numColors)
+                                splitNum=numColors)
         colorList = plotter.getHexColorList(len(stepColors), self._getColorName())
 
         fnVol = os.path.abspath(fnOrigMap)
@@ -100,7 +100,7 @@ class LocalResolutionViewer(pwviewer.ProtocolViewer):
                             colorList,
                             voldim,
                             volOrigin=None,
-                            step = -1,
+                            step=-1,
                             sampling=sampRate,
                             scriptFileName=scriptFile,
                             bgColorImage='white',

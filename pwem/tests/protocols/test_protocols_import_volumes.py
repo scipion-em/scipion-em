@@ -4,7 +4,7 @@
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
-# * the Free Software Foundation; either version 2 of the License, or
+# * the Free Software Foundation; either version 3 of the License, or
 # * (at your option) any later version.
 # *
 # * This program is distributed in the hope that it will be useful,
@@ -28,6 +28,7 @@ import pwem.protocols as emprot
 import pwem.constants as emcts
 import pwem.convert as emconv
 from pwem.convert import Ccp4Header
+from pyworkflow.object import Pointer
 
 
 class TestImportBase(pwtests.BaseTest):
@@ -271,16 +272,29 @@ class TestImportVolumes(TestImportBase):
         prot5.setObjLabel('import vol,\n import from EMDB')
         self.launchProtocol(prot5)
         volume = prot5.outputVolume
-        #volume.setOrigin(None)
+        # volume.setOrigin(None)
         # The volume has no origin
         t = volume.getOrigin(force=True)
         x, y, z = t.getShifts()
         self.assertTrue(os.path.exists(prot5._getExtraPath('emd_10676.map')))
-        # TODO: I should chech origin but all 3D map
+        # TODO: I should check origin but all 3D map
         # I have tried to download have origin =0 :-(
         # self.assertEqual(-67.2, x)
         # self.assertEqual(-67.2, y)
         # self.assertEqual(-67.2, z)
+
+        # Test join sets work with volumes
+
+        unionProt = self.newProtocol(emprot.ProtUnionSet,
+                                     inputType=emprot.ProtUnionSet.TYPE_VOLUME_INDEX)
+
+        # Set the input volumes
+        unionProt.inputSets.append (Pointer(prot2, extended="outputVolumes.1"))
+        unionProt.inputSets.append(Pointer(prot3, extended="outputVolumes.1"))
+        unionProt.setObjLabel("Single volumes union")
+        self.launchProtocol(unionProt)
+        self.assertSetSize(unionProt.outputSet, 2, msg="Union of 2 volumes does not work.")
+
 
     def test_import_volume2(self):
         """
@@ -318,7 +332,6 @@ class TestImportVolumes(TestImportBase):
         self.assertEqual(-90.0, y)
         self.assertEqual(-90.0, z)
 
-
     def test_import_volume3(self):
         """
         Test to import a full map (Icosahedron) and two maps (half1 and half2)
@@ -352,7 +365,7 @@ class TestImportVolumes(TestImportBase):
         volume = prot5.outputVolume
         self.assertVolumeOrigin(volume, -ORIG_X, -ORIG_Y, -ORIG_Z)
 
-        #DO NOT REMOVE this print because it triggers the loading of the get of halfmaps
+        # DO NOT REMOVE this print because it triggers the loading of the get of halfmaps
         print(volume.getHalfMaps())
         newHalf1Fn = volume.getHalfMaps().split(",")[0]
         self.assertNotEqual(volMapNamehalf1, newHalf1Fn)

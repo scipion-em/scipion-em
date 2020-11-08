@@ -6,7 +6,7 @@
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
-# * the Free Software Foundation; either version 2 of the License, or
+# * the Free Software Foundation; either version 3 of the License, or
 # * (at your option) any later version.
 # *
 # * This program is distributed in the hope that it will be useful,
@@ -41,9 +41,9 @@ class TestMixedRelionTutorial(TestWorkflow):
         cls.crdsXmippDir = cls.dataset.getFile('posAllDir')
         cls.micsFn = cls.dataset.getFile('allMics')
         cls.vol = cls.dataset.getFile('volume')
-    
+
     def test_workflow(self):
-        #First, import a set of micrographs
+        # First, import a set of micrographs
         print("Importing a set of micrographs...")
         protImport = self.newProtocol(emprot.ProtImportMicrographs,
                                       filesPath=self.micsFn,
@@ -54,14 +54,14 @@ class TestMixedRelionTutorial(TestWorkflow):
         self.launchProtocol(protImport)
         self.assertIsNotNone(protImport.outputMicrographs,
                              "There was a problem with the import")
-        
+
         print("Importing a volume...")
         protImportVol = self.newProtocol(emprot.ProtImportVolumes, filesPath=self.vol,
                                          samplingRate=7.08)
         protImportVol.setObjLabel('import single vol')
         self.launchProtocol(protImportVol)
         self.assertIsNotNone(protImportVol.outputVolume, "There was a problem with the import")
-        
+
         print("Preprocessing the micrographs...")
         xmippProtocols = Domain.importFromPlugin('xmipp3.protocols',
                                                  doRaise=True)
@@ -72,12 +72,12 @@ class TestMixedRelionTutorial(TestWorkflow):
         self.launchProtocol(protPreprocess)
         self.assertIsNotNone(protPreprocess.outputMicrographs,
                              "There was a problem with the downsampling")
-        
+
         print("Running Eman import coordinates...")
         protPP = self.newProtocol(emprot.ProtImportCoordinates,
-                                 importFrom=emprot.ProtImportCoordinates.IMPORT_FROM_EMAN,
-                                 filesPath=self.crdsEmanDir,
-                                 filesPattern='info/*_info.json', boxSize=60)
+                                  importFrom=emprot.ProtImportCoordinates.IMPORT_FROM_EMAN,
+                                  filesPath=self.crdsEmanDir,
+                                  filesPattern='info/*_info.json', boxSize=60)
         protPP.inputMicrographs.set(protPreprocess.outputMicrographs)
         protPP.setObjLabel('import from Eman boxing')
         self.launchProtocol(protPP)
@@ -109,7 +109,7 @@ class TestMixedRelionTutorial(TestWorkflow):
         self.launchProtocol(protExtract)
         self.assertIsNotNone(protExtract.outputParticles,
                              "There was a problem with the extract particles")
-        
+
         print("Run CL2D")
         protCL2D = xmippProtocols.XmippProtCL2D(numberOfClasses=32,
                                                 numberOfInitialClasses=4,
@@ -117,10 +117,10 @@ class TestMixedRelionTutorial(TestWorkflow):
                                                 numberOfMpi=16)
         protCL2D.inputParticles.set(protExtract.outputParticles)
         protCL2D.setObjLabel('CL2D')
-        self.launchProtocol(protCL2D)   
+        self.launchProtocol(protCL2D)
         self.assertIsNotNone(protCL2D.outputClasses,
                              "There was a problem with CL2D")
-        
+
         # Now estimate CTF on the micrographs with xmipp
         print("Performing Xmipp CTF...")
         protCTF2 = self.newProtocol(xmippProtocols.XmippProtCTFMicrographs,
@@ -131,18 +131,18 @@ class TestMixedRelionTutorial(TestWorkflow):
         protCTF2.inputMicrographs.set(protPreprocess.outputMicrographs)
         protCTF2.setObjLabel('CTF xmipp')
         self.launchProtocol(protCTF2)
-        
+
         print("Running Xmipp Import Coordinates")
         protPP2 = self.newProtocol(emprot.ProtImportCoordinates,
-                                 importFrom=emprot.ProtImportCoordinates.IMPORT_FROM_XMIPP,
-                                 filesPath=self.crdsXmippDir,
-                                 filesPattern='*.pos', boxSize=60)
-        protPP2.inputMicrographs.set(protPreprocess.outputMicrographs)  
+                                   importFrom=emprot.ProtImportCoordinates.IMPORT_FROM_XMIPP,
+                                   filesPath=self.crdsXmippDir,
+                                   filesPattern='*.pos', boxSize=60)
+        protPP2.inputMicrographs.set(protPreprocess.outputMicrographs)
         protPP2.setObjLabel('Xmipp Import Coords')
         self.launchProtocol(protPP2)
         self.assertIsNotNone(protPP2.outputCoordinates,
                              "There was a problem with the Xmipp import coordinates")
-        
+
         print("Run extract particles with <Same as picking> option")
         protExtract2 = self.newProtocol(xmippProtocols.XmippProtExtractParticles,
                                         boxSize=60,
@@ -155,7 +155,7 @@ class TestMixedRelionTutorial(TestWorkflow):
         self.launchProtocol(protExtract2)
         self.assertIsNotNone(protExtract2.outputParticles,
                              "There was a problem with the extract particles")
-        
+
         print("Run Relion Classification2d")
         relionProtocols = Domain.importFromPlugin('relion.protocols',
                                                   doRaise=True)
@@ -166,17 +166,20 @@ class TestMixedRelionTutorial(TestWorkflow):
         prot2D.numberOfIterations.set(25)
         prot2D.inputParticles.set(protExtract2.outputParticles)
         prot2D.setObjLabel('relion 2D')
-        self.launchProtocol(prot2D)        
-        self.assertIsNotNone(prot2D.outputClasses, "There was a problem with Relion 2D:\n" + (prot2D.getErrorMessage() or "No error set"))
-        
+        self.launchProtocol(prot2D)
+        self.assertIsNotNone(prot2D.outputClasses,
+                             "There was a problem with Relion 2D:\n" + (prot2D.getErrorMessage() or "No error set"))
+
         print("Run Relion Refine")
         proRef = relionProtocols.ProtRelionRefine3D()
         proRef.inputParticles.set(protExtract2.outputParticles)
         proRef.referenceVolume.set(protImportVol.outputVolume)
         proRef.setObjLabel('relion Refine')
-        self.launchProtocol(proRef)        
-        self.assertIsNotNone(proRef.outputVolume, "There was a problem with Relion Refine:\n" + (proRef.getErrorMessage() or "No error set"))
-        self.assertIsNotNone(proRef.outputParticles, "There was a problem with Relion Refine:\n" + (proRef.getErrorMessage() or "No error set"))
+        self.launchProtocol(proRef)
+        self.assertIsNotNone(proRef.outputVolume,
+                             "There was a problem with Relion Refine:\n" + (proRef.getErrorMessage() or "No error set"))
+        self.assertIsNotNone(proRef.outputParticles,
+                             "There was a problem with Relion Refine:\n" + (proRef.getErrorMessage() or "No error set"))
 
 
 class TestMixedFrealignClassify(TestWorkflow):
@@ -188,11 +191,11 @@ class TestMixedFrealignClassify(TestWorkflow):
         cls.crdsXmippDir = cls.dataset.getFile('posAllDir')
         cls.micsFn = cls.dataset.getFile('allMics')
         cls.vol = cls.dataset.getFile('volume')
-    
+
     def test_workflow(self):
-        #First, import a set of micrographs
+        # First, import a set of micrographs
         print("Importing a set of micrographs...")
-        #TODO missing contrst amplitude ROB
+        # TODO missing contrst amplitude ROB
         protImport = self.newProtocol(emprot.ProtImportMicrographs,
                                       filesPath=self.micsFn,
                                       samplingRateMode=1, magnification=79096,
@@ -202,7 +205,7 @@ class TestMixedFrealignClassify(TestWorkflow):
         self.launchProtocol(protImport)
         self.assertIsNotNone(protImport.outputMicrographs,
                              "There was a problem with the import")
-        
+
         print("Importing a volume...")
         protImportVol = self.newProtocol(emprot.ProtImportVolumes,
                                          filesPath=self.vol, samplingRate=7.08)
@@ -210,7 +213,7 @@ class TestMixedFrealignClassify(TestWorkflow):
         self.launchProtocol(protImportVol)
         self.assertIsNotNone(protImportVol.outputVolume,
                              "There was a problem with the import")
-        
+
         print("Preprocessing the micrographs...")
         xmippProtocols = Domain.importFromPlugin('xmipp3.protocols',
                                                  doRaise=True)
@@ -224,9 +227,9 @@ class TestMixedFrealignClassify(TestWorkflow):
 
         print("Running Eman import coordinates...")
         protPP = self.newProtocol(emprot.ProtImportCoordinates,
-                                 importFrom=emprot.ProtImportCoordinates.IMPORT_FROM_EMAN,
-                                 filesPath=self.crdsEmanDir,
-                                 filesPattern='info/*_info.json', boxSize=60)
+                                  importFrom=emprot.ProtImportCoordinates.IMPORT_FROM_EMAN,
+                                  filesPath=self.crdsEmanDir,
+                                  filesPattern='info/*_info.json', boxSize=60)
         protPP.inputMicrographs.set(protPreprocess.outputMicrographs)
         protPP.setObjLabel('import from Eman boxing')
         self.launchProtocol(protPP)
@@ -244,7 +247,7 @@ class TestMixedFrealignClassify(TestWorkflow):
         protCTF.inputMicrographs.set(protPreprocess.outputMicrographs)
         protCTF.setObjLabel('CTF ctffind')
         self.launchProtocol(protCTF)
-        
+
         print("Run extract particles with <Same as picking> option")
         protExtract = self.newProtocol(xmippProtocols.XmippProtExtractParticles,
                                        boxSize=60,

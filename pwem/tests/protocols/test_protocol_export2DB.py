@@ -8,7 +8,7 @@
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
-# * the Free Software Foundation; either version 2 of the License, or
+# * the Free Software Foundation; either version 3 of the License, or
 # * (at your option) any later version.
 # *
 # * This program is distributed in the hope that it will be useful,
@@ -33,6 +33,7 @@ import pyworkflow.tests as pwtest
 import pwem.protocols as emprot
 import pwem.constants as emcts
 from .test_protocols_import_volumes import createFeatVolume
+
 
 class TestExport2DataBases(pwtest.BaseTest):
     @classmethod
@@ -112,9 +113,9 @@ class TestExport2DataBases(pwtest.BaseTest):
         count = 0
         for line in fo:
             if line[0:3] == '<x>':
-                saved_x.append(int(float(line[3:-5])*1000))
-                orig_x.append(int(orig_list_x[count]*1000))
-                count = count+1
+                saved_x.append(int(float(line[3:-5]) * 1000))
+                orig_x.append(int(orig_list_x[count] * 1000))
+                count = count + 1
 
         self.assertListEqual(orig_x, saved_x)
 
@@ -175,9 +176,9 @@ class TestExport2DataBases(pwtest.BaseTest):
         count = 0
         for line in fo:
             if line[0:3] == '<x>':
-                saved_x.append(int(float(line[3:-5])*1000))
-                orig_x.append(int(orig_list_x[count]*1000))
-                count = count+1
+                saved_x.append(int(float(line[3:-5]) * 1000))
+                orig_x.append(int(orig_list_x[count] * 1000))
+                count = count + 1
 
         self.assertListEqual(orig_x, saved_x)
 
@@ -226,7 +227,7 @@ class TestExport2DataBases(pwtest.BaseTest):
         self.launchProtocol(prot5_1)
         self.half1 = prot5_1.outputVolume
         self.half1.setOrigin(None)
-            # The volume has no origin
+        # The volume has no origin
         t = self.volume.getOrigin(force=True)
         x, y, z = t.getShifts()
         self.assertEqual(-90.0, x)
@@ -253,7 +254,7 @@ class TestExport2DataBases(pwtest.BaseTest):
                 'samplingRate': _samplingRate
                 }
         prot6 = self.newProtocol(emprot.ProtImportMask, **args)
-        prot6.setObjLabel('import mask') #  add origin to the mask
+        prot6.setObjLabel('import mask')  # add origin to the mask
         self.launchProtocol(prot6)
         self.mask = prot6.outputMask
         self.mask.setOrigin(None)
@@ -263,7 +264,6 @@ class TestExport2DataBases(pwtest.BaseTest):
         self.assertEqual(-90.0, x)
         self.assertEqual(-90.0, y)
         self.assertEqual(-90.0, z)
-
 
     def test_halfmaps_mask(self):
         """ If the input is a 3D map with half volumes associated
@@ -288,7 +288,7 @@ class TestExport2DataBases(pwtest.BaseTest):
         protExp.exportVolume.set(self.volume)
         protExp.additionalVolumesToExport.set(True)
         protExp.exportAdditionalVolumes.set([self.protImportHalf1.outputVolume,
-                                            self.protImportHalf2.outputVolume])
+                                             self.protImportHalf2.outputVolume])
         protExp.exportFSC.set(prot.outputFSC)
         protExp.masksToExport.set(True)
         protExp.exportMasks.set([self.mask])

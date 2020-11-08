@@ -8,7 +8,7 @@
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
-# * the Free Software Foundation; either version 2 of the License, or
+# * the Free Software Foundation; either version 3 of the License, or
 # * (at your option) any later version.
 # *
 # * This program is distributed in the hope that it will be useful,
@@ -50,7 +50,7 @@ class ProtExtractCoords(ProtParticlePickingAuto):
     original dimensions. It can be also handy to visualize the resulting
     particles in their location on micrographs.
     """
-    
+
     _label = 'extract coordinates'
 
     # --------------------------- DEFINE param functions ----------------------
@@ -62,7 +62,7 @@ class ProtExtractCoords(ProtParticlePickingAuto):
                       label='Input particles', important=True,
                       help='Select the particles from which you want\n'
                            'to extract the coordinates and micrographs.')
-        
+
         form.addParam('inputMicrographs', params.PointerParam,
                       pointerClass='SetOfMicrographs',
                       label='Input micrographs', important=True,
@@ -78,8 +78,8 @@ class ProtExtractCoords(ProtParticlePickingAuto):
                            'order to avoid interpolation. If you are re-extracting particles and '
                            'want to apply the remaining decimal part of the shifts, set to  "yes" the '
                            'option "Were particle shifts applied?" in alignment assign protocol.'
-        )
-        
+                      )
+
         form.addParallelSection(threads=0, mpi=0)
 
     # --------------------------- INSERT steps functions ----------------------
@@ -93,7 +93,7 @@ class ProtExtractCoords(ProtParticlePickingAuto):
 
             t0 = time.time()
             newParts, self.streamClosed = self.loadInputs()
-            print("loadInputs() time: %fs" % (time.time()-t0))
+            print("loadInputs() time: %fs" % (time.time() - t0))
 
             stepsIds = self._insertNewSteps(newParts)
             self._insertFunctionStep('createOutputStep',
@@ -149,7 +149,7 @@ class ProtExtractCoords(ProtParticlePickingAuto):
         t0 = time.time()
         outputCoords.write()
         outputCoords.close()
-        print("write time: %fs" % (time.time()-t0))
+        print("write time: %fs" % (time.time() - t0))
 
     def extractCoordinates(self, partsIds=None):
         inPart = self.getInputParticles()
@@ -167,9 +167,8 @@ class ProtExtractCoords(ProtParticlePickingAuto):
             # Clone the mics! otherwise we will get pointers and
             # will end up with the same mic in the dictionary.
             clonedMic = mic.clone()
-            micDict[clonedMic.getObjId()]= clonedMic
+            micDict[clonedMic.getObjId()] = clonedMic
             micDict[clonedMic.getMicName()] = clonedMic
-
 
         def appendCoordFromParticle(part):
             coord = part.getCoordinate()
@@ -184,7 +183,7 @@ class ProtExtractCoords(ProtParticlePickingAuto):
                 mic = micDict.get(micKey, None)
 
             if mic is None:
-                print("Skipping particle, %s or id %s not found" % (micName,micKey))
+                print("Skipping particle, %s or id %s not found" % (micName, micKey))
             else:
                 newCoord.copyObjId(part)
                 x, y = coord.getPosition()
@@ -289,7 +288,7 @@ class ProtExtractCoords(ProtParticlePickingAuto):
     def _getFirstJoinStepName(self):
         # This function will be used for streaming, to check which is
         # the first function that need to wait for all micrographs
-        # to have completed, this can be overriden in subclasses
+        # to have completed, this can be overwritten in subclasses
         # (e.g., in Xmipp 'sortPSDStep')
         return 'createOutputStep'
 
@@ -392,7 +391,7 @@ class ProtExtractCoords(ProtParticlePickingAuto):
         ps2 = self.getInputMicrographs().getSamplingRate()
         summary.append(u'Input particles pixel size: *%0.3f* (Å/px)' % ps1)
         summary.append(u'Input micrographs pixel size: *%0.3f* (Å/px)' % ps2)
-        summary.append('Scaling coordinates by a factor of *%0.3f*' % (ps1/ps2))
+        summary.append('Scaling coordinates by a factor of *%0.3f*' % (ps1 / ps2))
         if self.applyShifts:
             summary.append('Applied 2D shifts from particles')
 
