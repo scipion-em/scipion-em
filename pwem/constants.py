@@ -41,7 +41,7 @@ UNIT_PIXEL = 'px'
 UNIT_PIXEL_FOURIER = '1/px'
 UNIT_ANGSTROM = 'A'
 UNIT_ANGSTROM_FOURIER = '1/A'
-UNIT_ANGSTROM_SYMBOL = u"\u212B"
+UNIT_ANGSTROM_SYMBOL = u"\u212B" # No needed: Å should be valid as long as first line in file has utf-8 directive --> # -*- coding: utf-8 -*-
 
 # Fourier Filter options
 FILTER_LOW_PASS = 0
