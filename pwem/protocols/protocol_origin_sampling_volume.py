@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # **************************************************************************
 # *
 # * Authors:     Roberto Marabini (roberto@cnb.csic.es)
@@ -28,9 +29,9 @@
 import os
 
 import pyworkflow.protocol.params as params
-from pwem import UNIT_ANGSTROM_SYMBOL
 from pyworkflow import VERSION_3_0
 
+from pwem.convert import Ccp4Header
 from pwem.protocols import EMProtocol
 import pwem.objects as emobj
 import pyworkflow.utils as pwutils
@@ -56,27 +57,27 @@ class ProtOrigSampling(EMProtocol):
                       help='A new object volume will be created with the assigned sampling rate and origin. '
                            'No new binary file will be created')
         form.addParam('copyFiles', params.BooleanParam,
-                      label="copy (true)/link(false) volume:",
-                      help="Option YES:\nA new volume file will be copied "
-                           "otherwise a link to the input volume is made\n"
-                           "default = false", expertLevel=params.LEVEL_ADVANCED,
+                      label="Copy volume",
+                      help="Option Yes:\nA new volume file will be copied "
+                           "otherwise a link to the input volume is made\n",
+                      expertLevel=params.LEVEL_ADVANCED,
                       default=False)
         form.addParam('setSampling', params.BooleanParam,
-                      label="Set SamplingRate",
-                      help="Option YES:\nA new volume object will be created with "
+                      label="Set sampling rate",
+                      help="Option Yes:\nA new volume object will be created with "
                            "the given SamplingRate. "
-                           "This SamplingRate will NOT be set in the map file header.\n\n",
+                           "This sampling rate will NOT be set in the map file header.\n\n",
                       default=False)
         form.addParam('samplingRate', params.FloatParam,
                       condition='setSampling',
                       label=pwutils.Message.LABEL_SAMP_RATE)
         form.addParam('setOrigCoord', params.BooleanParam,
-                      label="Set origin of coordinates",
-                      help="Option YES:\nA new volume object will be created with "
+                      label="Set origin",
+                      help="Option Yes:\nA new volume object will be created with "
                            "the given ORIGIN of coordinates. "
                            "This ORIGIN will NOT be set in the map file header.\n\n",
                       default=False)
-        line = form.addLine('Offset(%s)' % UNIT_ANGSTROM_SYMBOL,
+        line = form.addLine("Coordinates (Å)",
                             help="A wizard will suggest you possible "
                                  "coordinates for the ORIGIN. In MRC volume "
                                  "files, the ORIGIN coordinates will be "
@@ -84,17 +85,17 @@ class ProtOrigSampling(EMProtocol):
                                  "In case you prefer set your own ORIGIN "
                                  "coordinates, write them here. You have to "
                                  "provide the map center coordinates in "
-                                 "Angstroms (pixels x sampling).\n",
-                            condition='setOrigCoord')
-        line.addParam('x', params.FloatParam, condition='setOrigCoord',
+                                 "Å (pixels x sampling).\n",
+                                 condition='setOrigCoord')
+        line.addParam('x', params.FloatParam,
                       label="x",
-                      help="offset along x axis (Angstroms)")
-        line.addParam('y', params.FloatParam, condition='setOrigCoord',
+                      help="offset along x axis (Å)")
+        line.addParam('y', params.FloatParam,
                       label="  y",
-                      help="offset along y axis (Angstroms)")
-        line.addParam('z', params.FloatParam, condition='setOrigCoord',
+                      help="offset along y axis (Å)")
+        line.addParam('z', params.FloatParam,
                       label="  z",
-                      help="offset along z axis (Angstroms)")
+                      help="offset along z axis (Å)")
 
     # --------------------------- INSERT steps functions ----------------------
     def _insertAllSteps(self):
@@ -110,7 +111,7 @@ class ProtOrigSampling(EMProtocol):
 
         # Set sampling Rate (or copy from input)
         if self.setSampling.get():
-            samplingRate = self.samplingRate
+            samplingRate = self.samplingRate.get()
         else:
             samplingRate = self.inVol.getSamplingRate()
 
@@ -119,19 +120,25 @@ class ProtOrigSampling(EMProtocol):
         # set Origin
         if self.setOrigCoord.get():
             origin = emobj.Transform()
-            origin.setShifts(self.x, self.y, self.z)
+            origin.setShifts(self.x.get(), self.y.get(), self.z.get())
         else:
             origin = self.inVol.getOrigin()
 
         self.outVol.setOrigin(origin)
 
-        # copy or link
-        copyOrLink = self.getCopyOrLink()
-        fileName = self.inVol.getFileName()
+        # Files system stuff
+        fileName = os.path.abspath(self.inVol.getFileName())
         fileName = fileName.replace(':mrc', '')
-        imgBase = basename(fileName)
+        imgBase = pwutils.replaceBaseExt(fileName, "mrc")
         imgDst = self._getExtraPath(imgBase)
-        copyOrLink(os.path.abspath(fileName), imgDst)
+
+        # copy or link
+        if self.copyFiles:
+            Ccp4Header.fixFile(fileName,imgDst, origin.getShifts(),
+                               sampling=samplingRate)
+        else:
+            pwutils.createAbsLink(fileName, imgDst)
+
         self.outVol.setLocation(imgDst)
 
         # save
@@ -160,14 +167,6 @@ class ProtOrigSampling(EMProtocol):
         return []
 
     # --------------------------- UTILS functions ---------------------------------
-
-    def getCopyOrLink(self):
-        # Set a function to copyFile or createLink
-        # depending in the user selected option
-        if self.copyFiles:
-            return pwutils.copyFile
-        else:
-            return pwutils.createAbsLink
 
     def getFnPath(self, label='volume'):
         return os.path.join(self.filesPath.get(),

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # **************************************************************************
 # *
 # * Authors:     Jose Gutierrez (jose.gutierrez@cnb.csic.es)
@@ -757,10 +758,8 @@ class CtfDialog(DownsampleDialog):
         if sr == 1:
             var2set.set('{:2.2f} {}'.format(labSlider.slider.get(), emcts.UNIT_PIXEL))
         else:
-            var2set.set('{:2.2f} rad/{} | {:5.1f} {}'.format(labSlider.slider.get(),
-                                                             emcts.UNIT_ANGSTROM_SYMBOL,
-                                                             self.getDownsample() * sr / freqVal,
-                                                             emcts.UNIT_ANGSTROM_SYMBOL))
+            var2set.set('{:2.2f} rad/Å | {:5.1f} Å'.format(labSlider.slider.get(),
+                                                           self.getDownsample() * sr / freqVal))
 
     def getLowFreq(self):
         return self.lfSlider.get()
@@ -998,9 +997,9 @@ class MaskPreviewDialog(ImagePreviewDialog):
         if self.samplingRate == 1:
             var2set.set('{:6.1f} {}'.format(pixVal, emcts.UNIT_PIXEL))
         else:
-            var2set.set('{:5.0f} pix | {:6.1f} {}'.format(pixVal,
+            var2set.set('{:5.0f} pix | {:6.1f} Å'.format(pixVal,
                                                           self.getRadiusAngstroms(radiusSlider),
-                                                          emcts.UNIT_ANGSTROM_SYMBOL))
+                                                          ))
 
     @staticmethod
     def getRadius(radiusSlider):

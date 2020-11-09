@@ -142,7 +142,7 @@ class ChangeOriginSamplingWizard(pwizard.Wizard):
     def show(self, form, *params):
         protocol = form.protocol
         vol = protocol.inVolume.get()
-        fullPattern = vol.getLocation()
+        fullPattern = vol.getFileName()
         sampling = vol.getSamplingRate()
         if ((str(fullPattern)).endswith('mrc') or
                 (str(fullPattern)).endswith('map')):
@@ -152,13 +152,10 @@ class ChangeOriginSamplingWizard(pwizard.Wizard):
             x, y, z = \
                 ImportOriginVolumeWizard._halfOriginCoordinates(vol, sampling)
 
-        def remove_tail_zeros(number):
-            return decimal.Decimal(number).normalize()
-
-        form.setVar('x', remove_tail_zeros(x))
-        form.setVar('y', remove_tail_zeros(y))
-        form.setVar('z', remove_tail_zeros(z))
-        form.setVar('samplingRate', remove_tail_zeros(sampling))
+        form.setVar('x', round(x, 3))
+        form.setVar('y', round(y, 3))
+        form.setVar('z', round(z, 3))
+        form.setVar('samplingRate', round(sampling, 3))
 
 
 class GetStructureChainsWizard(pwizard.Wizard):

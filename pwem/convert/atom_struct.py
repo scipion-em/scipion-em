@@ -618,12 +618,20 @@ class AtomicStructHandler:
         import uuid
         chainIDs1 = [chain.id for chain in self.structure.get_chains()]
         for chain in struct2.get_chains():
+            counter = 2
             if chain.id in chainIDs1:
                 repeated = True
                 cId = chain.id
                 l = len(cId)
                 if l == 1:
-                    chain.id = "%s002" % cId
+                    while True:
+                        try:
+                            chain.id = "%s%03d" % (cId, counter)
+                            break
+                        except ValueError:
+                            counter +=1
+                            if counter > 1000:
+                                raise ValueError('Error in _renameChainsIfNeed.')
                 elif RepresentsInt(cId[1:]):  # try to fit a number and increase it by one
                     chain.id = "%s%03d" % (cId[0], int(cId[1:]) + 1)
                 else:  # generate a 4 byte random string
