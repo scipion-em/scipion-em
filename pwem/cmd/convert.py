@@ -19,7 +19,7 @@ def main():
 
     parser = argparse.ArgumentParser(prog=CONVERT_ENTRY_POINT,
                                      usage=
-                                     "pwem command to convert metatata "
+                                     "pwem command to convert metadata "
                                      "coordinates from several em formats "
                                      "(eman, relion, gautomatch "
                                      "and bsoft) to xmipp metadata")
@@ -63,8 +63,7 @@ def main():
                                                                                        doRaise=True)
                     inputCoords = args.extra
                     starFiles = [os.path.join(inputCoords,
-                                              pwutils.removeBaseExt(mic.getFileName())
-                                              + '_autopick.star') for mic in micSet]
+                                              "mic_%06d_autopick.star" % mic.getObjId()) for mic in micSet]
                     readSetOfCoordinates(coordSet, starFiles)
         elif fromType == 'gautomatch':
             if toType == 'xmipp':

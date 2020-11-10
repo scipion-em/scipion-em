@@ -57,12 +57,11 @@ def createDummyProtocol(projName):
     except Exception as e:
         print(str(e))
     return prot
- 
+
 
 class TestFSC(unittest.TestCase):
-    
     _labels = [SMALL, WEEKLY]
-        
+
     def testIO(self):
         """Test basic FSC object"""
         xList = [0.00, 0.05, 0.10, 0.15, 0.2]
@@ -70,12 +69,12 @@ class TestFSC(unittest.TestCase):
         fsc = emobj.FSC()
         fsc.setData(xList, yList)
         # fsc.printAll()
-        x,y = fsc.getData()
+        x, y = fsc.getData()
         self.assertEqual(xList, x)
         self.assertEqual(yList, y)
 
     def testMd(self):
-        """test create FSC from metdata"""
+        """test create FSC from metadata"""
         xList = [0.00, 0.05, 0.10, 0.15, 0.2]
         yList = [1.00, 0.95, 0.90, 0.85, 0.2]
         md1 = emlib.MetaData()
@@ -92,7 +91,6 @@ class TestFSC(unittest.TestCase):
 
 
 class TestImage(unittest.TestCase):
-
     _labels = [SMALL, WEEKLY]
 
     @classmethod
@@ -138,9 +136,8 @@ class TestImage(unittest.TestCase):
 
 
 class TestImageHandler(unittest.TestCase):
-
     _labels = [SMALL, WEEKLY]
-    
+
     @classmethod
     def setUpClass(cls):
         setupTestOutput(cls)
@@ -237,7 +234,7 @@ class TestImageHandler(unittest.TestCase):
         self.assertEqual([X, Y, Z, N], expectedSize_Svol)
 
     def test_convertMicrographs(self):
-        """ Convert micrograhs to different formats.
+        """ Convert micrographs to different formats.
          EMAN2 required for .img
         """
         micFn = self.dataset.getFile('micrographs/BPV_1386.mrc')
@@ -305,11 +302,11 @@ class TestImageHandler(unittest.TestCase):
 
         # Clean up tmp files
         pwutils.cleanPath(outFn)
-    
+
     def test_convertMovie(self):
         """Check movie conversion"""
         movFn = self.dsFormat.getFile('qbeta/qbeta.mrc') + ":mrcs"
-        
+
         ih = emlib.image.ImageHandler()
         # Check that we can read the dimensions of the dm4 file:
         EXPECTED_SIZE = (4096, 4096, 1, 7)
@@ -317,11 +314,11 @@ class TestImageHandler(unittest.TestCase):
 
         self.assertEqual(ih.getDimensions(movFn), EXPECTED_SIZE)
         self.assertEqual(ih.getDataType(movFn), EXPECTED_DT)
-        
+
         outFn = join('/tmp/qbeta_converted.mrcs')
 
         ih.convertStack(movFn, outFn, 2, 6)
-        
+
         self.assertTrue(os.path.exists(outFn))
         self.assertTrue(pwutils.getFileSize(outFn) > 0)
         self.assertEqual(ih.getDimensions(outFn), (4096, 4096, 1, 5))
@@ -360,75 +357,74 @@ class TestImageHandler(unittest.TestCase):
 
 
 class TestSetOfMicrographs(BaseTest):
-
     _labels = [SMALL, WEEKLY]
 
     @classmethod
     def setUpClass(cls):
         setupTestOutput(cls)
-        cls.dataset = DataSet.getDataSet('xmipp_tutorial')  
+        cls.dataset = DataSet.getDataSet('xmipp_tutorial')
         cls.dbGold = cls.dataset.getFile('micsGoldSqlite')
         cls.micsPattern = cls.dataset.getFile('allMics')
         cls.dbFn = cls.getOutputPath('micrographs.sqlite')
         cls.acquisition = emobj.Acquisition(magnification=60000, voltage=300,
                                             sphericalAberration=2,
                                             amplitudeContrast=0.1)
-        
+
         # cls.mics = glob(cls.micsPattern)
         cls.mics = []
         for mic in iglob(cls.micsPattern):
             cls.mics.append(cls.getRelPath(cls.dataset.getPath(), mic))
-        
+
         if len(cls.mics) == 0:
             raise Exception('There are not micrographs matching pattern')
-        cls.mics.sort()                 
-    
+        cls.mics.sort()
+
     def checkSet(self, micSet):
         idCount = 1
-    
+
         for mic1, fn in zip(micSet, self.mics):
             # traceback.print_stack(file=sys.stdout)
             micFn = mic1.getFileName()
-            self.assertEqual(fn, micFn, 
-                             "micrograph NAME in the set is wrong, \n   expected: '%s'\n        got: '%s'" 
+            self.assertEqual(fn, micFn,
+                             "micrograph NAME in the set is wrong, \n   expected: '%s'\n        got: '%s'"
                              % (fn, micFn))
-            self.assertEqual(idCount, mic1.getObjId(), 
-                             "micrograph ID in the set is wrong, \n   expected: '%s'\n        got: '%s'" 
+            self.assertEqual(idCount, mic1.getObjId(),
+                             "micrograph ID in the set is wrong, \n   expected: '%s'\n        got: '%s'"
                              % (idCount, mic1.getObjId()))
             mic2 = micSet[idCount]  # Test getitem
             self.assertEqual(mic1.getObjId(), mic2.getObjId(), "micrograph got from ID is wrong")
-            idCount += 1           
-             
+            idCount += 1
+
     def testCreate(self):
         cwd = os.getcwd()
         # Change to test path
         os.chdir(self.dataset.getPath())
         """ Create a SetOfMicrographs from a list of micrographs """
         micSet = emobj.SetOfMicrographs(filename=self.dbFn)
-        
+
         micSet.setAcquisition(self.acquisition)
         micSet.setSamplingRate(1.2)
         for fn in self.mics:
             mic = emobj.Micrograph()
             mic.setFileName(fn)
             micSet.append(mic)
-        micSet.write()    
-        
+        micSet.write()
+
         self.checkSet(micSet)
-        
+
         # Check copy info also copies the samplingRate
         micSet2 = emobj.SetOfMicrographs(filename=':memory:')
         micSet2.copyInfo(micSet)
         self.assertAlmostEqual(micSet.getSamplingRate(), micSet2.getSamplingRate())
-         
+
         os.chdir(cwd)
-        
+
     def testRead(self):
         """ Read micrographs from a an sqlite file.
         It should contains Acquisition info. """
         micFn = self.dataset.getFile('micsGoldSqlite2')
         print(">>> Reading gold micrographs from: ", micFn)
-        
+
         micSet = emobj.SetOfMicrographs(filename=micFn)
         self.assertEqual(2, micSet.getSize())
         acquisition = emobj.Acquisition()
@@ -436,7 +432,7 @@ class TestSetOfMicrographs(BaseTest):
         acquisition.setVoltage(200.)
         acquisition.setSphericalAberration(2.26)
         acquisition.setAmplitudeContrast(0.1)
-        
+
         mic2 = emobj.Micrograph()
         mic2.setSamplingRate(2.8)
         mic2.setAcquisition(acquisition)
@@ -484,7 +480,7 @@ class TestSetOfParticles(BaseTest):
     def setUpClass(cls):
         setupTestOutput(cls)
         cls.dataset = DataSet.getDataSet('xmipp_tutorial')
-        
+
     def test_orderBy(self):
         # create setofProjections sorted
         imgSet1 = emobj.SetOfParticles(filename=':memory:', prefix='set1')
@@ -495,7 +491,7 @@ class TestSetOfParticles(BaseTest):
 
         for i in range(1, 10):
             img.setLocation(i, 'mystack.stk')
-            img.setMicId(10-i)
+            img.setMicId(10 - i)
             img.setClassId(i % 5)
             imgSet1.append(img)
             img.setMicId(i)
@@ -503,9 +499,9 @@ class TestSetOfParticles(BaseTest):
             img.cleanObjId()
         # orderby
         for item1, item2 in zip(imgSet1.iterItems(orderBy='_micId',
-                                                   direction='ASC'),
-                                 imgSet2.iterItems(orderBy='_micId',
-                                                   direction='ASC')):
+                                                  direction='ASC'),
+                                imgSet2.iterItems(orderBy='_micId',
+                                                  direction='ASC')):
             self.assertEquals(item1.getMicId(), item2.getMicId())
 
     def test_readStack(self):
@@ -513,24 +509,24 @@ class TestSetOfParticles(BaseTest):
         Particles should be of 500x500 pixels.
         """
         size = 29
-        xdim = 500        
+        xdim = 500
         inStack = self.dataset.getFile('particles1')
         outFn = self.getOutputPath('particles.sqlite')
-        
+
         imgSet = emobj.SetOfParticles(filename=outFn)
         imgSet.setSamplingRate(1.0)
         imgSet.readStack(inStack)  # This should add 29 new items to the set
-        
+
         self.assertEquals(size, imgSet.getSize())  # Check same size
         self.assertEquals(xdim, imgSet.getDim()[0])  # Check same dimensions
-        
+
         print("writing particles to: ", outFn)
         imgSet.write()
-        
+
         imgSet2 = emobj.SetOfParticles(filename=':memory:')
         imgSet2.copyInfo(imgSet)
         self.assertAlmostEqual(imgSet.getSamplingRate(), imgSet2.getSamplingRate())
-        
+
     def test_hugeSet(self):
         """ Create a set of a big number of particles to measure
         creation time with sqlite operations. 
@@ -539,64 +535,64 @@ class TestSetOfParticles(BaseTest):
         n = int(os.environ.get('SCIPION_TEST_HUGE', 10000))
         print(">>>> Creating a set of %d particles." % n)
         print("     (set SCIPION_TEST_HUGE environment var to other value)")
-        
+
         dbFn = self.getOutputPath('huge_set.sqlite')
         # dbFn = ':memory:'
-        
+
         img = emobj.Particle()
         imgSet = emobj.SetOfParticles(filename=dbFn)
         imgSet.setSamplingRate(1.0)
-        
-        for i in range(1, n+1):
+
+        for i in range(1, n + 1):
             # Creating object inside the loop significantly
             # decrease performance
             # img = Particle()
             img.setLocation(i, "images.stk")
-            
+
             imgSet.append(img)
             img.cleanObjId()
             # img.setObjId(None)
-            
+
         imgSet.write()
-        
+
     def test_hugeSetToMd(self):
-        """ Just as a bencharmark comparing to test_hugeSet ."""
+        """ Just as a benchrmark comparing to test_hugeSet ."""
         # Allow what huge means to be defined with environment var
         n = int(os.environ.get('SCIPION_TEST_HUGE', 10000))
         print(">>>> Creating a set of %d particles." % n)
         print("     (set SCIPION_TEST_HUGE environment var to other value)")
-        
+
         imgMd = md.MetaData()
-        
-        for i in range(1, n+1):
+
+        for i in range(1, n + 1):
             # Creating object inside the loop significantly
             # decrease performance
             # img = Particle()
             objId = imgMd.addObject()
-            imgMd.setValue(md.MDL_IMAGE, '%06d@images.stk' % (i+1), objId)
-            
+            imgMd.setValue(md.MDL_IMAGE, '%06d@images.stk' % (i + 1), objId)
+
         mdFn = self.getOutputPath('huge_set.xmd')
         print("Writing metadata to: ", mdFn)
         imgMd.write(mdFn)
-        
+
     def test_hugeSetToText(self):
-        """ Just as a bencharmark comparing to test_hugeSet ."""
+        """ Just as a benchrmark comparing to test_hugeSet ."""
         # Allow what huge means to be defined with environment var
         n = int(os.environ.get('SCIPION_TEST_HUGE', 10000))
         print(">>>> Creating a set of %d particles." % n)
         print("     (set SCIPION_TEST_HUGE environment var to other value)")
-        
+
         textFn = self.getOutputPath('huge_set.txt')
         print("Writing to text file: ", textFn)
         f = open(textFn, 'w')
-        
-        for i in range(1, n+1):
+
+        for i in range(1, n + 1):
             string = '%06d@images.stk' % i
             f.write(string)
             # print >> f, '%06d@images.stk' % i
-            
-        f.close()     
-        
+
+        f.close()
+
     def test_getFiles(self):
         # create setofImages
         dbFn = self.getOutputPath('multistack_set.sqlite')
@@ -608,16 +604,16 @@ class TestSetOfParticles(BaseTest):
         imgSet.setSamplingRate(1.0)
         goldStacks = set()
 
-        for j in range(1, m+1):
+        for j in range(1, m + 1):
             stackName = 'stack%02d.stk' % j
             goldStacks.add(stackName)
-            for i in range(1, n+1):
+            for i in range(1, n + 1):
                 img.setLocation(i, stackName)
                 imgSet.append(img)
                 img.cleanObjId()
 
         self.assertEquals(goldStacks, imgSet.getFiles())
-        
+
         imgSet.close()
 
         # It should automatically call load
@@ -753,15 +749,14 @@ class TestSetOfCoordinates(BaseTest):
 
 
 class TestSetOfClasses2D(BaseTest):
-
     _labels = [SMALL, WEEKLY]
 
     @classmethod
     def setUpClass(cls):
         setupTestOutput(cls)
-        cls.dataset = DataSet.getDataSet('model')  
+        cls.dataset = DataSet.getDataSet('model')
         cls.selectionFn = cls.dataset.getFile('classesSelection')
-        
+
     def test_basics(self):
         """ Load an existing SetOfClasses and test basic properties 
         such us: _mapperPath, iteration and others.
@@ -769,21 +764,21 @@ class TestSetOfClasses2D(BaseTest):
         classes2DSet = emobj.SetOfClasses2D(filename=self.selectionFn)
         # Check the _mapperPath was properly set
         self.assertEqual(classes2DSet._mapperPath.get(), '%s, ' % self.selectionFn)
-        
+
         cls1 = classes2DSet.getFirstItem()
         self.assertEqual(cls1._mapperPath.get(), '%s,Class001' % self.selectionFn)
-        
+
         img1 = cls1.getFirstItem()
         self.assertEqual(img1.getObjId(), 1)  # First image of first class is 1 in this test
-        
+
         images = [[1, 3, 4, 5, 7, 9, 11, 14, 16, 17, 21, 22, 24, 26, 28, 29, 30,
                    35, 37, 38, 39, 40, 42, 45, 54, 57, 62, 65, 67, 69, 70, 71, 74],
                   [2, 8, 10, 12, 13, 15, 19, 20, 23, 25, 27, 33, 34, 41, 43, 44,
                    46, 47, 48, 49, 50, 51, 52, 53, 55, 56, 58, 59, 60, 61, 63,
                    64, 68, 72, 73, 75, 76],
-                  [18, 31, 32], 
+                  [18, 31, 32],
                   [6, 36, 66]]
-        
+
         classes2DSet.close()
         # Check iteration is working properly even after 
         # a close operation, it should open automatically
@@ -807,7 +802,7 @@ class TestSetOfClasses2D(BaseTest):
         subset of images and classes.
         """
         classes2DSet = emobj.SetOfClasses2D(filename=self.selectionFn)
-        
+
         imgSet = emobj.SetOfParticles(filename=':memory:')
         # We are going to iterate over the enabled items and create
         # a new set of images
@@ -818,7 +813,7 @@ class TestSetOfClasses2D(BaseTest):
         sizes = [32, 36]
         self.assertEqual(imgSet.getSize(), sum(sizes))
         imgSet.clear()  # Close db connection and clean data
-        
+
         # Now create a subset of classes and check the number
         # of images per class
         clsSet = emobj.SetOfClasses2D(filename=':memory:')
@@ -870,66 +865,65 @@ class TestTransform(BaseTest):
         m = t.getMatrix()
         m[0, 3] = 2
         m[1, 3] = 4
-        
+
         t2 = t.clone()
         m2 = t2.getMatrix()
-        self.assertTrue(np.allclose(m, m2, rtol=1e-2)) 
-        
+        self.assertTrue(np.allclose(m, m2, rtol=1e-2))
+
         p = emobj.Particle()
         p.setTransform(t)
-        
+
         p2 = p.clone()
         m3 = p2.getTransform().getMatrix()
-        self.assertTrue(np.allclose(m, m3, rtol=1e-2)) 
-        
-    
-class TestCopyItems(BaseTest):
+        self.assertTrue(np.allclose(m, m3, rtol=1e-2))
 
+
+class TestCopyItems(BaseTest):
     _labels = [SMALL, WEEKLY]
 
     @classmethod
     def setUpClass(cls):
         setupTestOutput(cls)
-        cls.dataset = DataSet.getDataSet('model')  
-        
+        cls.dataset = DataSet.getDataSet('model')
+
     def test_listAttribute(self):
         """ 
         Test the use of copyItems function where the items have
         a property that is a list.
         """
-        
+
         inFn = self.dataset.getFile('particles/particles_nma.sqlite')
         outFn = self.getOutputPath('particles.sqlite')
 
         inputSet = emobj.SetOfParticles(filename=inFn)
         inputSet.setSamplingRate(1.0)
-        
+
         outputSet = emobj.SetOfParticles(filename=outFn)
         outputSet.copyInfo(inputSet)
-        
-        outputSet.copyItems(inputSet, 
+
+        outputSet.copyItems(inputSet,
                             updateItemCallback=self._updateItem)
-        
+
         # print("writing particles to: ", outFn)
-        outputSet.write()        
+        outputSet.write()
         outputSet.close()
-        
+
         # Read again the written set of particles
         checkSet = emobj.SetOfParticles(filename=outFn)
-        
+
         # check that the first item (as the rest)
         # have the added _list attribute with the correct values
-        particle = checkSet.getFirstItem()        
+        particle = checkSet.getFirstItem()
         self.assertTrue(particle.hasAttribute('_list'))
         for v1, v2 in zip([1.0, 2.0], particle._list):
             self.assertAlmostEqual(v1, float(v2))
-            
+
         # check that copied items have exactly
-        # the same attribes than the input set
+        # the same attributes than the input set
         # except for the _list
         for i1, i2 in zip(inputSet, checkSet):
             self.assertTrue(i2.equalAttributes(i1, ignore=['_list']))
-        
+
     def _updateItem(self, item, row):
         item._list = emobj.CsvList()
         item._list.set([1.0, 2.0])
@@ -967,9 +961,9 @@ class TestCoordinatesTiltPair(BaseTest):
         # added that data type Should provide a clear test
         # when this is done then I will finish the test_mapper
 
+
 class TestCTFModel(TestCase):
     def test_stringContext(self):
-
         ctf = emobj.CTFModel()
         # All values to None should be printable without exception
         print(ctf)

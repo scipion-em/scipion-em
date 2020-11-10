@@ -6,7 +6,7 @@
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
-# * the Free Software Foundation; either version 2 of the License, or
+# * the Free Software Foundation; either version 3 of the License, or
 # * (at your option) any later version.
 # *
 # * This program is distributed in the hope that it will be useful,
@@ -56,7 +56,7 @@ class ProtImportParticles(ProtImportImages):
     def _getImportChoices(self):
         """ Return a list of possible choices
         from which the import can be done.
-        (usually packages formas such as: xmipp3, eman2, relion...etc.
+        (usually packages formats such as: xmipp3, eman2, relion...etc.
         """
         choices = ProtImportImages._getImportChoices(self)
         # Do not change the order of this list since
@@ -107,7 +107,7 @@ class ProtImportParticles(ProtImportImages):
                            "previous Relion execution."
                            "To detect if the input particles contains alignment "
                            "information, it is required to have the "
-                           "optimeser.star file corresponding to the data.star")
+                           "optimiser.star file corresponding to the data.star")
         
         form.addParam('ignoreIdColumn', params.BooleanParam, default=False,
                       condition='(importFrom == %d)' % self.IMPORT_FROM_RELION,

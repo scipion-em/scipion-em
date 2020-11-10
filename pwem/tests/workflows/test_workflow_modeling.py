@@ -5,7 +5,7 @@
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
-# * the Free Software Foundation; either version 2 of the License, or
+# * the Free Software Foundation; either version 3 of the License, or
 # * (at your option) any later version.
 # *
 # * This program is distributed in the hope that it will be useful,
@@ -245,7 +245,7 @@ class TestChimeraFit(TestImportData):
                          "coordinateSystem #2 models #3\n"
         extraCommands += "fitmap #3 in #2\n"
         extraCommands += "scipionwrite #2  " \
-                          "prefix DONOTSAVESESSION_\n"
+                         "prefix DONOTSAVESESSION_\n"
         extraCommands += "scipionwrite #3 " \
                          "prefix DONOTSAVESESSION_\n"
         extraCommands += "exit\n"
@@ -265,17 +265,17 @@ class TestChimeraFit(TestImportData):
         try:
             result = eval(
                 "protChimera.DONOTSAVESESSION_Map__2_%06d.getFileName()"
-                 % protChimera.getObjId())
+                % protChimera.getObjId())
         except:
-            self.assertTrue(False,  "There was a problem with the alignment")
+            self.assertTrue(False, "There was a problem with the alignment")
 
         self.assertTrue(os.path.exists(result))
         try:
             result = eval(
                 "protChimera.DONOTSAVESESSION_Atom_struct__3_%06d.getFileName()"
-                 % protChimera.getObjId())
+                % protChimera.getObjId())
         except:
-            self.assertTrue(False,  "There was a problem with the alignment")
+            self.assertTrue(False, "There was a problem with the alignment")
 
         self.assertTrue(os.path.exists(result))
 
@@ -548,10 +548,10 @@ class TestChimeraFit(TestImportData):
                                 "and model")
         self.launchProtocol(protChimera)
         volume = eval("protChimera.DONOTSAVESESSION_Map__2_%06d" \
-            % protChimera.getObjId())
+                      % protChimera.getObjId())
         structure2_PDB = \
             eval("protChimera.DONOTSAVESESSION_Atom_struct__3_%06d" \
-            % protChimera.getObjId())
+                 % protChimera.getObjId())
 
         extraCommands = ""
         extraCommands += "move 24.11, 45.76, 24.60 " \
@@ -570,15 +570,15 @@ class TestChimeraFit(TestImportData):
                                                       doRaise=True)
         protChimera2 = self.newProtocol(ChimeraProtRigidFit, **args)
         protChimera2.setObjLabel("chimera fit\n pdb and associated volume\n ("
-                                "just moves the structure\nto "
-                                "the starting position) "
-                                "\nsave "
-                                "volume and model")
+                                 "just moves the structure\nto "
+                                 "the starting position) "
+                                 "\nsave "
+                                 "volume and model")
         self.launchProtocol(protChimera2)
         volume = eval("protChimera2.DONOTSAVESESSION_Map__2_%06d" \
-            % protChimera2.getObjId())
+                      % protChimera2.getObjId())
         structure3_PDB = eval("protChimera2.DONOTSAVESESSION_Atom_struct__3_%06d" \
-            % protChimera2.getObjId())
+                              % protChimera2.getObjId())
 
         extraCommands = ""
         extraCommands += "move -24.11,-45.76,-24.60 " \
@@ -593,16 +593,16 @@ class TestChimeraFit(TestImportData):
                 }
         protChimera3 = self.newProtocol(ChimeraProtRigidFit, **args)
         protChimera3.setObjLabel("chimera fit\n pdb and associated volume\n "
-                                "save only model")
+                                 "save only model")
         self.launchProtocol(protChimera3)
 
         structure4_PDB = eval("protChimera3.DONOTSAVESESSION_Atom_struct__3_%06d" \
-            % protChimera3.getObjId())
+                              % protChimera3.getObjId())
 
         extraCommands = ""
         extraCommands += "volume #2 voxelSize 1.55\n"
         extraCommands += "scipionwrite #2 " \
-                        "prefix DONOTSAVESESSION_\n"
+                         "prefix DONOTSAVESESSION_\n"
         extraCommands += "scipionwrite #3 " \
                          "prefix DONOTSAVESESSION_\n"
         extraCommands += "exit\n"
@@ -612,23 +612,23 @@ class TestChimeraFit(TestImportData):
                 }
         protChimera4 = self.newProtocol(ChimeraProtRigidFit, **args)
         protChimera4.setObjLabel("chimera fit \n pdb and associated "
-                                "volume\n volume resampled\n save volume "
-                                "and model\n")
+                                 "volume\n volume resampled\n save volume "
+                                 "and model\n")
         self.launchProtocol(protChimera4)
         try:
             result = eval(
                 "protChimera4.DONOTSAVESESSION_Map__2_%06d.getFileName()"
-                 % protChimera4.getObjId())
+                % protChimera4.getObjId())
         except:
-            self.assertTrue(False,  "There was a problem with the alignment")
+            self.assertTrue(False, "There was a problem with the alignment")
 
         self.assertTrue(os.path.exists(result))
         try:
             result = eval(
                 "protChimera4.DONOTSAVESESSION_Atom_struct__3_%06d.getFileName()"
-                 % protChimera4.getObjId())
+                % protChimera4.getObjId())
         except:
-            self.assertTrue(False,  "There was a problem with the alignment")
+            self.assertTrue(False, "There was a problem with the alignment")
 
         self.assertTrue(os.path.exists(result))
 
@@ -734,7 +734,7 @@ class TestCootRefinement(TestImportData):
                                 'save volume and model')
         self.launchProtocol(protChimera)
         volume2 = eval("protChimera.DONOTSAVESESSION_Map__2_%06d" \
-                      % protChimera.getObjId())
+                       % protChimera.getObjId())
         structure2_PDB = eval("protChimera.DONOTSAVESESSION_Atom_struct__3_%06d" \
                               % protChimera.getObjId())
 
@@ -794,8 +794,8 @@ class TestCootRefinement(TestImportData):
         protChimera.setObjLabel('chimera fit\n volume and pdb\n '
                                 'save volume and model')
         self.launchProtocol(protChimera)
-        listVolCoot = [ eval("protChimera.DONOTSAVESESSION_Map__2_%06d" \
-                       % protChimera.getObjId())]
+        listVolCoot = [eval("protChimera.DONOTSAVESESSION_Map__2_%06d" \
+                            % protChimera.getObjId())]
         structure2_PDB = eval("protChimera.DONOTSAVESESSION_Atom_struct__3_%06d" \
                               % protChimera.getObjId())
 
@@ -854,7 +854,7 @@ class TestCootRefinement(TestImportData):
                                 'volume and model')
         self.launchProtocol(protChimera)
         volume2 = eval("protChimera.DONOTSAVESESSION_Map__2_%06d" \
-                            % protChimera.getObjId())
+                       % protChimera.getObjId())
         structureCoot_PDB = self._importCootStructureWoVol()
 
         label = 'testLabel4'
@@ -911,7 +911,7 @@ class TestCootRefinement(TestImportData):
                                 'save volume and model')
         self.launchProtocol(protChimera)
         volume = eval("protChimera.DONOTSAVESESSION_Map__2_%06d" \
-                            % protChimera.getObjId())
+                      % protChimera.getObjId())
         structure3_PDB = eval("protChimera.DONOTSAVESESSION_Atom_struct__3_%06d" \
                               % protChimera.getObjId())
 
@@ -1145,9 +1145,9 @@ class TestRefmacRefinement(TestImportData):
                                 'and model')
         self.launchProtocol(protChimera)
         volume2 = eval("protChimera.DONOTSAVESESSION_Map__2_%06d"
-                 % protChimera.getObjId())
+                       % protChimera.getObjId())
         structure2_PDB = eval("protChimera.DONOTSAVESESSION_Atom_struct__3_%06d"
-                 % protChimera.getObjId())
+                              % protChimera.getObjId())
 
         listVolCoot = [volume2]
         label = 'testLabel2'
@@ -1214,7 +1214,7 @@ class TestRefmacRefinement(TestImportData):
                                 'to pdb\n save volume and model')
         self.launchProtocol(protChimera)
         volume = eval("protChimera.DONOTSAVESESSION_Map__2_%06d"
-                       % protChimera.getObjId())
+                      % protChimera.getObjId())
         structure3_PDB = eval("protChimera.DONOTSAVESESSION_Atom_struct__3_%06d"
                               % protChimera.getObjId())
 

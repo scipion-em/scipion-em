@@ -35,7 +35,7 @@ current Python environment. During development, I tend to set the PYTHONPATH:
     cd scipion-em
     # Either you have installed as mentioned above, or modify the PYTHONPATH
     export PYTHONPATH=$PYTHONPATH:$PWD
-    # After pyworkflow is accesible as a module, then:
+    # After pyworkflow is accessible as a module, then:
     cd pwem/tests
 
     python -m unittest discover

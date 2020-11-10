@@ -6,7 +6,7 @@
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
-# * the Free Software Foundation; either version 2 of the License, or
+# * the Free Software Foundation; either version 3 of the License, or
 # * (at your option) any later version.
 # *
 # * This program is distributed in the hope that it will be useful,
@@ -48,10 +48,6 @@ class ProtAlignmentAssign(ProtAlign2D):
         form.addParam('inputAlignment', params.PointerParam, pointerClass='SetOfParticles',
                       label="Input alignments",
                       help='Select the particles with alignment to be apply to the other particles.')
-        form.addParam('shiftsAppliedBefore', params.BooleanParam, default=False,
-                      label='Were particle shifts applied?',
-                      help='Activate this option only if the advanced option "Apply particle shifts" was set to Yes '
-                           'at the extract coordinates protocol.')
         form.addParam('assignRandomSubsets', params.BooleanParam, default=True,
                       expertLevel=params.LEVEL_ADVANCED,
                       label="Assign random subsets?",
@@ -82,8 +78,21 @@ class ProtAlignmentAssign(ProtAlign2D):
         # on the output particle, if not do not write that item
         if alignedParticle is not None:
             alignment = alignedParticle.getTransform()
-            alignment.scaleShifts(
-                scale, shiftsAppliedBefore=self.shiftsAppliedBefore.get())
+
+            # If shifts Applied before at extraction coordinate time
+            if item.hasCoordinate() and hasattr(item.getCoordinate(), "xFrac"):
+                coord = item.getCoordinate()
+
+                alignedParticle = inputAlignment[item.getObjId()]
+
+                alignment.invert()
+                alignment.setShifts(-coord.xFrac.get(),
+                                -coord.yFrac.get(),
+                                0)
+                alignment.invert()
+            else:
+                alignment.scaleShifts(scale)
+
             item.setTransform(alignment)
 
             if self.assignRandomSubsets:
@@ -154,12 +163,3 @@ class ProtAlignmentAssign(ProtAlign2D):
             
         # Add some errors if input is not valid
         return errors
-
-    def _warnings(self):
-        validateMsgs = []
-        if self.shiftsAppliedBefore.get():
-            validateMsgs.append("This option should be set to Yes only if the particle shifts have been applied "
-                                "before.\nIf selected, only the remaining decimal part of the shifts will be applied " +
-                                " for 'x' and 'y'  in the translation component of the transformation matrix. This " +
-                                "will carry longer execution times. Please read the help for further information.")
-        return validateMsgs

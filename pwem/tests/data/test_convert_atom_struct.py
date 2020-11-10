@@ -6,7 +6,7 @@
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
-# * the Free Software Foundation; either version 2 of the License, or
+# * the Free Software Foundation; either version 3 of the License, or
 # * (at your option) any later version.
 # *
 # * This program is distributed in the hope that it will be useful,
@@ -364,7 +364,7 @@ class TestAtomicStructHandler(unittest.TestCase):
         # problem, xmipp rotates with respect the volume center
         # pdb with respect the origin of coordinates (much better convention)
         # in order to compare both I need to
-        # move pdb to origin, rotate it, put it back in the possition
+        # move pdb to origin, rotate it, put it back in the position
         if False or doAll:
             shift = [0., 0., 0.]
             angles = [30., 0., 0.]
@@ -397,7 +397,7 @@ class TestAtomicStructHandler(unittest.TestCase):
         os.unlink(fileName)
 
     def testFunctionAddStructNoNewModel(self):
-        """ add two atomic structures with overlaping chain ids"""
+        """ add two atomic structures with overlapping chain ids"""
         pdbID1 = '1P30'  # A
         pdbID2 = '1CJD'  # A, B, C
         outFile = "/tmp/nomodel.cif"  # A, A002, B, C
@@ -425,7 +425,7 @@ class TestAtomicStructHandler(unittest.TestCase):
         os.unlink(outFile)
 
     def testFunctionAddStructNoNewModelAddTwice(self):
-        """ add two atomic structures with overlaping chain ids, last atomic
+        """ add two atomic structures with overlapping chain ids, last atomic
         structure is added two times"""
         pdbID1 = '1P30'  # A,
         pdbID2 = '1CJD'  # A, B, C
