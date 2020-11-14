@@ -25,6 +25,8 @@
 # **************************************************************************
 
 import os
+
+import numpy
 from PIL import Image
 import pyworkflow.utils as pwutils
 import pwem.objects as emobj
@@ -497,6 +499,36 @@ class ImageHandler(object):
             x, y, z = int(x * scaleFactor), int(y * scaleFactor), int(z * scaleFactor)
 
         I.scale(x, y, z, setDimensions)
+        I.write(outputFn)
+
+    @classmethod
+    def scale2DStack(cls, inputFn, outputFn, scaleFactor=None, finalDimension=None):
+        """
+         Scale a 2D images stack using PIL.
+        """
+        from PIL import Image
+        if scaleFactor is None and finalDimension is None:
+            raise TypeError("scaleFactor or finalDimension must be passed")
+
+        I = lib.Image()
+        I.read(inputFn)
+        x, y, z, n = I.getDimensions()
+
+        if not finalDimension:
+            finalDimension = round(x*scaleFactor)
+
+        objects = I.getData()
+
+        newStack = numpy.zeros((n, 1, finalDimension, finalDimension))
+        count = 0
+        for object in objects:
+            slice = object[0]
+            image = Image.fromarray(slice)
+            resizedImage = image.resize((finalDimension, finalDimension))
+            newStack[count] = numpy.array(resizedImage)
+            count += 1
+
+        I.setData(newStack)
         I.write(outputFn)
 
     @staticmethod
