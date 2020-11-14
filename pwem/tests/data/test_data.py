@@ -355,6 +355,40 @@ class TestImageHandler(unittest.TestCase):
         self.assertEqual(ih.getDimensions(outFn), SIZE)
         self.assertEqual(ih.getDataType(outFn), DT)
 
+    def test_scaleStack(self):
+        particles = self.dataset.getFile("particles/BPV_1386.stk")
+        outFn = join('/tmp', 'scaled.mrc')
+        ih = emlib.image.ImageHandler()
+        DT = emlib.DT_FLOAT
+
+        # Scaled with a higher dimension using finalDimension parameter
+        EXPECTED_SIZE = (256, 256, 131, 1)
+        ih.scale2DStack(particles, outFn, finalDimension=EXPECTED_SIZE[0])
+
+        self.assertTrue(os.path.exists(outFn))
+        self.assertTrue(pwutils.getFileSize(outFn) > 0)
+        self.assertEqual(ih.getDimensions(outFn), EXPECTED_SIZE)
+        self.assertEqual(ih.getDataType(outFn), DT)
+
+        # Scaled with a lower dimension using finalDimension parameter
+        EXPECTED_SIZE = (64, 64, 131, 1)
+        ih.scale2DStack(particles, outFn, finalDimension=EXPECTED_SIZE[0])
+
+        self.assertTrue(os.path.exists(outFn))
+        self.assertTrue(pwutils.getFileSize(outFn) > 0)
+        self.assertEqual(ih.getDimensions(outFn), EXPECTED_SIZE)
+        self.assertEqual(ih.getDataType(outFn), DT)
+
+        # Scaled with a higher dimension using scaleFactor parameter
+        scaleFactor = 1.5
+        EXPECTED_SIZE = (210, 210, 131, 1)
+        ih.scale2DStack(particles, outFn, scaleFactor=scaleFactor)
+
+        self.assertTrue(os.path.exists(outFn))
+        self.assertTrue(pwutils.getFileSize(outFn) > 0)
+        self.assertEqual(ih.getDimensions(outFn), EXPECTED_SIZE)
+        self.assertEqual(ih.getDataType(outFn), DT)
+
 
 class TestSetOfMicrographs(BaseTest):
     _labels = [SMALL, WEEKLY]
