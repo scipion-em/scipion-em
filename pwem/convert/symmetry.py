@@ -6,7 +6,7 @@
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
-# * the Free Software Foundation; either version 2 of the License, or
+# * the Free Software Foundation; either version 3 of the License, or
 # * (at your option) any later version.
 # *
 # * This program is distributed in the hope that it will be useful,
@@ -25,7 +25,7 @@
 # **************************************************************************
 """
 This module returns the matrices related with the different
-point symmetries. Code based on chiomera file sym.py
+point symmetries. Code based on chimera file sym.py
 """
 
 from math import sin, cos, pi, acos, sqrt, asin
@@ -72,7 +72,7 @@ def _rotationTransform(axis, angle, center=(0, 0, 0)):
           (az*sa+k*ax*ay, 1 + k*(ay*ay-1), -ax*sa+k*ay*az, 0),
           (-ay*sa+k*ax*az, ax*sa+k*ay*az, 1 + k*(az*az-1), 0))
     cx, cy, cz = center
-    c_tf = ((1, 0, 0, cx), (0, 1, 0, cy), (0, 0, 1,cz))
+    c_tf = ((1, 0, 0, cx), (0, 1, 0, cy), (0, 0, 1, cz))
     inv_c_tf = ((1, 0, 0, -cx), (0, 1, 0, -cy), (0, 0, 1, -cz))
     rtf = _multiplyMatrices(c_tf, tf, inv_c_tf)
     return rtf

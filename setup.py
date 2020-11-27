@@ -36,7 +36,7 @@ setup(
     version=__version__,  # Required
     description='This modules contains classes related with EM',  # Required
     long_description=long_description,  # Optional
-    url= URL,  # Optional
+    url=URL,  # Optional
     author='J.M. De la Rosa Trevin, '
            'Roberto Marabini, '
            'Grigory Sharov, '
@@ -86,6 +86,6 @@ setup(
         'pyworkflow.plugin': 'pwem = pwem'
     },
     package_data={
-      'pwem':['templates/*','cmd/*']
+      'pwem': ['templates/*', 'cmd/*']
     }
 )

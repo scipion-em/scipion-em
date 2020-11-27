@@ -7,7 +7,7 @@
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
-# * the Free Software Foundation; either version 2 of the License, or
+# * the Free Software Foundation; either version 3 of the License, or
 # * (at your option) any later version.
 # *
 # * This program is distributed in the hope that it will be useful,
@@ -40,6 +40,7 @@ import pwem.convert as emconv
 from pwem.wizards.wizard import EmWizard
 import pwem.protocols as emprot
 import pwem.objects as emobj
+
 
 class ImportAcquisitionWizard(EmWizard):
     _targets = [(emprot.ProtImportImages, ['acquisitionWizard'])]
@@ -90,7 +91,6 @@ class ImportCoordinatesBoxSizeWizard(pwizard.Wizard):
 
     @classmethod
     def _getBoxSize(cls, protocol):
-
         return protocol.getDefaultBoxSize()
 
     @classmethod
@@ -99,7 +99,6 @@ class ImportCoordinatesBoxSizeWizard(pwizard.Wizard):
 
 
 class ImportOriginVolumeWizard(pwizard.Wizard):
-
     _targets = [(emprot.ProtImportVolumes, ['x', 'y', 'z'])]
 
     def show(self, form, *params):
@@ -116,7 +115,7 @@ class ImportOriginVolumeWizard(pwizard.Wizard):
             inputVol = emobj.Volume()
             inputVol.setFileName(fileName)
             if ((str(fullPattern)).endswith('mrc') or
-               (str(fullPattern)).endswith('map')):
+                    (str(fullPattern)).endswith('map')):
                 ccp4header = emconv.Ccp4Header(fileName, readHeader=True)
                 x, y, z = ccp4header.getOrigin(changeSign=True)  # In Angstroms
             else:
@@ -143,23 +142,20 @@ class ChangeOriginSamplingWizard(pwizard.Wizard):
     def show(self, form, *params):
         protocol = form.protocol
         vol = protocol.inVolume.get()
-        fullPattern = vol.getLocation()
+        fullPattern = vol.getFileName()
         sampling = vol.getSamplingRate()
         if ((str(fullPattern)).endswith('mrc') or
-           (str(fullPattern)).endswith('map')):
+                (str(fullPattern)).endswith('map')):
             ccp4header = emconv.Ccp4Header(fullPattern, readHeader=True)
             x, y, z = ccp4header.getOrigin(changeSign=True)  # In Angstroms
         else:
             x, y, z = \
                 ImportOriginVolumeWizard._halfOriginCoordinates(vol, sampling)
 
-        def remove_tail_zeros(number):
-            return decimal.Decimal(number).normalize()
-
-        form.setVar('x', remove_tail_zeros(x))
-        form.setVar('y', remove_tail_zeros(y))
-        form.setVar('z', remove_tail_zeros(z))
-        form.setVar('samplingRate', remove_tail_zeros(sampling))
+        form.setVar('x', round(x, 3))
+        form.setVar('y', round(y, 3))
+        form.setVar('z', round(z, 3))
+        form.setVar('samplingRate', round(sampling, 3))
 
 
 class GetStructureChainsWizard(pwizard.Wizard):
@@ -176,7 +172,7 @@ class GetStructureChainsWizard(pwizard.Wizard):
     def getModelsChainsStep(cls, protocol):
         """ Returns (1) list with the information
            {"model": %d, "chain": "%s", "residues": %d} (modelsLength)
-           (2) list with residues, postion and chain (modelsFirstResidue)"""
+           (2) list with residues, position and chain (modelsFirstResidue)"""
         structureHandler = emconv.AtomicStructHandler()
         fileName = ""
         if hasattr(protocol, 'pdbId'):

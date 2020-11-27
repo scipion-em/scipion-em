@@ -6,7 +6,7 @@
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
-# * the Free Software Foundation; either version 2 of the License, or
+# * the Free Software Foundation; either version 3 of the License, or
 # * (at your option) any later version.
 # *
 # * This program is distributed in the hope that it will be useful,
@@ -265,7 +265,7 @@ class ProtUserSubSet(BatchProtocol):
 
         # Register outputs
         outputCtfs.setMicrographs(outputMics)
-        # NOTE: I've splited the define output in 2 steps.
+        # NOTE: I've split the define output in 2 steps.
         # It seems with python3 outputCTF was processed first and needs mics to be saved first.
         self._defineOutputs(outputMicrographs=outputMics)
         self._defineOutputs(outputCTF=outputCtfs)
@@ -570,7 +570,7 @@ class ProtCreateFSC(BatchProtocol):
         form.addHidden('inputObj', PointerParam,
                        pointerClass='EMObject')
         form.addHidden('fscValues', StringParam,
-                       help='String represention of the list with FSC values')
+                       help='String representation of the list with FSC values')
         form.addHidden('fscLabels', StringParam,
                        help='String with fsc labels')
 

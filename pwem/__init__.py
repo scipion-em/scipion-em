@@ -6,7 +6,7 @@
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
-# * the Free Software Foundation; either version 2 of the License, or
+# * the Free Software Foundation; either version 3 of the License, or
 # * (at your option) any later version.
 # *
 # * This program is distributed in the hope that it will be useful,
@@ -38,9 +38,11 @@ import pyworkflow.plugin
 from .constants import *
 from .objects import EMObject
 from .utils import *
-__version__ = '3.0.3'
+
+__version__ = '3.0.6'
 _logo = "scipion_icon.gif"
 _references = ["delaRosaTrevin201693"]
+
 
 class Config(pw.Config):
     _get = pw.Config._get
@@ -49,10 +51,10 @@ class Config(pw.Config):
     EM_ROOT = _join(_get(EM_ROOT_VAR, _join(pw.Config.SCIPION_SOFTWARE, 'em')))
 
     # Default XMIPP_HOME: needed here for ShowJ viewers
-    XMIPP_HOME = _join(_get('XMIPP_HOME', os.path.join(EM_ROOT,'xmipp')))
+    XMIPP_HOME = _join(_get('XMIPP_HOME', os.path.join(EM_ROOT, 'xmipp')))
 
     # Needed by Chimera viewer: (TODO: Take the value from the plugin)
-    CHIMERA_HOME = _join(_get('CHIMERA_HOME', os.path.join(EM_ROOT,'chimerax-1.1')))
+    CHIMERA_HOME = _join(_get('CHIMERA_HOME', os.path.join(EM_ROOT, 'chimerax-1.1')))
 
     # Get java home, we might need to provide correct default value
     JAVA_HOME = _get('JAVA_HOME', '')
@@ -84,7 +86,7 @@ class Plugin(pyworkflow.plugin.Plugin):
         """ Shortcut method to define variables prepending EM_ROOT if variable is not absolute"""
 
         # Get the value, either whatever is in the environment or a join of EM_ROOT + defaultValue
-        value = os.environ.get(varName, os.path.join(Config.EM_ROOT,defaultValue))
+        value = os.environ.get(varName, os.path.join(Config.EM_ROOT, defaultValue))
 
         # CASE-1 : Users might have used ~ and that has to be expanded
         value = os.path.expanduser(value)
@@ -99,7 +101,6 @@ class Plugin(pyworkflow.plugin.Plugin):
         # /<scipion_home>/software/em/chimera-13.0.1
         # In any case we join it (absolute paths will not join)
         value = os.path.join(pw.Config.SCIPION_HOME, value)
-
 
         cls._addVar(varName, value)
 
@@ -122,17 +123,16 @@ class Plugin(pyworkflow.plugin.Plugin):
 
     @classmethod
     def defineBinariesMaxit(cls, default, env):
-
         # If not defined already (several plugins needs this and call this but has to be added once
         if not env.hasPackage(MAXIT):
             MAXIT_URL = 'https://sw-tools.rcsb.org/apps/MAXIT/maxit-v10.100-prod-src.tar.gz'
             MAXIT_TAR = 'maxit-v10.100-prod-src.tar.gz'
             maxit_commands = [('make -j 1 binary ', ['bin/maxit'])]
             env.addPackage(MAXIT, version='10.1',
-                       tar=MAXIT_TAR,
-                       url=MAXIT_URL,
-                       commands=maxit_commands,
-                       default=default)  # scipion installb maxit
+                           tar=MAXIT_TAR,
+                           url=MAXIT_URL,
+                           commands=maxit_commands,
+                           default=default)  # scipion installb maxit
             # requirements bison, flex, gcc
 
         maxit10 = env.getTarget(env._getExtName(MAXIT, "10.1"))

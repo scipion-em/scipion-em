@@ -8,7 +8,7 @@
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
-# * the Free Software Foundation; either version 2 of the License, or
+# * the Free Software Foundation; either version 3 of the License, or
 # * (at your option) any later version.
 # *
 # * This program is distributed in the hope that it will be useful,
@@ -250,7 +250,7 @@ class ProtImportSequence(ProtImportFiles):
                       condition='inputSequence == %d and '
                                 'inputNucleotideSequence == %d' %
                                 (emconv.SEQ_TYPE_NUCLEOTIDES,
-                                self.IMPORT_FROM_GENEBANK),
+                                 self.IMPORT_FROM_GENEBANK),
                       label="GeneBank accession ", allowsNull=True,
                       help='Write a GeneBank accession.\n')
 
@@ -344,7 +344,7 @@ class ProtImportSequence(ProtImportFiles):
             self.id = self.inputSequenceID.get()
         else:
             self.id = self.structureHandler.getFullID(
-                    selectedModel, selectedChain)
+                selectedModel, selectedChain)
 
         print("Selected chain: %s from model: %s from structure: %s" %
               (selectedChain, selectedModel, self.structureHandler.structure.get_id()))
@@ -453,7 +453,7 @@ class ProtImportSequence(ProtImportFiles):
             elif self.inputNucleotideSequence == \
                     self.IMPORT_FROM_NUCLEOTIDE_STRUCTURE:
                 if self.inputStructureSequence == \
-                    self.IMPORT_STRUCTURE_FROM_ID:
+                        self.IMPORT_STRUCTURE_FROM_ID:
                     summary.append("Sequence *%s* imported from atomic "
                                    "structure *%s.cif*\n"
                                    % (self.name, self.pdbId.get()))
@@ -490,4 +490,3 @@ class ProtImportSequence(ProtImportFiles):
             return self.proteinIUPACalphabet.get()
         else:
             return self.nucleotideIUPACalphabet.get()
-

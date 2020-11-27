@@ -7,7 +7,7 @@
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
-# * the Free Software Foundation; either version 2 of the License, or
+# * the Free Software Foundation; either version 3 of the License, or
 # * (at your option) any later version.
 # *
 # * This program is distributed in the hope that it will be useful,
@@ -64,7 +64,6 @@ class scipionMMCIFIO(MMCIFIO):
     # as converter.
     # TODO: Delete it after a more extensive testing period
     # DATE mar feb 18 17:48:57 CET 2020
-
 
     def _save_dict_delete(self, out_file):
         # Form dictionary where key is first part of mmCIF key and value is list
@@ -233,7 +232,7 @@ class AtomicStructHandler:
                 return False
 
     def getStructure(self):
-        """return strcture information, model, chain,
+        """return structure information, model, chain,
            residues, atoms..."""
         return self.structure
 
@@ -507,7 +506,7 @@ class AtomicStructHandler:
             self.writeAsCif(fileName)
 
     def writeAsPdb(self, pdbFile):
-        """ Save structure as PDB. Be aware that this is not a lossless convertion
+        """ Save structure as PDB. Be aware that this is not a lossless conversion
         Returns False is conversion is not possible. True otherwise
         """
         # check input is not PDB
@@ -532,13 +531,13 @@ class AtomicStructHandler:
 
     def writeAsCif(self, cifFile):
         """ Save structure as CIF.
-            Be aware that this is not a lossless convertion
+            Be aware that this is not a lossless conversion
         """
         self._write(cifFile)
 
     def centerOfMass(self, geometric=False):
         """
-        Returns gravitic [default] or geometric center of mass of an Entity
+        Returns gravity [default] or geometric center of mass of an Entity
         (anything with a get_atoms function in biopython.
         Geometric assumes all masses are equal (geometric=True)
         """
@@ -619,12 +618,20 @@ class AtomicStructHandler:
         import uuid
         chainIDs1 = [chain.id for chain in self.structure.get_chains()]
         for chain in struct2.get_chains():
+            counter = 2
             if chain.id in chainIDs1:
                 repeated = True
                 cId = chain.id
                 l = len(cId)
                 if l == 1:
-                    chain.id = "%s002" % cId
+                    while True:
+                        try:
+                            chain.id = "%s%03d" % (cId, counter)
+                            break
+                        except ValueError:
+                            counter +=1
+                            if counter > 1000:
+                                raise ValueError('Error in _renameChainsIfNeed.')
                 elif RepresentsInt(cId[1:]):  # try to fit a number and increase it by one
                     chain.id = "%s%03d" % (cId[0], int(cId[1:]) + 1)
                 else:  # generate a 4 byte random string
@@ -694,9 +701,8 @@ class AtomicStructHandler:
         self.structure[modelID][chainID].id = newChainName
         self.write(filename)
 
-
     def renumberChain(self, chainID, offset=0, modelID='0',
-                    filename="output.mmcif"):
+                      filename="output.mmcif"):
         # get chain object
         chain = self.structure[modelID][chainID]
         # remove chain from model
@@ -710,7 +716,7 @@ class AtomicStructHandler:
             rId = residue.id
             res_id = list(rId)
             res_id[1] = res_id[1] + offset
-            if res_id[1] <0 :
+            if res_id[1] < 0:
                 raise ValueError('Residue number cant be <= 0')
             residue.id = tuple(res_id)
             newChain.add(residue)
@@ -863,8 +869,10 @@ def retry(runEnvirom, program, args, cwd, listAtomStruct=[], log=None, clean_dir
                         _args = args.replace(atomStructName, newAtomStructName)
                         runEnvirom(program, _args, cwd=cwd)
                     except:
-                        print("CIF file standarization failed.")
+                        print("CIF file standardisation failed.")
                         # atomStructName = newAtomStructName
+
+
 # TODO this should no be here, ROB
 def partiallyCleaningFolder(program, cwd):
     l1 = os.listdir(cwd)
@@ -874,21 +882,21 @@ def partiallyCleaningFolder(program, cwd):
 
     for item in l1:
         if (program.endswith('real_space_refine.py') and
-                (item.endswith('geo') or
-                 item.endswith('real_space_refined.log') or
-                 item.endswith('real_space_refine.pdb') or
-                 item.endswith('real_space_refined.cif'))) or \
-           (program.endswith('molprobity.py') and item in l2)  or \
-           (program.endswith('validation_cryoem.py') and item in l3) or \
-           (program.endswith('emringer.py') and
-                (item.endswith("emringer.csv") or \
-                 item.endswith("emringer.pkl") or \
-                 item.endswith("emringer_plots") or \
-                 item.startswith('emringer_transfer'))) or \
-           (program.endswith('dock_in_map.py') and item in l4):
+            (item.endswith('geo') or
+             item.endswith('real_space_refined.log') or
+             item.endswith('real_space_refine.pdb') or
+             item.endswith('real_space_refined.cif'))) or \
+                (program.endswith('molprobity.py') and item in l2) or \
+                (program.endswith('validation_cryoem.py') and item in l3) or \
+                (program.endswith('emringer.py') and
+                 (item.endswith("emringer.csv") or
+                  item.endswith("emringer.pkl") or
+                  item.endswith("emringer_plots") or
+                  item.startswith('emringer_transfer'))) or \
+                (program.endswith('dock_in_map.py') and item in l4):
             path1 = os.path.join(cwd, item)
             if os.path.exists(path1):
-                if (os.path.isfile(path1) or os.path.islink(path1)):
+                if os.path.isfile(path1) or os.path.islink(path1):
                     os.remove(path1)
                 elif os.path.isdir(path1):
                     shutil.rmtree(path1)

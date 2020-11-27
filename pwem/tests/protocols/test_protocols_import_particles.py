@@ -4,7 +4,7 @@
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
-# * the Free Software Foundation; either version 2 of the License, or
+# * the Free Software Foundation; either version 3 of the License, or
 # * (at your option) any later version.
 # *
 # * This program is distributed in the hope that it will be useful,
@@ -36,7 +36,7 @@ class TestImportBase(pwtests.BaseTest):
         cls.dsRelion = pwtests.DataSet.getDataSet('relion_tutorial')
         
     def checkOutput(self, prot, outputName, conditions=[]):
-        """ Check that an ouput was generated and
+        """ Check that an output was generated and
         the condition is valid. 
         """
         o = getattr(prot, outputName, None)
@@ -54,7 +54,7 @@ class TestImportParticles(TestImportBase):
         args = {'importFrom': emprot.ProtImportParticles.IMPORT_FROM_FILES,
                 'filesPath': self.dsXmipp.getFile('particles/'),
                 'filesPattern': 'BPV_????_ptcls.hdf',
-                'amplitudConstrast': 0.1,
+                'amplitudeConstrast': 0.1,
                 'sphericalAberration': 2.,
                 'voltage': 100,
                 'samplingRate': 2.1,
@@ -77,7 +77,7 @@ class TestImportParticles(TestImportBase):
         """ Import an EMX file with Particles and defocus
         """
         args = {'importFrom': emprot.ProtImportParticles.IMPORT_FROM_EMX,
-                'amplitudConstrast': 0.1,
+                'amplitudeConstrast': 0.1,
                 'sphericalAberration': 2.,
                 'voltage': 100,
                 'alignType': 3,
@@ -192,7 +192,7 @@ class TestImportParticles(TestImportBase):
         args = {'importFrom': emprot.ProtImportParticles.IMPORT_FROM_FILES,
                 'filesPath': self.dsMda.getFile('particles/'),
                 'filesPattern': 'particles.hed',
-                'amplitudConstrast': 0.1,
+                'amplitudeConstrast': 0.1,
                 'sphericalAberration': 2.,
                 'voltage': 100,
                 'samplingRate': 2.1,
