@@ -74,7 +74,7 @@ class ProtUserSubSet(BatchProtocol):
         markedSet = self.createSetObject() # Set equal to sourceSet but marked with disabled
         other = self.other.get()
 
-        print("Source set: %s (%s)" % (sourceSet, sourceSet.getFileName()))
+        print("Source: %s" % sourceSet)
         print("Output type: %s" % self.outputClassName)
         print("Subset (sqlite) file: %s" % self.sqliteFile)
         if other:
