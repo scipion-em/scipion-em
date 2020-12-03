@@ -52,7 +52,7 @@ class viewerProtImportVolumes(EmProtocolViewer):
     with the Xmipp program xmipp_showj. """
 
     _label = 'viewer input volume'
-    _targets = [emprot.ProtImportVolumes]
+    _targets = [emprot.ProtImportVolumes, emprot.ProtOrigSampling]
     _environments = [pwviewer.DESKTOP_TKINTER, pwviewer.WEB_DJANGO]
 
     def _defineParams(self, form):
