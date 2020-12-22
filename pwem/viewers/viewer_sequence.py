@@ -63,10 +63,10 @@ class SequenceViewer(pwviewer.Viewer):
         seqName = obj.getSeqName()
         seqDescription = obj.getDescription()
         seqFileName = os.path.abspath(
-            self.protocol._getTmpPath(seqName + ".fasta"))
-        # Step 3: Sequence saved in the tmp file
+            self.protocol._getExtraPath(seqName + ".fasta"))
+        # Step 3: Sequence saved in the extra file
         seqHandler.saveFile(seqFileName, seqID, sequence=seqBio,
                             name=seqName, seqDescription=seqDescription,
                             type="fasta")
-        # Step 4: Visualization of tmp file
+        # Step 4: Visualization of extra file
         openTextFileEditor(seqFileName)
