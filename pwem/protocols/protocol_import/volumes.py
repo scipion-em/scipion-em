@@ -40,6 +40,7 @@ from pwem import emlib
 from .base import ProtImportFiles
 from .images import ProtImportImages
 from ...convert import Ccp4Header
+from pyworkflow.object import Float
 
 
 class ProtImportVolumes(ProtImportImages):
@@ -232,6 +233,8 @@ class ProtImportVolumes(ProtImportImages):
                 print(e)
                 return
             # open volume and fill sampling and origin
+            self.samplingRate.set(sampling)
+            self._store(self.samplingRate)
             vol.setSamplingRate(sampling)
             vol.setFileName(localFileName)
             from pwem.objects.data import Transform
