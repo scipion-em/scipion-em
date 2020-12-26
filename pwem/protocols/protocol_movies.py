@@ -299,7 +299,7 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
 
         if self._filterMovie(movie):
             pwutils.makePath(movieFolder)
-            pwutils.createLink(movieFn, join(movieFolder, movieName))
+            pwutils.createAbsLink(os.path.abspath(movieFn), join(movieFolder, movieName))
 
             if movieName.endswith('bz2'):
                 newMovieName = movieName.replace('.bz2', '')
