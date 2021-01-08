@@ -116,7 +116,7 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
 
     # STEP to convert correction images if apply
     def _convertInputStep(self):
-
+        pwutils.makePath(self._getExtraPath('DONE'))
         movs = self.inputMovies.get()
 
         # Convert gain
@@ -386,14 +386,14 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
         return self._getExtraPath('movie_%06d%s' % (movie.getObjId(), ext))
 
     def _getMovieDone(self, movie):
-        return self._getExtraPath('DONE_movie_%06d.TXT' % movie.getObjId())
+        return self._getExtraPath('DONE', 'movie_%06d.TXT' % movie.getObjId())
 
     def _isMovieDone(self, movie):
         """ A movie is done if the marker file exists. """
         return os.path.exists(self._getMovieDone(movie))
 
     def _getAllDone(self):
-        return self._getExtraPath('DONE_all.TXT')
+        return self._getExtraPath('DONE', 'all.TXT')
 
     def _getAllFailed(self):
         return self._getExtraPath('FAILED_all.TXT')
