@@ -39,8 +39,6 @@ from pwem import emlib
 
 from .base import ProtImportFiles
 from .images import ProtImportImages
-from ...convert import Ccp4Header
-from pyworkflow.object import Float
 
 
 class ProtImportVolumes(ProtImportImages):
