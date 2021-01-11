@@ -129,8 +129,6 @@ class ProtOrigSampling(EMProtocol):
         # Files system stuff
         fileName = os.path.abspath(self.inVol.getFileName())
         fileName = fileName.replace(':mrc', '')
-        # imgBase = pwutils.replaceBaseExt(fileName, "mrc")
-        # imgDst = self._getExtraPath(imgBase)
 
         # copy or link
         if self.copyFiles:
