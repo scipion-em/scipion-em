@@ -257,9 +257,6 @@ class AtomicStructHandler:
         self._readDone = True
 
     def checkRead(self):
-        import inspect
-
-        print('caller name checkRead:', inspect.stack()[1][3])
         if self._readDone:
             return True
         else:
@@ -324,9 +321,6 @@ class AtomicStructHandler:
         return listOfChains, listOfResidues
 
     def getSequenceFromChain(self, modelID, chainID):
-        import inspect
-
-        print('caller name getSequenceFromChain:', inspect.stack()[1][3])
         self.checkRead()
         seq = list()
         for model in self.structure:
