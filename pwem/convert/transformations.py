@@ -1514,7 +1514,7 @@ class Arcball(object):
     >>> R = ball.matrix()
     >>> np.allclose(np.sum(R), 0.2055924)
     True
-    >>> ball.next()
+    >>> next(ball)
 
     """
 
