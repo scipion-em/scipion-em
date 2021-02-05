@@ -629,7 +629,7 @@ class ProtAlignMovies(ProtProcessMovies):
         """ Generates a thumbnail of the input file"""
         outputFn = outputFn or self.getThumbnailFn(inputFn)
         args = "%s %s " % (inputFn, outputFn)
-        args += "--fouriershrink %s --process normalize" % scaleFactor
+        args += "--meanshrink %s --fixintscaling=sane" % scaleFactor
 
         self.__runEman2Program('e2proc2d.py', args)
 

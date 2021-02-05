@@ -88,13 +88,13 @@ class ProtOrigSampling(EMProtocol):
                                  "Å (pixels x sampling).\n",
                                  condition='setOrigCoord')
         line.addParam('x', params.FloatParam,
-                      label="x",
+                      label="x", default=0.,
                       help="offset along x axis (Å)")
         line.addParam('y', params.FloatParam,
-                      label="  y",
+                      label="  y", default=0.,
                       help="offset along y axis (Å)")
         line.addParam('z', params.FloatParam,
-                      label="  z",
+                      label="  z", default=0.,
                       help="offset along z axis (Å)")
 
     # --------------------------- INSERT steps functions ----------------------
@@ -129,14 +129,16 @@ class ProtOrigSampling(EMProtocol):
         # Files system stuff
         fileName = os.path.abspath(self.inVol.getFileName())
         fileName = fileName.replace(':mrc', '')
-        imgBase = pwutils.replaceBaseExt(fileName, "mrc")
-        imgDst = self._getExtraPath(imgBase)
 
         # copy or link
         if self.copyFiles:
+            imgBase = pwutils.replaceBaseExt(fileName, "mrc")
+            imgDst = self._getExtraPath(imgBase)
             Ccp4Header.fixFile(fileName,imgDst, origin.getShifts(),
                                sampling=samplingRate)
         else:
+            imgBase = basename(fileName)
+            imgDst = self._getExtraPath(imgBase)
             pwutils.createAbsLink(fileName, imgDst)
 
         self.outVol.setLocation(imgDst)

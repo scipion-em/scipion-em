@@ -328,13 +328,8 @@ class ChimeraViewer(pwviewer.Viewer):
             # volume (if available)
             else:
                 fn = obj.getFileName()
-                # check if tmp dir exists, if not use /tmp
-                # tmp does not exists if you try to visualize something  (eye)
-                # before irunning the protocol
-                tmpPath = self.protocol._getTmpPath()
-                if not os.path.exists(tmpPath):
-                    tmpPath = "/tmp"
-                fnCmd = os.path.join(tmpPath, "chimera.cxc")
+                extraPath = self.protocol._getExtraPath()
+                fnCmd = os.path.join(extraPath, "chimera.cxc")
                 f = open(fnCmd, 'w')
                 f.write("cofr 0,0,0\n")  # set center of coordinates
                 if obj.hasVolume():
@@ -355,7 +350,7 @@ class ChimeraViewer(pwviewer.Viewer):
                     sampling = 1.
                 # Construct the coordinate file
                 bildFileName = os.path.abspath(
-                    os.path.join(tmpPath, "axis.bild"))
+                    os.path.join(extraPath, "axis.bild"))
                 Chimera.createCoordinateAxisFile(dim,
                                                  bildFileName=bildFileName,
                                                  sampling=sampling)
