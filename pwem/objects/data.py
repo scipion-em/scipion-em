@@ -33,18 +33,15 @@ import os
 import json
 import numpy as np
 
-from pyworkflow.object import (OrderedObject, Float, Integer, String,
+from pyworkflow.object import (Object, Float, Integer, String,
                                OrderedDict, CsvList, Boolean, Set, Pointer,
                                Scalar)
 
 from pwem.constants import (NO_INDEX, ALIGN_NONE, ALIGN_2D, ALIGN_3D,
                             ALIGN_PROJ, ALIGNMENTS)
 
-class EMObject(OrderedObject):
+class EMObject(Object):
     """Base object for all EM classes"""
-
-    def __init__(self, **kwargs):
-        OrderedObject.__init__(self, **kwargs)
 
     def __str__(self):
         return self.getClassName()
@@ -877,13 +874,16 @@ class PdbFile(AtomStruct):
 
 
 class EMSet(Set, EMObject):
+    _classesDict = None
 
     def _loadClassesDict(self):
-        from pwem import Domain
-        classDict = Domain.getObjects()
-        classDict.update(globals())
 
-        return classDict
+        if self._classesDict is None:
+            from pwem import Domain
+            self._classesDict = Domain.getObjects()
+            self._classesDict.update(globals())
+
+        return self._classesDict
 
     def copyInfo(self, other):
         """ Define a dummy copyInfo function to be used

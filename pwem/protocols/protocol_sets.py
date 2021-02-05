@@ -112,19 +112,18 @@ class ProtUnionSet(ProtSets):
                                                  'contain a total of 500 elements.')
         form.addParam('ignoreDuplicates', pwprot.params.BooleanParam,
                       default=False,
-                      label='Ignore duplicates?',
-                      help='By default, if duplicated items are found (same ID) '
-                           'within the input sets, it will cause renumbering of the '
+                      label='Remove duplicates?',
+                      help='By default, duplicated items found (same ID) '
+                           'within the input sets, will cause renumbering of all the '
                            'items ids in the output set. '
                            'This is the case for example when doing several '
                            'imports (which will cause ids overlapping) '
                            'but we really want to insert as new items in the '
                            'output. \n'
-                           'On the other hand, if the items come from the same '
-                           'protocol (obove in the workflow), you would like '
-                           'to ignore that items that appears in the different '
-                           'inputs since they will be identical. '
-                           'Therefore, set this option to *Yes* to keep only '
+                           'On the other hand, items originated in a previous common '
+                           'protocol (above in the workflow) might have identical items'
+                           'and you would like to remove them. '
+                           'Therefore, set this option to *Yes* to remove duplicates and keep only '
                            'one copy of the item. (the first occurrence)')
         form.addParam('renumber', pwprot.params.BooleanParam, default=False,
                       expertLevel=pwprot.LEVEL_ADVANCED,
@@ -246,15 +245,16 @@ class ProtUnionSet(ProtSets):
         the beginning. """
         usedIds = set()  # to keep track of the object ids we have already seen
 
-        for itemSet in self.inputSets:
-            if str(itemSet.get().getClassName()) is not Volume.__name__:
-                for obj in itemSet.get():
+        for item_pointer in self.inputSets:
+            if str(item_pointer.get().getClassName()) is not Volume.__name__:
+                # This could be optimised to get just the ids and avoiding Objects
+                for obj in item_pointer.get():
                     objId = obj.getObjId()
                     if objId in usedIds:
                         return True
                     usedIds.add(objId)
             else:
-                objId = itemSet.get().getObjId()
+                objId = item_pointer.get().getObjId()
                 if objId in usedIds:
                     return True
                 usedIds.add(objId)
