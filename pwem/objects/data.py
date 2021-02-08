@@ -1137,10 +1137,10 @@ class SetOfImages(EMSet):
         """ Return the string representing the dimensions. """
         return str(self._firstDim)
 
-    def iterItems(self, orderBy='id', direction='ASC', where='1', limit=None):
+    def iterItems(self, orderBy='id', direction='ASC', where='1', limit=None, iterate=True):
         """ Redefine iteration to set the acquisition to images. """
         for img in Set.iterItems(self, orderBy=orderBy, direction=direction,
-                                 where=where, limit=limit):
+                                 where=where, limit=limit, iterate=iterate):
 
             # Sometimes the images items in the set could
             # have the acquisition info per data row and we
