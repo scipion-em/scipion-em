@@ -1282,7 +1282,7 @@ class TestEMRingerValidation(TestImportData):
             self.assertAlmostEqual(self.resultsDict[
                                        'Rotamer-Ratio'], rotRatio, delta=0.5)
             self.assertAlmostEqual(self.resultsDict[
-                                       'Max Zscore'], maxZscore, delta=0.5)
+                                       'Max Zscore'], maxZscore, delta=2)
             self.assertAlmostEqual(self.resultsDict[
                                        'Model Length'], modLength, places)
             self.assertAlmostEqual(self.resultsDict[
@@ -1981,21 +1981,21 @@ class TestMolprobityValidation(TestImportData):
     """
 
     def checkResults(self, ramOutliers, ramFavored, rotOutliers, cbetaOutliers,
-                     clashScore, overallScore, protMolProbity, places=0):
+                     clashScore, overallScore, protMolProbity, places=0, testsMsg=""):
         # method to check MolProbity statistic results of the Final Results
         # Table
         self.assertAlmostEqual(protMolProbity.ramachandranOutliers.get(),
-                               ramOutliers, places)
+                               ramOutliers, places, msg="%s: ramOutliers does not match" % testsMsg)
         self.assertAlmostEqual(protMolProbity.ramachandranFavored.get(),
-                               ramFavored, places=0)
+                               ramFavored, delta=2, msg="%s: ramFavored does not match" %testsMsg)
         self.assertAlmostEqual(protMolProbity.rotamerOutliers.get(),
-                               rotOutliers, places)
+                               rotOutliers, places, msg="%s: rotOuliers does not match" % testsMsg)
         self.assertAlmostEqual(protMolProbity.cbetaOutliers.get(),
-                               cbetaOutliers, delta=2)
+                               cbetaOutliers, delta=2, msg="%s: cbetaOtliers does not match" %testsMsg)
         self.assertAlmostEqual(protMolProbity.clashscore.get(),
-                               clashScore, places)
+                               clashScore, places,msg="%s: clashScore does not match" %testsMsg)
         self.assertAlmostEqual(protMolProbity.overallScore.get(),
-                               overallScore, places)
+                               overallScore, places, msg="%s: overallScore does not match" %testsMsg)
 
     def testMolProbityValidationFromPDB(self):
         """ This test checks that EMRinger validation protocol runs with an
@@ -2314,7 +2314,8 @@ class TestMolprobityValidation(TestImportData):
                           cbetaOutliers=2,
                           clashScore=4.77,
                           overallScore=2.51,
-                          protMolProbity=protMolProbity)
+                          protMolProbity=protMolProbity,
+                          testsMsg="AfterChimeraAndCootAndRefmacNoMask")
 
     def testMolProbityValidationAfterChimeraAndCootAndRefmacWithMask(self):
         """ This test checks that MolProbity validation protocol runs with a
