@@ -129,14 +129,16 @@ class ProtOrigSampling(EMProtocol):
         # Files system stuff
         fileName = os.path.abspath(self.inVol.getFileName())
         fileName = fileName.replace(':mrc', '')
-        imgBase = pwutils.replaceBaseExt(fileName, "mrc")
-        imgDst = self._getExtraPath(imgBase)
 
         # copy or link
         if self.copyFiles:
+            imgBase = pwutils.replaceBaseExt(fileName, "mrc")
+            imgDst = self._getExtraPath(imgBase)
             Ccp4Header.fixFile(fileName,imgDst, origin.getShifts(),
                                sampling=samplingRate)
         else:
+            imgBase = basename(fileName)
+            imgDst = self._getExtraPath(imgBase)
             pwutils.createAbsLink(fileName, imgDst)
 
         self.outVol.setLocation(imgDst)
