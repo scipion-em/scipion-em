@@ -39,7 +39,7 @@ from .constants import *
 from .objects import EMObject
 from .utils import *
 
-__version__ = '3.0.7'
+__version__ = '3.0.8'
 _logo = "scipion_icon.gif"
 _references = ["delaRosaTrevin201693"]
 
