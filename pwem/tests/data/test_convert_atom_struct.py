@@ -30,15 +30,17 @@ from collections import Counter
 from urllib.request import urlretrieve
 
 import numpy as np
+import os
 
 from pyworkflow.tests import *
 
 import pwem.convert as emconv
 from pwem.emlib.image import ImageHandler
+from pwem.protocols import ProtImportPdb
 
 
 class TestAtomicStructHandler(unittest.TestCase):
-
+    """test atomicstructure handler"""
     def testIntToChain(self):
         aSH = emconv.AtomicStructHandler(self.PDBFileName)
         solString = ['A',  'B',  'C',  'D',  'E',  'F',  'G',
@@ -962,3 +964,32 @@ HETATM 5 C CB . PRO B 1 . 1 ? 6.460 21.723 20.211 1.00 22.26 ? ? ? ? ? ? ? 1 PRO
         f.write(CIFString.encode('utf8'))
         f.close()
         cls.CIFFileName = f.name
+
+    def testGetTransformMatrix(self):
+        # save files with h1 and h2
+        from .hexonAtomStruct import saveFiles
+        h1Fn, h2Fn = saveFiles()
+        aSH = emconv.AtomicStructHandler(h1Fn)
+        # should get identity matrix
+        matrix, error = aSH.getTransformMatrix(h1Fn, 100, 300)
+        self.assertTrue(matrix.shape[0] == matrix.shape[1] and\
+               np.allclose(matrix, np.eye(matrix.shape[0])))
+        data = np.array([[1, 2], [3, 4]])
+
+        goldMatrix = np.array(
+            [[ 9.93196087e-01,  2.55599161e-02, -1.13614363e-01, 1.75187864e+00],
+             [-2.25492853e-02,  9.99361764e-01,  2.77054840e-02, 4.47446401e+01],
+             [ 1.14250000e-01, -2.49550556e-02,  9.93138552e-01, 3.95671369e+01],
+             [ 0.00000000e+00,  0.00000000e+00,  0.00000000e+00, 1.00000000e+00]])
+        goldError = 0.8032027904183334
+
+        matrix, error = aSH.getTransformMatrix(h2Fn, -1, -1)
+        self.assertTrue( matrix.shape[0] == matrix.shape[1] and\
+                        np.allclose(matrix, goldMatrix))
+        self.assertAlmostEqual(error, goldError)
+        # DEBUG, next three lines save the transformed
+        # atom struct to file
+        # aSH2 = emconv.AtomicStructHandler(h2Fn)
+        # aSH2.transform(matrix)
+        # aSH2.write("/tmp/kk.cif")
+
