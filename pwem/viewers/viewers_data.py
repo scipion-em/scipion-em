@@ -201,11 +201,7 @@ class DataViewer(pwviewer.Viewer):
             xmipp3.convert.writeSetOfMicrographsPairs(
                 obj.getUntilted().getMicrographs(),
                 obj.getTilted().getMicrographs(), mdFn)
-            parentProtId = obj.getObjParentId()
-            parentProt = self.getProject().mapper.selectById(parentProtId)
-            extraDir = parentProt._getExtraPath()
 
-            #           extraDir = parentProt._getExtraPath()
             # TODO: Review this if ever a non Xmipp CoordinatesTiltPair is available
             xmipp3.convert.writeSetOfCoordinates(tmpDir, obj.getUntilted())
             xmipp3.convert.writeSetOfCoordinates(tmpDir, obj.getTilted())

@@ -88,13 +88,13 @@ class ProtOrigSampling(EMProtocol):
                                  "Å (pixels x sampling).\n",
                                  condition='setOrigCoord')
         line.addParam('x', params.FloatParam,
-                      label="x",
+                      label="x", default=0.,
                       help="offset along x axis (Å)")
         line.addParam('y', params.FloatParam,
-                      label="  y",
+                      label="  y", default=0.,
                       help="offset along y axis (Å)")
         line.addParam('z', params.FloatParam,
-                      label="  z",
+                      label="  z", default=0.,
                       help="offset along z axis (Å)")
 
     # --------------------------- INSERT steps functions ----------------------

@@ -33,18 +33,15 @@ import os
 import json
 import numpy as np
 
-from pyworkflow.object import (OrderedObject, Float, Integer, String,
+from pyworkflow.object import (Object, Float, Integer, String,
                                OrderedDict, CsvList, Boolean, Set, Pointer,
                                Scalar)
 
 from pwem.constants import (NO_INDEX, ALIGN_NONE, ALIGN_2D, ALIGN_3D,
                             ALIGN_PROJ, ALIGNMENTS)
 
-class EMObject(OrderedObject):
+class EMObject(Object):
     """Base object for all EM classes"""
-
-    def __init__(self, **kwargs):
-        OrderedObject.__init__(self, **kwargs)
 
     def __str__(self):
         return self.getClassName()
@@ -877,13 +874,16 @@ class PdbFile(AtomStruct):
 
 
 class EMSet(Set, EMObject):
+    _classesDict = None
 
     def _loadClassesDict(self):
-        from pwem import Domain
-        classDict = Domain.getObjects()
-        classDict.update(globals())
 
-        return classDict
+        if self._classesDict is None:
+            from pwem import Domain
+            self._classesDict = Domain.getObjects()
+            self._classesDict.update(globals())
+
+        return self._classesDict
 
     def copyInfo(self, other):
         """ Define a dummy copyInfo function to be used
@@ -1137,10 +1137,10 @@ class SetOfImages(EMSet):
         """ Return the string representing the dimensions. """
         return str(self._firstDim)
 
-    def iterItems(self, orderBy='id', direction='ASC', where='1', limit=None):
+    def iterItems(self, orderBy='id', direction='ASC', where='1', limit=None, iterate=True):
         """ Redefine iteration to set the acquisition to images. """
         for img in Set.iterItems(self, orderBy=orderBy, direction=direction,
-                                 where=where, limit=limit):
+                                 where=where, limit=limit, iterate=iterate):
 
             # Sometimes the images items in the set could
             # have the acquisition info per data row and we
