@@ -233,6 +233,14 @@ class TestImageHandler(unittest.TestCase):
         X, Y, Z, N = ih.getDimensions(sVolFn + volLabel)
         self.assertEqual([X, Y, Z, N], expectedSize_Svol)
 
+        # eer format (In case we want to cancel the warning)
+        import logging
+        tifffileLogger = logging.getLogger("tifffile.tifffile")
+        tifffileLogger.disabled = True
+
+        X, Y, Z, N = ih.getDimensions(self.dsFormat.getFile("eer"))
+        self.assertEqual([X, Y, Z, N], [4096, 4096, 567, 1])
+
     def test_convertMicrographs(self):
         """ Convert micrographs to different formats.
          EMAN2 required for .img

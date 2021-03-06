@@ -28,6 +28,8 @@ import os
 
 import numpy
 from PIL import Image
+from tifffile import TiffFile
+
 import pyworkflow.utils as pwutils
 import pwem.objects as emobj
 import pwem.constants as emcts
@@ -256,6 +258,12 @@ class ImageHandler(object):
                     'eman2.convert', 'getImageDimensions',
                     doRaise=True)
                 return getImageDimensions(fn)  # we are ignoring index here
+            elif ext == '.eer':
+                tif = TiffFile(fn)
+                frames = len(tif.pages)  # number of pages in the file
+                page = tif.pages[0]  # get shape and dtype of the image in the first page
+                x, y = page.shape
+                return x, y, frames, 1
             else:
                 self._img.read(location, lib.HEADER)
                 return self._img.getDimensions()
