@@ -966,7 +966,7 @@ HETATM 5 C CB . PRO B 1 . 1 ? 6.460 21.723 20.211 1.00 22.26 ? ? ? ? ? ? ? 1 PRO
         cls.CIFFileName = f.name
 
     def testGetTransformMatrix(self):
-        # save files with h1 and h2
+        # create and load atom struct
         from .hexonAtomStruct import saveFiles
         h1Fn, h2Fn = saveFiles()
         aSH = emconv.AtomicStructHandler(h1Fn)
@@ -993,3 +993,15 @@ HETATM 5 C CB . PRO B 1 . 1 ? 6.460 21.723 20.211 1.00 22.26 ? ? ? ? ? ? ? 1 PRO
         # aSH2.transform(matrix)
         # aSH2.write("/tmp/kk.cif")
 
+    def testGetBoundingBox(self):
+        # create and load atom struct
+        from .hexonAtomStruct import saveFiles
+        h1Fn, h2Fn = saveFiles()
+        aSH = emconv.AtomicStructHandler(h1Fn)
+        [[x1, y1, z1],[x2, y2, z2]] = aSH.getBoundingBox()
+        self.assertAlmostEqual(x1, 205.438 - 3, places=2)
+        self.assertAlmostEqual(y1, -92.590 - 3, places=2)
+        self.assertAlmostEqual(z1, 240.313 - 3, places=2)
+        self.assertAlmostEqual(x2, 328.960 + 3, places=2)
+        self.assertAlmostEqual(y2,   2.663 + 3, places=2)
+        self.assertAlmostEqual(z2, 352.586 + 3, places=2)

@@ -535,6 +535,39 @@ class AtomicStructHandler:
         """
         self._write(cifFile)
 
+    def getBoundingBox(self, expand=3):
+        """Get bounding box (angstroms) for atom struct.
+         Only alpha carbons are taken into account.
+         parameter: expand.- make box larger addind this factor
+         """
+        # Use the first model
+        ref_model = self.getStructure()[0]
+        # init bounding box volues
+        xmin = 100000; ymin = xmin; zmin = xmin
+        xmax = -100000; ymax = xmax; zmax = xmax
+        # iterate for all aminoacids
+        for chain in ref_model:
+            for residue in chain:
+                (x,y,z) = residue["CA"].get_coord()
+                if x < xmin: xmin = x
+                if x > xmax: xmax = x
+
+                if y < ymin: ymin = y
+                if y > ymax: ymax = y
+
+                if z < zmin: zmin = z
+                if z > zmax: zmax = z
+            # DEBUG
+            # with open("/tmp/kk.bild", "w") as file:
+            #     file.write(".transparency 0.8\n"
+            #                ".color red\n"
+            #                ".box %f %f %f %f %f %f\n" %
+            #                (xmin - expand , ymin - expand, zmin - expand,
+            #                xmax + expand, ymax + expand, zmax + expand))
+        return [[xmin - expand, ymin - expand, zmin - expand],
+                [xmax + expand, ymax + expand, zmax + expand]]
+
+
     def getTransformMatrix(self, atomStructFn, startId=-1, endId=-1):
         """find matrix that Superimposes two atom structures.
         this matrix moves atomStructFn to self """
