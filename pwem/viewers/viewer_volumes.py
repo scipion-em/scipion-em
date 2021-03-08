@@ -152,6 +152,7 @@ class viewerProtImportVolumes(EmProtocolViewer):
                             (count, x, y, z))
                     f.write("tile\n")
                     count += 1
+        f.write("view\n")
         f.close()
         return [ChimeraView(tmpFileNameCMD)]
 
