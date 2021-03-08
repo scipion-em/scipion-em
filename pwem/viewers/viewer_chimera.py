@@ -208,6 +208,7 @@ class ChimeraAngDist(pwviewer.CommandView):
         fhCmd.write("volume #3 voxelSize %s\n" % self.voxelSize)
         x, y, z = self.volOrigin
         fhCmd.write("volume #3 origin %s,%s,%s\n" % (x, y, z))
+        fhCmd.write("view\n")
 
         fhCmd.close()
 
@@ -357,6 +358,7 @@ class ChimeraViewer(pwviewer.Viewer):
                 f.write("open %s\n" % bildFileName)
                 f.write("open %s\n" % os.path.abspath(fn))
                 f.write("style stick")
+                f.write("view\n")
                 f.close()
                 ChimeraView(fnCmd).show()
             # FIXME: there is an asymmetry between ProtocolViewer and Viewer
@@ -477,4 +479,5 @@ def mapVolsWithColorkey(displayVolFileName,
 
         fhCmd.write(command)
         labelCount += 1
+    fhCmd.write("run(session, 'view')\n")
     fhCmd.close()
