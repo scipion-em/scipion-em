@@ -277,3 +277,9 @@ def defineDatasets():
                 'coords': 'coords/*.json',
                 'ctfs': 'ctfs/'
             })
+
+    DataSet(name='deepConsensusPicking', folder='deepConsensusPicking',
+            files={
+                'allMics': 'micrographs/*.mrc',
+                'autoPickingCoordinates': 'autoPickingCoordinates'
+            })
