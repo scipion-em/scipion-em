@@ -232,6 +232,11 @@ class ProtAlignMovies(ProtProcessMovies):
 
             for movie in newDone:
                 mic = micSet.ITEM_TYPE()
+                if hasattr(self, "flipY") and self.flipY:
+                    print('Flipping Y output micrograph')
+                    micPath = self._getExtraPath(getOutputMicName(movie))
+                    newMcFn = self.flipYGain(micPath, micPath)
+                    movie.setMicName(newMcFn)
                 mic.copyObjId(movie)
                 mic.setMicName(movie.getMicName())
                 # The subclass protocol is responsible of generating the output
