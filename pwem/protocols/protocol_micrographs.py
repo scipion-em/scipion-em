@@ -27,7 +27,7 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-
+import threading
 from os.path import exists, getmtime
 from datetime import datetime
 from collections import OrderedDict
@@ -38,6 +38,7 @@ import pyworkflow.protocol.params as params
 import pyworkflow.utils as pwutils
 
 import pwem.objects as emobj
+from pyworkflow.mapper.sqlite import ID
 
 from .protocol import EMProtocol
 
@@ -741,6 +742,204 @@ class ProtCTFMicrographs(ProtMicrographs):
 
         return failedList
 
+class ProtCTFMicrographsStreaming (ProtCTFMicrographs):
+    """ New streaming approach:
+    1.- _stepsCheck will just check for input
+    2.- output is generated inside each processing step
+    3.- all steps are inserted in the checkNewInput"""
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        # Timestamp when input was checked for the last time.
+        # This could go in any protocol.So It might be worth to move it up.
+        # IDEA: Maybe the set can handle this in a non persistence variable?
+        self.lastInputCheck = None
+        self.lastMicIdFound = pwobj.Integer(0)  # Last micId found in the input set
+        self._lock = threading.Lock()
+
+    def _insertAllSteps(self):
+        """ Insert the steps to perform CTF estimation, on a set of micrographs."""
+        self._defineCtfParamsDict()
+
+        if not self.isContinued():
+            self.lastMicIdFound.set(0)
+
+        # Just insert a final closing set step.
+        self._insertFunctionStep('closeOutputStep', prerequisites=[],
+                                 wait=True)
+
+    def closeOutputStep(self):
+        """ Closes the output sets setting its stream state"""
+        outputSet = self.getOutputSet()
+        outputSet.setStreamState(pwobj.Set.STREAM_CLOSED)
+        outputSet.write
+        self._store()
+
+    def _getFirstJoinStepName(self):
+        # This function will be used for streaming, to check which is
+        # the first function that need to wait for all micrographs
+        # to have completed, this can be overwritten in subclasses
+        # (e.g., in Xmipp 'sortPSDStep')
+        return self.closeOutputStep.__name__
+
+    def _stepsCheck(self):
+        # To allow streaming ctf estimation we need to detect:
+        # new micrographs ready to be estimated
+       self._checkNewInput()
+
+
+    def _checkNewInput(self):
+
+        # Check if there are new micrographs to process from the input set
+        inputMics = self.getInputMicrographs()
+
+        if not inputMics.hasChangedSince(self.lastInputCheck):
+            return None
+        # Load its properties to get current streamStatus
+        # We might want to use loadProperty to get just streamState or even a dedicated method in the set to "hide" the attribute name.?
+        # Maybe have a refresh method doing same as loadAllProperties?
+        inputMics.loadAllProperties()
+
+        # Update last time input was checked
+        self.lastInputCheck = datetime.now()
+
+        # Open input micrographs.sqlite and close it as soon as possible
+        newMicIds = self._getNewMics()
+
+        closeOutputStep = self._getFirstJoinStep()
+
+        if newMicIds:
+            fDeps = self._insertNewMicsSteps(newMicIds)
+            closeOutputStep.addPrerequisites(*fDeps)
+            self.updateSteps()
+
+        # Activate closeOutputStep if input closed
+        if inputMics.isStreamClosed():
+            closeOutputStep.setStatus(pwcts.STATUS_NEW)
+
+    def _getNewMics(self):
+        """ Returns a list of unique micNames."""
+        micSet = self.getInputMicrographs()
+        return micSet.getUniqueValues(ID, where="%s>%s" % (ID, self.lastMicIdFound))
+
+    def _insertCtfListStep(self, micId, prerequisites, *args):
+        """ Basic method to insert an estimation step for a given micrograph. """
+        micStepId = self._insertFunctionStep('estimateCtfListStep',
+                                             micId, *args,
+                                             prerequisites=prerequisites)
+        return micStepId
+
+    def _insertCtfStep(self, micId, prerequisites, *args):
+        """ Basic method to insert an estimation step for a given micrograph. """
+        micStepId = self._insertFunctionStep(self.estimateCtfStep.__name__,
+                                             micId, *args,
+                                             prerequisites=prerequisites)
+        return micStepId
+
+    def estimateCtfStep(self, micId, *args):
+        """ Step function that will be common for all CTF protocols.
+        It will take care of getting the micrograph object from the id
+        argument and perform any conversion if needed. Then, the function
+        _estimateCTF will be called, that should be implemented by each
+        CTF estimation protocol.
+        """
+        # NOTE: clone here is to avoid "ghost" replacement done by the mapper whe threads concur
+        # We may want to make a clone internally at:
+        # Set.__getItem__, or even deeper. Same problem with getFirsItem()
+        mic = self.getInputMicrographs()[micId].clone()
+        # micDoneFn = self._getMicrographDone(mic)
+        micFn = mic.getFileName()
+
+        # if self.isContinued() and self._isMicDone(mic):
+        #     self.info("Skipping micrograph: %s, seems to be done" % micFn)
+        #     return
+
+        # Clean old finished files
+        # pwutils.cleanPath(micDoneFn)
+        self.info("Estimating CTF of micrograph: %s " % mic.getObjId())
+        self._estimateCTF(mic, *args)
+
+        # Register the output after estimating the ctf
+        try:
+            with self._lock:
+                outputCtf = self.getOutputSet()
+
+                ctf = self._createCtfModel(mic)
+                # Set the same id as the mic for now to overcome the issue of the mapper, assigning id in threads.
+                # ctf.setObjId(mic.getObjId())
+                outputCtf.append(ctf)
+                # Write the set own data
+                outputCtf.write()
+                outputCtf.close()
+                # Write set info (size, ..) in the run.db.
+                self._store()
+        except Exception as ex:
+                print(pwutils.yellowStr("Missing CTF?: Couldn't add CTF for %s" % micFn))
+                print(ex)
+
+    def _insertNewMicsSteps(self, newMics):
+        """ Insert steps to process new mics (from streaming)
+        Params:
+            inputMics: input mics set to be inserted
+        """
+
+        deps = []
+        args = self._getCtfArgs()
+
+        def _insertSubset(micSubset):
+            stepId = self._insertCtfListStep(micSubset, self.initialIds, *args)
+            deps.append(stepId)
+
+        # Now handle the steps depending on the streaming batch size
+        batchSize = self._getStreamingBatchSize()
+
+        if batchSize == 1:  # This is one by one, as before the batch size
+            for mic in newMics:
+                stepId = self._insertCtfStep(mic, [], *args)
+                deps.append(stepId)
+
+        elif batchSize == 0:  # Greedy, take all available ones
+            _insertSubset(newMics)
+
+        else:  # batchSize > 0, insert only batches of this size
+            n = len(newMics)
+            d = int(n / batchSize)  # number of batches to insert
+            nd = d * batchSize
+            for i in range(d):
+                _insertSubset(newMics[i * batchSize:(i + 1) * batchSize])
+
+            if n > nd and self.streamClosed:  # insert last ones
+                _insertSubset(newMics[nd:])
+
+        self.updateLastMicIdFound(newMics)
+        return deps
+
+    def updateLastMicIdFound(self, micIds):
+        """ Updates the last input check attribute with the maximum id in the micSet"""
+
+        self.lastMicIdFound.set(max(micIds))
+
+    def getOutputSet(self):
+        """ Returns the output set. Creates it if not done before"""
+        
+        if hasattr(self, "outputCTF"):
+            self.outputCTF.enableAppend()
+        else:
+            outputCTF = self._createSetOfCTF()
+            outputCTF.setMicrographs(self.getInputMicrographsPointer())
+            outputCTF.setStreamState(pwobj.Set.STREAM_OPEN)
+            self._defineOutputs(outputCTF=outputCTF)
+            self._defineCtfRelation(self.getInputMicrographsPointer(), outputCTF)
+
+        return self.outputCTF
+
+    # ------------- Unnecessary functions with the new approach
+    def _checkNewOutput(self):
+        # This should not be needed done inside each processing step
+        pass
+
+    def createOutputStep(self):
+        pass  # Replaced by closeOutputStep
 
 class ProtPreprocessMicrographs(ProtMicrographs):
     pass
