@@ -248,6 +248,8 @@ class ProtAlignMovies(ProtProcessMovies):
                     self._preprocessOutputMicrograph(mic, movie)
                 except Exception as e:
                     self.error("Couldn't prepare output details: %s" % e)
+                    doneFailed.append(movie)
+                    continue
 
                 micSet.append(mic)
 
