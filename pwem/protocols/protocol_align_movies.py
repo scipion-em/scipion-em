@@ -243,7 +243,12 @@ class ProtAlignMovies(ProtProcessMovies):
                                             "can't add it to output set." % extraMicFn))
                     doneFailed.append(movie)
                     continue
-                self._preprocessOutputMicrograph(mic, movie)
+                # Tolerate errors here. Usually here some plots are generated.
+                try:
+                    self._preprocessOutputMicrograph(mic, movie)
+                except Exception as e:
+                    self.error("Couldn't prepare output details: %s" % e)
+
                 micSet.append(mic)
 
             self._updateOutputSet(outputName, micSet, streamMode)
