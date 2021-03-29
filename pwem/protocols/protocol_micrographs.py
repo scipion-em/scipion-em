@@ -763,24 +763,46 @@ class ProtCTFMicrographsStreaming (ProtCTFMicrographs):
 
         if not self.isContinued():
             self.lastMicIdFound.set(0)
+        # Here, due to general pyworkflow behaviour we need to provide all existing steps
+        else:
+            # We need to keep previously added steps...
+            self._steps = self.loadSteps()
+            # Insert an step to open the set
+            self._insertFunctionStep(self.openSetStep, prerequisites=[])
 
         # Just insert a final closing set step.
-        self._insertFunctionStep('closeOutputStep', prerequisites=[],
+        self._insertFunctionStep(self.closeSetStep, prerequisites=[],
                                  wait=True)
 
-    def closeOutputStep(self):
+    def closeSetStep(self):
         """ Closes the output sets setting its stream state"""
+        self.setStreamingStatus(pwobj.Set.STREAM_CLOSED)
+
+    def openSetStep(self):
+        """ Closes the output sets setting its stream state"""
+        self.setStreamingStatus(pwobj.Set.STREAM_OPEN)
+
+    def setStreamingStatus(self, status):
+
+        """ Sets the stream state of the output set"""
         outputSet = self.getOutputSet()
-        outputSet.setStreamState(pwobj.Set.STREAM_CLOSED)
+        outputSet.setStreamState(status)
         outputSet.write
         self._store()
+
+    def _getFirstJoinStep(self):
+        """ Returns the  step that needs to be activated (waiting) once all steps are done"""
+        for s in self._steps:
+            if s.isWaiting():
+                return s
+        return None
 
     def _getFirstJoinStepName(self):
         # This function will be used for streaming, to check which is
         # the first function that need to wait for all micrographs
         # to have completed, this can be overwritten in subclasses
         # (e.g., in Xmipp 'sortPSDStep')
-        return self.closeOutputStep.__name__
+        return self.setStreamingStatusStep.__name__
 
     def _stepsCheck(self):
         # To allow streaming ctf estimation we need to detect:
@@ -831,7 +853,7 @@ class ProtCTFMicrographsStreaming (ProtCTFMicrographs):
 
     def _insertCtfStep(self, micId, prerequisites, *args):
         """ Basic method to insert an estimation step for a given micrograph. """
-        micStepId = self._insertFunctionStep(self.estimateCtfStep.__name__,
+        micStepId = self._insertFunctionStep(self.estimateCtfStep,
                                              micId, *args,
                                              prerequisites=prerequisites)
         return micStepId
