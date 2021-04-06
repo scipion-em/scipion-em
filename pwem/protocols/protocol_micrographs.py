@@ -820,7 +820,8 @@ class ProtCTFMicrographsStreaming (ProtCTFMicrographs):
         # Load its properties to get current streamStatus
         # We might want to use loadProperty to get just streamState or even a dedicated method in the set to "hide" the attribute name.?
         # Maybe have a refresh method doing same as loadAllProperties?
-        inputMics.loadAllProperties()
+        with self._lock:
+            inputMics.loadProperty("_streamState")
 
         # Update last time input was checked
         self.lastInputCheck = datetime.now()
@@ -868,7 +869,9 @@ class ProtCTFMicrographsStreaming (ProtCTFMicrographs):
         # NOTE: clone here is to avoid "ghost" replacement done by the mapper whe threads concur
         # We may want to make a clone internally at:
         # Set.__getItem__, or even deeper. Same problem with getFirsItem()
-        mic = self.getInputMicrographs()[micId].clone()
+        with self._lock:
+            mic = self.getInputMicrographs()[micId].clone()
+
         # micDoneFn = self._getMicrographDone(mic)
         micFn = mic.getFileName()
 
