@@ -89,7 +89,7 @@ Basic streaming and integration capabilities demo, from Movies to particles (Mot
         "angDist": 0.0,
         "defectFile": null,
         "extraParams2": "",
-        "doSaveUnweightedMic": true,
+        "doSaveUnweightedMic": false,
         "hostName": "localhost",
         "numberOfThreads": 1,
         "numberOfMpi": 1,
