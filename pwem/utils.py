@@ -47,17 +47,20 @@ def runProgram(program, params):
 
     from pwem import Domain
     if programName.startswith('xmipp'):
+        print("Xmipp command detected")
         xmipp3 = Domain.getPlugin('xmipp3').Plugin
         env = xmipp3.getEnviron()
     if programName.startswith('relion'):
+        print("relion command detected")
         relion = Domain.getPlugin("relion").Plugin
         env = relion.getEnviron()
-        print(env)
     elif (programName.startswith('e2') or
           programName.startswith('sx')):
+        print("eman/sparx command detected")
         eman2 = Domain.importFromPlugin('eman2', 'Plugin')
         env = eman2.getEnviron()
     elif programName.startswith('b'):
+        print("Bsoft command detected")
         bsoft = Domain.importFromPlugin('bsoft', 'Plugin')
         env = bsoft.getEnviron()
 
