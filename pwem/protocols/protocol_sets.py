@@ -247,17 +247,14 @@ class ProtUnionSet(ProtSets):
 
         for item_pointer in self.inputSets:
             if str(item_pointer.get().getClassName()) is not Volume.__name__:
-                # This could be optimised to get just the ids and avoiding Objects
-                for obj in item_pointer.get():
-                    objId = obj.getObjId()
+                for objId in item_pointer.get().getIdSet():
                     if objId in usedIds:
                         return True
-                    usedIds.add(objId)
             else:
                 objId = item_pointer.get().getObjId()
                 if objId in usedIds:
                     return True
-                usedIds.add(objId)
+            usedIds.add(objId)
         return False
 
     def getAllSetsAttributes(self):
