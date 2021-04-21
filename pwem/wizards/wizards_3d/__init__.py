@@ -1,6 +1,6 @@
 # **************************************************************************
 # *
-# * Authors: Yunior C. Fonseca Reyna    (cfonseca@cnb.csic.es)
+# * Authors: David Herreros Calero    (dherreros@cnb.csic.es)
 # *
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
@@ -25,6 +25,6 @@
 # *
 # **************************************************************************
 
-from .wizard import *
-from .wizards import *
-from .wizards_3d import *
+from .mask_volume_wizard import *
+from .mask_structure_wizard import *
+from .callbacks import *
