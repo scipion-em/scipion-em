@@ -35,6 +35,7 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolb
 from pyworkflow.gui.plotter import plt
 plt.style.use('dark_background')
 
+from ...convert import AtomicStructHandler
 from .callbacks import DraggablePoint
 
 
@@ -42,7 +43,11 @@ class MaskStructureWizard(object):
     '''Create a mask for an atomic structure interactively. Masks currently implemented:
             - Spherical mask
     '''
-    def __init__(self, coords):
+    def __init__(self, filename):
+        ah = AtomicStructHandler()
+        ah.read(filename)
+        atomIterator = ah.getStructure().get_atoms()
+        coords = np.asarray([np.append(atom.get_coord(), 1) for atom in atomIterator])
         self.shift = np.mean(coords, axis=0)
         self.coords = np.copy(coords) - self.shift
         self.coordsDownsampled = np.copy(coords) - self.shift

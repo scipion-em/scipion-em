@@ -35,6 +35,7 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolb
 from pyworkflow.gui.plotter import plt
 plt.style.use('dark_background')
 
+from ...emlib.image import ImageHandler
 from .callbacks import DraggablePoint
 
 
@@ -42,7 +43,8 @@ class MaskVolumeWizard(object):
     '''Create a mask for a volume interactively. Masks currently implemented:
             - Spherical mask
     '''
-    def __init__(self, volume):
+    def __init__(self, filename):
+        volume = ImageHandler().read(filename).getData()
         self.volume = np.squeeze(np.copy(volume))
         self.coords = None
         self.coordsDownsampled = None
