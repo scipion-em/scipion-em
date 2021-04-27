@@ -59,9 +59,14 @@ class MaskStructureWizard(object):
         self.radius = 0
         self.running = True
         self.root = tk.Tk()
-        self.fig = plt.Figure(figsize=plt.figaspect(0.5)*1.5)
+        self.root.resizable(False, False)  # For matplotlib <= 3.3.x
+        self.fig = plt.Figure(figsize=plt.figaspect(1)*1.5)
         self.canvas = FigureCanvasTkAgg(self.fig, master=self.root)
         self.ax_3d = self.fig.add_subplot(projection='3d')
+
+    def get_sphere_params(self):
+        origin_shifted = self.origin + self.shift
+        return np.hstack([origin_shifted, self.radius])
 
     def is_window_closed(self):
         self.running = False
@@ -101,7 +106,7 @@ class MaskStructureWizard(object):
         self.plot_sphere(self.radius)
         self.dr = DraggablePoint(self.origin, self.fig, self.ax_3d, scatter_origin, self.M)
         self.ax_3d.set_axis_off()
-        self.ax_3d.set_box_aspect([1, 1, 1])
+        # self.ax_3d.set_box_aspect([1, 1, 1]) # For matplotlib => 3.3.x
         self.set_axes_equal(self.ax_3d)
 
     def plot_sphere(self, radius):
@@ -177,7 +182,8 @@ class MaskStructureWizard(object):
 
         # Buttons
         axcolor = 'grey'
-        rax = self.fig.add_axes([0.1, 0.4, 0.12, 0.25], facecolor=axcolor)
+        # rax = self.fig.add_axes([0.1, 0.4, 0.12, 0.25], facecolor=axcolor)  # For matplotlib => 3.3.x
+        rax = self.fig.add_axes([0.05, 0.5, 0.12, 0.15], facecolor=axcolor)  # For matplotlib <= 3.3.x
         self.radio = RadioButtons(rax, ('X', 'Y', 'Z'), activecolor='navy')
         self.radio.on_clicked(self.change_view)
         self.canvas.get_tk_widget().pack(side=tk.BOTTOM, fill=tk.BOTH, expand=1)
@@ -188,7 +194,8 @@ class MaskStructureWizard(object):
         self.slider.on_changed(self.downsamplingPC)
 
         srax = self.fig.add_axes([0.2, 0.06, 0.65, 0.03], facecolor=axcolor)
-        self.slider_radius = Slider(srax, 'Radius', 0, 100, valinit=0, valstep=1, color='navy')
+        max_radius = np.round(1.5 * np.amax(np.linalg.norm(self.coords, axis=1)))
+        self.slider_radius = Slider(srax, 'Radius', 0, max_radius, valinit=0, valstep=1, color='navy')
         self.slider_radius.on_changed(self.plot_sphere)
 
         # Toolbar
