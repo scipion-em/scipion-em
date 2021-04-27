@@ -57,4 +57,5 @@ from .protocol_tests import *
 
 from .protocol_origin_sampling_volume import ProtOrigSampling
 from .protocol_metadata_editor import ProtMetadataEditor
+from .protocol_set_filter import ProtSetFilter
 

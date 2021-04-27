@@ -40,7 +40,7 @@ from .objects import EMObject
 from .tests import defineDatasets
 from .utils import *
 
-__version__ = '3.0.9'
+__version__ = '3.0.10'
 _logo = "scipion_icon.gif"
 _references = ["delaRosaTrevin201693"]
 

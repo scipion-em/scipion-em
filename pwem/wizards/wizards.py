@@ -37,7 +37,7 @@ from pyworkflow.gui.tree import ListTreeProviderString
 
 import pwem.convert as emconv
 
-from pwem.wizards.wizard import EmWizard
+from pwem.wizards.wizard import EmWizard, FormulaDialog
 import pwem.protocols as emprot
 import pwem.objects as emobj
 
@@ -225,3 +225,15 @@ class GetStructureChainsWizard(pwizard.Wizard):
                                 "Select one of the chains (model, chain, "
                                 "number of chain residues)")
         form.setVar('inputStructureChain', dlg.values[0].get())
+
+class PythonFormulaeWizard(pwizard.Wizard):
+    """Assist in the creation of python formula to be evaluated. In Steps"""
+    _targets = [(emprot.ProtSetFilter, ['formula'])]
+
+    def show(self, form, *params):
+
+        d = FormulaDialog(form.root, form.protocol.inputSet.get(), formula=form.protocol.formula.get())
+
+        # If accepted
+        if d.resultYes():
+            form.setVar('formula',d.getFormula())
