@@ -357,7 +357,7 @@ class ChimeraViewer(pwviewer.Viewer):
                                                  sampling=sampling)
                 f.write("open %s\n" % bildFileName)
                 f.write("open %s\n" % os.path.abspath(fn))
-                f.write("style stick")
+                f.write("style stick\n")
                 f.write("view\n")
                 f.close()
                 ChimeraView(fnCmd).show()
