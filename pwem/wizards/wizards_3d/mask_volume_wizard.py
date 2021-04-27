@@ -65,7 +65,8 @@ class MaskVolumeWizard(object):
         self.ax_3d = self.fig.add_subplot(projection='3d')
 
     def get_sphere_params(self):
-        return np.hstack([self.origin, self.radius])
+        origin_xmipp = self.origin + self.xmippOrigin.astype(int)
+        return np.hstack([origin_xmipp, self.radius])
 
     def is_window_closed(self):
         self.running = False
