@@ -33,7 +33,6 @@ from matplotlib.widgets import RadioButtons, Slider
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 
 from pyworkflow.gui.plotter import plt
-plt.style.use('dark_background')
 
 from ...convert import AtomicStructHandler
 from .callbacks import DraggablePoint
@@ -63,6 +62,7 @@ class MaskStructureWizard(object):
         self.fig = plt.Figure(figsize=plt.figaspect(1)*1.5)
         self.canvas = FigureCanvasTkAgg(self.fig, master=self.root)
         self.ax_3d = self.fig.add_subplot(projection='3d')
+        # plt.style.use('dark_background')
 
     def get_sphere_params(self):
         origin_shifted = self.origin + self.shift
@@ -100,7 +100,7 @@ class MaskStructureWizard(object):
         zi = self.coordsDownsampled[:, 2]
         ori_x, ori_y, ori_z = self.origin[0], self.origin[1], self.origin[2]
         plt.ion()
-        self.ax_3d.scatter(xi, yi, zi, s=12, c='lime', edgecolors='k', alpha=0.3)
+        self.ax_3d.scatter(xi, yi, zi, s=12, c='purple', edgecolors='k', alpha=0.3)
         self.M = [-self.ax_3d.azim * np.pi / 180, self.ax_3d.elev * np.pi / 180, 0]
         scatter_origin = self.ax_3d.scatter(ori_x, ori_y, ori_z, s=100, c='cyan', edgecolors='k')
         self.plot_sphere(self.radius)
