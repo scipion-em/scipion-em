@@ -51,7 +51,7 @@ class MaskVolumeWizard(object):
         self.xmippOrigin = np.array((self.volume.shape[0] / 2,
                                      self.volume.shape[1] / 2,
                                      self.volume.shape[2] / 2))
-        self.origin = np.array((0, 0, 0))
+        self.origin = np.array((0, 0, 0))  # (z,y,x)
         self.pressed = False
         self.radio = None
         self.cb = None
@@ -65,8 +65,13 @@ class MaskVolumeWizard(object):
         self.ax_3d = self.fig.add_subplot(projection='3d')
 
     def get_sphere_params(self):
+        """Return x,y,z,r array with the origin displaced to be referred to
+        center of volume (Xmipp Origin Convention)"""
         origin_xmipp = self.origin + self.xmippOrigin.astype(int)
-        return np.hstack([origin_xmipp, self.radius])
+        return np.hstack([origin_xmipp[2],
+                          origin_xmipp[1],
+                          origin_xmipp[0],
+                          self.radius])
 
     def is_window_closed(self):
         self.running = False
@@ -180,27 +185,28 @@ class MaskVolumeWizard(object):
 
     def change_view(self, event):
         if event == "X":
-            self.ax_3d.view_init(elev=0., azim=0.)
-            self.M = [-0., 0., 0]
+            self.ax_3d.view_init(elev=90., azim=0.)
+            self.M = [0, np.pi / 2., 0]
             self.dr.M = self.M
         elif event == "Y":
             self.ax_3d.view_init(elev=0., azim=90.)
             self.M = [-np.pi / 2., 0., 0]
             self.dr.M = self.M
         elif event == "Z":
-            self.ax_3d.view_init(elev=90., azim=0.)
-            self.M = [0, np.pi / 2., 0]
+            self.ax_3d.view_init(elev=0., azim=0.)
+            self.M = [-0., 0., 0]
             self.dr.M = self.M
         self.fig.canvas.draw()
 
     def initializePlot(self):
         self.changeThreshold(0.5 * (np.amax(self.volume) - np.amin(self.volume)))
+        self.change_view("Z")
 
         # Buttons
         axcolor = 'grey'
         # rax = self.fig.add_axes([0.1, 0.4, 0.12, 0.25], facecolor=axcolor)  # For matplotlib => 3.3.x
         rax = self.fig.add_axes([0.05, 0.5, 0.12, 0.15], facecolor=axcolor)  # For matplotlib <= 3.3.x
-        self.radio = RadioButtons(rax, ('X', 'Y', 'Z'), activecolor='navy')
+        self.radio = RadioButtons(rax, ('X', 'Y', 'Z'), activecolor='navy', active=2)
         self.radio.on_clicked(self.change_view)
         self.canvas.get_tk_widget().pack(side=tk.BOTTOM, fill=tk.BOTH, expand=1)
 
