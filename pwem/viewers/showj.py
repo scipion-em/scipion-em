@@ -6,7 +6,7 @@
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
-# * the Free Software Foundation; either version 2 of the License, or
+# * the Free Software Foundation; either version 3 of the License, or
 # * (at your option) any later version.
 # *
 # * This program is distributed in the hope that it will be useful,
@@ -290,7 +290,7 @@ def runJavaIJapp(memory, appName, args, env=None):
 
     # Add scipion variables
     env[SCIPION_DOMAIN] = Config.SCIPION_DOMAIN
-    env[SCIPION_HOME_VAR]= Config.SCIPION_HOME
+    env[SCIPION_HOME_VAR] = Config.SCIPION_HOME
 
     if Config.debugOn():
         env[SCIPION_DEBUG] = "1"

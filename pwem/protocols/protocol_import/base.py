@@ -6,7 +6,7 @@
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
-# * the Free Software Foundation; either version 2 of the License, or
+# * the Free Software Foundation; either version 3 of the License, or
 # * (at your option) any later version.
 # *
 # * This program is distributed in the hope that it will be useful,
@@ -127,7 +127,7 @@ class ProtImportFiles(ProtImport):
                            "the output Set will be closed and no more data will be "
                            "added to it. \n"
                            "Note 1:  The default value is  high (12 hours) to avoid "
-                           "the protocol finishes during the aqcuisition of the "
+                           "the protocol finishes during the acquisition of the "
                            "microscope. You can also stop it from right click and press "
                            "STOP_STREAMING.\n"
                            "Note 2: If you're using individual frames when importing "
@@ -176,11 +176,11 @@ class ProtImportFiles(ProtImport):
 
         return errors
 
-    # --------------------------- BASE methods to be overriden ----------------
+    # --------------------------- BASE methods to be overwritten ----------------
     def _getImportChoices(self):
         """ Return a list of possible choices
         from which the import can be done.
-        (usually packages formas such as: xmipp3, eman2, relion...etc.
+        (usually packages formats such as: xmipp3, eman2, relion...etc.
         """
         return ['files']
 

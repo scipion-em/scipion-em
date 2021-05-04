@@ -7,7 +7,7 @@
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
-# * the Free Software Foundation; either version 2 of the License, or
+# * the Free Software Foundation; either version 3 of the License, or
 # * (at your option) any later version.
 # *
 # * This program is distributed in the hope that it will be useful,
@@ -39,7 +39,6 @@ from pwem import emlib
 
 from .base import ProtImportFiles
 from .images import ProtImportImages
-from ...convert import Ccp4Header
 
 
 class ProtImportVolumes(ProtImportImages):
@@ -59,7 +58,7 @@ class ProtImportVolumes(ProtImportImages):
         return ['local file', 'EMDBid']
 
     def _defineAcquisitionParams(self, form):
-        """ Define acquisition parameters, it can be overriden
+        """ Define acquisition parameters, it can be overwritten
         by subclasses to change what parameters to include.
         """
         param = form.getParam('importFrom')
@@ -232,6 +231,8 @@ class ProtImportVolumes(ProtImportImages):
                 print(e)
                 return
             # open volume and fill sampling and origin
+            self.samplingRate.set(sampling)
+            self._store(self.samplingRate)
             vol.setSamplingRate(sampling)
             vol.setFileName(localFileName)
             from pwem.objects.data import Transform
@@ -420,23 +421,34 @@ def fetch_emdb_map(id, directory, tmpDirectory):
     minimum_map_size = 8192  # bytes
     url_rest_api = url_rest_api % id
 
-    try:
-        map_path, samplingAPI, originAPI = fetch_file(map_url,
-                                                url_rest_api,
-                                                name,
-                                                minimum_map_size,
-                                                directory,
-                                                tmpDirectory,
-                                                map_name
-                                                )
-    except Exception as e:
-        raise Exception ("Cannot retrieve File from EMDB", e)
+    nTimes = 3
+    for i in range(nTimes):  # if error repeat the fetch file up to nTimes
+        try:
+            # raise Exception("test")  # uncomment to test this loop
+            map_path, samplingAPI, originAPI = fetch_file(map_url,
+                                                          url_rest_api,
+                                                          name,
+                                                          minimum_map_size,
+                                                          directory,
+                                                          tmpDirectory,
+                                                          map_name
+                                                          )
+            break
+        except Exception as e:
+            print("Retieving 3D map with id=", id, "failed retrying (%d/%d)" %
+                  (i+1, nTimes))
+            print("Error:", e)
+    # Loop statements may have an else clause; it is executed
+    # when the loop terminates through exhaustion of the iterable
+    else:
+        raise Exception("Cannot retrieve File from EMDB")
+
 
     originAPI = array(originAPI) * samplingAPI  # convert to Angstrom
-    #check consistency between file header and rest API
+    # check consistency between file header and rest API
     ccp4header = emconv.Ccp4Header(map_path, readHeader=True)
     samplingHeader = ccp4header.computeSampling()  # unit = A/px
-    originHeader = array(ccp4header.getOrigin())   # unit = A
+    originHeader = array(ccp4header.getOrigin())  # unit = A
 
     if abs(samplingHeader - samplingAPI) >= 0.01:
         print("###########################\n"
@@ -501,7 +513,7 @@ def fetch_file(url, url_rest_api, name,
         y = results[origin_tag][origin_y_tag]
         z = results[origin_tag][origin_z_tag]
     except Exception as e:
-        print("Error retriving data from EMDB", str(e))
+        print("Error retrieving data from EMDB", str(e))
 
     if stat(compressName).st_size < minimum_file_size:
         raise Exception("File Downloaded from EMDB is empty")

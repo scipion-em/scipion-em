@@ -8,7 +8,7 @@
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
-# * the Free Software Foundation; either version 2 of the License, or
+# * the Free Software Foundation; either version 3 of the License, or
 # * (at your option) any later version.
 # *
 # * This program is distributed in the hope that it will be useful,
@@ -50,24 +50,25 @@ class ProtProcessParticles(ProtParticles):
     that performs some operation on Particles (i.e. filters, mask, resize, etc)
     It is mainly defined by an inputParticles and outputParticles.
     """
+
     def _defineParams(self, form):
         form.addSection(label=pwutils.Message.LABEL_INPUT)
-        
+
         form.addParam('inputParticles', params.PointerParam,
                       pointerClass='SetOfParticles',
                       label=pwutils.Message.LABEL_INPUT_PART, important=True)
         # Hook that should be implemented in subclasses
         self._defineProcessParams(form)
-        
+
         __threads, __mpi = self._getDefaultParallel()
-        
+
         form.addParallelSection(threads=__threads, mpi=__mpi)
-        
+
     def _defineProcessParams(self, form):
         """ This method should be implemented by subclasses
         to add other parameter relatives to the specific operation."""
         pass
-    
+
     def _getDefaultParallel(self):
         """ Return the default value for thread and MPI
         for the parallel section definition.
@@ -84,6 +85,7 @@ class ProtFilterParticles(ProtProcessParticles):
 class ProtOperateParticles(ProtProcessParticles):
     """ Base class for operations on particles of type ProtPreprocessParticles.
     """
+
     def __init__(self, **args):
         ProtProcessParticles.__init__(self, **args)
 
@@ -104,16 +106,17 @@ class ProtExtractParticles(ProtParticles):
      This class will take care of the streaming functionality and
      derived classes should mainly overwrite the '_extractMicrograph' function.
      """
+
     # --------------------------- DEFINE param functions ------------------------
     def _defineParams(self, form):
         form.addSection(label='Input')
-    
+
         form.addParam('inputCoordinates', params.PointerParam,
                       pointerClass='SetOfCoordinates',
                       important=True,
                       label="Input coordinates",
                       help='Select the SetOfCoordinates ')
-    
+
         # The name for the following param is because historical reasons
         # now it should be named better 'micsSource' rather than
         # 'downsampleType', but this could make inconsistent previous executions
@@ -132,13 +135,13 @@ class ProtExtractParticles(ProtParticles):
                            'micrographs and coordinates are related '
                            'by micName or by micId. Difference in pixel size '
                            'will be handled automatically.')
-    
+
         form.addParam('inputMicrographs', params.PointerParam,
                       pointerClass='SetOfMicrographs',
                       condition='downsampleType != %s' % SAME_AS_PICKING,
                       important=True, label='Input micrographs',
                       help='Select the SetOfMicrographs from which to extract.')
-    
+
         form.addParam('ctfRelations', params.RelationParam, allowsNull=True,
                       condition='inputCoordinates is not None',
                       relationName=emcts.RELATION_CTF,
@@ -148,14 +151,14 @@ class ProtExtractParticles(ProtParticles):
                            'micrographs. \n CTF estimation is needed if you '
                            'want to do phase flipping or you want to '
                            'associate CTF information to the particles.')
-        
+
         self._definePreprocessParams(form)
 
     def _definePreprocessParams(self, form):
         """ Should be implemented in sub-classes to define some
         specific parameters """
         pass
-    
+
     # --------------------------- INSERT steps functions ----------------------
     def _insertAllSteps(self):
         # Let's load input data for the already existing micrographs
@@ -203,7 +206,7 @@ class ProtExtractParticles(ProtParticles):
                                              mic.getMicName(), *args,
                                              prerequisites=prerequisites)
         return micStepId
-    
+
     # -------------------------- STEPS functions ------------------------------
 
     def extractMicrographStep(self, micKey, *args):
@@ -302,7 +305,7 @@ class ProtExtractParticles(ProtParticles):
          Should be implemented in derived classes.
         """
         return False
-    
+
     # ------ Methods for Streaming extraction --------------
     def _isStreamClosed(self):
         return self.micsClosed and self.ctfsClosed and self.coordsClosed
@@ -326,6 +329,7 @@ class ProtExtractParticles(ProtParticles):
         2) Micrographs to be extracted (in case it is different from 1)
         3) New computed CTF (in case it is associated with the particles)
         """
+
         def _loadSet(inputSet, SetClass, getKeyFunc):
             setFn = inputSet.getFileName()
             self.debug("Loading input db: %s" % setFn)
@@ -359,7 +363,7 @@ class ProtExtractParticles(ProtParticles):
             self.debug("Loading other Mics.")
             oMicDict, oMicClosed = _loadMics(self.inputMicrographs.get())
             self.micsClosed = self.micsClosed and oMicClosed
-            micDictNew={}
+            micDictNew = {}
             for micKey, mic in micDict.items():
                 if micKey in oMicDict:
                     oMic = oMicDict[micKey]
@@ -368,18 +372,18 @@ class ProtExtractParticles(ProtParticles):
                     # to match each coordinate to its micrograph
                     oMic.copyObjId(mic)
                     micDictNew[micKey] = oMic
-            micDict=micDictNew
+            micDict = micDictNew
 
         self.debug("Mics are closed? %s" % self.micsClosed)
         if self._useCTF():
             self.debug("Loading CTFs.")
             ctfDict, ctfClosed = _loadCTFs(self.ctfRelations.get())
-            micDictNew={}
+            micDictNew = {}
             for micKey, mic in micDict.items():
                 if micKey in ctfDict:
                     mic.setCTF(ctfDict[micKey])
-                    micDictNew[micKey]=mic
-            micDict=micDictNew
+                    micDictNew[micKey] = mic
+            micDict = micDictNew
 
         # if not use CTF, self.ctfsClosed is True
         self.ctfsClosed = ctfClosed if self._useCTF() else True
@@ -387,7 +391,7 @@ class ProtExtractParticles(ProtParticles):
 
         self.debug("Loading Coords.")
         # Now load the coordinates for the newly detected micrographs. If
-        # microgrpahs does not have coordinates, is not processed.
+        # micrographs does not have coordinates, is not processed.
         micDict = self._loadInputCoords(micDict)
 
         # Store this value to be used when inserting new steps and batch mode
@@ -417,7 +421,7 @@ class ProtExtractParticles(ProtParticles):
         for micKey, mic in micDict.items():
             if counter % 50 == 0:
                 b = datetime.now()
-                print(b-a, 'reading coordinates for mic number', "%06d" % counter)
+                print(b - a, 'reading coordinates for mic number', "%06d" % counter)
                 sys.stdout.flush()  # force buffer to print
             counter += 1
 
@@ -443,25 +447,25 @@ class ProtExtractParticles(ProtParticles):
 
     def _checkNewInput(self):
         self.debug(">>> _checkNewInput ")
-    
+
         def _modificationTime():
             """ Check the last modification time of any of the three possible
              input files. """
             items = [self.inputCoordinates.get()]
-        
+
             if self._micsOther():
                 items.append(self.inputMicrographs.get())
             else:
                 items.append(self.inputCoordinates.get().getMicrographs())
-        
+
             if self._useCTF():
                 items.append(self.ctfRelations.get())
-        
+
             def _mTime(fn):
                 return datetime.fromtimestamp(os.path.getmtime(fn))
-        
+
             return max([_mTime(i.getFileName()) for i in items])
-    
+
         mTime = _modificationTime()
         now = datetime.now()
         self.lastCheck = getattr(self, 'lastCheck', now)
@@ -475,13 +479,13 @@ class ProtExtractParticles(ProtParticles):
                    % (self.lastCheck > mTime, hasattr(self, 'micDict')))
         if self.lastCheck > mTime and hasattr(self, 'micDict'):
             return None
-        
+
         # Open input micrographs.sqlite and close it as soon as possible
         newMics = self._loadInputList()
-        
+
         self.lastCheck = now
         outputStep = self._getFirstJoinStep()
-    
+
         if newMics:
             fDeps = self._insertNewMicsSteps(newMics.values())
             if outputStep is not None:
@@ -633,5 +637,5 @@ class ProtExtractParticles(ProtParticles):
 
 class ProtExtractParticlesPair(ProtParticles):
     """ Base class for all extract-particles pairs protocols. Until now,
-    this protcols is not in streaming mode.
+    this protocols is not in streaming mode.
      """

@@ -7,7 +7,7 @@
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
-# * the Free Software Foundation; either version 2 of the License, or
+# * the Free Software Foundation; either version 3 of the License, or
 # * (at your option) any later version.
 # *
 # * This program is distributed in the hope that it will be useful,
@@ -36,7 +36,7 @@ from Bio.PDB.MMCIFParser import MMCIFParser
 from Bio.PDB.PDBParser import PDBParser
 from Bio.PDB import PDBIO, MMCIFIO
 from Bio.PDB.mmcifio import mmcif_order
-
+from Bio.PDB import Superimposer
 from Bio.PDB.MMCIF2Dict import MMCIF2Dict
 from Bio.PDB import Entity
 from Bio.PDB import PDBList
@@ -64,7 +64,6 @@ class scipionMMCIFIO(MMCIFIO):
     # as converter.
     # TODO: Delete it after a more extensive testing period
     # DATE mar feb 18 17:48:57 CET 2020
-
 
     def _save_dict_delete(self, out_file):
         # Form dictionary where key is first part of mmCIF key and value is list
@@ -233,7 +232,7 @@ class AtomicStructHandler:
                 return False
 
     def getStructure(self):
-        """return strcture information, model, chain,
+        """return structure information, model, chain,
            residues, atoms..."""
         return self.structure
 
@@ -507,7 +506,7 @@ class AtomicStructHandler:
             self.writeAsCif(fileName)
 
     def writeAsPdb(self, pdbFile):
-        """ Save structure as PDB. Be aware that this is not a lossless convertion
+        """ Save structure as PDB. Be aware that this is not a lossless conversion
         Returns False is conversion is not possible. True otherwise
         """
         # check input is not PDB
@@ -532,13 +531,102 @@ class AtomicStructHandler:
 
     def writeAsCif(self, cifFile):
         """ Save structure as CIF.
-            Be aware that this is not a lossless convertion
+            Be aware that this is not a lossless conversion
         """
         self._write(cifFile)
 
+    def getBoundingBox(self, expand=3):
+        """Get bounding box (angstroms) for atom struct.
+         Only alpha carbons are taken into account.
+         parameter: expand.- make box larger addind this factor
+         """
+        # Use the first model
+        ref_model = self.getStructure()[0]
+        # init bounding box volues
+        xmin = 100000; ymin = xmin; zmin = xmin
+        xmax = -100000; ymax = xmax; zmax = xmax
+        # iterate for all aminoacids
+        for chain in ref_model:
+            for residue in chain:
+                (x,y,z) = residue["CA"].get_coord()
+                if x < xmin: xmin = x
+                if x > xmax: xmax = x
+
+                if y < ymin: ymin = y
+                if y > ymax: ymax = y
+
+                if z < zmin: zmin = z
+                if z > zmax: zmax = z
+            # DEBUG
+            # with open("/tmp/kk.bild", "w") as file:
+            #     file.write(".transparency 0.8\n"
+            #                ".color red\n"
+            #                ".box %f %f %f %f %f %f\n" %
+            #                (xmin - expand , ymin - expand, zmin - expand,
+            #                xmax + expand, ymax + expand, zmax + expand))
+        return [[xmin - expand, ymin - expand, zmin - expand],
+                [xmax + expand, ymax + expand, zmax + expand]]
+
+
+    def getTransformMatrix(self, atomStructFn, startId=-1, endId=-1):
+        """find matrix that Superimposes two atom structures.
+        this matrix moves atomStructFn to self """
+        if endId == -1:
+            endId = 10000000
+        # load second atom structure
+        aSH = AtomicStructHandler()
+        aSH.read(atomStructFn)
+
+        # Use the first model in the atom struct for alignment
+        ref_model = self.getStructure()[0]
+        sample_model = aSH.getStructure()[0]
+
+        # Make a list of the atoms (in the structures) you wish to align.
+        # In this case we use CA atoms whose index is in the
+        # specified range (starId, endId)
+        ref_atoms = []
+        sample_atoms = []
+
+        # Now get a list with CA atoms (alpha-carbon)
+        # I assume that both atom structs have the same number of chains
+        # and in the same order.
+        for ref_chain, sample_chain in zip(ref_model, sample_model):
+            # create a set with the id of all residues
+            # for the current chain
+            ref_set_id = set(res.get_id()[1] for res in ref_chain)
+            sample_set_id = set(res.get_id()[1] for res in sample_chain)
+            # keep the intersection as an ordered list (sets are not ordered)
+            ref_set_id.intersection_update(sample_set_id)
+            ref_list_id = sorted(ref_set_id)
+            # delete AA smaller or large than the predefined values
+            ref_list_id[:] = [x for x in ref_list_id
+                              if x >= startId and x <= endId]
+
+            # Iiterate through all residues in each chain a store CA atoms
+            for id in ref_list_id:
+                ref_atoms.append(ref_chain[id]['CA'])
+                sample_atoms.append(sample_chain[id]['CA'])
+        # Now we initiate the superimposer:
+        super_imposer = Superimposer()
+        super_imposer.set_atoms(ref_atoms, sample_atoms)
+        # super_imposer.apply(sample_model.get_atoms())
+        (rot, trans) = super_imposer.rotran
+        # DEBUG, uncomment next two lines to see
+        # transformation applied to atomStructFn
+        # aSH.getStructure().transform(rot, trans)
+        # aSH.write("/tmp/pp.cif")
+
+        # convert 3x3 rotation matrix to homogeneous matrix
+        rot = numpy.transpose(rot)  # scipion and biopython use
+                                    # different conventions
+        tmp = numpy.r_[rot, numpy.zeros((1, 3))]
+        mat = numpy.c_[tmp, numpy.array(
+            [[trans[0]], [trans[1]], [trans[2]], [1]])]
+        return mat, super_imposer.rms
+
     def centerOfMass(self, geometric=False):
         """
-        Returns gravitic [default] or geometric center of mass of an Entity
+        Returns gravity [default] or geometric center of mass of an Entity
         (anything with a get_atoms function in biopython.
         Geometric assumes all masses are equal (geometric=True)
         """
@@ -619,12 +707,20 @@ class AtomicStructHandler:
         import uuid
         chainIDs1 = [chain.id for chain in self.structure.get_chains()]
         for chain in struct2.get_chains():
+            counter = 2
             if chain.id in chainIDs1:
                 repeated = True
                 cId = chain.id
                 l = len(cId)
                 if l == 1:
-                    chain.id = "%s002" % cId
+                    while True:
+                        try:
+                            chain.id = "%s%03d" % (cId, counter)
+                            break
+                        except ValueError:
+                            counter +=1
+                            if counter > 1000:
+                                raise ValueError('Error in _renameChainsIfNeed.')
                 elif RepresentsInt(cId[1:]):  # try to fit a number and increase it by one
                     chain.id = "%s%03d" % (cId[0], int(cId[1:]) + 1)
                 else:  # generate a 4 byte random string
@@ -694,9 +790,8 @@ class AtomicStructHandler:
         self.structure[modelID][chainID].id = newChainName
         self.write(filename)
 
-
     def renumberChain(self, chainID, offset=0, modelID='0',
-                    filename="output.mmcif"):
+                      filename="output.mmcif"):
         # get chain object
         chain = self.structure[modelID][chainID]
         # remove chain from model
@@ -710,7 +805,7 @@ class AtomicStructHandler:
             rId = residue.id
             res_id = list(rId)
             res_id[1] = res_id[1] + offset
-            if res_id[1] <0 :
+            if res_id[1] < 0:
                 raise ValueError('Residue number cant be <= 0')
             residue.id = tuple(res_id)
             newChain.add(residue)
@@ -863,8 +958,10 @@ def retry(runEnvirom, program, args, cwd, listAtomStruct=[], log=None, clean_dir
                         _args = args.replace(atomStructName, newAtomStructName)
                         runEnvirom(program, _args, cwd=cwd)
                     except:
-                        print("CIF file standarization failed.")
+                        print("CIF file standardisation failed.")
                         # atomStructName = newAtomStructName
+
+
 # TODO this should no be here, ROB
 def partiallyCleaningFolder(program, cwd):
     l1 = os.listdir(cwd)
@@ -874,21 +971,21 @@ def partiallyCleaningFolder(program, cwd):
 
     for item in l1:
         if (program.endswith('real_space_refine.py') and
-                (item.endswith('geo') or
-                 item.endswith('real_space_refined.log') or
-                 item.endswith('real_space_refine.pdb') or
-                 item.endswith('real_space_refined.cif'))) or \
-           (program.endswith('molprobity.py') and item in l2)  or \
-           (program.endswith('validation_cryoem.py') and item in l3) or \
-           (program.endswith('emringer.py') and
-                (item.endswith("emringer.csv") or \
-                 item.endswith("emringer.pkl") or \
-                 item.endswith("emringer_plots") or \
-                 item.startswith('emringer_transfer'))) or \
-           (program.endswith('dock_in_map.py') and item in l4):
+            (item.endswith('geo') or
+             item.endswith('real_space_refined.log') or
+             item.endswith('real_space_refine.pdb') or
+             item.endswith('real_space_refined.cif'))) or \
+                (program.endswith('molprobity.py') and item in l2) or \
+                (program.endswith('validation_cryoem.py') and item in l3) or \
+                (program.endswith('emringer.py') and
+                 (item.endswith("emringer.csv") or
+                  item.endswith("emringer.pkl") or
+                  item.endswith("emringer_plots") or
+                  item.startswith('emringer_transfer'))) or \
+                (program.endswith('dock_in_map.py') and item in l4):
             path1 = os.path.join(cwd, item)
             if os.path.exists(path1):
-                if (os.path.isfile(path1) or os.path.islink(path1)):
+                if os.path.isfile(path1) or os.path.islink(path1):
                     os.remove(path1)
                 elif os.path.isdir(path1):
                     shutil.rmtree(path1)

@@ -7,7 +7,7 @@
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
-# * the Free Software Foundation; either version 2 of the License, or
+# * the Free Software Foundation; either version 3 of the License, or
 # * (at your option) any later version.
 # *
 # * This program is distributed in the hope that it will be useful,
@@ -56,7 +56,7 @@ class ProtImportImages(ProtImportFiles):
     # --------------------------- DEFINE param functions ----------------------
 
     def _defineAcquisitionParams(self, form):
-        """ Define acquisition parameters, it can be overriden
+        """ Define acquisition parameters, it can be overwritten
         by subclasses to change what parameters to include.
         """
         group = form.addGroup('Acquisition info')
@@ -350,6 +350,7 @@ class ProtImportImages(ProtImportFiles):
                 if (not self.dataStreaming and
                     not (imgFn.endswith('bz2') or
                          imgFn.endswith('tbz') or
+                         imgFn.endswith('eer') or
                          ih.isImageFile(imgFn))):
                     if not errors:  # if empty add the first line
                         errors.append("Error reading the following images:")

@@ -48,7 +48,7 @@ class ProtMetadataEditor(EMProtocol):
         form.addParam('inputSet', params.PointerParam, pointerClass='EMSet',
                       label='Set to edit',
                       help='Set which items will be modified.')
-        form.addParam('formula', params.StringParam, label="Formula", important = True,
+        form.addParam('formula', params.StringParam, label="Formula", important=True,
                       help='A python code compatible with eval, where item represents each of '
                            'the elements of the set. E.g.: item._resolution.set(item._resolution.get() +1).'
                            'You could also use modules like "import numpy;  item._resolution .... "')
@@ -73,5 +73,3 @@ class ProtMetadataEditor(EMProtocol):
 
         outputArgs = {self.inputSet.getExtended(): modifiedSet}
         self._defineOutputs(**outputArgs)
-
-

@@ -6,7 +6,7 @@
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
-# * the Free Software Foundation; either version 2 of the License, or
+# * the Free Software Foundation; either version 3 of the License, or
 # * (at your option) any later version.
 # *
 # * This program is distributed in the hope that it will be useful,
@@ -134,7 +134,7 @@ class ProtParticlePicking(ProtParticles):
 
     def __getOutputSuffix(self):
         """ Get the name to be used for a new output.
-        For example: outputCoordiantes7.
+        For example: outputCoordinates7.
         It should take into account previous outputs
         and number with a higher value.
         """
@@ -526,7 +526,7 @@ class ProtParticlePickingAuto(ProtParticlePicking):
         # the first function that need to wait for all micrographs
         # to have completed, this can be overwritten in subclasses
         # (eg in Xmipp 'sortPSDStep')
-        return 'createOutputStep'
+        return self.createOutputStep.__name__
 
     def _getFirstJoinStep(self):
         for s in self._steps:
@@ -542,7 +542,7 @@ class ProtParticlePickingAuto(ProtParticlePicking):
 
 class ProtPickingDifference(ProtParticlePicking):
     """
-    Protocol to compute the difference between a reference SetOfPartices and
+    Protocol to compute the difference between a reference SetOfParticles and
     a another set (usually a negative reference).
 
     The output will be a SetOfCoordinates with the particles in the reference

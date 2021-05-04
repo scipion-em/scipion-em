@@ -8,7 +8,7 @@
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
-# * the Free Software Foundation; either version 2 of the License, or
+# * the Free Software Foundation; either version 3 of the License, or
 # * (at your option) any later version.
 # *
 # * This program is distributed in the hope that it will be useful,
@@ -39,7 +39,6 @@ from pwem import Domain
 from pwem.emlib.image import ImageHandler
 import pwem.constants as emcts
 
-
 from .images import ProtImportImages
 
 
@@ -59,7 +58,7 @@ class ProtImportMicBase(ProtImportImages):
                        label=pwutils.Message.LABEL_SAMP_MODE,
                        help=pwutils.Message.TEXT_SAMP_MODE)
 
-        group.addParam('samplingRate', params.FloatParam,  default=1.0,
+        group.addParam('samplingRate', params.FloatParam, default=1.0,
                        condition='samplingRateMode==%d' % emcts.SAMPLING_FROM_IMAGE,
                        label=pwutils.Message.LABEL_SAMP_RATE,
                        help=pwutils.Message.TEXT_SAMP_RATE)
@@ -140,7 +139,7 @@ class ProtImportMicBase(ProtImportImages):
         errors += self._validateBlacklist()
 
         return errors
-        
+
     def setSamplingRate(self, micSet):
         """ Set the sampling rate to the given set. """
         if self.samplingRateMode == emcts.SAMPLING_FROM_IMAGE:
@@ -155,13 +154,13 @@ class ProtImportMicBase(ProtImportImages):
         return 'True'
 
     def loadAcquisitionInfo(self):
-        """ Return a proper acquistionInfo (dict)
+        """ Return a proper acquisitionInfo (dict)
         or an error message (str).
         """
         if self.importFrom != self.IMPORT_FROM_FILES:
             return ProtImportImages.loadAcquisitionInfo(self)
 
-        result = "Could not find acquistion information"
+        result = "Could not find acquisition information"
 
         for fileName, fileId in self.iterFiles():
             baseName = pwutils.removeExt(fileName)
@@ -297,12 +296,12 @@ class ProtImportMicBase(ProtImportImages):
                 return True
         return False
 
-    
+
 class ProtImportMicrographs(ProtImportMicBase):
     """Protocol to import a set of micrographs to the project"""
     _label = 'import micrographs'
-    _outputClassName = 'SetOfMicrographs' 
-    
+    _outputClassName = 'SetOfMicrographs'
+
     IMPORT_FROM_EMX = 1
     IMPORT_FROM_XMIPP3 = 2
     IMPORT_FROM_SCIPION = 3
@@ -310,7 +309,7 @@ class ProtImportMicrographs(ProtImportMicBase):
     def _getImportChoices(self):
         """ Return a list of possible choices
         from which the import can be done.
-        (usually packages formas such as: xmipp3, eman2, relion...etc.
+        (usually packages formats such as: xmipp3, eman2, relion...etc.
         """
         choices = ProtImportImages._getImportChoices(self)
         return choices + ['emx', 'xmipp3', 'scipion']
@@ -319,66 +318,66 @@ class ProtImportMicrographs(ProtImportMicBase):
         """ Returns the class to be blacklisted by this protocol.
         """
         return "SetOfMicrographs"
-    
+
     def _defineImportParams(self, form):
         """ Just redefine to put some import parameters
         before the acquisition related parameters.
         """
         form.addParam('emxFile', params.FileParam,
-              condition='(importFrom == %d)' % self.IMPORT_FROM_EMX,
-              label='Input EMX file',
+                      condition='(importFrom == %d)' % self.IMPORT_FROM_EMX,
+                      label='Input EMX file',
                       help="Select the EMX file containing micrographs information.\n"
                            "See more about [[http://i2pc.cnb.csic.es/emx][EMX format]]")
-        
+
         form.addParam('mdFile', params.FileParam,
                       condition='(importFrom == %d)' % self.IMPORT_FROM_XMIPP3,
                       label='Micrographs metadata file',
                       help="Select the micrographs Xmipp metadata file.\n"
                            "It is usually a _micrograph.xmd_ file result\n"
                            "from import, preprocess or downsample protocols.")
-        
+
         form.addParam('sqliteFile', params.FileParam,
                       condition='(importFrom == %d)' % self.IMPORT_FROM_SCIPION,
                       label='Micrographs sqlite file',
                       help="Select the micrographs sqlite file.\n")
-    
+
     # --------------------------- INSERT functions ----------------------------
     def _insertAllSteps(self):
         importFrom = self.importFrom.get()
         ci = self.getImportClass()
-        
+
         if ci is None:
             ProtImportMicBase._insertAllSteps(self)
         else:
             self._insertFunctionStep('importMicrographsStep', importFrom,
                                      self.importFilePath)
-    
+
     # --------------------------- STEPS functions -----------------------------
     def importMicrographsStep(self, importFrom, *args):
         ci = self.getImportClass()
         ci.importMicrographs()
-        
+
         summary = "Import from *%s* file:\n" % self.getEnumText('importFrom')
         summary += self.importFilePath + '\n'
-        
+
         if self.hasAttribute('outputParticles'):
             particles = self.outputParticles
             summary += '   Particles: *%d* (ctf=%s, alignment=%s)\n' % (particles.getSize(),
                                                                         particles.hasCTF(),
                                                                         particles.getAlignment())
-                                                                      
+
         if self.hasAttribute('outputCoordinates'):  # EMX files can contain only Coordinates information
             summary += '   Coordinates: *%d* \n' % (self.outputCoordinates.getSize())
-            
+
         if self.hasAttribute('outputMicrographs'):  # EMX files can contain only Coordinates information
             summary += '   Micrographs: *%d* \n' % (self.outputMicrographs.getSize())
-        
+
         if self.copyFiles:
             summary += ('\n_WARNING_: Binary files copied into project '
                         '(extra disk space)')
-            
+
         self.summaryVar.set(summary)
-    
+
     # --------------------------- INFO functions ------------------------------
     def _validate(self):
         ci = self.getImportClass()
@@ -398,18 +397,18 @@ class ProtImportMicrographs(ProtImportMicBase):
                                       "--ext *extension*")
                 # JMRT: only check the first image, for large dataset
                 # even reading the header can take a while
-                break 
+                break
             return errors
-            
+
         else:
             return ci.validateMicrographs()
-    
+
     def _summary(self):
         if self.importFrom == self.IMPORT_FROM_FILES:
             return ProtImportMicBase._summary(self)
         else:
             return [self.summaryVar.get('No summary information.')]
-    
+
     # --------------------------- UTILS functions -----------------------------
     def getImportClass(self):
         """ Return the class in charge of importing the files. """
@@ -424,10 +423,10 @@ class ProtImportMicrographs(ProtImportMicBase):
         elif self.importFrom == self.IMPORT_FROM_SCIPION:
             from .dataimport import ScipionImport
             self.importFilePath = self.sqliteFile.get('').strip()
-            return ScipionImport(self, self.importFilePath) 
+            return ScipionImport(self, self.importFilePath)
         else:
             self.importFilePath = ''
-            return None       
+            return None
 
 
 class ProtImportMovies(ProtImportMicBase):
@@ -436,7 +435,7 @@ class ProtImportMovies(ProtImportMicBase):
     """
     _label = 'import movies'
     _outputClassName = 'SetOfMovies'
-    
+
     def __init__(self, **kwargs):
         ProtImportMicBase.__init__(self, **kwargs)
         self.serverSocket = None
@@ -446,38 +445,38 @@ class ProtImportMovies(ProtImportMicBase):
         """ Returns the class to be blacklisted by this protocol.
         """
         return "SetOfMovies"
-    
+
     def _defineAcquisitionParams(self, form):
         group = ProtImportMicBase._defineAcquisitionParams(self, form)
-        
+
         line = group.addLine('Dose (e/A^2)',
                              help="Initial accumulated dose (usually 0) and "
                                   "dose per frame. ")
-        
+
         line.addParam('doseInitial', params.FloatParam, default=0,
                       label='Initial')
-        
+
         line.addParam('dosePerFrame', params.FloatParam, default=None,
                       allowsNull=True,
                       label='Per frame')
-        
+
         form.addParam('gainFile', params.FileParam,
                       label='Gain image',
                       help='A gain reference related to a set of movies'
                            ' for gain correction')
-        
+
         form.addParam('darkFile', params.FileParam,
                       label='Dark image',
                       help='A dark image related to a set of movies')
-    
+
     def _defineParams(self, form):
         ProtImportMicBase._defineParams(self, form)
-        
+
         form.addSection('Frames')
-        
+
         streamingConditioned = "dataStreaming"
         framesCondition = "inputIndividualFrames"
-        
+
         form.addParam('inputIndividualFrames', params.BooleanParam,
                       default=False,
                       label="Input individual frames?",
@@ -514,14 +513,14 @@ class ProtImportMovies(ProtImportMicBase):
                       label="Delete frame files?",
                       help="Select Yes if you want to remove the individual "
                            "frame files after creating the movie stack. ")
-        
+
         streamingSection = form.getSection('Streaming')
         streamingSection.addParam('moviesToExclude', params.PointerParam,
                                   pointerClass='SetOfMovies',
                                   condition=streamingConditioned,
                                   allowsNull=True,
                                   expertLevel=params.LEVEL_ADVANCED,
-                                  label="Previuos movies to exclude",
+                                  label="Previous movies to exclude",
                                   help="Select a setOfMovies that are already "
                                        "imported that you want to exclude for "
                                        "this import.")
@@ -531,18 +530,18 @@ class ProtImportMovies(ProtImportMicBase):
         # Only the import movies has property 'inputIndividualFrames'
         # so let's query in a non-intrusive manner
         inputIndividualFrames = getattr(self, 'inputIndividualFrames', False)
-        
+
         if self.dataStreaming or inputIndividualFrames:
             funcName = 'importImagesStreamStep'
         else:
             funcName = 'importImagesStep'
-        
+
         self._insertFunctionStep(funcName, self.getPattern(),
                                  self.voltage.get(),
                                  self.sphericalAberration.get(),
                                  self.amplitudeContrast.get(),
                                  self.magnification.get())
-    
+
     # --------------------------- INFO functions -------------------------------
     def _validate(self):
         """Overwriting to skip file validation if streaming with socket"""
@@ -558,7 +557,7 @@ class ProtImportMovies(ProtImportMicBase):
         if not self.darkFile.empty() and not os.path.exists(self.darkFile.get()):
             errors.append("Dark file not found in " + str(self.gainFile.get()))
         return errors
-    
+
     # --------------------------- UTILS functions ------------------------------
     def setSamplingRate(self, movieSet):
         ProtImportMicBase.setSamplingRate(self, movieSet)
@@ -567,12 +566,12 @@ class ProtImportMovies(ProtImportMicBase):
         acq = movieSet.getAcquisition()
         acq.setDoseInitial(self.doseInitial.get())
         acq.setDosePerFrame(self.dosePerFrame.get())
-    
+
     def _setupFirstImage(self, movie, imgSet):
         # Create a movie object to read dimensions
         dimMovie = movie.clone()
         movieFn = movie.getFileName()
-        
+
         def decompress(program, args, ext, nExt):
             movieFolder = self._getTmpPath()
             movieName = basename(movie.getFileName())
@@ -581,20 +580,20 @@ class ProtImportMovies(ProtImportMicBase):
             pwutils.createAbsLink(os.path.abspath(movieFn), movieTmpLink)
             self.runJob(program, args % movieName, cwd=movieFolder)
             dimMovie.setFileName(movieTmpLink.replace(ext, nExt))
-        
+
         if movieFn.endswith('bz2'):
             decompress('bzip2', '-d -f %s', '.bz2', '')
-        
+
         elif movieFn.endswith('tbz'):
             decompress('tar', 'jxf %s', '.tbz', '.mrc')
-        
+
         dim = dimMovie.getDim()
         self.info("Dim: (%s)" % ", ".join(map(str, dim)))
         range = [1, dim[2], 1]
         movie.setFramesRange(range)
         imgSet.setDim(dim)
         imgSet.setFramesRange(range)
-    
+
     def iterNewInputFiles(self):
         """ In the case of importing movies, we want to override this method
         for the case when input are individual frames and we want to create
@@ -602,15 +601,15 @@ class ProtImportMovies(ProtImportMicBase):
         The frames pattern should contains a part delimited by $.
         The id expression with # is not supported for simplicity.
         """
-        
+
         if not (self.inputIndividualFrames and self.stackFrames):
             # In this case behave just as
             iterInputFiles = ProtImportMicBase.iterNewInputFiles(self)
-            
+
             for fileName, uniqueFn, fileId in iterInputFiles:
                 yield fileName, uniqueFn, fileId
             return
-        
+
         if self.dataStreaming:
             # Consider only the files that are not changed in the fileTime
             # delta if processing data in streaming
@@ -619,55 +618,55 @@ class ProtImportMovies(ProtImportMicBase):
                          if not self.fileModified(f, fileTimeout)]
         else:
             filePaths = self.getMatchFiles()
-        
+
         frameRegex = re.compile("(?P<prefix>.+[^\d]+)(?P<frameid>\d+)")
         # Group all frames for each movie
         # Key of the dictionary will be the common prefix and the value
         # will be a list with all frames in that movie
         frameDict = {}
-        
+
         for fileName in filePaths:
             fnNoExt = pwutils.removeExt(fileName)
-            
+
             match = frameRegex.match(fnNoExt)
-            
+
             if match is None:
                 raise Exception("Incorrect match of frame files pattern!")
-            
+
             d = match.groupdict()
             prefix = d['prefix']
             frameid = int(d['frameid'])
-            
+
             if prefix not in frameDict:
                 frameDict[prefix] = []
-            
+
             frameDict[prefix].append((frameid, fileName))
-        
+
         suffix = self.movieSuffix.get()
         ih = ImageHandler()
-        
+
         for movieFn in self.createdStacks:
             uniqueFn = basename(movieFn)
             if uniqueFn not in self.importedFiles:
                 yield movieFn, uniqueFn, None
-        
+
         def checkMovie():
             for k, v in frameDict.items():
                 moviePath = os.path.dirname(k)
                 movieFn = join(moviePath + "/", self._getUniqueFileName(k) +
                                suffix)
-                
+
                 if self.writeMoviesInProject:
                     movieFn = self._getExtraPath(os.path.basename(movieFn))
-                
+
                 if (movieFn not in self.importedFiles and
                         movieFn not in self.createdStacks and
                         len(v) == self.numberOfIndividualFrames):
                     movieOut = movieFn
-                    
+
                     if movieOut.endswith("mrc"):
                         movieOut += ":mrcs"
-                    
+
                     # By default we will write the movie stacks
                     # unless we are in continue mode and the file exists
                     writeMovie = True
@@ -675,27 +674,28 @@ class ProtImportMovies(ProtImportMicBase):
                         self.info("Skipping movie stack: %s, seems to be done"
                                   % movieFn)
                         writeMovie = False
-                    
+
                     if writeMovie:
                         self.info("Writing movie stack: %s" % movieFn)
                         # Remove the output file if exists
                         pwutils.cleanPath(movieFn)
-                        
+
                         for i, frame in enumerate(sorted(v, key=lambda x: x[0])):
                             frameFn = frame[1]  # Frame name stored previously
-                            ih.convert(frameFn, (i+1, movieOut))
-                            
+                            ih.convert(frameFn, (i + 1, movieOut))
+
                             if self.deleteFrames:
                                 pwutils.cleanPath(frameFn)
-                    
+
                     # Now return the newly created movie file as imported file
                     self.createdStacks.add(movieFn)
                     return
+
         checkMovie()
-    
+
     def ignoreCopy(self, source, dest):
         pass
-    
+
     def getCopyOrLink(self):
         if (self.inputIndividualFrames and self.stackFrames and
                 self.writeMoviesInProject):

@@ -7,7 +7,7 @@
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
-# * the Free Software Foundation; either version 2 of the License, or
+# * the Free Software Foundation; either version 3 of the License, or
 # * (at your option) any later version.
 # *
 # * This program is distributed in the hope that it will be useful,
@@ -69,7 +69,7 @@ class ProtImportMask(ProtImport):
         dst = self._getExtraPath(basename(path))
         pwutils.copyFile(path, dst)
 
-        # Retrive image dimensions
+        # Retrieve image dimensions
         imgh = ImageHandler()
         _, _, z, n = imgh.getDimensions(dst)
 

@@ -8,7 +8,7 @@
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
-# * the Free Software Foundation; either version 2 of the License, or
+# * the Free Software Foundation; either version 3 of the License, or
 # * (at your option) any later version.
 # *
 # * This program is distributed in the hope that it will be useful,
@@ -44,6 +44,7 @@ SET_OF_MOVIES = 0
 SET_OF_MICROGRAPHS = 1
 SET_OF_RANDOM_MICROGRAPHS = 2
 SET_OF_PARTICLES = 3
+SET_OF_COORDINATES = 4
 
 
 class ProtCreateStreamData(EMProtocol):
@@ -51,7 +52,7 @@ class ProtCreateStreamData(EMProtocol):
         micrograph -> read a micrograph in memory and writes it nDim times
         movie      -> read a movie in memory and writes it nDim times
         randomMicrographs -> creates a micrograph with random values
-        and aplies a random CTF
+        and applies a random CTF
         particles  -> read nDim particles in memory and writes it in streaming
     """
     _label = "create stream data"
@@ -74,7 +75,7 @@ class ProtCreateStreamData(EMProtocol):
 
         form.addParam('setof', params.EnumParam, default=0,
                       choices=['Movies', 'Micrographs', 'RandomMicrographs',
-                               'Particles'],
+                               'Particles', 'Coordinates'],
                       label='set Of',
                       help='create set of')
         form.addParam('inputMovies', params.PointerParam, pointerClass='SetOfMovies',
@@ -100,6 +101,11 @@ class ProtCreateStreamData(EMProtocol):
                       condition="setof==%d" % SET_OF_PARTICLES,
                       label="SetOfParticles",
                       help='These particles will be written in streaming')
+        form.addParam('inputCoordinates', params.PointerParam,
+                      pointerClass='SetOfCoordinates',
+                      condition="setof==%d" % SET_OF_COORDINATES,
+                      label="SetOfCoordinates",
+                      help='These Coordinates will be written in streaming')
         form.addParam('groups', params.IntParam, default=50,
                       condition="setof==%d" % SET_OF_PARTICLES,
                       label="groups",
@@ -116,6 +122,10 @@ class ProtCreateStreamData(EMProtocol):
                       label="Create Object each (sec)",
                       pointerClass='EMProtocol',
                       help="create one object each creationInterval seconds")
+        form.addParam('extraRandomInterval', params.IntParam, default=0,
+                      label='Extra random seconds interval', expertLevel=params.LEVEL_ADVANCED,
+                      help='Each object will be generated in a random time uniformly picked from the interval defined by'
+                           '[baseInterval, baseInterval+extraInterval]')
         form.addParam('delay', params.IntParam, default=0,
                       label="delay (sec)",
                       help="wait this seconds before creating stream data")
@@ -127,7 +137,7 @@ class ProtCreateStreamData(EMProtocol):
         self.counter = 0
         deps = []
 
-        if self.delay != 0:
+        if self.delay.get() != 0:
             delayId = self._insertFunctionStep('delayStep')
             deps.append(delayId)
 
@@ -140,6 +150,8 @@ class ProtCreateStreamData(EMProtocol):
             step = 'createRandomMicStep'
         elif self.setof == SET_OF_PARTICLES:
             step = 'createParticlesStep'
+        elif self.setof == SET_OF_COORDINATES:
+            step = 'createCoordinatesStep'
         else:
             raise Exception('Unknown data type')
 
@@ -149,13 +161,20 @@ class ProtCreateStreamData(EMProtocol):
             for mic in range(1, int((self.nDims / self.group) +
                              (self.nDims % self.group > 0) + 1)):
                 self._insertFunctionStep(step, prerequisites=deps)
+
+        elif self.setof == SET_OF_COORDINATES:
+            self.inputMicrographs = self.inputCoordinates.get().getMicrographs()
+            self.nDims = min(self.nDim.get(), len(self.inputMicrographs))
+            for micIdx in range(1, self.nDims + 1):
+                self._insertFunctionStep(step, micIdx, prerequisites=deps)
+
         else:
             for mic in range(1, self.nDim.get() + 1):
                 self._insertFunctionStep(step, mic, prerequisites=deps)
 
-    # -------------------------- STEPS functions -------------------------
+    # -------------------------- STEPS functions ------------------------
     def delayStep(self):
-        time.sleep(self.delay)
+        time.sleep(self.delay.get())
 
     def _checkNewItems(self, objSet):
         """ Check for already computed micrograph/movie and
@@ -272,7 +291,7 @@ class ProtCreateStreamData(EMProtocol):
         newObjSet.close()
 
     def createStep(self, counter):
-        time.sleep(self.creationInterval.get())
+        time.sleep(self.getTimeInterval())
         if not ProtCreateStreamData.object or self.setof == \
                 SET_OF_MICROGRAPHS or self.setof == SET_OF_MOVIES:
 
@@ -304,7 +323,7 @@ class ProtCreateStreamData(EMProtocol):
 
     def createParticlesStep(self):
         self.name = "particle"
-        time.sleep(self.creationInterval.get())
+        time.sleep(self.getTimeInterval())
 
         for idx, p in enumerate(self.inputParticles.get()):
             if ((idx > self.counter-1) and (idx < self.nDims) and
@@ -317,9 +336,34 @@ class ProtCreateStreamData(EMProtocol):
                 self.dictObj[destFn] = True
         self._checkProcessedData()
 
+    def createCoordinatesStep(self, micIdx):
+        self.name = "coordinate"
+        time.sleep(self.getTimeInterval())
+        inputCoordinates = self.inputCoordinates.get()
+        micrographs = inputCoordinates.getMicrographs()
+        if not hasattr(self, "outputCoordinates"):
+            self.outputCoordinates = self._createSetOfCoordinates(micrographs)
+            self.outputCoordinates.copyInfo(inputCoordinates)
+            self.outputCoordinates.setBoxSize(inputCoordinates.getBoxSize())
+            self.outputCoordinates.setStreamState(emobj.SetOfParticles.STREAM_OPEN)
+            self._defineOutputs(outputCoordinates=self.outputCoordinates)
+            self._defineSourceRelation(inputCoordinates, self.outputCoordinates)
+
+        for idx, mic in enumerate(micrographs):
+            if idx == micIdx - 1:
+                newMic = mic.clone()
+                for newCoord in self.inputCoordinates.get().iterCoordinates(newMic):
+                    self.outputCoordinates.append(newCoord)
+                if micIdx == self.nDims:
+                    self.outputCoordinates.setStreamState(emobj.SetOfParticles.STREAM_CLOSED)
+                self.outputCoordinates.write()
+                self._store(self.outputCoordinates)
+                break
+
+
     def createRandomMicStep(self, mic):
         from pwem import Domain
-        time.sleep(self.creationInterval.get())
+        time.sleep(self.getTimeInterval())
         getEnviron = Domain.importFromPlugin('xmipp3', 'Plugin',
                                              doRaise=True).getEnviron
 
@@ -365,6 +409,13 @@ class ProtCreateStreamData(EMProtocol):
         self.runJob("xmipp_transform_filter", args, env=getEnviron())
         self.dictObj[baseFnImageCTF] = True
         self._checkProcessedData()
+
+    # -------------------------- UTILS functions -----------------------------
+    def getTimeInterval(self):
+        baseInterval = self.creationInterval.get()
+        interval = random.randint(baseInterval, baseInterval+self.extraRandomInterval.get())
+        return interval
+
 
     # -------------------------- INFO functions ------------------------------
     def _validate(self):

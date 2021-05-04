@@ -6,7 +6,7 @@
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
-# * the Free Software Foundation; either version 2 of the License, or
+# * the Free Software Foundation; either version 3 of the License, or
 # * (at your option) any later version.
 # *
 # * This program is distributed in the hope that it will be useful,
@@ -32,7 +32,7 @@ from pyworkflow.utils import ProgressBar
 
 class ProtAlignmentInvertHand(ProtAlign2D):
     """ Modify the transformation matrix of a set of particles
-    So that the handness tranges
+    So that the handedness changes
     """
     _label = 'invert hand'
 
@@ -60,11 +60,10 @@ class ProtAlignmentInvertHand(ProtAlign2D):
         width = 40
         step = total // width
 
-        # print a progressba since this make take for ever
+        # print a progressbar since this make take for ever
         pb = ProgressBar(total=total, width=width, fmt=ProgressBar.NOBAR)
-        from time import sleep
         for counter, particle in enumerate(inputParticles):
-            if counter % step ==0:
+            if counter % step == 0:
                 pb.update(counter)
             t = particle.getTransform()
             m = t.getMatrix()

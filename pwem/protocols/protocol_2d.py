@@ -6,7 +6,7 @@
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
-# * the Free Software Foundation; either version 2 of the License, or
+# * the Free Software Foundation; either version 3 of the License, or
 # * (at your option) any later version.
 # *
 # * This program is distributed in the hope that it will be useful,
@@ -41,7 +41,7 @@ class ProtAlign2D(Prot2D):
     """ This class will serve as a base for all protocols that align a set of 
         2D images.
         All Align protocols receive as input:
-        A set of partices
+        A set of particles
         and will allow the option to generate the aligned particles.
     """
     def _defineParams(self, form):

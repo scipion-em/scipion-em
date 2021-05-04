@@ -6,7 +6,7 @@
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
-# * the Free Software Foundation; either version 2 of the License, or
+# * the Free Software Foundation; either version 3 of the License, or
 # * (at your option) any later version.
 # *
 # * This program is distributed in the hope that it will be useful,
@@ -30,15 +30,17 @@ from collections import Counter
 from urllib.request import urlretrieve
 
 import numpy as np
+import os
 
 from pyworkflow.tests import *
 
 import pwem.convert as emconv
 from pwem.emlib.image import ImageHandler
+from pwem.protocols import ProtImportPdb
 
 
 class TestAtomicStructHandler(unittest.TestCase):
-
+    """test atomicstructure handler"""
     def testIntToChain(self):
         aSH = emconv.AtomicStructHandler(self.PDBFileName)
         solString = ['A',  'B',  'C',  'D',  'E',  'F',  'G',
@@ -364,7 +366,7 @@ class TestAtomicStructHandler(unittest.TestCase):
         # problem, xmipp rotates with respect the volume center
         # pdb with respect the origin of coordinates (much better convention)
         # in order to compare both I need to
-        # move pdb to origin, rotate it, put it back in the possition
+        # move pdb to origin, rotate it, put it back in the position
         if False or doAll:
             shift = [0., 0., 0.]
             angles = [30., 0., 0.]
@@ -397,7 +399,7 @@ class TestAtomicStructHandler(unittest.TestCase):
         os.unlink(fileName)
 
     def testFunctionAddStructNoNewModel(self):
-        """ add two atomic structures with overlaping chain ids"""
+        """ add two atomic structures with overlapping chain ids"""
         pdbID1 = '1P30'  # A
         pdbID2 = '1CJD'  # A, B, C
         outFile = "/tmp/nomodel.cif"  # A, A002, B, C
@@ -425,7 +427,7 @@ class TestAtomicStructHandler(unittest.TestCase):
         os.unlink(outFile)
 
     def testFunctionAddStructNoNewModelAddTwice(self):
-        """ add two atomic structures with overlaping chain ids, last atomic
+        """ add two atomic structures with overlapping chain ids, last atomic
         structure is added two times"""
         pdbID1 = '1P30'  # A,
         pdbID2 = '1CJD'  # A, B, C
@@ -962,3 +964,44 @@ HETATM 5 C CB . PRO B 1 . 1 ? 6.460 21.723 20.211 1.00 22.26 ? ? ? ? ? ? ? 1 PRO
         f.write(CIFString.encode('utf8'))
         f.close()
         cls.CIFFileName = f.name
+
+    def testGetTransformMatrix(self):
+        # create and load atom struct
+        from .hexonAtomStruct import saveFiles
+        h1Fn, h2Fn = saveFiles()
+        aSH = emconv.AtomicStructHandler(h1Fn)
+        # should get identity matrix
+        matrix, error = aSH.getTransformMatrix(h1Fn, 100, 300)
+        self.assertTrue(matrix.shape[0] == matrix.shape[1] and\
+               np.allclose(matrix, np.eye(matrix.shape[0])))
+        data = np.array([[1, 2], [3, 4]])
+
+        goldMatrix = np.array(
+            [[ 9.93196087e-01,  2.55599161e-02, -1.13614363e-01, 1.75187864e+00],
+             [-2.25492853e-02,  9.99361764e-01,  2.77054840e-02, 4.47446401e+01],
+             [ 1.14250000e-01, -2.49550556e-02,  9.93138552e-01, 3.95671369e+01],
+             [ 0.00000000e+00,  0.00000000e+00,  0.00000000e+00, 1.00000000e+00]])
+        goldError = 0.8032027904183334
+
+        matrix, error = aSH.getTransformMatrix(h2Fn, -1, -1)
+        self.assertTrue( matrix.shape[0] == matrix.shape[1] and\
+                        np.allclose(matrix, goldMatrix))
+        self.assertAlmostEqual(error, goldError)
+        # DEBUG, next three lines save the transformed
+        # atom struct to file
+        # aSH2 = emconv.AtomicStructHandler(h2Fn)
+        # aSH2.transform(matrix)
+        # aSH2.write("/tmp/kk.cif")
+
+    def testGetBoundingBox(self):
+        # create and load atom struct
+        from .hexonAtomStruct import saveFiles
+        h1Fn, h2Fn = saveFiles()
+        aSH = emconv.AtomicStructHandler(h1Fn)
+        [[x1, y1, z1],[x2, y2, z2]] = aSH.getBoundingBox()
+        self.assertAlmostEqual(x1, 205.438 - 3, places=2)
+        self.assertAlmostEqual(y1, -92.590 - 3, places=2)
+        self.assertAlmostEqual(z1, 240.313 - 3, places=2)
+        self.assertAlmostEqual(x2, 328.960 + 3, places=2)
+        self.assertAlmostEqual(y2,   2.663 + 3, places=2)
+        self.assertAlmostEqual(z2, 352.586 + 3, places=2)

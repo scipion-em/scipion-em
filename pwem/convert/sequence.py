@@ -8,7 +8,7 @@
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
-# * the Free Software Foundation; either version 2 of the License, or
+# * the Free Software Foundation; either version 3 of the License, or
 # * (at your option) any later version.
 # *
 # * This program is distributed in the hope that it will be useful,
@@ -87,7 +87,7 @@ class SequenceHandler:
     def downloadSeqFromDatabase(self, seqID):
         # see http://biopython.org/DIST/docs/api/Bio.SeqIO-module.html
         # for format/databases
-        print("Connecting to dabase...")
+        print("Connecting to database...")
         seqID = str(seqID)
         sys.stdout.flush()
         counter = 1
@@ -135,9 +135,11 @@ class SequenceHandler:
             print("read the sequence first")
             exit(0)
 
+
 def sequenceLength(filename, format='fasta'):
-    handler=SequenceHandler()
-    return len(handler.downloadSeqFromFile(filename,format))
+    handler = SequenceHandler()
+    return len(handler.downloadSeqFromFile(filename, format))
+
 
 def cleanSequenceScipion(isAminoacid, iUPACAlphabet, sequence):
     return cleanSequence(indexToAlphabet(isAminoacid, iUPACAlphabet), sequence)

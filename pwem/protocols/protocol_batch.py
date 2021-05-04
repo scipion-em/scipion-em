@@ -6,7 +6,7 @@
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
-# * the Free Software Foundation; either version 2 of the License, or
+# * the Free Software Foundation; either version 3 of the License, or
 # * (at your option) any later version.
 # *
 # * This program is distributed in the hope that it will be useful,
@@ -74,7 +74,7 @@ class ProtUserSubSet(BatchProtocol):
         markedSet = self.createSetObject() # Set equal to sourceSet but marked with disabled
         other = self.other.get()
 
-        print("Source set: %s (%s)" % (sourceSet, sourceSet.getFileName()))
+        print("Source: %s" % sourceSet)
         print("Output type: %s" % self.outputClassName)
         print("Subset (sqlite) file: %s" % self.sqliteFile)
         if other:
@@ -143,6 +143,13 @@ class ProtUserSubSet(BatchProtocol):
                     volSet = emobj.SetOfVolumes(filename=self._dbName)
                     volSet.loadAllProperties()
                     self._createSimpleSubset(volSet)
+
+                # Go for a generic way of creating the set the the
+                # input set is not registered (typically from viewers)
+                else:
+                    # We might want to do this before, inside the createSetObject
+                    setObj.loadAllProperties()
+                    self._createSimpleSubset(setObj)
 
         else:
             self._createSimpleSubset(sourceSet)
@@ -262,7 +269,7 @@ class ProtUserSubSet(BatchProtocol):
 
         # Register outputs
         outputCtfs.setMicrographs(outputMics)
-        # NOTE: I've splited the define output in 2 steps.
+        # NOTE: I've split the define output in 2 steps.
         # It seems with python3 outputCTF was processed first and needs mics to be saved first.
         self._defineOutputs(outputMicrographs=outputMics)
         self._defineOutputs(outputCTF=outputCtfs)
@@ -483,7 +490,6 @@ class ProtUserSubSet(BatchProtocol):
         # Ignoring self._dbPrefix here, since we want to load
         # the top-level set in the sqlite file
         setObj = loadSetFromDb(self._dbName)
-
         return setObj
 
     def _summary(self):
@@ -567,7 +573,7 @@ class ProtCreateFSC(BatchProtocol):
         form.addHidden('inputObj', PointerParam,
                        pointerClass='EMObject')
         form.addHidden('fscValues', StringParam,
-                       help='String represention of the list with FSC values')
+                       help='String representation of the list with FSC values')
         form.addHidden('fscLabels', StringParam,
                        help='String with fsc labels')
 

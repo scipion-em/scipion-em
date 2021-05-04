@@ -8,7 +8,7 @@
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
-# * the Free Software Foundation; either version 2 of the License, or
+# * the Free Software Foundation; either version 3 of the License, or
 # * (at your option) any later version.
 # *
 # * This program is distributed in the hope that it will be useful,
@@ -40,6 +40,7 @@ from pwem.protocols import EMProtocol
 from pwem.objects import FSC
 from pyworkflow.utils.path import copyFile
 
+
 class ProtExportDataBases(EMProtocol):
     """ generates files for elements to submit structures to EMDB/PDB.
         Since mmcif/pdb is only partially supported by some software
@@ -52,7 +53,6 @@ class ProtExportDataBases(EMProtocol):
     VOLUMENAME = 'main_map.mrc'
     HALFVOLUMENAME = 'half_map_%d.mrc'
     COORDINATEFILENAME = 'coordinates.cif'
-    MASKNAME = 'mask_%d.mrc'
     ADDITIONALVOLUMEDIR = "addMaps"
     ADDITIONALVOLUMENAME = "map_%02d.mrc"
     MASKDIR = "masks"
@@ -74,7 +74,7 @@ class ProtExportDataBases(EMProtocol):
         form.addParam('additionalVolumesToExport', params.BooleanParam,
                       default=False, label='Additional maps to export?',
                       help='Select YES if you want to add some more '
-                              'EM maps to export.')
+                           'EM maps to export.')
         form.addParam('exportAdditionalVolumes', params.MultiPointerParam,
                       label="Additional EM maps to export",
                       allowsNull=True,
@@ -109,7 +109,7 @@ class ProtExportDataBases(EMProtocol):
     # --------------------------- INSERT steps functions ----------------------
     def _insertAllSteps(self):
         self.dirName = self.filesPath.get()
-        self._insertFunctionStep('createDirectoryStep',  self.dirName)
+        self._insertFunctionStep('createDirectoryStep', self.dirName)
         if self.exportVolume.get() is not None:
             self._insertFunctionStep('exportVolumeStep')
         if self.additionalVolumesToExport:
@@ -150,7 +150,7 @@ class ProtExportDataBases(EMProtocol):
             for counter, half_map in enumerate(
                     self.exportVolume.get().getHalfMaps().split(','), 1):
                 outVolFileName = os.path.join(self.dirName,
-                             self.HALFVOLUMENAME % counter)
+                                              self.HALFVOLUMENAME % counter)
                 ccp4header.fixFile(half_map, outVolFileName, shifts,
                                    sampling=sampling)
 
@@ -162,7 +162,7 @@ class ProtExportDataBases(EMProtocol):
             map = map.get()
             inVolFileName = map.getFileName()
             outVolFileName = os.path.join(outputDir,
-                                    self.ADDITIONALVOLUMENAME % counter)
+                                          self.ADDITIONALVOLUMENAME % counter)
             shifts = map.getOrigin(force=True).getShifts()
             sampling = map.getSamplingRate()
 
@@ -202,14 +202,13 @@ class ProtExportDataBases(EMProtocol):
             mask = mask.get()
             inVolFileName = mask.getFileName()
             outVolFileName = os.path.join(outputDir,
-                                    self.MASKNAME % counter)
+                                          self.MASKNAME % counter)
             shifts = mask.getOrigin(force=True).getShifts()
             sampling = mask.getSamplingRate()
 
             ccp4header = Ccp4Header(inVolFileName)
             ccp4header.fixFile(inVolFileName, outVolFileName, shifts,
                                sampling=sampling)
-
 
     def exportAtomStructStep(self):
         exportAtomStruct = self.exportAtomStruct.get()
@@ -220,7 +219,7 @@ class ProtExportDataBases(EMProtocol):
 
         # save input atom struct with no change
         baseName = os.path.basename(originStructPath)
-        localPath = os.path.abspath(os.path.join(dirName,baseName))
+        localPath = os.path.abspath(os.path.join(dirName, baseName))
         copyFile(originStructPath, localPath)
 
         # call biopython to simplify atom struct and save it
@@ -233,11 +232,11 @@ class ProtExportDataBases(EMProtocol):
             # convert pdb to cif using maxit program
             log = self._log
             fromPDBToCIF(originStructPath,
-                        destinyStructPath, log)
+                         destinyStructPath, log)
             try:
                 # convert cif to mmCIF by using maxit program
                 fromCIFTommCIF(destinyStructPath,
-                            destinyStructPath, log)
+                               destinyStructPath, log)
             except Exception as e:
                 pass
         # if cif convert to mmcif using maxit
@@ -249,7 +248,6 @@ class ProtExportDataBases(EMProtocol):
                                destinyStructPath, log)
             except Exception as e:
                 pass
-
 
     def exportImageStep(self):
         imageBaseFileName = os.path.basename(self.exportPicture.get())
@@ -271,7 +269,7 @@ class ProtExportDataBases(EMProtocol):
     def _methods(self):
         return []
 
-# --------------------------- UTILS functions ---------------------------------
+    # --------------------------- UTILS functions ---------------------------------
 
     def getFnPath(self, label='volume'):
         return os.path.join(self.filesPath.get(),
