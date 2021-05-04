@@ -148,8 +148,8 @@ class ProtUserSubSet(BatchProtocol):
                 # input set is not registered (typically from viewers)
                 else:
                     # We might want to do this before, inside the createSetObject
-                    setObj.loadAllProperties()
-                    self._createSimpleSubset(setObj)
+                    markedSet.loadAllProperties()
+                    self._createSimpleSubset(markedSet)
 
         else:
             self._createSimpleSubset(sourceSet)

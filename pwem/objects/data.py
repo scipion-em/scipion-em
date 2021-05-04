@@ -993,6 +993,8 @@ class EMSet(Set, EMObject):
         if copyItems:
             setObj.copyItems(self)
 
+        return setObj
+
     def getFiles(self):
         return Set.getFiles(self)
 
