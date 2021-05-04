@@ -41,7 +41,7 @@ import pyworkflow.gui.dialog as dialog
 from matplotlib import cm
 from pwem import convertPixToLength, splitRange
 from pyworkflow.gui.plotter import getHexColorList
-from pyworkflow.gui.tree import BoundTree, ListTreeProvider
+from pyworkflow.gui.tree import BoundTree, ListTreeProvider, ListTreeProviderString, AttributesTreeProvider
 from pyworkflow.gui.widgets import LabelSlider, ExplanationText
 
 import pwem.constants as emcts
@@ -1310,3 +1310,123 @@ class ColorScaleDialog(dialog.Dialog):
         event.widget.icursor('end')
         # stop propagation
         # return 'break'
+
+
+class FormulaDialog(dialog.Dialog):
+    """ This will assist users to create a formula based on class attibutes.
+    """
+
+    def __init__(self, parentWindow, set, formula=""):
+        """
+            :param set: set with the items to use in the formulae
+            :param formula: initial formulate to load
+        """
+        self.set = set
+        self.item = set.getFirstItem()
+        self.formula = tk.StringVar(value=formula)
+        self.formula.trace("w", self.evaluateFormula)
+        self.formulaTxt = None # To be instantiated later.
+        self.info = tk.StringVar()
+        dialog.Dialog.__init__(self, parentWindow, "Formula wizard", default="None")
+
+
+    # Getters
+    def getFormula(self):
+        return self.formula.get()
+
+    def getItem(self):
+        return self.item
+
+    ### ----- GUI methods ------ ###
+    def _createTree(self, parent):
+        provider = AttributesTreeProvider(self.item)
+        self.tree = BoundTree(parent, provider)
+        self.tree.itemDoubleClick = self.addAttributeToFormula
+        self.tree.grid(row=1, column=0)
+
+    def addAttributeToFormula(self, event):
+        attr = self.tree.getSelectedObjects()[0]
+        self._insertText("item." + attr.attrName , self.formulaTxt)
+
+    def body(self, master):
+        """ Draws the main frame of the dialog"""
+        body = tk.Frame(self)
+        body.grid(row=0, column=0, sticky="news")
+        body.grid_columnconfigure(1, weight=10)
+
+        # GUI attributes
+        self.attributes = tk.Frame(body)
+        self.attributes.grid(row=0, column=0, sticky='nes',
+                          padx=5, pady=5)
+
+        # Formula
+        self.formulaFrame = tk.Frame(body)
+        self.formulaFrame.grid(row=0, column=1, sticky='news',
+                         padx=5, pady=5)
+        #self.params.bind("<Key>", self._keyPressedOnParams)
+
+        self._fillParams()
+
+
+    def _fillParams(self):
+
+        # Add the formula text
+        formulaLbl = tk.Label(self.formulaFrame, text="Formula:")
+        formulaLbl.grid(row=0, column=0, sticky="w")
+        self.formulaTxt = self._addEntry(1, 0, self.formula,  width=100)
+
+        self._createTree(self.attributes)
+
+        # Label to show formula result or error
+        infoLabel = tk.Label(self.formulaFrame, textvariable=self.info)
+        infoLabel.grid(row=2, column=0, columnspan=2, sticky="news")
+
+    def _addEntry(self, row, column, var, width=None):
+
+        newEntry = tk.Entry(self.formulaFrame, textvariable=var, width=width)
+        newEntry.grid(row=row, column=column, sticky="news")
+        newEntry.lift()
+        # Bind events
+        newEntry.bind("<Return>", self._paramChanged)
+        newEntry.bind("<FocusOut>", self._paramChanged)
+
+        return newEntry
+
+    def evaluateFormula(self, name='', index='', mode=''):
+        try:
+            item = self.item
+            result = eval(self.formula.get())
+            self.info.set(result)
+        except Exception as e:
+            self.info.set(str(e))
+
+    ### Events handling
+    def _paramChanged(self, event):
+        # Handles change in palette Option
+        self.evaluateFormula()
+
+    def _selectAllText(self, event):
+        """ Select all the text of the widget that triggered the event"""
+        # select text
+        event.widget.select_range(0, 'end')
+        # move cursor to the end
+        event.widget.icursor('end')
+        # stop propagation
+        # return 'break'
+
+    def _insertText(self, text, widget):
+        """ Insert the passed text in the entry at current cursor location"""
+        # Get inserting position
+        pos = widget.index(tk.INSERT)
+
+        # Insert he text
+        widget.insert(pos, text)
+
+def insertText (target, textToInsert, position):
+    """ Inserts a text into another at a position
+
+    :param target: text to do the insertion on
+    :param textToInsert: text to be inserted
+    :param position: position where to insert the new text"""
+
+    return target[:position] + textToInsert + target[position:]

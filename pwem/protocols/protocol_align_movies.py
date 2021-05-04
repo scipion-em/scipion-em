@@ -243,7 +243,14 @@ class ProtAlignMovies(ProtProcessMovies):
                                             "can't add it to output set." % extraMicFn))
                     doneFailed.append(movie)
                     continue
-                self._preprocessOutputMicrograph(mic, movie)
+                # Tolerate errors here. Usually here some plots are generated.
+                try:
+                    self._preprocessOutputMicrograph(mic, movie)
+                except Exception as e:
+                    self.error("Couldn't prepare output details: %s" % e)
+                    doneFailed.append(movie)
+                    continue
+
                 micSet.append(mic)
 
             self._updateOutputSet(outputName, micSet, streamMode)
@@ -519,7 +526,7 @@ class ProtAlignMovies(ProtProcessMovies):
                env=eman2.Plugin.getEnviron())
 
     def averageMovie(self, movie, inputFn, outputMicFn, binFactor=1, roi=None,
-                     dark=None, gain=None, splineOrder=None):
+                     dark=None, gain=None, splineOrder=None, outxmd=None):
         """ Average a movie (using xmipp) taking into account the
          possible shifts and other alignment parameters.
          Params:
@@ -562,6 +569,9 @@ class ProtAlignMovies(ProtProcessMovies):
 
         if gain is not None:
             args += ' --gain ' + gain
+
+        if outxmd is not None:
+            args += ' -o ' + outxmd
 
         self.__runXmippProgram('xmipp_movie_alignment_correlation', args)
 
@@ -629,7 +639,7 @@ class ProtAlignMovies(ProtProcessMovies):
         """ Generates a thumbnail of the input file"""
         outputFn = outputFn or self.getThumbnailFn(inputFn)
         args = "%s %s " % (inputFn, outputFn)
-        args += "--fouriershrink %s --process normalize" % scaleFactor
+        args += "--meanshrink %s --fixintscaling=sane" % scaleFactor
 
         self.__runEman2Program('e2proc2d.py', args)
 

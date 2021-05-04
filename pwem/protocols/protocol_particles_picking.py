@@ -526,7 +526,7 @@ class ProtParticlePickingAuto(ProtParticlePicking):
         # the first function that need to wait for all micrographs
         # to have completed, this can be overwritten in subclasses
         # (eg in Xmipp 'sortPSDStep')
-        return 'createOutputStep'
+        return self.createOutputStep.__name__
 
     def _getFirstJoinStep(self):
         for s in self._steps:

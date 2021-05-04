@@ -52,7 +52,7 @@ class viewerProtImportVolumes(EmProtocolViewer):
     with the Xmipp program xmipp_showj. """
 
     _label = 'viewer input volume'
-    _targets = [emprot.ProtImportVolumes]
+    _targets = [emprot.ProtImportVolumes, emprot.ProtOrigSampling]
     _environments = [pwviewer.DESKTOP_TKINTER, pwviewer.WEB_DJANGO]
 
     def _defineParams(self, form):
@@ -104,7 +104,7 @@ class viewerProtImportVolumes(EmProtocolViewer):
 
     def _showVolumesChimera(self):
         """ Create a chimera script to visualize selected volumes. """
-        tmpFileNameCMD = self.protocol._getTmpPath("chimera.cxc")
+        tmpFileNameCMD = self.protocol._getExtraPath("chimera.cxc")
         f = open(tmpFileNameCMD, "w")
         sampling, _setOfVolumes = self._createSetOfVolumes()
         count = 1  # chimeraX stars counting in 1 (chimera in 0)
@@ -116,7 +116,7 @@ class viewerProtImportVolumes(EmProtocolViewer):
             # be in the center of the window
 
             dim = self.protocol.outputVolume.getDim()[0]
-            tmpFileNameBILD = os.path.abspath(self.protocol._getTmpPath(
+            tmpFileNameBILD = os.path.abspath(self.protocol._getExtraPath(
                 "axis.bild"))
             Chimera.createCoordinateAxisFile(dim,
                                              bildFileName=tmpFileNameBILD,
@@ -152,6 +152,7 @@ class viewerProtImportVolumes(EmProtocolViewer):
                             (count, x, y, z))
                     f.write("tile\n")
                     count += 1
+        f.write("view\n")
         f.close()
         return [ChimeraView(tmpFileNameCMD)]
 

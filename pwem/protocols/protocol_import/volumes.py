@@ -39,7 +39,6 @@ from pwem import emlib
 
 from .base import ProtImportFiles
 from .images import ProtImportImages
-from ...convert import Ccp4Header
 
 
 class ProtImportVolumes(ProtImportImages):
@@ -232,6 +231,8 @@ class ProtImportVolumes(ProtImportImages):
                 print(e)
                 return
             # open volume and fill sampling and origin
+            self.samplingRate.set(sampling)
+            self._store(self.samplingRate)
             vol.setSamplingRate(sampling)
             vol.setFileName(localFileName)
             from pwem.objects.data import Transform
@@ -420,17 +421,28 @@ def fetch_emdb_map(id, directory, tmpDirectory):
     minimum_map_size = 8192  # bytes
     url_rest_api = url_rest_api % id
 
-    try:
-        map_path, samplingAPI, originAPI = fetch_file(map_url,
-                                                      url_rest_api,
-                                                      name,
-                                                      minimum_map_size,
-                                                      directory,
-                                                      tmpDirectory,
-                                                      map_name
-                                                      )
-    except Exception as e:
-        raise Exception("Cannot retrieve File from EMDB", e)
+    nTimes = 3
+    for i in range(nTimes):  # if error repeat the fetch file up to nTimes
+        try:
+            # raise Exception("test")  # uncomment to test this loop
+            map_path, samplingAPI, originAPI = fetch_file(map_url,
+                                                          url_rest_api,
+                                                          name,
+                                                          minimum_map_size,
+                                                          directory,
+                                                          tmpDirectory,
+                                                          map_name
+                                                          )
+            break
+        except Exception as e:
+            print("Retieving 3D map with id=", id, "failed retrying (%d/%d)" %
+                  (i+1, nTimes))
+            print("Error:", e)
+    # Loop statements may have an else clause; it is executed
+    # when the loop terminates through exhaustion of the iterable
+    else:
+        raise Exception("Cannot retrieve File from EMDB")
+
 
     originAPI = array(originAPI) * samplingAPI  # convert to Angstrom
     # check consistency between file header and rest API

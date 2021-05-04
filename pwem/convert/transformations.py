@@ -186,7 +186,7 @@ True
 
 """
 
-import math
+import math, sys
 
 import numpy as np
 
@@ -1450,6 +1450,50 @@ def quaternion_slerp(quat0, quat1, fraction, spin=0, shortestpath=True):
     q0 += q1
     return q0
 
+def quaternion_distance(q1, q2):
+    '''Return distance between two quaternions'''
+    q = q1 - q2
+    module2_q = q[0] ** 2 + np.linalg.norm(q[1:]) ** 2
+    dist = 2 * np.arccos(1 - module2_q / 2)
+    return dist
+
+def weighted_tensor(tuple_q):
+    '''Compute the Tensor as needed for the mean of quaterniones'''
+    T = np.zeros((4, 4))
+    w_i = 1 / len(tuple_q)
+    for q in tuple_q:
+        T += w_i * q.reshape(-1, 1).dot(q.reshape(1, -1))
+    return T
+
+def normalized_Principal_Eigenvector(T, q_bar):
+    '''Normalize the principal eigenvector o a tensor given a quaternion'''
+    new_q_bar = T.dot(q_bar.reshape(-1, 1))
+    new_q_bar /= np.linalg.norm(new_q_bar)
+    return new_q_bar.reshape(-1)
+
+def mean_quaternion(T, q_bar_0=None, tol=1e-3):
+    '''Compute the mean of a series of quaternions given a weighted Tensor'''
+    if q_bar_0 == None:
+        q_bar_0 = random_quaternion()
+    cost = sys.maxsize
+    while (cost > tol):
+        q_bar_f = normalized_Principal_Eigenvector(T, q_bar_0)
+        cost = quaternion_distance(q_bar_f, q_bar_0)
+        q_bar_0 = q_bar_f
+    return q_bar_f, cost
+
+def listQuaternions(matrices):
+    '''Convert a list of transformations matrices into a list of quaternions'''
+    quaternions = [quaternion_from_matrix(matrix) for matrix in matrices]
+    return np.asarray(quaternions)
+
+def qDistMatrix(Q1, Q2):
+    '''Returns a Distance matrix from two list of quaternions'''
+    ids_1 = range(0, Q1.shape[0])
+    ids_2 = range(0, Q2.shape[0])
+    dist = [[quaternion_distance(Q1[id_1, :], Q2[id_2, :])
+            for id_2 in ids_2] for id_1 in ids_1]
+    return np.asarray(dist)
 
 def random_quaternion(rand=None):
     """Return uniform random unit quaternion.
@@ -1514,7 +1558,7 @@ class Arcball(object):
     >>> R = ball.matrix()
     >>> np.allclose(np.sum(R), 0.2055924)
     True
-    >>> ball.next()
+    >>> next(ball)
 
     """
 

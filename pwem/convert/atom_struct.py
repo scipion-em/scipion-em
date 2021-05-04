@@ -36,7 +36,7 @@ from Bio.PDB.MMCIFParser import MMCIFParser
 from Bio.PDB.PDBParser import PDBParser
 from Bio.PDB import PDBIO, MMCIFIO
 from Bio.PDB.mmcifio import mmcif_order
-
+from Bio.PDB import Superimposer
 from Bio.PDB.MMCIF2Dict import MMCIF2Dict
 from Bio.PDB import Entity
 from Bio.PDB import PDBList
@@ -534,6 +534,95 @@ class AtomicStructHandler:
             Be aware that this is not a lossless conversion
         """
         self._write(cifFile)
+
+    def getBoundingBox(self, expand=3):
+        """Get bounding box (angstroms) for atom struct.
+         Only alpha carbons are taken into account.
+         parameter: expand.- make box larger addind this factor
+         """
+        # Use the first model
+        ref_model = self.getStructure()[0]
+        # init bounding box volues
+        xmin = 100000; ymin = xmin; zmin = xmin
+        xmax = -100000; ymax = xmax; zmax = xmax
+        # iterate for all aminoacids
+        for chain in ref_model:
+            for residue in chain:
+                (x,y,z) = residue["CA"].get_coord()
+                if x < xmin: xmin = x
+                if x > xmax: xmax = x
+
+                if y < ymin: ymin = y
+                if y > ymax: ymax = y
+
+                if z < zmin: zmin = z
+                if z > zmax: zmax = z
+            # DEBUG
+            # with open("/tmp/kk.bild", "w") as file:
+            #     file.write(".transparency 0.8\n"
+            #                ".color red\n"
+            #                ".box %f %f %f %f %f %f\n" %
+            #                (xmin - expand , ymin - expand, zmin - expand,
+            #                xmax + expand, ymax + expand, zmax + expand))
+        return [[xmin - expand, ymin - expand, zmin - expand],
+                [xmax + expand, ymax + expand, zmax + expand]]
+
+
+    def getTransformMatrix(self, atomStructFn, startId=-1, endId=-1):
+        """find matrix that Superimposes two atom structures.
+        this matrix moves atomStructFn to self """
+        if endId == -1:
+            endId = 10000000
+        # load second atom structure
+        aSH = AtomicStructHandler()
+        aSH.read(atomStructFn)
+
+        # Use the first model in the atom struct for alignment
+        ref_model = self.getStructure()[0]
+        sample_model = aSH.getStructure()[0]
+
+        # Make a list of the atoms (in the structures) you wish to align.
+        # In this case we use CA atoms whose index is in the
+        # specified range (starId, endId)
+        ref_atoms = []
+        sample_atoms = []
+
+        # Now get a list with CA atoms (alpha-carbon)
+        # I assume that both atom structs have the same number of chains
+        # and in the same order.
+        for ref_chain, sample_chain in zip(ref_model, sample_model):
+            # create a set with the id of all residues
+            # for the current chain
+            ref_set_id = set(res.get_id()[1] for res in ref_chain)
+            sample_set_id = set(res.get_id()[1] for res in sample_chain)
+            # keep the intersection as an ordered list (sets are not ordered)
+            ref_set_id.intersection_update(sample_set_id)
+            ref_list_id = sorted(ref_set_id)
+            # delete AA smaller or large than the predefined values
+            ref_list_id[:] = [x for x in ref_list_id
+                              if x >= startId and x <= endId]
+
+            # Iiterate through all residues in each chain a store CA atoms
+            for id in ref_list_id:
+                ref_atoms.append(ref_chain[id]['CA'])
+                sample_atoms.append(sample_chain[id]['CA'])
+        # Now we initiate the superimposer:
+        super_imposer = Superimposer()
+        super_imposer.set_atoms(ref_atoms, sample_atoms)
+        # super_imposer.apply(sample_model.get_atoms())
+        (rot, trans) = super_imposer.rotran
+        # DEBUG, uncomment next two lines to see
+        # transformation applied to atomStructFn
+        # aSH.getStructure().transform(rot, trans)
+        # aSH.write("/tmp/pp.cif")
+
+        # convert 3x3 rotation matrix to homogeneous matrix
+        rot = numpy.transpose(rot)  # scipion and biopython use
+                                    # different conventions
+        tmp = numpy.r_[rot, numpy.zeros((1, 3))]
+        mat = numpy.c_[tmp, numpy.array(
+            [[trans[0]], [trans[1]], [trans[2]], [1]])]
+        return mat, super_imposer.rms
 
     def centerOfMass(self, geometric=False):
         """

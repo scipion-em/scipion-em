@@ -147,6 +147,13 @@ class ProtUserSubSet(BatchProtocol):
                     volSet.loadAllProperties()
                     self._createSimpleSubset(volSet)
 
+                # Go for a generic way of creating the set the the
+                # input set is not registered (typically from viewers)
+                else:
+                    # We might want to do this before, inside the createSetObject
+                    setObj.loadAllProperties()
+                    self._createSimpleSubset(setObj)
+
         else:
             self._createSimpleSubset(sourceSet)
 
@@ -486,7 +493,6 @@ class ProtUserSubSet(BatchProtocol):
         # Ignoring self._dbPrefix here, since we want to load
         # the top-level set in the sqlite file
         setObj = loadSetFromDb(self._dbName)
-
         return setObj
 
     def _summary(self):
