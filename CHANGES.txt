@@ -4,6 +4,8 @@ users:
   protocol tree (left pannel) collapsed at loading
 developers:
   protocols.conf created taken from scipion-app defining its own protocols.
+  Add getTransformMatrix function, finds transformation matrix between to PDB files
+  Add partial support for eer files, just reading dimensions (part 1)
 
 
 
