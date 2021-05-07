@@ -37,9 +37,10 @@ import pyworkflow.plugin
 
 from .constants import *
 from .objects import EMObject
+from .tests import defineDatasets
 from .utils import *
 
-__version__ = '3.0.9'
+__version__ = '3.0.10'
 _logo = "scipion_icon.gif"
 _references = ["delaRosaTrevin201693"]
 
@@ -116,6 +117,9 @@ class Plugin(pyworkflow.plugin.Plugin):
     def _defineVariables(cls):
         cls._defineVar(EM_ROOT_VAR, pwem.Config.EM_ROOT)
         cls._defineEmVar(MAXIT_HOME, 'maxit-10.1')
+
+        # Take this initialization event to define own datasets
+        defineDatasets()
 
     @classmethod
     def defineBinaries(cls, env):

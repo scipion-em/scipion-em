@@ -526,7 +526,7 @@ class ProtAlignMovies(ProtProcessMovies):
                env=eman2.Plugin.getEnviron())
 
     def averageMovie(self, movie, inputFn, outputMicFn, binFactor=1, roi=None,
-                     dark=None, gain=None, splineOrder=None):
+                     dark=None, gain=None, splineOrder=None, outxmd=None):
         """ Average a movie (using xmipp) taking into account the
          possible shifts and other alignment parameters.
          Params:
@@ -569,6 +569,9 @@ class ProtAlignMovies(ProtProcessMovies):
 
         if gain is not None:
             args += ' --gain ' + gain
+
+        if outxmd is not None:
+            args += ' -o ' + outxmd
 
         self.__runXmippProgram('xmipp_movie_alignment_correlation', args)
 
