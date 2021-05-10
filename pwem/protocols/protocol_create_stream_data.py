@@ -27,7 +27,7 @@
 # **************************************************************************
 
 from collections import OrderedDict
-from os.path import basename
+from os.path import basename, splitext
 import time
 import random
 
@@ -301,6 +301,7 @@ class ProtCreateStreamData(EMProtocol):
                     if idx == (counter - 1) % setDim:
                         newMov = mov.clone()
                         break
+                _, ext = splitext(newMov.getFileName())
                 ProtCreateStreamData.object = \
                     emlib.image.ImageHandler().read(newMov.getLocation())
                 self.name = "movie"
@@ -311,12 +312,13 @@ class ProtCreateStreamData(EMProtocol):
                     if idx == (counter-1) % setDim:
                         newMic = mic.clone()
                         break
+                _, ext = splitext(newMic.getFileName())
                 ProtCreateStreamData.object = \
                     emlib.image.ImageHandler().read(newMic.getLocation())
                 self.name = "micro"
 
         # save file
-        destFn = self._getExtraPath("%s_%05d" % (self.name, counter))
+        destFn = self._getExtraPath("%s_%05d%s" % (self.name, counter, ext))
         ProtCreateStreamData.object.write(destFn)
         self.dictObj[destFn] = True
         self._checkProcessedData()
