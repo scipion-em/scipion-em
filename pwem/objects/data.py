@@ -140,7 +140,7 @@ class CTFModel(EMObject):
                  "psh={}, res={}, fit={}".format(
             strEx(self._defocusU.get()),
             strEx(self._defocusV.get()),
-            strEx(self._defocusU.get()-self._defocusV.get()),
+            strEx(self._defocusU.get(0)-self._defocusV.get(0)),
             strEx(self.getPhaseShift()),
             strEx(self._resolution.get()),
             strEx(self._fitQuality.get())
