@@ -162,7 +162,7 @@ class ProtImportImages(ProtImportFiles):
                     self._addImageToSet(img, imgSet)
             else:
                 img.setObjId(fileId)
-                img.setFileName(dst)
+                img.setLocation(dst)
                 # Fill the micName if img is either Micrograph or Movie
                 uniqueFn = uniqueFn.replace(' ', '')
                 self._fillMicName(img, uniqueFn)
