@@ -35,7 +35,6 @@ import pyworkflow.object as pwobj
 import pyworkflow.protocol as pwprot
 import pyworkflow.protocol.params as params
 import pyworkflow.utils as pwutils
-import pyworkflow.mapper as pwmapper
 
 import pwem.objects as emobj
 import pwem.constants as emcts
@@ -57,8 +56,6 @@ class EMProtocol(pwprot.Protocol):
         # Close the connection to the database if
         # it is open before deleting the file
         pwutils.cleanPath(setFn)
-
-        pwmapper.SqliteDb.closeConnection(setFn)
         setObj = SetClass(filename=setFn, **kwargs)
         return setObj
 

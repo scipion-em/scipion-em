@@ -64,8 +64,7 @@ class ProtMetadataEditor(EMProtocol):
         """
         inputSet = self.inputSet.get()
 
-        modifiedSet = inputSet.create(self._getExtraPath())
-        modifiedSet.copyInfo(inputSet)
+        modifiedSet = inputSet.createCopy(self._getExtraPath(), copyInfo=True)
 
         for sourceItem in inputSet.iterItems():
             item = sourceItem.clone()
