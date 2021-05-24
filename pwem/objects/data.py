@@ -119,6 +119,8 @@ class Acquisition(EMObject):
 class CTFModel(EMObject):
     """ Represents a generic CTF model. """
 
+    DEFOCUS_RATIO_ERROR_VALUE = -1
+
     def __init__(self, **kwargs):
         EMObject.__init__(self, **kwargs)
         self._defocusU = Float(kwargs.get('defocusU', None))
@@ -248,7 +250,11 @@ class CTFModel(EMObject):
             self._defocusAngle.sum(180.)
         # At this point defocusU is always greater than defocusV
         # following the EMX standard
-        self._defocusRatio.set(self.getDefocusU() / self.getDefocusV())
+
+        if self.getDefocusV() != 0:
+            self._defocusRatio.set(self.getDefocusU() / self.getDefocusV())
+        else:
+            self._defocusRatio.set(self.DEFOCUS_RATIO_ERROR_VALUE)
 
     def equalAttributes(self, other, ignore=[], verbose=False):
         """ Override default behaviour to compare two
