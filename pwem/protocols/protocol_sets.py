@@ -38,13 +38,30 @@ import pyworkflow.object as pwobj
 
 import pwem.objects as emobj
 from pwem.protocols import EMProtocol
-from pwem.objects import Volume
-
+from pwem.objects import Volume, EMSet
 
 
 class ProtSets(EMProtocol):
     """ Base class for all protocols related to subsets. """
-    pass
+
+    def _append(self, outputSet, item, sourceItem=None):
+        """ Add an item to the outputSet.
+        If the item is a new copy of sourceItem(case of the join sets),
+        then use a sourceItem since item lost the information related with the
+        mapper
+        """
+        subElemList = []
+        if sourceItem is None:
+            sourceItem = item
+        if isinstance(item, EMSet):
+            for subElem in sourceItem.iterItems():
+                # We need to create a clone because all items have a same _objId
+                subElemList.append(subElem.clone())
+
+        outputSet.append(item)
+        if subElemList:
+            for subElem in subElemList:
+                item.append(subElem)
 
 
 class ProtUnionSet(ProtSets):
@@ -150,7 +167,7 @@ class ProtUnionSet(ProtSets):
                 outputSetFunction = self._createSetOfVolumes
             outputSet = outputSetFunction()
         except Exception:
-            outputSet = set1.create(self._getPath())
+            outputSet = set1.createCopy(self._getPath())
 
         # Copy info from input sets (sampling rate, etc).
         if str(set1.getClassName()) is not Volume.__name__:
@@ -199,7 +216,7 @@ class ProtUnionSet(ProtSets):
                     if (cleanIds and setNum > 1) or self.renumber.get():
                         newObj.cleanObjId()
 
-                    outputSet.append(newObj)
+                    self._append(outputSet, newObj, sourceItem=obj)
 
             else:
                 obj = itemSet.get()
@@ -417,8 +434,8 @@ class ProtSplitSet(ProtSets):
             outputSetFunction = getattr(self, "_create%s" % inputClassName)
             subsets = [outputSetFunction(suffix=str(i)) for i in range(1, n + 1)]
         except Exception:
-            subsets = [inputSet.create(self._getPath(), suffix=str(i)) for i in
-                       range(1, n + 1)]
+            subsets = [inputSet.createCopy(self._getPath(), suffix=str(i))
+                       for i in range(1, n + 1)]
 
         # Iterate over the elements in the input set and assign
         # to different subsets.
@@ -433,7 +450,7 @@ class ProtSplitSet(ProtSets):
             if i >= ns[pos]:
                 pos += 1
                 i = 0
-            subsets[pos].append(elem)
+            self._append(subsets[pos], elem)
             i += 1
 
         key = 'output' + inputClassName.replace('SetOf', '') + '%02d'
@@ -532,7 +549,7 @@ class ProtSubSet(ProtSets):
             outputSetFunction = getattr(self, "_create%s" % inputClassName)
             outputSet = outputSetFunction()
         except Exception:
-            outputSet = inputFullSet.create(self._getPath())
+            outputSet = inputFullSet.createCopy(self._getPath())
 
         outputSet.copyInfo(inputFullSet)
 
@@ -541,7 +558,7 @@ class ProtSubSet(ProtSets):
                                    self.nElements.get())
             for i, elem in enumerate(inputFullSet):
                 if i in chosen:
-                    outputSet.append(elem)
+                    self._append(outputSet, elem)
         else:
             # Iterate over the elements in the smaller set
             # and take the info from the full set
