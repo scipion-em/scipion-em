@@ -122,6 +122,7 @@ class Acquisition(EMObject):
 class CTFModel(EMObject):
     """ Represents a generic CTF model. """
 
+    DEFOCUS_V_MINIMUM_VALUE = 0.1
     DEFOCUS_RATIO_ERROR_VALUE = -1
 
     def __init__(self, **kwargs):
@@ -254,7 +255,7 @@ class CTFModel(EMObject):
         # At this point defocusU is always greater than defocusV
         # following the EMX standard
 
-        if self.getDefocusV() != 0:
+        if self.getDefocusV() > self.DEFOCUS_V_MINIMUM_VALUE:
             self._defocusRatio.set(self.getDefocusU() / self.getDefocusV())
         else:
             self._defocusRatio.set(self.DEFOCUS_RATIO_ERROR_VALUE)
