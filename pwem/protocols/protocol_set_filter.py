@@ -25,18 +25,15 @@
 # **************************************************************************
 
 import pyworkflow.protocol.params as params
-import pyworkflow.utils as pwutils
 from pwem.protocols import EMProtocol
 
 
-class ProtMetadataEditor(EMProtocol):
+class ProtSetFilter(EMProtocol):
     """
-    Protocol to edit attributes of all the items of a set using a formula.
-    This could be useful for corrupting your data for testing purposes or
-    editing some values in the set that make sense to do it. Use this with
-    extreme care, you can easily ruin your processing.
+    Protocol to filter sets based on its attributes through an expresion that should evaluate to true
+    or false.
     """
-    _label = 'metadata editor'
+    _label = 'filter set'
 
     def _defineParams(self, form):
         """
@@ -46,30 +43,33 @@ class ProtMetadataEditor(EMProtocol):
 
         form.addSection(label='Input')
         form.addParam('inputSet', params.PointerParam, pointerClass='EMSet',
-                      label='Set to edit',
-                      help='Set which items will be modified.')
-        form.addParam('formula', params.StringParam, label="Formula", important=True,
-                      help='A python code compatible with eval, where item represents each of '
-                           'the elements of the set. E.g.: item._resolution.set(item._resolution.get() +1).'
+                      label='Set to filter',
+                      help='Set which items will be filtered.')
+        form.addParam('formula', params.StringParam, label="Passing formula", important=True,
+                      help='A python code compatible with eval that should evaluate to True or False, where item represents each of '
+                           'the elements of the set. E.g.: item._resolution.get() < 4).'
                            'You could also use modules like "import numpy;  item._resolution .... "')
 
     def _insertAllSteps(self):
-        self._insertFunctionStep('editItemsStep')
+        self._insertFunctionStep(self.filterSetStep)
 
-    def editItemsStep(self):
+    def filterSetStep(self):
         """
         Goes through all items in the input set and applies the formula to each of them using exec.
         Complex python code could be run separating lines with ;  To use numpy you could do
         import numpy; item._resolution.set(numpy.random.randint(10))
+        If result is True, item will be transferred to the output set
         """
         inputSet = self.inputSet.get()
 
-        modifiedSet = inputSet.createCopy(self._getExtraPath(), copyInfo=True)
+        modifiedSet = inputSet.create(self._getExtraPath())
+        modifiedSet.copyInfo(inputSet)
 
         for sourceItem in inputSet.iterItems():
             item = sourceItem.clone()
-            exec(self.formula.get())
-            modifiedSet.append(item)
+            exec("item.setEnabled(%s)"% self.formula.get())
+            if item.isEnabled():
+                modifiedSet.append(item)
 
         outputArgs = {self.inputSet.getExtended(): modifiedSet}
         self._defineOutputs(**outputArgs)

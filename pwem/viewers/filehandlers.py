@@ -44,7 +44,8 @@ class ImageFileHandler(FileHandler):
             return "Image file."
         x, y, z, n = emlib.getImageSize(filename)
         objType = 'Image'
-        dimMsg = "*%(objType)s file*\n  dimensions: %(x)d x %(y)d"
+        objFileType = "link" if os.path.islink(filename) else "file"
+        dimMsg = "*%(objType)s %(objFileType)s*\n  dimensions: %(x)d x %(y)d"
         expMsg = "Columns x Rows "
         if z > 1:
             dimMsg += " x %(z)d"
@@ -81,19 +82,18 @@ class ImageFileHandler(FileHandler):
 
 class ParticleFileHandler(ImageFileHandler):
     def getFileIcon(self, objFile):
-        return 'file_image.gif'
+        return 'file_image.gif' if not objFile.isLink() else 'file_image_link.gif'
 
 
 class VolFileHandler(ImageFileHandler):
     def getFileIcon(self, objFile):
         return 'file_vol.gif'
 
-
 class StackHandler(ImageFileHandler):
     _index = '1@'
 
     def getFileIcon(self, objFile):
-        return 'file_stack.gif'
+        return 'file_stack.gif' if not objFile.isLink() else 'file_stack_link.gif'
 
 
 class ChimeraHandler(FileHandler):
