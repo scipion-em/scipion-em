@@ -64,13 +64,20 @@ class MaskVolumeWizard(object):
         self.ax_3d = self.fig.add_subplot(projection='3d')
         # plt.style.use('dark_background')
 
-    def get_sphere_params(self):
-        """Return x,y,z,r array with the origin displaced to be referred to
-        center of volume (Xmipp Origin Convention)"""
-        origin_xmipp = self.origin + self.xmippOrigin.astype(int)
-        return np.hstack([origin_xmipp[2],
-                          origin_xmipp[1],
-                          origin_xmipp[0],
+    def get_sphere_params(self, mass_center=True):
+        """Return x,y,z,r array. Two possible conventions are implemented:
+            - Bottom Left Corner (All Coordinates positive)
+            - Center of Mass (Coordinates can be positive or negative) -- Default
+        """
+        if mass_center:
+            # Center of mass convention - Xmipp convention (Coordinates can be positive or negative)
+            origin = self.origin
+        else:
+            # Bottom Left convention (all coordinates positive)
+            origin = self.origin + self.xmippOrigin.astype(int)
+        return np.hstack([origin[2],
+                          origin[1],
+                          origin[0],
                           self.radius])
 
     def is_window_closed(self):
