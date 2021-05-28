@@ -26,8 +26,8 @@ class ProtMovieEraser(EMProtocol):
 
         form.addParam('movieSet', params.PointerParam,
                       pointerClass='SetOfMovies',
-                      label=pwutils.Message.LABEL_INPUT_MIC, important=True,
-                      help='Select the SetOfMovies to locate the movie files. Match will be done by ids.')
+                      label="Movies source", important=True,
+                      help='Select the SetOfMovies to locate the movie files. Match will be done by ids!.')
 
         form.addParam("dryMode", params.BooleanParam, label="Dry mode", default=True, expertLevel=params.LEVEL_ADVANCED)
 
