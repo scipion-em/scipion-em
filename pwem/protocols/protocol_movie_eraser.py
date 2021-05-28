@@ -113,6 +113,7 @@ class ProtMovieEraser(EMProtocol):
         mics = self._getMicSet()
         return mics.isStreamClosed() and mics.getSize() == len(self.deletedMovies)
 
+    @classmethod
     def worksInStreaming(cls):
         return True
     # -------------------------- INFO functions -------------------------------
