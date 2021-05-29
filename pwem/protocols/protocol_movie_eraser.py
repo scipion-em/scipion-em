@@ -59,7 +59,7 @@ class ProtMovieEraser(EMProtocol):
 
         # if dry mode
         elif self.dryMode.get():
-            print("%s would have been deleted" % movieFile)
+            print("%s would have been deleted" % movieFile, flush=True)
 
         # Delete!!!
         else:
