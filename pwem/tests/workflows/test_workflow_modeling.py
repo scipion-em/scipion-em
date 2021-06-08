@@ -1007,10 +1007,13 @@ class TestCootRefinement(TestImportData):
             self.launchProtocol(protCoot)
         except Exception as ex:
             print("second call to coot ended")
-        self.assertIsNotNone(protCoot.coot_001138_Imol_0000_version_0002.getFileName(),
+
+        PDB_output = eval("protCoot.coot_%06d_Imol_0000_version_0002"
+                          % protCoot.getObjId())
+        self.assertIsNotNone(PDB_output.getFileName(),
                              "There was a problem with the alignment")
         self.assertTrue(os.path.exists(
-            protCoot.coot_001138_Imol_0000_version_0002.getFileName()))
+            PDB_output.getFileName()))
         self.assertTrue(
             os.path.exists(protCoot.output3DMap_0001.getFileName()))
 
@@ -1762,7 +1765,8 @@ class TestEMRingerValidation(TestImportData):
         self.launchProtocol(protCoot)
 
         # EMRinger
-        coot_PDB = protCoot.coot_000730_Imol_0000_version_0002
+        coot_PDB = eval("protCoot.coot_%06d_Imol_0000_version_0002"
+                        % protCoot.getObjId())
         args = {'inputVolume': volume,
                 'inputStructure': coot_PDB,
                 'doTest': True
@@ -1783,7 +1787,8 @@ class TestEMRingerValidation(TestImportData):
                           protEMRinger=protEMRinger)
 
         # refmac withouth mask
-        coot_PDB = protCoot.coot_000730_Imol_0000_version_0002
+        coot_PDB = eval("protCoot.coot_%06d_Imol_0000_version_0002"
+                        % protCoot.getObjId())
         args = {'inputVolume': volume,
                 'inputStructure': coot_PDB,
                 'generateMaskedVolume': False
@@ -1887,7 +1892,8 @@ class TestEMRingerValidation(TestImportData):
         self.launchProtocol(protCoot)
 
         # EMRinger
-        coot_PDB = protCoot.coot_001030_Imol_0000_version_0002
+        coot_PDB = eval("protCoot.coot_%06d_Imol_0000_version_0002"
+                        % protCoot.getObjId())
         args = {'inputVolume': volume,
                 'inputStructure': coot_PDB,
                 'doTest': True
@@ -1908,7 +1914,8 @@ class TestEMRingerValidation(TestImportData):
                           protEMRinger=protEMRinger)
 
         # refmac with mask
-        coot_PDB = protCoot.coot_001030_Imol_0000_version_0002
+        coot_PDB = eval("protCoot.coot_%06d_Imol_0000_version_0002"
+                          % protCoot.getObjId())
         args = {'inputVolume': volume,
                 'inputStructure': coot_PDB,
                 'generateMaskedVolume': True
@@ -2507,7 +2514,8 @@ class TestMolprobityValidation(TestImportData):
         self.launchProtocol(protCoot)
 
         # MolProbity
-        coot_PDB = protCoot.coot_000754_Imol_0000_version_0002
+        coot_PDB = eval("protCoot.coot_%06d_Imol_0000_version_0002"
+                          % protCoot.getObjId())
         args = {'inputVolume': volume,
                 'resolution': 3.5,
                 'inputStructure': coot_PDB
@@ -2529,7 +2537,8 @@ class TestMolprobityValidation(TestImportData):
                           protMolProbity=protMolProbity)
 
         # refmac withouth mask
-        coot_PDB = protCoot.coot_000754_Imol_0000_version_0002
+        coot_PDB = eval("protCoot.coot_%06d_Imol_0000_version_0002"
+                        % protCoot.getObjId())
         args = {'inputVolume': volume,
                 'inputStructure': coot_PDB,
                 'generateMaskedVolume': False
@@ -2633,7 +2642,8 @@ class TestMolprobityValidation(TestImportData):
         self.launchProtocol(protCoot)
 
         # MolProbity
-        coot_PDB = protCoot.coot_001066_Imol_0000_version_0002
+        coot_PDB = eval("protCoot.coot_%06d_Imol_0000_version_0002"
+                          % protCoot.getObjId())
         args = {'inputVolume': volume,
                 'resolution': 3.5,
                 'inputStructure': coot_PDB
@@ -2655,7 +2665,8 @@ class TestMolprobityValidation(TestImportData):
                           protMolProbity=protMolProbity)
 
         # refmac with mask
-        coot_PDB = protCoot.coot_001066_Imol_0000_version_0002
+        coot_PDB = eval("protCoot.coot_%06d_Imol_0000_version_0002"
+                          % protCoot.getObjId())
         args = {'inputVolume': volume,
                 'inputStructure': coot_PDB,
                 'generateMaskedVolume': True
