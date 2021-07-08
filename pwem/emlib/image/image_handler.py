@@ -440,7 +440,11 @@ class ImageHandler(object):
         """ Check if imgFn has an image extension. The function
         is implemented in the Xmipp binding.
         """
-        return lib.FileName(imgFn).isImage()
+        # Local import to avoid import loop between ImageHandler and Ccp4Header.
+        from pwem.convert import headers
+
+        return (lib.FileName(imgFn).isImage() or
+                headers.getFileFormat(imgFn) == headers.MRC)
 
     def computeThumbnail(self, inputFn, outputFn, scaleFactor=6, flipOnY=False,
                          flipOnX=False):
