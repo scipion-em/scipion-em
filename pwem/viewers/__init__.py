@@ -53,4 +53,4 @@ register(ParticleFileHandler(),
          '.hed', *STANDARD_IMAGE_EXTENSIONS)
 register(VolFileHandler(), '.vol')
 register(StackHandler(), '.stk', '.mrcs', '.st', '.pif', '.dm4')
-register(ChimeraHandler(), '.bild')
+register(ChimeraHandler(), '.bild', '.mrc', '.pdb', '.vol')

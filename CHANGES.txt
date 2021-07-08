@@ -1,3 +1,15 @@
+V3.0.11
+users:
+  mrc, pdb, vol files can be open with Chimera from the file browser
+  rec file can be imported (not yet displayed by xmipp)
+  fix import of particles stack with one image
+
+developers:
+  EmSet has a create copy method to properly copy a Set
+  usefull for generic set handling (subset, join set, user subset)
+  tiltseries subsets bug fixed
+  MaskVolumeWizard - Creates a mask for a volume interactively. Masks currently implemented: Spherical mask
+
 V3.0.10
 users:
   "set filter" protocol and wizard

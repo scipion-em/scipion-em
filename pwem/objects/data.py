@@ -33,12 +33,15 @@ import os
 import json
 import numpy as np
 
+import pyworkflow.utils as pwutils
 from pyworkflow.object import (Object, Float, Integer, String,
                                OrderedDict, CsvList, Boolean, Set, Pointer,
                                Scalar)
-
+import pwem
 from pwem.constants import (NO_INDEX, ALIGN_NONE, ALIGN_2D, ALIGN_3D,
                             ALIGN_PROJ, ALIGNMENTS)
+
+
 
 class EMObject(Object):
     """Base object for all EM classes"""
@@ -119,6 +122,9 @@ class Acquisition(EMObject):
 class CTFModel(EMObject):
     """ Represents a generic CTF model. """
 
+    DEFOCUS_V_MINIMUM_VALUE = 0.1
+    DEFOCUS_RATIO_ERROR_VALUE = -1
+
     def __init__(self, **kwargs):
         EMObject.__init__(self, **kwargs)
         self._defocusU = Float(kwargs.get('defocusU', None))
@@ -140,7 +146,7 @@ class CTFModel(EMObject):
                  "psh={}, res={}, fit={}".format(
             strEx(self._defocusU.get()),
             strEx(self._defocusV.get()),
-            strEx(self._defocusAngle.get()),
+            strEx(self._defocusU.get(0)-self._defocusV.get(0)),
             strEx(self.getPhaseShift()),
             strEx(self._resolution.get()),
             strEx(self._fitQuality.get())
@@ -248,7 +254,11 @@ class CTFModel(EMObject):
             self._defocusAngle.sum(180.)
         # At this point defocusU is always greater than defocusV
         # following the EMX standard
-        self._defocusRatio.set(self.getDefocusU() / self.getDefocusV())
+
+        if self.getDefocusV() > self.DEFOCUS_V_MINIMUM_VALUE:
+            self._defocusRatio.set(self.getDefocusU() / self.getDefocusV())
+        else:
+            self._defocusRatio.set(self.DEFOCUS_RATIO_ERROR_VALUE)
 
     def equalAttributes(self, other, ignore=[], verbose=False):
         """ Override default behaviour to compare two
@@ -822,7 +832,7 @@ class AtomStruct(EMFile):
         # origin stores a matrix that using as input the point (0,0,0)
         # provides  the position of the actual origin in the system of
         # coordinates of the default origin.
-        # _origin is an object of the class Transformor shifts
+        # _origin is an object of the class Transform shifts
         # units are Angstroms (in Image units are A)
         self._origin = None
 
@@ -938,6 +948,59 @@ class EMSet(Set, EMObject):
             else:
                 if itemDataIter is not None:
                     next(itemDataIter)  # just skip disabled data row
+
+    @classmethod
+    def create(cls, outputPath,
+               prefix=None, suffix=None, ext=None,
+               **kwargs):
+        """ Create an empty set from the current Set class.
+         Params:
+            outputPath: where the output file will be written.
+            prefix: prefix of the created file, if None, it will be deduced
+                from the ClassName.
+            suffix: additional suffix that will be added to the prefix with a
+                "_" in between.
+            ext: extension of the output file, be default will use .sqlite
+        """
+        fn = prefix or cls.__name__.lower().replace('setof', '')
+
+        if suffix:
+            fn += '_%s' % suffix
+
+        fn += '.%s' % (ext or 'sqlite')
+
+        setPath = os.path.join(outputPath, fn)
+        pwutils.cleanPath(setPath)
+
+        return cls(filename=setPath, **kwargs)
+
+    def createCopy(self, outputPath,
+                   prefix=None, suffix=None, ext=None,
+                   copyInfo=False, copyItems=False):
+        """ Make a copy of the current set to another location (e.g file).
+        Params:
+            outputPath: where the output file will be written.
+            prefix: prefix of the created file, if None, it will be deduced
+                from the ClassName.
+            suffix: additional suffix that will be added to the prefix with a
+                "_" in between.
+            ext: extension of the output file, be default will use the same
+                extension of this set filename.
+            copyInfo: if True the copyInfo will be called after set creation.
+            copyItems: if True the copyItems function will be called.
+        """
+        setObj = self.create(outputPath,
+                             prefix=prefix,
+                             suffix=suffix,
+                             ext=ext or pwutils.getExt(self.getFileName()))
+
+        if copyInfo:
+            setObj.copyInfo(self)
+
+        if copyItems:
+            setObj.copyItems(self)
+
+        return setObj
 
     def getFiles(self):
         return Set.getFiles(self)

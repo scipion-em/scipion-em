@@ -72,7 +72,7 @@ class ProtParticlePicking(ProtParticles):
                               self.getInputMicrographs().getSize()))
 
         if self.getOutputsSize() >= 1:
-            for key, output in self.iterOutputAttributes():
+            for key, output in self.iterOutputAttributes(emobj.SetOfCoordinates):
                 msg = self.getMethods(output)
                 methodsMsgs.append("%s: %s" % (self.getObjectTag(output), msg))
         else:
@@ -203,7 +203,7 @@ class ProtParticlePickingAuto(ProtParticlePicking):
         """ Override this function to insert some steps after the
         picking micrograph steps.
         Receive the list of step ids of the picking steps. """
-        self._insertFunctionStep('createOutputStep',
+        self._insertFunctionStep(self.createOutputStep.__name__,
                                  prerequisites=micSteps, wait=True)
 
     def _getPickArgs(self):
