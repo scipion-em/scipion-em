@@ -166,3 +166,8 @@ FREQ_BANDPASS_WIZ_MSG = \
     'frequency and angstroms.'
 
 EM_ROOT_VAR = 'EM_ROOT'
+
+# Basic Transformation factory
+ROT_X_90 = 'rotX90'
+ROT_Y_90 = 'rotY90'
+ROT_Z_90 = 'rotZ90'

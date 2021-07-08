@@ -35,7 +35,6 @@ import pwem.objects as emobj
 import pwem.constants as emcts
 from .. import lib
 
-
 class ImageHandler(object):
     """ Class to provide several Image manipulation utilities. """
 
@@ -382,6 +381,15 @@ class ImageHandler(object):
         self.__runXmippProgram('xmipp_transform_mask',
                                '-i %s --create_mask  %s --mask circular -%d'
                                % (inputRef, outputFile, radius))
+
+    def rotateVolume(self, inputFile, outputFile, transformation):
+        """ Apply geometric transformations to images. You can shift, rotate
+        and scale a group of images/volumes.
+        """
+        elementList = [str(item) for item in numpy.concatenate(transformation.getMatrix(), axis=0).tolist()]
+        unrolledMatrix = ' '.join(elementList)
+        self.__runXmippProgram('xmipp_transform_geometry',
+                               '-i %s -o %s --rotate_volume matrix %s' % (inputFile, outputFile, unrolledMatrix))
 
     def addNoise(self, inputFile, outputFile, std=1., avg=0.):
         """ Add Gaussian noise to an input image (or stack)

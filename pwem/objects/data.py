@@ -37,10 +37,8 @@ import pyworkflow.utils as pwutils
 from pyworkflow.object import (Object, Float, Integer, String,
                                OrderedDict, CsvList, Boolean, Set, Pointer,
                                Scalar)
-import pwem
 from pwem.constants import (NO_INDEX, ALIGN_NONE, ALIGN_2D, ALIGN_3D,
-                            ALIGN_PROJ, ALIGNMENTS)
-
+                            ALIGN_PROJ, ALIGNMENTS, ROT_X_90, ROT_Y_90, ROT_Z_90)
 
 
 class EMObject(Object):
@@ -1684,6 +1682,21 @@ class Transform(EMObject):
         """Apply a transformation matrix to the current matrix """
         new_matrix = matrix * self.getMatrix()
         self._matrix.setMatrix(new_matrix)
+
+
+class TransformationsFactory(EMObject):
+
+    @staticmethod
+    def create(type):
+        if type == ROT_X_90:
+            return Transform(matrix=(
+                             [1, 0, 0],
+                             [0, 0, 1],
+                             [0, -1, 0]))
+        if type == ROT_Y_90:
+            return None
+        if type == ROT_Z_90:
+            return None
 
 
 class Class2D(SetOfParticles):
