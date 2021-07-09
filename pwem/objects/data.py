@@ -591,9 +591,13 @@ class Image(EMObject):
         origin = self.getOrigin(force=True)
         origin.setShifts(x, y, z)
 
-    def setOrigin(self, newOrigin):
-        """shifts in A"""
-        self._origin = newOrigin
+    def setOrigin(self, newOrigin=None):
+        """If None, default origin will be set.
+        Note: shifts are in Angstroms"""
+        if newOrigin:
+            self._origin = newOrigin
+        else:
+            self._origin = self._getDefaultOrigin()
 
     def originResampled(self, originNotResampled, oldSampling):
         factor = self.getSamplingRate() / oldSampling
