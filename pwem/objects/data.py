@@ -38,7 +38,9 @@ from pyworkflow.object import (Object, Float, Integer, String,
                                OrderedDict, CsvList, Boolean, Set, Pointer,
                                Scalar)
 from pwem.constants import (NO_INDEX, ALIGN_NONE, ALIGN_2D, ALIGN_3D,
-                            ALIGN_PROJ, ALIGNMENTS, ROT_X_90, ROT_Y_90, ROT_Z_90)
+                            ALIGN_PROJ, ALIGNMENTS, ROT_X_90_CLOCKWISE, ROT_Y_90_CLOCKWISE, ROT_Z_90_CLOCKWISE,
+                            ROT_X_90_COUNTERCLOCKWISE, ROT_Y_90_COUNTERCLOCKWISE, ROT_Z_90_COUNTERCLOCKWISE,
+                            TRANSFORMATION_FACTORY_TYPES)
 
 
 class EMObject(Object):
@@ -1684,19 +1686,43 @@ class Transform(EMObject):
         self._matrix.setMatrix(new_matrix)
 
 
-class TransformationsFactory(EMObject):
+class TransformationFactory(EMObject):
 
     @staticmethod
     def create(type):
-        if type == ROT_X_90:
+        if type not in TRANSFORMATION_FACTORY_TYPES:
+            raise Exception('Introduced Transformation type is not recognized.\nAdmitted values are\n'
+                            '%s' % ' '.join(TRANSFORMATION_FACTORY_TYPES))
+        elif type == ROT_X_90_CLOCKWISE:
             return Transform(matrix=(
-                             [1, 0, 0],
-                             [0, 0, 1],
-                             [0, -1, 0]))
-        if type == ROT_Y_90:
-            return None
-        if type == ROT_Z_90:
-            return None
+                [1, 0, 0],
+                [0, 0, 1],
+                [0, -1, 0]))
+        elif type == ROT_X_90_COUNTERCLOCKWISE:
+            return Transform(matrix=(
+                [1, 0, 0],
+                [0, 0, -1],
+                [0, 1, 0]))
+        elif type == ROT_Y_90_CLOCKWISE:
+            return Transform(matrix=(
+                [1, 0, -1],
+                [0, 1, 0],
+                [1, 0, 0]))
+        elif type == ROT_Y_90_COUNTERCLOCKWISE:
+            return Transform(matrix=(
+                [1, 0, 1],
+                [0, 1, 0],
+                [-1, 0, 0]))
+        elif type == ROT_Z_90_CLOCKWISE:
+            return Transform(matrix=(
+                [0, 1, 0],
+                [-1, 0, 0],
+                [0, 0, 0]))
+        elif type == ROT_Z_90_COUNTERCLOCKWISE:
+            return Transform(matrix=(
+                [0, -1, 0],
+                [1, 0, 0],
+                [0, 0, 0]))
 
 
 class Class2D(SetOfParticles):
