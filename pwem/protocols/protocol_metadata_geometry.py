@@ -1,6 +1,6 @@
 # **************************************************************************
 # *
-# * Authors:     Pablo Conesa(pconesa@cnb.csic.es)
+# * Authors:     Roberto Marabini(roberto@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -27,16 +27,20 @@
 import pyworkflow.protocol.params as params
 import pyworkflow.utils as pwutils
 from pwem.protocols import EMProtocol
+from pwem.constants import (SYM_CYCLIC, SYM_DIHEDRAL_X,
+                            SYM_DIHEDRAL_Y, SYM_TETRAHEDRAL,
+                            SYM_TETRAHEDRAL_Z3, SYM_OCTAHEDRAL,
+                            SYM_OC  SYM_I222, SYM_I222r, SYM_In25,
+                            SYM_In25r, SYM_I2n3, SYM_I2n3r, SYM_I2n5, SYM_I2n5r,
+                            SCIPION_SYM_NAME)
 
 
-class ProtMetadataEditor(EMProtocol):
+class ProtMetadataGeometry(EMProtocol):
     """
-    Protocol to edit attributes of all the items of a set using a formula.
-    This could be useful for corrupting your data for testing purposes or
-    editing some values in the set that make sense to do it. Use this with
-    extreme care, you can easily ruin your processing.
+    Protocol Metadata Geometry. Select/delete particles
+    that satisfy some constrains related with geometry
     """
-    _label = 'metadata editor'
+    _label = 'geometry metadata operator'
 
     def _defineParams(self, form):
         """
@@ -48,10 +52,32 @@ class ProtMetadataEditor(EMProtocol):
         form.addParam('inputSet', params.PointerParam, pointerClass='EMSet',
                       label='Set to edit',
                       help='Set which items will be modified.')
-        form.addParam('formula', params.StringParam, label="Formula", important=True,
-                      help='A python code compatible with eval, where item represents each of '
-                           'the elements of the set. E.g.: item._resolution.set(item._resolution.get() +1).'
-                           'You could also use modules like "import numpy;  item._resolution .... "')
+        desplegable
+        vector
+        form.addParam('originSymmetryGroup', EnumParam,
+                      choices=[LOCAL_SYM_NAME[SYM_I222] +
+                               " (" + SCIPION_SYM_NAME[SYM_I222] + ")",
+                               SCIPION_SYM_NAME[SYM_I222r] +
+                               " (" + SCIPION_SYM_NAME[SYM_I222r] + ")",
+                               SCIPION_SYM_NAME[SYM_In25] +
+                               " (" + SCIPION_SYM_NAME[SYM_In25] + ")",
+                               SCIPION_SYM_NAME[SYM_In25r] +
+                               " (" + SCIPION_SYM_NAME[SYM_In25r] + ")",
+                               SCIPION_SYM_NAME[SYM_I2n3] +
+                               " (" + SCIPION_SYM_NAME[SYM_I2n3] + ")",
+                               SCIPION_SYM_NAME[SYM_I2n3r] +
+                               " (" + SCIPION_SYM_NAME[SYM_I2n3r] + ")",
+                               SCIPION_SYM_NAME[SYM_I2n5] +
+                               " (" + SCIPION_SYM_NAME[SYM_I2n5] + ")",
+                               SCIPION_SYM_NAME[SYM_I2n5r] +
+                               " (" + SCIPION_SYM_NAME[SYM_I2n5r] + ")"
+                               ],
+                      default=SYM_I222r - SYM_I222,
+                      label="Symmetry",
+                      help="Select the current symmetry of your atomic structure./n"
+                           "See https://github.com/I2PC/xmipp-portal/wiki/Symmetry"
+                           "Symmetry for a description of the symmetry groups "
+                      )
 
     def _insertAllSteps(self):
         self._insertFunctionStep('editItemsStep')
