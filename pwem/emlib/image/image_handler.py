@@ -386,7 +386,7 @@ class ImageHandler(object):
         """ Apply geometric transformations to images. You can shift, rotate
         and scale a group of images/volumes.
         """
-        elementList = [str(item) for item in numpy.concatenate(transformation.getMatrix(), axis=0).tolist()]
+        elementList = [str(item) for item in transformation.getRotationMatrix().flatten().tolist()]
         unrolledMatrix = ' '.join(elementList)
         self.__runXmippProgram('xmipp_transform_geometry',
                                '-i %s -o %s --rotate_volume matrix %s' % (inputFile, outputFile, unrolledMatrix))

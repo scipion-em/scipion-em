@@ -1643,6 +1643,14 @@ class Transform(EMObject):
     def getMatrix(self):
         return self._matrix.getMatrix()
 
+    def getRotationMatrix(self):
+        M = self.getMatrix()
+        return M[:3, :3]
+
+    def getShifts(self):
+        M = self.getMatrix()
+        return M[1, 4], M[2, 4], M[3, 4]
+
     def getMatrixAsList(self):
         """ Return the values of the Matrix as a list. """
         return self._matrix.getMatrix().flatten().tolist()
@@ -1691,45 +1699,52 @@ class Transform(EMObject):
         new_matrix = matrix * self.getMatrix()
         self._matrix.setMatrix(new_matrix)
 
-    def create(self, type):
-        if type == self.ROT_X_90_CLOCKWISE:
-            return Transform(matrix=(
-                [1, 0, 0],
-                [0, 0, 1],
-                [0, -1, 0]))
-        elif type == self.ROT_X_90_COUNTERCLOCKWISE:
-            return Transform(matrix=(
-                [1, 0, 0],
-                [0, 0, -1],
-                [0, 1, 0]))
-        elif type == self.ROT_Y_90_CLOCKWISE:
-            return Transform(matrix=(
-                [1, 0, -1],
-                [0, 1, 0],
-                [1, 0, 0]))
-        elif type == self.ROT_Y_90_COUNTERCLOCKWISE:
-            return Transform(matrix=(
-                [1, 0, 1],
-                [0, 1, 0],
-                [-1, 0, 0]))
-        elif type == self.ROT_Z_90_CLOCKWISE:
-            return Transform(matrix=(
-                [0, 1, 0],
-                [-1, 0, 0],
-                [0, 0, 0]))
-        elif type == self.ROT_Z_90_COUNTERCLOCKWISE:
-            return Transform(matrix=(
-                [0, -1, 0],
-                [1, 0, 0],
-                [0, 0, 0]))
+    @classmethod
+    def create(cls, type):
+        if type == cls.ROT_X_90_CLOCKWISE:
+            return Transform(matrix=np.array([
+                [1, 0, 0, 0],
+                [0, 0, 1, 0],
+                [0, -1, 0, 0],
+                [0, 0, 0, 1]]))
+        elif type == cls.ROT_X_90_COUNTERCLOCKWISE:
+            return Transform(matrix=np.array([
+                [1, 0, 0, 0],
+                [0, 0, -1, 0],
+                [0, 1, 0, 0],
+                [0, 0, 0, 1]]))
+        elif type == cls.ROT_Y_90_CLOCKWISE:
+            return Transform(matrix=np.array([
+                [1, 0, -1, 0],
+                [0, 1, 0, 0],
+                [1, 0, 0, 0],
+                [0, 0, 0, 1]]))
+        elif type == cls.ROT_Y_90_COUNTERCLOCKWISE:
+            return Transform(matrix=np.array([
+                [1, 0, 1, 0],
+                [0, 1, 0, 0],
+                [-1, 0, 0, 0],
+                [0, 0, 0, 1]]))
+        elif type == cls.ROT_Z_90_CLOCKWISE:
+            return Transform(matrix=np.array([
+                [0, 1, 0, 0],
+                [-1, 0, 0, 0],
+                [0, 0, 0, 0],
+                [0, 0, 0, 1]]))
+        elif type == cls.ROT_Z_90_COUNTERCLOCKWISE:
+            return Transform(matrix=np.array([
+                [0, -1, 0, 0],
+                [1, 0, 0, 0],
+                [0, 0, 0, 0],
+                [0, 0, 0, 1]]))
         else:
             TRANSFORMATION_FACTORY_TYPES = [
-                self.ROT_X_90_CLOCKWISE,
-                self.ROT_Y_90_CLOCKWISE,
-                self.ROT_Z_90_CLOCKWISE,
-                self.ROT_X_90_COUNTERCLOCKWISE,
-                self.ROT_Y_90_COUNTERCLOCKWISE,
-                self.ROT_Z_90_COUNTERCLOCKWISE
+                cls.ROT_X_90_CLOCKWISE,
+                cls.ROT_Y_90_CLOCKWISE,
+                cls.ROT_Z_90_CLOCKWISE,
+                cls.ROT_X_90_COUNTERCLOCKWISE,
+                cls.ROT_Y_90_COUNTERCLOCKWISE,
+                cls.ROT_Z_90_COUNTERCLOCKWISE
             ]
             raise Exception('Introduced Transformation type is not recognized.\nAdmitted values are\n'
                             '%s' % ' '.join(TRANSFORMATION_FACTORY_TYPES))
