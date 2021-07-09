@@ -38,9 +38,7 @@ from pyworkflow.object import (Object, Float, Integer, String,
                                OrderedDict, CsvList, Boolean, Set, Pointer,
                                Scalar)
 from pwem.constants import (NO_INDEX, ALIGN_NONE, ALIGN_2D, ALIGN_3D,
-                            ALIGN_PROJ, ALIGNMENTS, ROT_X_90_CLOCKWISE, ROT_Y_90_CLOCKWISE, ROT_Z_90_CLOCKWISE,
-                            ROT_X_90_COUNTERCLOCKWISE, ROT_Y_90_COUNTERCLOCKWISE, ROT_Z_90_COUNTERCLOCKWISE,
-                            TRANSFORMATION_FACTORY_TYPES)
+                            ALIGN_PROJ, ALIGNMENTS)
 
 
 class EMObject(Object):
@@ -1628,6 +1626,14 @@ class Transform(EMObject):
     Shifts are stored in pixels as treated in extract coordinates, or assign angles,...
     """
 
+    # Basic Transformation factory
+    ROT_X_90_CLOCKWISE = 'rotX90c'
+    ROT_Y_90_CLOCKWISE = 'rotY90c'
+    ROT_Z_90_CLOCKWISE = 'rotZ90c'
+    ROT_X_90_COUNTERCLOCKWISE = 'rotX90cc'
+    ROT_Y_90_COUNTERCLOCKWISE = 'rotY90cc'
+    ROT_Z_90_COUNTERCLOCKWISE = 'rotZ90cc'
+
     def __init__(self, matrix=None, **kwargs):
         EMObject.__init__(self, **kwargs)
         self._matrix = Matrix()
@@ -1685,44 +1691,48 @@ class Transform(EMObject):
         new_matrix = matrix * self.getMatrix()
         self._matrix.setMatrix(new_matrix)
 
-
-class TransformationFactory(EMObject):
-
-    @staticmethod
-    def create(type):
-        if type not in TRANSFORMATION_FACTORY_TYPES:
-            raise Exception('Introduced Transformation type is not recognized.\nAdmitted values are\n'
-                            '%s' % ' '.join(TRANSFORMATION_FACTORY_TYPES))
-        elif type == ROT_X_90_CLOCKWISE:
+    def create(self, type):
+        if type == self.ROT_X_90_CLOCKWISE:
             return Transform(matrix=(
                 [1, 0, 0],
                 [0, 0, 1],
                 [0, -1, 0]))
-        elif type == ROT_X_90_COUNTERCLOCKWISE:
+        elif type == self.ROT_X_90_COUNTERCLOCKWISE:
             return Transform(matrix=(
                 [1, 0, 0],
                 [0, 0, -1],
                 [0, 1, 0]))
-        elif type == ROT_Y_90_CLOCKWISE:
+        elif type == self.ROT_Y_90_CLOCKWISE:
             return Transform(matrix=(
                 [1, 0, -1],
                 [0, 1, 0],
                 [1, 0, 0]))
-        elif type == ROT_Y_90_COUNTERCLOCKWISE:
+        elif type == self.ROT_Y_90_COUNTERCLOCKWISE:
             return Transform(matrix=(
                 [1, 0, 1],
                 [0, 1, 0],
                 [-1, 0, 0]))
-        elif type == ROT_Z_90_CLOCKWISE:
+        elif type == self.ROT_Z_90_CLOCKWISE:
             return Transform(matrix=(
                 [0, 1, 0],
                 [-1, 0, 0],
                 [0, 0, 0]))
-        elif type == ROT_Z_90_COUNTERCLOCKWISE:
+        elif type == self.ROT_Z_90_COUNTERCLOCKWISE:
             return Transform(matrix=(
                 [0, -1, 0],
                 [1, 0, 0],
                 [0, 0, 0]))
+        else:
+            TRANSFORMATION_FACTORY_TYPES = [
+                self.ROT_X_90_CLOCKWISE,
+                self.ROT_Y_90_CLOCKWISE,
+                self.ROT_Z_90_CLOCKWISE,
+                self.ROT_X_90_COUNTERCLOCKWISE,
+                self.ROT_Y_90_COUNTERCLOCKWISE,
+                self.ROT_Z_90_COUNTERCLOCKWISE
+            ]
+            raise Exception('Introduced Transformation type is not recognized.\nAdmitted values are\n'
+                            '%s' % ' '.join(TRANSFORMATION_FACTORY_TYPES))
 
 
 class Class2D(SetOfParticles):
