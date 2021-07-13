@@ -48,19 +48,17 @@ class ProtSetEditor(EMProtocol):
     CHOICE_FORMULA = 0
     CHOICE_ROTATE_VECTOR = 1
     CHOICE_ROTATE_ICOSAHEDRAL = 2
-    CHOICE_LABEL ={}
-    CHOICE_LABEL[CHOICE_FORMULA] = 'formula'
-    CHOICE_LABEL[CHOICE_ROTATE_VECTOR] = 'rotate to vector'
-    CHOICE_LABEL[CHOICE_ROTATE_ICOSAHEDRAL] = 'rotate icosahedral'
-    LOCAL_SYM_NAME = {}
-    LOCAL_SYM_NAME[SYM_I222] = 'I1'
-    LOCAL_SYM_NAME[SYM_I222r] = 'I2'
-    LOCAL_SYM_NAME[SYM_In25] = 'I3'
-    LOCAL_SYM_NAME[SYM_In25r] = 'I4'
-    LOCAL_SYM_NAME[SYM_I2n3] = 'I5'
-    LOCAL_SYM_NAME[SYM_I2n3r] = 'I6'
-    LOCAL_SYM_NAME[SYM_I2n5] = 'I7'
-    LOCAL_SYM_NAME[SYM_I2n5r] = 'I8'
+    CHOICE_LABEL = {CHOICE_FORMULA: 'formula',
+                    CHOICE_ROTATE_VECTOR: 'rotate to vector',
+                    CHOICE_ROTATE_ICOSAHEDRAL: 'rotate icosahedral'}
+    LOCAL_SYM_NAME = {SYM_I222: 'I1',
+                      SYM_I222r: 'I2',
+                      SYM_In25: 'I3',
+                      SYM_In25r: 'I4',
+                      SYM_I2n3: 'I5',
+                      SYM_I2n3r: 'I6',
+                      SYM_I2n5: 'I7',
+                      SYM_I2n5r: 'I8'}
 
     def _defineParams(self, form):
         """
@@ -90,7 +88,7 @@ class ProtSetEditor(EMProtocol):
                            " (i.e, multiply resolution by 2 )"
                       )
 
-        form.addParam('formula', params.StringParam, label="Formula", important=True,
+        form.addParam('formula', params.StringParam, label="Formula",
                       condition = "operation==%d" % self.CHOICE_FORMULA,
                       help='A python code compatible with eval, where item represents each of '
                            'the elements of the set. E.g.: item._resolution.set(item._resolution.get() +1).'
