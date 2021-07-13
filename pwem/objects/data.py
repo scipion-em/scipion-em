@@ -37,10 +37,8 @@ import pyworkflow.utils as pwutils
 from pyworkflow.object import (Object, Float, Integer, String,
                                OrderedDict, CsvList, Boolean, Set, Pointer,
                                Scalar)
-import pwem
 from pwem.constants import (NO_INDEX, ALIGN_NONE, ALIGN_2D, ALIGN_3D,
                             ALIGN_PROJ, ALIGNMENTS)
-
 
 
 class EMObject(Object):
@@ -593,9 +591,13 @@ class Image(EMObject):
         origin = self.getOrigin(force=True)
         origin.setShifts(x, y, z)
 
-    def setOrigin(self, newOrigin):
-        """shifts in A"""
-        self._origin = newOrigin
+    def setOrigin(self, newOrigin=None):
+        """If None, default origin will be set.
+        Note: shifts are in Angstroms"""
+        if newOrigin:
+            self._origin = newOrigin
+        else:
+            self._origin = self._getDefaultOrigin()
 
     def originResampled(self, originNotResampled, oldSampling):
         factor = self.getSamplingRate() / oldSampling
@@ -1628,6 +1630,14 @@ class Transform(EMObject):
     Shifts are stored in pixels as treated in extract coordinates, or assign angles,...
     """
 
+    # Basic Transformation factory
+    ROT_X_90_CLOCKWISE = 'rotX90c'
+    ROT_Y_90_CLOCKWISE = 'rotY90c'
+    ROT_Z_90_CLOCKWISE = 'rotZ90c'
+    ROT_X_90_COUNTERCLOCKWISE = 'rotX90cc'
+    ROT_Y_90_COUNTERCLOCKWISE = 'rotY90cc'
+    ROT_Z_90_COUNTERCLOCKWISE = 'rotZ90cc'
+
     def __init__(self, matrix=None, **kwargs):
         EMObject.__init__(self, **kwargs)
         self._matrix = Matrix()
@@ -1636,6 +1646,14 @@ class Transform(EMObject):
 
     def getMatrix(self):
         return self._matrix.getMatrix()
+
+    def getRotationMatrix(self):
+        M = self.getMatrix()
+        return M[:3, :3]
+
+    def getShifts(self):
+        M = self.getMatrix()
+        return M[1, 4], M[2, 4], M[3, 4]
 
     def getMatrixAsList(self):
         """ Return the values of the Matrix as a list. """
@@ -1685,6 +1703,56 @@ class Transform(EMObject):
         new_matrix = np.matmul(matrix, self.getMatrix())
         # new_matrix = matrix * self.getMatrix()
         self._matrix.setMatrix(new_matrix)
+
+    @classmethod
+    def create(cls, type):
+        if type == cls.ROT_X_90_CLOCKWISE:
+            return Transform(matrix=np.array([
+                [1, 0, 0, 0],
+                [0, 0, 1, 0],
+                [0, -1, 0, 0],
+                [0, 0, 0, 1]]))
+        elif type == cls.ROT_X_90_COUNTERCLOCKWISE:
+            return Transform(matrix=np.array([
+                [1, 0, 0, 0],
+                [0, 0, -1, 0],
+                [0, 1, 0, 0],
+                [0, 0, 0, 1]]))
+        elif type == cls.ROT_Y_90_CLOCKWISE:
+            return Transform(matrix=np.array([
+                [1, 0, -1, 0],
+                [0, 1, 0, 0],
+                [1, 0, 0, 0],
+                [0, 0, 0, 1]]))
+        elif type == cls.ROT_Y_90_COUNTERCLOCKWISE:
+            return Transform(matrix=np.array([
+                [1, 0, 1, 0],
+                [0, 1, 0, 0],
+                [-1, 0, 0, 0],
+                [0, 0, 0, 1]]))
+        elif type == cls.ROT_Z_90_CLOCKWISE:
+            return Transform(matrix=np.array([
+                [0, 1, 0, 0],
+                [-1, 0, 0, 0],
+                [0, 0, 0, 0],
+                [0, 0, 0, 1]]))
+        elif type == cls.ROT_Z_90_COUNTERCLOCKWISE:
+            return Transform(matrix=np.array([
+                [0, -1, 0, 0],
+                [1, 0, 0, 0],
+                [0, 0, 0, 0],
+                [0, 0, 0, 1]]))
+        else:
+            TRANSFORMATION_FACTORY_TYPES = [
+                cls.ROT_X_90_CLOCKWISE,
+                cls.ROT_Y_90_CLOCKWISE,
+                cls.ROT_Z_90_CLOCKWISE,
+                cls.ROT_X_90_COUNTERCLOCKWISE,
+                cls.ROT_Y_90_COUNTERCLOCKWISE,
+                cls.ROT_Z_90_COUNTERCLOCKWISE
+            ]
+            raise Exception('Introduced Transformation type is not recognized.\nAdmitted values are\n'
+                            '%s' % ' '.join(TRANSFORMATION_FACTORY_TYPES))
 
 
 class Class2D(SetOfParticles):
