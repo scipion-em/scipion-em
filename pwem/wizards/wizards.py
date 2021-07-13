@@ -228,7 +228,8 @@ class GetStructureChainsWizard(pwizard.Wizard):
 
 class PythonFormulaeWizard(pwizard.Wizard):
     """Assist in the creation of python formula to be evaluated. In Steps"""
-    _targets = [(emprot.ProtSetFilter, ['formula'])]
+    _targets = [(emprot.ProtSetFilter, ['formula']),
+                (emprot.ProtSetEditor, ['formula'])]
 
     def show(self, form, *params):
 
