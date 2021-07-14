@@ -27,6 +27,8 @@
 
 import pyworkflow.protocol.params as params
 from pwem.protocols import EMProtocol
+from pwem.objects.data import SetOfParticles
+
 from pwem.convert.transformations import (rotation_matrix,
       angle_between_vectors, vector_product)
 import numpy as np
@@ -272,7 +274,9 @@ class ProtSetEditor(EMProtocol):
         errors = []
         inputSet = self.inputSet.get()
         operation = self.operation.get()
-        if (not inputSet.hasAlignmentProj()) and \
-                (not (operation == self.CHOICE_FORMULA)):
-            errors.append("The input data set does not have alignment 3D")
+        if operation != self.CHOICE_FORMULA:
+            if not isinstance(inputSet, SetOfParticles):
+                errors.append("The input data set is not a set of projections")
+            if not inputSet.hasAlignmentProj():
+                errors.append("The input data set does not have alignment 3D")
         return errors
