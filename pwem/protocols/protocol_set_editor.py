@@ -277,6 +277,6 @@ class ProtSetEditor(EMProtocol):
         if operation != self.CHOICE_FORMULA:
             if not isinstance(inputSet, SetOfParticles):
                 errors.append("The input data set is not a set of projections")
-            if not inputSet.hasAlignmentProj():
+            elif not inputSet.hasAlignmentProj():
                 errors.append("The input data set does not have alignment 3D")
         return errors
