@@ -102,13 +102,7 @@ class ProtSetFilter(EMProtocol):
         # TODO: copyInfo does not copy the set of micrographs
         # associate to the setOfCoordinates
         modifiedSet.setMicrographs(self.inputSet.get().getMicrographs())
-
-        # TODO: extended is not defined when test is executed
-        # I do not know why
-        if self.inputSet.hasExtended() or len(self.inputSet.getExtended()) < 1:
-            outputArgs = {'outSet': modifiedSet}
-        else:
-            outputArgs = {self.inputSet.getExtended(): modifiedSet}
+        outputArgs = {self.inputSet.getExtended(): modifiedSet}
         self._defineOutputs(**outputArgs)
 
     def distanceCenterStep(self):
