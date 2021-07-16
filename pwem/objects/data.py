@@ -1700,7 +1700,8 @@ class Transform(EMObject):
 
     def composeTransform(self, matrix):
         """Apply a transformation matrix to the current matrix """
-        new_matrix = matrix * self.getMatrix()
+        new_matrix = np.matmul(matrix, self.getMatrix())
+        # new_matrix = matrix * self.getMatrix()
         self._matrix.setMatrix(new_matrix)
 
     @classmethod
