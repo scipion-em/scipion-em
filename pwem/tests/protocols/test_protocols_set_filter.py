@@ -111,25 +111,27 @@ class TestSetFilter(pwtests.BaseTest):
         dummyProt = self.createCoorSetProtocol()
         protSetFilter = self.newProtocol(ProtSetFilter,
                                           objLabel="operate")
-        protSetFilter.inputSet.set(dummyProt.outputCoordinates)
+        protSetFilter.inputSet.set(dummyProt)
+        protSetFilter.inputSet.setExtended("outputCoordinates")
         protSetFilter.operation.set(protSetFilter.CHOICE_FORMULA)
         protSetFilter.formula.set('item._x.get()>200')
         self.launchProtocol(protSetFilter)
-        for item in protSetFilter.outSet:
+        for item in protSetFilter.outputCoordinates:
             self.assertGreater(item.getX(), 100)
         self.assertEqual(len(dummyProt.outputCoordinates), 1200)
-        self.assertEqual(len(protSetFilter.outSet), 1100)
+        self.assertEqual(len(protSetFilter.outputCoordinates), 1100)
 
     def testCenter(self):
         """Remove coordinates closer to center less than 200"""
         dummyProt = self.createCoorSetProtocol()
         protSetFilter = self.newProtocol(ProtSetFilter,
                                          objLabel="center")
-        protSetFilter.inputSet.set(dummyProt.outputCoordinates)
+        protSetFilter.inputSet.set(dummyProt)
+        protSetFilter.inputSet.setExtended("outputCoordinates")
         protSetFilter.operation.set(protSetFilter.CHOICE_DISTANCE_CENTER)
         protSetFilter.distance.set(200)
         self.launchProtocol(protSetFilter)
-        self.assertEqual(len(protSetFilter.outSet), 720)
+        self.assertEqual(len(protSetFilter.outputCoordinates), 720)
         self.assertEqual(len(dummyProt.outputCoordinates), 1200)
 
     def testDistance(self):
@@ -137,21 +139,23 @@ class TestSetFilter(pwtests.BaseTest):
         dummyProt = self.createCoorSetProtocol()
         protSetFilter = self.newProtocol(ProtSetFilter,
                                          objLabel="distance- keepfirst true")
-        protSetFilter.inputSet.set(dummyProt.outputCoordinates)
+        protSetFilter.inputSet.set(dummyProt)
+        protSetFilter.inputSet.setExtended("outputCoordinates")
         protSetFilter.operation.set(protSetFilter.CHOICE_DISTANCE_BETWEEN_COORDS)
         protSetFilter.distance.set(10)
         protSetFilter.keepFirst.set(True)
         self.launchProtocol(protSetFilter)
-        self.assertEqual(len(protSetFilter.outSet), 1048)
+        self.assertEqual(len(protSetFilter.outputCoordinates), 1048)
         self.assertEqual(len(dummyProt.outputCoordinates), 1200)
         protSetFilter = self.newProtocol(ProtSetFilter,
                                          objLabel="distance- keepfirst false")
-        protSetFilter.inputSet.set(dummyProt.outputCoordinates)
+        protSetFilter.inputSet.set(dummyProt)
+        protSetFilter.inputSet.setExtended("outputCoordinates")
         protSetFilter.operation.set(protSetFilter.CHOICE_DISTANCE_BETWEEN_COORDS)
         protSetFilter.distance.set(10)
         protSetFilter.keepFirst.set(False)
         self.launchProtocol(protSetFilter)
-        self.assertEqual(len(protSetFilter.outSet), 1008)
+        self.assertEqual(len(protSetFilter.outputCoordinates), 1008)
         self.assertEqual(len(dummyProt.outputCoordinates), 1200)
 
 
