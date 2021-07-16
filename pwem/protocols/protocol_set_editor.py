@@ -221,12 +221,7 @@ class ProtSetEditor(EMProtocol):
         self.createOutput(self.inputSet, modifiedSet)
 
     def createOutput(self, inputSet, modifiedSet):
-        # TODO: getExtendend is empty when protocol called
-        # within a test. I do not understand why
-        if len(inputSet.getExtended()) < 1:
-            outputArgs = {'outSet': modifiedSet}
-        else:
-            outputArgs = {inputSet.getExtended(): modifiedSet}
+        outputArgs = {inputSet.getExtended(): modifiedSet}
         self._defineOutputs(**outputArgs)
 
     def rotateStep(self):

@@ -153,11 +153,12 @@ class TestSets(pwtests.BaseTest):
         #launch operate set protocol
         protSetEditor = self.newProtocol(ProtSetEditor,
                                          objLabel="operate")
-        protSetEditor.inputSet.set(protImportProj.outputParticles)
+        protSetEditor.inputSet.set(protImportProj)
+        protSetEditor.inputSet.setExtended("outputParticles")
         protSetEditor.operation.set(ProtSetEditor.CHOICE_FORMULA)
         protSetEditor.formula.set('item._ctfModel._defocusU.set(item._ctfModel._defocusU.get() + 1. )')
         self.launchProtocol(protSetEditor)
-        for item1, item2 in zip(protSetEditor.outSet, protImportProj.outputParticles):
+        for item1, item2 in zip(protSetEditor.outputParticles, protImportProj.outputParticles):
             self.assertAlmostEqual(item1._ctfModel._defocusU.get() ,
                                    item2._ctfModel._defocusU.get() + 1)
 
@@ -176,7 +177,8 @@ class TestSets(pwtests.BaseTest):
 
         #launch operate set protocol
         protSetEditor = self.newProtocol(ProtSetEditor, objLabel="rotate")
-        protSetEditor.inputSet.set(protImportProj.outputParticles)
+        protSetEditor.inputSet.set(protImportProj)
+        protSetEditor.inputSet.setExtended("outputParticles")
         protSetEditor.operation.set(ProtSetEditor.CHOICE_ROTATE_VECTOR)
         protSetEditor.xs.set(0.)
         protSetEditor.ys.set(0.)
@@ -186,7 +188,7 @@ class TestSets(pwtests.BaseTest):
         protSetEditor.zt.set(0.)
         self.launchProtocol(protSetEditor)
         for controlPartSet, outPartSet in zip(  tOut,
-                                protSetEditor.outSet, ):
+                                protSetEditor.outputParticles, ):
             self.assertTrue(np.allclose(controlPartSet ,
                                    outPartSet.getTransform().getMatrix()))
 
@@ -205,14 +207,15 @@ class TestSets(pwtests.BaseTest):
 
         #launch operate set protocol
         protSetEditor = self.newProtocol(ProtSetEditor, objLabel="rotate")
-        protSetEditor.inputSet.set(protImportProj.outputParticles)
+        protSetEditor.inputSet.set(protImportProj)
+        protSetEditor.inputSet.setExtended("outputParticles")
         protSetEditor.operation.set(ProtSetEditor.CHOICE_ROTATE_ICOSAHEDRAL)
         protSetEditor.originSymmetryGroup.set(SYM_I222 - SYM_I222)
         protSetEditor.targetSymmetryGroup.set(SYM_I222r - SYM_I222)
 
         self.launchProtocol(protSetEditor)
         for controlPartSet, outPartSet in zip(tIcoOut,
-                                protSetEditor.outSet, ):
+                                protSetEditor.outputParticles, ):
             self.assertTrue(np.allclose(controlPartSet ,
                                    outPartSet.getTransform().getMatrix()))
 
