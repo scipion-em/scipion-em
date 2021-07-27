@@ -1,3 +1,8 @@
+V3.0.12
+users:
+  JAVA_MAX_MEMORY defaults to 4GB for a better user experience with large datasets
+  Take CHIMERA_HOME from chimera plugin if available. Otherwise will go for chimerax-1.2.5 as default
+
 V3.0.11
 users:
   mrc, pdb, vol files can be open with Chimera from the file browser
