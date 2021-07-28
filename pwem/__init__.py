@@ -40,7 +40,7 @@ from .objects import EMObject
 from .tests import defineDatasets
 from .utils import *
 
-__version__ = '3.0.11'
+__version__ = '3.0.12'
 _logo = "scipion_icon.gif"
 _references = ["delaRosaTrevin201693"]
 
@@ -54,12 +54,9 @@ class Config(pw.Config):
     # Default XMIPP_HOME: needed here for ShowJ viewers
     XMIPP_HOME = _join(_get('XMIPP_HOME', os.path.join(EM_ROOT, 'xmipp')))
 
-    # Needed by Chimera viewer: (TODO: Take the value from the plugin)
-    CHIMERA_HOME = _join(_get('CHIMERA_HOME', os.path.join(EM_ROOT, 'chimerax-1.1')))
-
     # Get java home, we might need to provide correct default value
     JAVA_HOME = _get('JAVA_HOME', '')
-    JAVA_MAX_MEMORY = _get('JAVA_MAX_MEMORY', '2')
+    JAVA_MAX_MEMORY = _get('JAVA_MAX_MEMORY', '4')
 
     # MPI
     MPI_LIBDIR = _get('MPI_LIBDIR', '/usr/lib64/mpi/gcc/openmpi/lib')

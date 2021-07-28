@@ -84,7 +84,12 @@ class Chimera:
 
     @classmethod
     def getHome(cls):
-        return emConfig.CHIMERA_HOME
+        """ Returns chimera home, trying first to take it from chimera plugin. If it fails it will return, the default value in the config"""
+        with pwutils.weakImport("chimera"):
+            from chimera import Plugin as chimeraPlugin
+            return chimeraPlugin.getHome()
+
+        return os.path.join(emConfig.EM_ROOT, 'chimerax-1.2.5')
 
     @classmethod
     def getEnviron(cls):
