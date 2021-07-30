@@ -257,7 +257,7 @@ class ImageHandler(object):
                     'eman2.convert', 'getImageDimensions',
                     doRaise=True)
                 return getImageDimensions(fn)  # we are ignoring index here
-            elif ext == '.eer':
+            elif ext in ['.eer', '.gain']:
                 tif = TiffFile(fn)
                 frames = len(tif.pages)  # number of pages in the file
                 page = tif.pages[0]  # get shape and dtype of the image in the first page
