@@ -381,7 +381,7 @@ class ProtUserSubSet(BatchProtocol):
             createFunc = getattr(self, '_create' + className)
             output = createFunc()
         except Exception as e:
-            output = inputClasses.getClass().createCopy(self._getPath())
+            output = inputClasses.getClass().create(self._getPath())
 
         modifiedSet = inputClasses.getClass()(filename=self._dbName, prefix=self._dbPrefix)
         self.info("Creating subset of classes from classes, sqlite file: %s" % self._dbName)
