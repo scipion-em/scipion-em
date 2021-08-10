@@ -25,6 +25,8 @@
 # *
 # **************************************************************************
 from os.path import join, dirname, basename
+import logging
+logger = logging.getLogger(__name__)
 import pyworkflow.utils as pwutils
 import pwem
 
@@ -97,3 +99,25 @@ def splitRange(minValue, maxValue, splitNum=10, roundTo=2):
     for step in range(0, splitNum):
         rangeList.append(round(minValue + step * inter, roundTo))
     return rangeList
+
+
+PROBLEMATIC_SHELL_CHARS = ";<>?\"()|*\\'&"
+
+def cleanFileName(fn, warn=True):
+    """ Cleans any character that later on might cause shell parsing errors like "(", ")", " "
+    and warns about it if warn is true.
+
+    :param fn: file to be cleaned
+    :param warn: Optional (True). Logs """
+
+    cleaned = False
+
+    for bannedChar in PROBLEMATIC_SHELL_CHARS:
+        if bannedChar in fn:
+            if warn:
+                logger.info("Warning!. Problematic character (%s) found in file %s. "
+                            "Any of these characters will be removed: %s" % (bannedChar, fn, PROBLEMATIC_SHELL_CHARS))
+            fn = fn.replace(bannedChar, '')
+            cleaned = True
+
+    return fn, cleaned
