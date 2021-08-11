@@ -357,3 +357,17 @@ def getFileFormat(fileName):
         return SPIDER
     else:
         return UNKNOWNFORMAT
+
+def fixVolume(paths):
+    """
+    Fixes mrc (any extension) files that are defined as stacks but are meant to be volumes as defined in the mrc 2014
+    specs. Setting ISPG to 1.
+    :param paths: accept a string or a list of strings
+    :return: nothing, but mrc files header end up being updated.
+    """
+    if isinstance(paths, str):
+        paths = [paths]
+    for path in paths:
+        ccp4header = Ccp4Header(path, readHeader=True)
+        ccp4header.setISPG(1)
+        ccp4header.writeHeader()
