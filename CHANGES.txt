@@ -1,6 +1,15 @@
+V3.0.13
+users:
+  JAVA_MAX_MEMORY defaults to 4GB for a better user experience with large datasets
+  Take CHIMERA_HOME from chimera plugin if available. Otherwise will go for chimerax-1.2.5 as default
+
 V3.0.12
 users:
   fix create user subsets with classes2D
+
+developers:
+  pwem.convert.headers.fixVolume: fixes the header of a volume defined as stack, so we can avoid :mrc suffix in paths the paths.
+  images imported by ProtImportImage and ProtImportMask remove problematic characters -> PROBLEMATIC_SHELL_CHARS = ;<>?"()|*\'&
 
 V3.0.11
 users:
