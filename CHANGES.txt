@@ -2,6 +2,14 @@ V3.0.13
 users:
   JAVA_MAX_MEMORY defaults to 4GB for a better user experience with large datasets
   Take CHIMERA_HOME from chimera plugin if available. Otherwise will go for chimerax-1.2.5 as default
+  Clean problematic characters in filenames: ;<>?"()|*\'&
+  "filter set" prtocols extended to filter by coordinate distance.
+  "edit set" protocol extended to allow editing angular information.
+  .gain files are treated as tiff files when getting its dimensions.
+
+developers:
+  Transform class provides a "create" (factory method) to create common trasformations.
+  pwem.convert.headers.fixVolume: to fix mrc headers of volumes.
 
 V3.0.12
 users:
