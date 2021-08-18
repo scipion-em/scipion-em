@@ -141,6 +141,13 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
         elif not os.path.exists(finalName):
             # Conversion never happened...
             print('converting %s to %s' % (correctionImage, finalName))
+
+            if correctionImage.endswith('.gain'):  # treat as tif file
+                fnBase = basename(correctionImage)
+                tmpLink = self._getTmpPath(pwutils.replaceExt(fnBase, 'tif'))
+                pwutils.createAbsLink(correctionImage, tmpLink)
+                correctionImage = tmpLink
+
             emlib.image.ImageHandler().convert(correctionImage, finalName)
 
         # return final name

@@ -35,6 +35,7 @@ import pyworkflow.utils as pwutils
 
 from pwem.objects import Mask, VolumeMask
 from pwem.emlib.image import ImageHandler
+from pwem.protocols.protocol_import.images import cleanFileName
 
 from .base import ProtImport
 
@@ -67,6 +68,7 @@ class ProtImportMask(ProtImport):
 
         # Copy the image file into the project
         dst = self._getExtraPath(basename(path))
+        dst, cleaned = cleanFileName(dst)
         pwutils.copyFile(path, dst)
 
         # Retrieve image dimensions
