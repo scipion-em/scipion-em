@@ -101,7 +101,8 @@ class ProtSetFilter(EMProtocol):
     def createOutput(self, modifiedSet):
         # TODO: copyInfo does not copy the set of micrographs
         # associate to the setOfCoordinates
-        modifiedSet.setMicrographs(self.inputSet.get().getMicrographs())
+        if hasattr(modifiedSet, "setMicrographs"):
+            modifiedSet.setMicrographs(self.inputSet.get().getMicrographs())
         outputArgs = {self.inputSet.getExtended(): modifiedSet}
         self._defineOutputs(**outputArgs)
 
