@@ -1734,13 +1734,13 @@ class Transform(EMObject):
             return Transform(matrix=np.array([
                 [0, 1, 0, 0],
                 [-1, 0, 0, 0],
-                [0, 0, 0, 0],
+                [0, 0, 1, 0],
                 [0, 0, 0, 1]]))
         elif type == cls.ROT_Z_90_COUNTERCLOCKWISE:
             return Transform(matrix=np.array([
                 [0, -1, 0, 0],
                 [1, 0, 0, 0],
-                [0, 0, 0, 0],
+                [0, 0, 1, 0],
                 [0, 0, 0, 1]]))
         else:
             TRANSFORMATION_FACTORY_TYPES = [
