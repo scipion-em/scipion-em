@@ -1,3 +1,7 @@
+V3.0.14
+users:
+  New protocol: numeric classes extractor: Extracts items from a SetOfClasses based on number of items assigned to the classes
+
 V3.0.13
 users:
   JAVA_MAX_MEMORY defaults to 4GB for a better user experience with large datasets
