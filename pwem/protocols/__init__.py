@@ -44,7 +44,6 @@ from .protocol_ctf_assign import ProtCTFAssign
 from .protocol_alignment_assign import ProtAlignmentAssign
 from .protocol_alignment_invertHand import ProtAlignmentInvertHand
 from .protocol_batch import *
-from .protocol_classes_consensus import ProtClassesConsensus
 from .protocol_extract_coordinates import ProtExtractCoords
 from .protocol_create_stream_data import ProtCreateStreamData
 from .parallel import ProtTestParallel
@@ -59,3 +58,4 @@ from .protocol_origin_sampling_volume import ProtOrigSampling
 from .protocol_set_editor import ProtSetEditor
 from .protocol_set_filter import ProtSetFilter
 from .protocol_movie_eraser import ProtMovieEraser
+from .protocol_classes_selector import ProtClassesSelector

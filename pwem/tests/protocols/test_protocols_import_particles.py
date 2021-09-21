@@ -24,6 +24,7 @@
 import pyworkflow.tests as pwtests
 
 import pwem.protocols as emprot
+from pyworkflow.object import Pointer
 
 
 class TestImportBase(pwtests.BaseTest):
@@ -151,8 +152,32 @@ class TestImportParticles(TestImportBase):
         self.launchProtocol(prot1)
         self.checkOutput(prot1, 'outputParticles', ['outputParticles.hasAlignment2D()',
                                                     'outputParticles.isPhaseFlipped()'])
-        self.checkOutput(prot1, 'outputClasses')    
- 
+        self.checkOutput(prot1, 'outputClasses')
+
+
+        # Add tests for classes selector. representative
+        classSelector = self.newProtocol(emprot.ProtClassesSelector,
+                                         objLabel='representatives from 2 mayor classes',
+                                         firstNElements=2,
+                                         extractRepresentative=True
+                                         )
+        classSelector.inputClasses = Pointer(prot1, extended='outputClasses')
+        self.launchProtocol(classSelector)
+
+        self.assertSetSize(classSelector.output, size=2)
+
+        # Add tests for classes selector: items
+        classSelector2 = self.newProtocol(emprot.ProtClassesSelector,
+                                         objLabel='items from 3 mayor classes',
+                                         firstNElements=3,
+                                         extractRepresentative=False
+                                         )
+        classSelector2.inputClasses = Pointer(prot1, extended='outputClasses')
+        self.launchProtocol(classSelector2)
+
+        self.assertSetSize(classSelector2.output, size=1739)
+
+
     def test_fromRelionClassify3D(self):
         """ Import an EMX file with Particles and defocus
         """
