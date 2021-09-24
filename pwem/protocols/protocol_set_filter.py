@@ -45,9 +45,7 @@ class ProtSetFilter(EMProtocol):
                     CHOICE_DISTANCE_CENTER: 'distance to center',
                     CHOICE_DISTANCE_BETWEEN_COORDS:
                         'distance between particles',
-                    CHOICE_RANKED: 'top-rank'}
-    HIGHER, LOWER = 0, 1
-    NUMBER, PROPORTION = 0, 1
+                    CHOICE_RANKED: 'ranking'}
 
     def _defineParams(self, form):
         """
@@ -95,26 +93,26 @@ class ProtSetFilter(EMProtocol):
                            "keep the first one or delete all"
                       )
 
-        form.addParam('topRankValue', params.StringParam, label="Filter value: ",
+        form.addParam('threshold', params.StringParam, label="Threshold: ",
                       condition="operation==%d" % (self.CHOICE_RANKED),
-                      help='Number/proportion of items to filter:\n\tNumber: n>=1 \n\tProportion: n<1\n\tPercentage: n%\n\n'
+                      help='Number/proportion of items to keep:\n\tNumber: n>=1 \n\tProportion: 0<n<1\n\tPercentage: n%\n\n'
                            'Higher/lower values of the attribute: \n\tHigher: positive number\n\tLower: negative number\n\n'
                            'e.g: "-10%" == "-0.1" == 10% of the items with lower values\n'
                            'e.g: "5" == 5 items with higher values')
-        form.addParam('topRankAttribute', params.StringParam, label="Attribute for filter: ",
+        form.addParam('rankingField', params.StringParam, label="Ranking field: ",
                       condition="operation==%d" % self.CHOICE_RANKED,
-                      help='Atribute to use as filter')
+                      help='Attribute to sort the set by.')
 
     def _insertAllSteps(self):
         operation = self.operation.get()
         if operation == self.CHOICE_FORMULA:
-            self._insertFunctionStep('formulaStep')
+            self._insertFunctionStep(self.formulaStep)
         elif operation == self.CHOICE_DISTANCE_CENTER:
-            self._insertFunctionStep('distanceCenterStep')
+            self._insertFunctionStep(self.distanceCenterStep)
         elif operation == self.CHOICE_DISTANCE_BETWEEN_COORDS:
-            self._insertFunctionStep('distanceBetweenCoorStep')
+            self._insertFunctionStep(self.distanceBetweenCoorStep)
         elif operation == self.CHOICE_RANKED:
-            self._insertFunctionStep('topRankStep')
+            self._insertFunctionStep(self.rankingStep)
 
     def createOutput(self, modifiedSet):
         # TODO: copyInfo does not copy the set of micrographs
@@ -217,37 +215,42 @@ class ProtSetFilter(EMProtocol):
             modifiedSet.setMicrographs(inputSet.getMicrographs())
         self.createOutput(modifiedSet)
 
-    def topRankStep(self):
+    def rankingStep(self):
         """
         Goes through all items in the input set and takes the number/proportion of items with a higher/lower value
         of the chosen attribute
         """
         inputSet = self.inputSet.get()
         finalNumber, direc = self.parseTopRankParam()
-        modifiedSet = self.getTopRankItems(self.topRankAttribute.get(), inputSet, finalNumber, direc)
+        modifiedSet = self.getTopRankItems(self.rankingField.get(), inputSet, finalNumber, direc)
         self.createOutput(modifiedSet)
 
     def parseTopRankParam(self):
         direc = 'DESC'
-        inputSet, param = self.inputSet.get(), self.topRankValue.get()
-        if param.endswith('%'):
-            perc = float(param[:-1])
+        inputSet, threshold = self.inputSet.get(), self.threshold.get()
+        # Filed with % at the end
+        if threshold.endswith('%'):
+            perc = float(threshold[:-1])
             finalNumber = round(perc * len(inputSet) / 100)
-        elif float(param) < 1:
-            prop = float(param)
-            finalNumber = round(prop * len(inputSet))
-        elif float(param) >= 1:
-            finalNumber = int(param)
 
+        # percentage specified in decimal format.
+        elif -1 < float(threshold) < 1:
+            prop = float(threshold)
+            finalNumber = round(prop * len(inputSet))
+
+        # Else integers (positive or negative).
+        else :
+            finalNumber = int(threshold)
+
+        # If negative
         if finalNumber < 0:
             finalNumber = abs(finalNumber)
             direc = 'ASC'
 
         return finalNumber, direc
 
-
     def getTopRankItems(self, attribute, iSet, finalNumber, direc='ASC'):
-        modifiedSet = iSet.create(self._getExtraPath())
+        modifiedSet = iSet.createCopy(self._getExtraPath(), copyInfo=True)
         for item in iSet.iterItems(orderBy=attribute, direction=direc, limit=finalNumber):
             modifiedSet.append(item.clone())
         return modifiedSet

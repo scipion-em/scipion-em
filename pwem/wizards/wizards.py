@@ -241,7 +241,7 @@ class PythonFormulaeWizard(pwizard.Wizard):
             
 class PythonTopRankWizard(pwizard.Wizard):
     """Assist in the creation of python formula to be evaluated. In Steps"""
-    _targets = [(emprot.ProtSetFilter, ['topRankAttribute'])]
+    _targets = [(emprot.ProtSetFilter, ['rankingField'])]
 
     def getInputAttributes(self, form):
         attrNames=[]
@@ -259,4 +259,4 @@ class PythonTopRankWizard(pwizard.Wizard):
 
         dlg = dialog.ListDialog(form.root, "Filter set", provider,
                                 "Select one of the attributes")
-        form.setVar('topRankAttribute', dlg.values[0].get())
+        form.setVar('rankingField', dlg.values[0].get())
