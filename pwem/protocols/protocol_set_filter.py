@@ -40,10 +40,14 @@ class ProtSetFilter(EMProtocol):
     CHOICE_FORMULA = 0
     CHOICE_DISTANCE_CENTER = 1
     CHOICE_DISTANCE_BETWEEN_COORDS = 2
+    CHOICE_RANKED = 3
     CHOICE_LABEL = {CHOICE_FORMULA: 'formula',
                     CHOICE_DISTANCE_CENTER: 'distance to center',
                     CHOICE_DISTANCE_BETWEEN_COORDS:
-                        'distance between particles'}
+                        'distance between particles',
+                    CHOICE_RANKED: 'top-rank'}
+    HIGHER, LOWER = 0, 1
+    NUMBER, PROPORTION = 0, 1
 
     def _defineParams(self, form):
         """
@@ -57,7 +61,8 @@ class ProtSetFilter(EMProtocol):
         form.addParam('operation', params.EnumParam,
                       choices=[self.CHOICE_LABEL[self.CHOICE_FORMULA],
                                self.CHOICE_LABEL[self.CHOICE_DISTANCE_CENTER],
-                               self.CHOICE_LABEL[self.CHOICE_DISTANCE_BETWEEN_COORDS]
+                               self.CHOICE_LABEL[self.CHOICE_DISTANCE_BETWEEN_COORDS],
+                               self.CHOICE_LABEL[self.CHOICE_RANKED]
                                ],
                       default = self.CHOICE_FORMULA,
                       label="Select operation",
@@ -89,6 +94,25 @@ class ProtSetFilter(EMProtocol):
                       help="If 2 or more coordinates are closer than distance"
                            "keep the first one or delete all"
                       )
+
+        form.addParam('topRankOrder', params.EnumParam, label="Rank type: ", default=0,
+                      choices=['Higher', 'Lower'], display=params.EnumParam.DISPLAY_HLIST,
+                      condition="operation==%d" % self.CHOICE_RANKED,
+                      help='Outputs the higher / lower ranked items')
+        form.addParam('topRankType', params.EnumParam, label="Rank type: ", default=0,
+                      choices=['Number', 'Proportion'], display=params.EnumParam.DISPLAY_HLIST,
+                      condition="operation==%d" % self.CHOICE_RANKED,
+                      help='Outputs the higher / lower ranked number or proportion of items')
+        form.addParam('topRankNumber', params.IntParam, label="Number of items: ",
+                      condition="operation==%d and topRankType==%d" % (self.CHOICE_RANKED, self.NUMBER),
+                      help='Outputs the higher / lower ranked number of items')
+        form.addParam('topRankProportion', params.FloatParam, label="Proportion of items: ",
+                      condition="operation==%d and topRankType==%d" % (self.CHOICE_RANKED, self.PROPORTION),
+                      help='Outputs the higher / lower ranked proportion of items')
+        form.addParam('topRankAttribute', params.StringParam, label="Attribute for filter: ",
+                      condition="operation==%d" % self.CHOICE_RANKED,
+                      help='Atribute to use as filter')
+
     def _insertAllSteps(self):
         operation = self.operation.get()
         if operation == self.CHOICE_FORMULA:
@@ -97,6 +121,8 @@ class ProtSetFilter(EMProtocol):
             self._insertFunctionStep('distanceCenterStep')
         elif operation == self.CHOICE_DISTANCE_BETWEEN_COORDS:
             self._insertFunctionStep('distanceBetweenCoorStep')
+        elif operation == self.CHOICE_RANKED:
+            self._insertFunctionStep('topRankStep')
 
     def createOutput(self, modifiedSet):
         # TODO: copyInfo does not copy the set of micrographs
@@ -199,11 +225,52 @@ class ProtSetFilter(EMProtocol):
             modifiedSet.setMicrographs(inputSet.getMicrographs())
         self.createOutput(modifiedSet)
 
+    def topRankStep(self):
+        """
+        Goes through all items in the input set and takes the number/proportion of items with a higher/lower value
+        of the chosen attribute
+        """
+        inputSet = self.inputSet.get()
+        modifiedSet = inputSet.create(self._getExtraPath())
+
+        attrName = self.topRankAttribute.get().split('.')[1]
+        attributeValues = self.getAttributeValues(attrName, inputSet)
+        itemsIdx = list(range(len(attributeValues)))
+
+        if self.topRankOrder.get() == self.HIGHER:
+            attributeValues, itemsIdx = zip(*sorted(zip(attributeValues, itemsIdx), reverse=True))
+        elif self.topRankOrder.get() == self.LOWER:
+            attributeValues, itemsIdx = zip(*sorted(zip(attributeValues, itemsIdx)))
+
+        if self.topRankType.get() == self.NUMBER:
+            finalNumber = self.topRankNumber.get()
+        else:
+            finalNumber = round(self.topRankProportion.get() * len(inputSet))
+        itemsIdx = itemsIdx[:finalNumber]
+
+        added = 0
+        for i, item in enumerate(inputSet):
+            if i in itemsIdx:
+                modifiedSet.append(item.clone())
+                added += 1
+            if added == finalNumber:
+                break
+
+        self.createOutput(modifiedSet)
+
+
+    def getAttributeValues(self, attribute, iSet):
+        attrs = []
+        for item in iSet:
+            attrs.append(getattr(item.clone(), attribute))
+        return attrs
+
+
     def _validate(self):
         errors = []
         inputSet = self.inputSet.get()
         operation = self.operation.get()
-        if operation != self.CHOICE_FORMULA:
+        if operation == self.CHOICE_DISTANCE_CENTER or operation == self.CHOICE_DISTANCE_BETWEEN_COORDS:
             if not isinstance(inputSet, SetOfCoordinates):
                 errors.append("The input data set is not a set of coordinates")
         return errors

@@ -238,3 +238,16 @@ class PythonFormulaeWizard(pwizard.Wizard):
         # If accepted
         if d.resultYes():
             form.setVar('formula',d.getFormula())
+            
+class PythonFormulaeWizard(pwizard.Wizard):
+    """Assist in the creation of python formula to be evaluated. In Steps"""
+    _targets = [(emprot.ProtSetFilter, ['topRankAttribute'])]
+
+    def show(self, form, *params):
+        d = FormulaDialog(form.root, form.protocol.inputSet.get(), formula=form.protocol.formula.get())
+
+        # If accepted
+        if d.resultYes():
+            form.setVar('topRankAttribute', d.getFormula())
+
+
