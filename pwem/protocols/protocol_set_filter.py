@@ -242,7 +242,7 @@ class ProtSetFilter(EMProtocol):
         elif self.topRankOrder.get() == self.LOWER:
             direc = 'ASC'
 
-        attrName = self.topRankAttribute.get().split('.')[1]
+        attrName = self.topRankAttribute.get()
         modifiedSet = self.getTopRankItems(attrName, inputSet, finalNumber, direc)
         self.createOutput(modifiedSet)
 

@@ -239,15 +239,24 @@ class PythonFormulaeWizard(pwizard.Wizard):
         if d.resultYes():
             form.setVar('formula',d.getFormula())
             
-class PythonFormulaeWizard(pwizard.Wizard):
+class PythonTopRankWizard(pwizard.Wizard):
     """Assist in the creation of python formula to be evaluated. In Steps"""
     _targets = [(emprot.ProtSetFilter, ['topRankAttribute'])]
 
+    def getInputAttributes(self, form):
+        attrNames=[]
+        item = form.protocol.inputSet.get().getFirstItem()
+        for key, attr in item.getAttributesToStore():
+            attrNames.append(key)
+        return attrNames
+
     def show(self, form, *params):
-        d = FormulaDialog(form.root, form.protocol.inputSet.get(), formula=form.protocol.formula.get())
+        attrsList = self.getInputAttributes(form)
+        finalAttrsList = []
+        for i in attrsList:
+            finalAttrsList.append(pwobj.String(i))
+        provider = ListTreeProviderString(finalAttrsList)
 
-        # If accepted
-        if d.resultYes():
-            form.setVar('topRankAttribute', d.getFormula())
-
-
+        dlg = dialog.ListDialog(form.root, "Filter set", provider,
+                                "Select one of the attributes")
+        form.setVar('topRankAttribute', dlg.values[0].get())
