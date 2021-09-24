@@ -231,39 +231,27 @@ class ProtSetFilter(EMProtocol):
         of the chosen attribute
         """
         inputSet = self.inputSet.get()
-        modifiedSet = inputSet.create(self._getExtraPath())
-
-        attrName = self.topRankAttribute.get().split('.')[1]
-        attributeValues = self.getAttributeValues(attrName, inputSet)
-        itemsIdx = list(range(len(attributeValues)))
-
-        if self.topRankOrder.get() == self.HIGHER:
-            attributeValues, itemsIdx = zip(*sorted(zip(attributeValues, itemsIdx), reverse=True))
-        elif self.topRankOrder.get() == self.LOWER:
-            attributeValues, itemsIdx = zip(*sorted(zip(attributeValues, itemsIdx)))
 
         if self.topRankType.get() == self.NUMBER:
             finalNumber = self.topRankNumber.get()
         else:
             finalNumber = round(self.topRankProportion.get() * len(inputSet))
-        itemsIdx = itemsIdx[:finalNumber]
 
-        added = 0
-        for i, item in enumerate(inputSet):
-            if i in itemsIdx:
-                modifiedSet.append(item.clone())
-                added += 1
-            if added == finalNumber:
-                break
+        if self.topRankOrder.get() == self.HIGHER:
+            direc = 'DESC'
+        elif self.topRankOrder.get() == self.LOWER:
+            direc = 'ASC'
 
+        attrName = self.topRankAttribute.get().split('.')[1]
+        modifiedSet = self.getTopRankItems(attrName, inputSet, finalNumber, direc)
         self.createOutput(modifiedSet)
 
 
-    def getAttributeValues(self, attribute, iSet):
-        attrs = []
-        for item in iSet:
-            attrs.append(getattr(item.clone(), attribute))
-        return attrs
+    def getTopRankItems(self, attribute, iSet, finalNumber, direc='ASC'):
+        modifiedSet = iSet.create(self._getExtraPath())
+        for item in iSet.iterItems(orderBy=attribute, direction=direc, limit=finalNumber):
+            modifiedSet.append(item.clone())
+        return modifiedSet
 
 
     def _validate(self):
