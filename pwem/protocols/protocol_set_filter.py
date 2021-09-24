@@ -227,7 +227,7 @@ class ProtSetFilter(EMProtocol):
 
     def parseTopRankParam(self):
         direc = 'DESC'
-        inputSet, threshold = self.inputSet.get(), self.threshold.get()
+        inputSet, threshold = self.inputSet.get(), self.threshold.get().strip()
         # Filed with % at the end
         if threshold.endswith('%'):
             perc = float(threshold[:-1])
@@ -263,4 +263,17 @@ class ProtSetFilter(EMProtocol):
         if operation == self.CHOICE_DISTANCE_CENTER or operation == self.CHOICE_DISTANCE_BETWEEN_COORDS:
             if not isinstance(inputSet, SetOfCoordinates):
                 errors.append("The input data set is not a set of coordinates")
+        elif operation == self.CHOICE_RANKED:
+            param = self.topRankValue.get().strip()
+            perc = False
+            try:
+                if param.endswith('%'):
+                    param = param[:-1]
+                    perc=True
+                param = float(param)
+                if perc:
+                    if abs(param) > 100:
+                        errors.append("Percentage cannot be higher than 100")
+            except:
+                errors.append("The filter value must be a number or a percentage")
         return errors
