@@ -264,7 +264,7 @@ class ProtSetFilter(EMProtocol):
             if not isinstance(inputSet, SetOfCoordinates):
                 errors.append("The input data set is not a set of coordinates")
         elif operation == self.CHOICE_RANKED:
-            param = self.topRankValue.get().strip()
+            param = self.threshold.get().strip()
             perc = False
             try:
                 if param.endswith('%'):
