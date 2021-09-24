@@ -27,7 +27,7 @@
 """
 In this module are protocol related to EM imports of Masks...
 """
-
+import enum
 from os.path import exists, basename
 
 import pyworkflow.protocol.params as params
@@ -39,10 +39,14 @@ from pwem.protocols.protocol_import.images import cleanFileName
 
 from .base import ProtImport
 
+class ImportMaskOutput(enum.Enum):
+    outputMask = VolumeMask()
+
 
 class ProtImportMask(ProtImport):
     """ Class for import masks from existing files. """
     _label = 'import mask'
+    _possibleOutputs = ImportMaskOutput
     
     # --------------------------- DEFINE param functions ----------------------
     def _defineParams(self, form):
@@ -85,7 +89,7 @@ class ProtImportMask(ProtImport):
         mask.setFileName(dst)
         mask.setSamplingRate(samplingRate)
 
-        self._defineOutputs(outputMask=mask)
+        self._defineOutputs(**{self._possibleOutputs.outputMask.name:mask})
 
     # --------------------------- INFO functions ------------------------------
     def _validate(self):
