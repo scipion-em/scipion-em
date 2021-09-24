@@ -1,6 +1,10 @@
 V3.0.14
 users:
   New protocol: numeric classes extractor: Extracts items from a SetOfClasses based on number of items assigned to the classes
+  outputs predefined for:
+    import masks
+    import mics
+    import movies
 
 V3.0.13
 users:
