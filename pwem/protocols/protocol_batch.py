@@ -71,7 +71,7 @@ class ProtUserSubSet(BatchProtocol):
     def createSetStep(self):
 
         sourceSet = self.inputObject.get()
-        markedSet = self.createSetObject() # Set equal to sourceSet but marked with disabled
+        markedSet = self.createSetObject()  # Set equal to sourceSet but marked with disabled
         other = self.other.get()
 
         print("Source: %s" % sourceSet)
@@ -192,8 +192,8 @@ class ProtUserSubSet(BatchProtocol):
             output = inputImages.createCopy(self._getPath())
 
         if copyInfoCallback is None:
-            modifiedSet.loadAllProperties()
-            output.copyInfo(modifiedSet)
+            # modifiedSet.loadAllProperties()
+            output.copyInfo(inputImages)
         else:
             copyInfoCallback(output)
 
