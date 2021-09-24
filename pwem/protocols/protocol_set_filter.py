@@ -95,20 +95,12 @@ class ProtSetFilter(EMProtocol):
                            "keep the first one or delete all"
                       )
 
-        form.addParam('topRankOrder', params.EnumParam, label="Rank type: ", default=0,
-                      choices=['Higher', 'Lower'], display=params.EnumParam.DISPLAY_HLIST,
-                      condition="operation==%d" % self.CHOICE_RANKED,
-                      help='Outputs the higher / lower ranked items')
-        form.addParam('topRankType', params.EnumParam, label="Rank type: ", default=0,
-                      choices=['Number', 'Proportion'], display=params.EnumParam.DISPLAY_HLIST,
-                      condition="operation==%d" % self.CHOICE_RANKED,
-                      help='Outputs the higher / lower ranked number or proportion of items')
-        form.addParam('topRankNumber', params.IntParam, label="Number of items: ",
-                      condition="operation==%d and topRankType==%d" % (self.CHOICE_RANKED, self.NUMBER),
-                      help='Outputs the higher / lower ranked number of items')
-        form.addParam('topRankProportion', params.FloatParam, label="Proportion of items: ",
-                      condition="operation==%d and topRankType==%d" % (self.CHOICE_RANKED, self.PROPORTION),
-                      help='Outputs the higher / lower ranked proportion of items')
+        form.addParam('topRankValue', params.StringParam, label="Filter value: ",
+                      condition="operation==%d" % (self.CHOICE_RANKED),
+                      help='Number/proportion of items to filter:\n\tNumber: n>=1 \n\tProportion: n<1\n\tPercentage: n%\n\n'
+                           'Higher/lower values of the attribute: \n\tHigher: positive number\n\tLower: negative number\n\n'
+                           'e.g: "-10%" == "-0.1" == 10% of the items with lower values\n'
+                           'e.g: "5" == 5 items with higher values')
         form.addParam('topRankAttribute', params.StringParam, label="Attribute for filter: ",
                       condition="operation==%d" % self.CHOICE_RANKED,
                       help='Atribute to use as filter')
@@ -231,20 +223,27 @@ class ProtSetFilter(EMProtocol):
         of the chosen attribute
         """
         inputSet = self.inputSet.get()
+        finalNumber, direc = self.parseTopRankParam()
+        modifiedSet = self.getTopRankItems(self.topRankAttribute.get(), inputSet, finalNumber, direc)
+        self.createOutput(modifiedSet)
 
-        if self.topRankType.get() == self.NUMBER:
-            finalNumber = self.topRankNumber.get()
-        else:
-            finalNumber = round(self.topRankProportion.get() * len(inputSet))
+    def parseTopRankParam(self):
+        direc = 'DESC'
+        inputSet, param = self.inputSet.get(), self.topRankValue.get()
+        if param.endswith('%'):
+            perc = float(param[:-1])
+            finalNumber = round(perc * len(inputSet) / 100)
+        elif float(param) < 1:
+            prop = float(param)
+            finalNumber = round(prop * len(inputSet))
+        elif float(param) >= 1:
+            finalNumber = int(param)
 
-        if self.topRankOrder.get() == self.HIGHER:
-            direc = 'DESC'
-        elif self.topRankOrder.get() == self.LOWER:
+        if finalNumber < 0:
+            finalNumber = abs(finalNumber)
             direc = 'ASC'
 
-        attrName = self.topRankAttribute.get()
-        modifiedSet = self.getTopRankItems(attrName, inputSet, finalNumber, direc)
-        self.createOutput(modifiedSet)
+        return finalNumber, direc
 
 
     def getTopRankItems(self, attribute, iSet, finalNumber, direc='ASC'):
