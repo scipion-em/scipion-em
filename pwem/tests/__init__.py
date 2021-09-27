@@ -283,3 +283,11 @@ def defineDatasets():
                 'allMics': 'micrographs/*.mrc',
                 'autoPickingCoordinates': 'autoPickingCoordinates'
             })
+
+    DataSet(name='smallMolecules', folder='smallMolecules',
+            files={
+              'mix': 'mix/',
+              'mol2': 'mol2/',
+              'pdb': 'pdb/',
+              'sdf': 'sdf/',
+              'smi': 'smi/'})
