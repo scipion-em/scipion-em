@@ -27,7 +27,7 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-
+import enum
 from os.path import exists, getmtime
 from datetime import datetime
 from collections import OrderedDict
@@ -46,8 +46,13 @@ class ProtMicrographs(EMProtocol):
     pass
 
 
+class ProtCTFMicOutputs(enum.Enum):
+    outputCTF = emobj.SetOfCTF()
+    
 class ProtCTFMicrographs(ProtMicrographs):
     """ Base class for all protocols that estimates the CTF"""
+
+    _possibleOutputs = ProtCTFMicOutputs
 
     def __init__(self, **kwargs):
         EMProtocol.__init__(self, **kwargs)
@@ -339,7 +344,7 @@ class ProtCTFMicrographs(ProtMicrographs):
         if self.recalculate:
             ctfSet = self._createSetOfCTF("_recalculated")
             prot = self.continueRun.get() or self
-            if hasattr(prot, 'outputCTF'):
+            if hasattr(prot, ProtCTFMicOutputs.outputCTF.name):
                 micSet = prot.outputCTF.getMicrographs()
                 # We suppose this is reading the ctf selection
                 # (with enabled/disabled) to only consider the enabled ones
@@ -359,7 +364,7 @@ class ProtCTFMicrographs(ProtMicrographs):
                         newCount += 1
                     ctfSet.append(ctfModel)
                 ctfSet.setMicrographs(micSet)
-                self._defineOutputs(outputCTF=ctfSet)
+                self._defineOutputs(**{ProtCTFMicOutputs.outputCTF.name:ctfSet})
                 self._defineCtfRelation(micSet, ctfSet)
                 self._computeDefocusRange(ctfSet)
                 self.summaryVar.set("CTF Re-estimation of %d micrographs"
@@ -384,7 +389,7 @@ class ProtCTFMicrographs(ProtMicrographs):
             else:
                 summary.append(pwutils.Message.TEXT_NO_CTF_READY)
         else:
-            if not hasattr(self, 'outputCTF'):
+            if not hasattr(self, ProtCTFMicOutputs.outputCTF.name):
                 summary.append(pwutils.Message.TEXT_NO_CTF_READY)
             else:
                 summary.append("CTF estimation of %d micrographs."
@@ -395,7 +400,7 @@ class ProtCTFMicrographs(ProtMicrographs):
     def _methods(self):
         methods = []
 
-        if hasattr(self, 'outputCTF') and self.isFinished():
+        if hasattr(self, ProtCTFMicOutputs.outputCTF.name) and self.isFinished():
             methods.append(self.methodsVar.get())
         else:
             methods.append(pwutils.Message.TEXT_NO_CTF_READY)
@@ -633,7 +638,7 @@ class ProtCTFMicrographs(ProtMicrographs):
         if not micDoneList:
             return []
 
-        outputName = 'outputCTF'
+        outputName = ProtCTFMicOutputs.outputCTF.name
         outputCtf = getattr(self, outputName, None)
 
         # If there is not outputCTF yet, it means that is the first
@@ -670,7 +675,7 @@ class ProtCTFMicrographs(ProtMicrographs):
         return micDoneList
 
     def _updateStreamState(self, streamMode):
-        outputName = 'outputCTF'
+        outputName = ProtCTFMicOutputs.outputCTF.name
         outputCtf = getattr(self, outputName, None)
 
         # If there are not outputCTFs yet, it means that is the first

@@ -6,6 +6,8 @@ users:
     import masks
     import mics
     import movies
+    movie alignments
+    ctf estimators
 
 
 V3.0.13
