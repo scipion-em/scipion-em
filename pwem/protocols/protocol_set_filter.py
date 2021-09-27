@@ -240,7 +240,7 @@ class ProtSetFilter(EMProtocol):
 
         # Else integers (positive or negative).
         else :
-            finalNumber = int(threshold)
+            finalNumber = int(float(threshold))
 
         # If negative
         if finalNumber < 0:
