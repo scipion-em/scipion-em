@@ -8,6 +8,8 @@ users:
     import movies
     movie alignments
     ctf estimators
+    pickings
+    extraction
 
 
 V3.0.13
