@@ -23,8 +23,7 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-
-
+import enum
 import os
 from datetime import datetime
 from collections import OrderedDict
@@ -38,8 +37,16 @@ import pwem.objects as emobj
 from pwem.protocols import ProtParticles
 
 
+class ProtParticlePickingOutput(enum.Enum):
+    """ Possible outputs for particle picking protocols
+    """
+    outputCoordinates = emobj.SetOfCoordinates()
+
+
 class ProtParticlePicking(ProtParticles):
-    OUTPUT_PREFIX = 'outputCoordinates'
+
+    _possibleOutputs = ProtParticlePickingOutput
+    OUTPUT_PREFIX = ProtParticlePickingOutput.outputCoordinates.name
 
     def _defineParams(self, form):
 
