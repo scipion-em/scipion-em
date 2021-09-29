@@ -25,7 +25,7 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-
+import enum
 import os
 import warnings
 
@@ -46,6 +46,11 @@ from pwem import emlib
 
 from pwem.protocols import ProtProcessMovies
 
+class ProtAlignMoviesOutput(enum.Enum):
+    """Pre-definition of outputs for movie alignments"""
+    outputMicrographs = emobj.SetOfMicrographs()
+    outputMicrographsDoseWeighted = emobj.SetOfMicrographs()
+    outputMovies =emobj.SetOfMovies()
 
 class ProtAlignMovies(ProtProcessMovies):
     """
@@ -56,6 +61,7 @@ class ProtAlignMovies(ProtProcessMovies):
     the frames range used for alignment and final sum, the binning factor
     or the cropping options (region of interest)
     """
+    _possibleOutputs = ProtAlignMoviesOutput
 
     # -------------------------- DEFINE param functions -----------------------
     def _defineParams(self, form):
@@ -213,7 +219,7 @@ class ProtAlignMovies(ProtProcessMovies):
                                          "added to the output set.\n%s"
                                          % (movie.getFileName(), e)))
 
-            self._updateOutputSet('outputMovies', movieSet, streamMode)
+            self._updateOutputSet(ProtAlignMoviesOutput.outputMovies.name, movieSet, streamMode)
 
             if firstTime:
                 # Probably is a good idea to store a cached summary for the
@@ -267,12 +273,12 @@ class ProtAlignMovies(ProtProcessMovies):
         if self._createOutputMicrographs():
             _updateOutputMicSet('micrographs.sqlite',
                                 self._getOutputMicName,
-                                'outputMicrographs')
+                                ProtAlignMoviesOutput.outputMicrographs.name)
 
         if self._createOutputWeightedMicrographs():
             _updateOutputMicSet('micrographs_dose-weighted.sqlite',
                                 self._getOutputMicWtName,
-                                'outputMicrographsDoseWeighted')
+                                ProtAlignMoviesOutput.outputMicrographsDoseWeighted.name)
 
         if self.finished:  # Unlock createOutputStep if finished all jobs
             outputStep = self._getFirstJoinStep()
@@ -375,7 +381,6 @@ class ProtAlignMovies(ProtProcessMovies):
         return first, last
 
     def _createOutputMovie(self, movie):
-        movieId = movie.getObjId()
 
         # Parse the alignment parameters and store the log files
         alignedMovie = movie.clone()
