@@ -55,13 +55,14 @@ class ProtImportCoordinates(ProtImportFiles, ProtParticlePicking):
     IMPORT_FROM_RELION = 2
     IMPORT_FROM_EMAN = 3
     IMPORT_FROM_DOGPICKER = 4
+    IMPORT_FROM_SCIPION = 5
 
     def _getImportChoices(self):
         """ Return a list of possible choices
         from which the import can be done.
         (usually packages formats such as: xmipp3, eman2, relion...etc.
         """
-        return ['auto', 'xmipp', 'relion', 'eman', 'dogpicker']
+        return ['auto', 'xmipp', 'relion', 'eman', 'dogpicker', 'scipion']
 
     def _getDefaultChoice(self):
         return self.IMPORT_FROM_AUTO
@@ -88,10 +89,13 @@ class ProtImportCoordinates(ProtImportFiles, ProtParticlePicking):
         form.addParam('boxSize', IntParam, label='Box size')
         form.addParam('scale', FloatParam,
                       label='Scale', default=1,
+                      condition='importFrom!=%d' % self.IMPORT_FROM_SCIPION,
                       help='Factor to scale coordinates')
         form.addParam('invertX', BooleanParam, default=False,
+                      condition='importFrom!=%d' % self.IMPORT_FROM_SCIPION,
                       label='Invert X')
         form.addParam('invertY', BooleanParam, default=False,
+                      condition='importFrom!=%d' % self.IMPORT_FROM_SCIPION,
                       label='Invert Y',
                       help='Invert Y for EMAN coordinates taken on dm3 or'
                            ' tif micrographs')
@@ -105,21 +109,29 @@ class ProtImportCoordinates(ProtImportFiles, ProtParticlePicking):
     # ------------------ STEPS functions --------------------------------------
     def createOutputStep(self, importFrom, *args):
         inputMics = self.inputMicrographs.get()
-        coordsSet = self._createSetOfCoordinates(inputMics)
-        coordsSet.setBoxSize(self.boxSize.get())
-        ci = self.getImportClass()
-        for coordFile, fileId in self.iterFiles():
-            mic = self.getMatchingMic(coordFile, fileId)
-            if mic is not None:
-                def addCoordinate(coord):
-                    coord.setMicrograph(mic)
-                    self.correctCoordinatePosition(coord)
-                    coordsSet.append(coord)
-                # Parse the coordinates in the given format for this micrograph
-                ci.importCoordinates(coordFile, addCoordinate=addCoordinate)
+        # scipion imports have a predefined format (see dataimport)
+        if importFrom == self.IMPORT_FROM_SCIPION:
+            from .dataimport import ScipionImport
+            self.importFilePath = self.filesPath.get('').strip()
+            sImport = ScipionImport(self, self.importFilePath)
+            # this function defines outputs and relations
+            sImport.importCoordinates(inputMics)  
+        else:
+            coordsSet = self._createSetOfCoordinates(inputMics)
+            coordsSet.setBoxSize(self.boxSize.get())
+            ci = self.getImportClass()
+            for coordFile, fileId in self.iterFiles():
+                mic = self.getMatchingMic(coordFile, fileId)
+                if mic is not None:
+                    def addCoordinate(coord):
+                        coord.setMicrograph(mic)
+                        self.correctCoordinatePosition(coord)
+                        coordsSet.append(coord)
+                    # Parse the coordinates in the given format for this micrograph
+                    ci.importCoordinates(coordFile, addCoordinate=addCoordinate)
 
-        self._defineOutputs(outputCoordinates=coordsSet)
-        self._defineSourceRelation(self.inputMicrographs, coordsSet)
+            self._defineOutputs(outputCoordinates=coordsSet)
+            self._defineSourceRelation(self.inputMicrographs, coordsSet)
 
     # ---------------- INFO functions -----------------------------------------
     def _summary(self):
@@ -177,6 +189,7 @@ class ProtImportCoordinates(ProtImportFiles, ProtParticlePicking):
                                                                'dogpicker files',
                                                       doRaise=True)
             return DogpickerImport(self)
+
         else:
             self.importFilePath = ''
             return None
