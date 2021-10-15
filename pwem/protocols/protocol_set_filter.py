@@ -250,7 +250,8 @@ class ProtSetFilter(EMProtocol):
         return finalNumber, direc
 
     def getTopRankItems(self, attribute, iSet, finalNumber, direc='ASC'):
-        modifiedSet = iSet.createCopy(self._getExtraPath(), copyInfo=True)
+        modifiedSet = iSet.create(self._getExtraPath())
+        modifiedSet.copyInfo(iSet)
         for item in iSet.iterItems(orderBy=attribute, direction=direc, limit=finalNumber):
             modifiedSet.append(item.clone())
         return modifiedSet
