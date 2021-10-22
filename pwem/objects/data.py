@@ -732,7 +732,7 @@ class Volume(Image):
         return self._classId.hasValue()
 
     def hasHalfMaps(self):
-        return self._halfMapFilenames.hasValue()
+        return not self._halfMapFilenames.isEmpty()
 
     def getHalfMaps(self):
         return self._halfMapFilenames.get()
@@ -740,6 +740,14 @@ class Volume(Image):
     def setHalfMaps(self, listFileNames):
         return self._halfMapFilenames.set(listFileNames)
 
+    def __str__(self):
+        """ returns string representation adding halves info to base image.__str__"""
+        imgStr = super().__str__()
+
+        if self.hasHalfMaps():
+            imgStr += " - w/halves"
+
+        return imgStr
 
 class VolumeMask(Volume):
     """ A 3D mask to be used with volumes. """
@@ -1734,13 +1742,13 @@ class Transform(EMObject):
             return Transform(matrix=np.array([
                 [0, 1, 0, 0],
                 [-1, 0, 0, 0],
-                [0, 0, 0, 0],
+                [0, 0, 1, 0],
                 [0, 0, 0, 1]]))
         elif type == cls.ROT_Z_90_COUNTERCLOCKWISE:
             return Transform(matrix=np.array([
                 [0, -1, 0, 0],
                 [1, 0, 0, 0],
-                [0, 0, 0, 0],
+                [0, 0, 1, 0],
                 [0, 0, 0, 1]]))
         else:
             TRANSFORMATION_FACTORY_TYPES = [

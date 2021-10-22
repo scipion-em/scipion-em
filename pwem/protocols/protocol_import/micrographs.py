@@ -25,8 +25,7 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-
-
+import enum
 import os
 from os.path import join, basename
 import re
@@ -40,6 +39,7 @@ from pwem.emlib.image import ImageHandler
 import pwem.constants as emcts
 
 from .images import ProtImportImages
+from ...objects import SetOfMicrographs, SetOfMovies
 
 
 class ProtImportMicBase(ProtImportImages):
@@ -296,11 +296,14 @@ class ProtImportMicBase(ProtImportImages):
                 return True
         return False
 
+class ImportMicsOutput(enum.Enum):
+    outputMicrographs = SetOfMicrographs()
 
 class ProtImportMicrographs(ProtImportMicBase):
     """Protocol to import a set of micrographs to the project"""
     _label = 'import micrographs'
-    _outputClassName = 'SetOfMicrographs'
+    _possibleOutputs = ImportMicsOutput
+    _outputClassName = ImportMicsOutput.outputMicrographs.value.__class__.__name__
 
     IMPORT_FROM_EMX = 1
     IMPORT_FROM_XMIPP3 = 2
@@ -428,13 +431,16 @@ class ProtImportMicrographs(ProtImportMicBase):
             self.importFilePath = ''
             return None
 
+class ImportMoviesOutput(enum.Enum):
+    outputMovies = SetOfMovies()
 
 class ProtImportMovies(ProtImportMicBase):
     """ Protocol to import a set of movies (from direct detector cameras)
     to the project.
     """
     _label = 'import movies'
-    _outputClassName = 'SetOfMovies'
+    _possibleOutputs = ImportMoviesOutput
+    _outputClassName = ImportMoviesOutput.outputMovies.value.__class__.__name__
 
     def __init__(self, **kwargs):
         ProtImportMicBase.__init__(self, **kwargs)

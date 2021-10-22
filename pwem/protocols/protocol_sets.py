@@ -578,7 +578,7 @@ class ProtSubSet(ProtSets):
                 # intersection directly in sqlite
                 exists = origElem.getObjId() in inputSubSet
                 if checkElem(exists):
-                    outputSet.append(origElem)
+                    self._append(outputSet, origElem)
 
         if outputSet.getSize():
             key = 'output' + inputClassName.replace('SetOf', '')

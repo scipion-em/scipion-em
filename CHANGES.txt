@@ -1,3 +1,38 @@
+V3.0.14
+users:
+  New protocol: numeric classes extractor: Extracts items from a SetOfClasses based on number of items assigned to the classes
+  Filter ser protocol can filter by ranking: ascending or descending getting N items or a percentage.
+  Outputs predefined for:
+    import masks
+    import mics
+    import movies
+    movie alignments
+    ctf estimators
+    pickings
+    extraction
+
+
+V3.0.13
+users:
+  JAVA_MAX_MEMORY defaults to 4GB for a better user experience with large datasets
+  Take CHIMERA_HOME from chimera plugin if available. Otherwise will go for chimerax-1.2.5 as default
+  Clean problematic characters in filenames: ;<>?"()|*\'&
+  "filter set" protocols extended to filter by coordinate distance.
+  "edit set" protocol extended to allow editing angular information.
+  .gain files are treated as tiff files when getting its dimensions.
+
+developers:
+  Transform class provides a "create" (factory method) to create common transformations.
+  pwem.convert.headers.fixVolume: to fix mrc headers of volumes.
+
+V3.0.12
+users:
+  fix create user subsets with classes2D
+
+developers:
+  pwem.convert.headers.fixVolume: fixes the header of a volume defined as stack, so we can avoid :mrc suffix in paths the paths.
+  images imported by ProtImportImage and ProtImportMask remove problematic characters -> PROBLEMATIC_SHELL_CHARS = ;<>?"()|*\'&
+
 V3.0.11
 users:
   mrc, pdb, vol files can be open with Chimera from the file browser
@@ -6,14 +41,14 @@ users:
 
 developers:
   EmSet has a create copy method to properly copy a Set
-  usefull for generic set handling (subset, join set, user subset)
-  tiltseries subsets bug fixed
+  useful for generic set handling (subset, join set, user subset)
+  tilt series subsets bug fixed
   MaskVolumeWizard - Creates a mask for a volume interactively. Masks currently implemented: Spherical mask
 
 V3.0.10
 users:
   "set filter" protocol and wizard
-  protocol tree (left pannel) collapsed at loading
+  protocol tree (left panel) collapsed at loading
 developers:
   protocols.conf created taken from scipion-app defining its own protocols.
   Add getTransformMatrix function, finds transformation matrix between to PDB files
