@@ -39,7 +39,7 @@ import pyworkflow.object as pwobj
 
 import pwem.objects as emobj
 from pwem.protocols import EMProtocol
-from pwem.objects import Volume, EMset
+from pwem.objects import Volume, EMSet
 from pyworkflow.utils import ProgressBar
 
 
