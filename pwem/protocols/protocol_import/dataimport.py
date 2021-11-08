@@ -63,6 +63,28 @@ class ScipionImport:
         micSet.copyItems(inputSet, updateItemCallback=self._updateParticle)
         self.protocol._defineOutputs(outputMicrographs=micSet)
 
+    def importCoordinates(self, inputMics):
+        """ Import a SetOfCoordinates from a given sqlite file. """
+        inputSet = emobj.SetOfCoordinates(filename=self._sqliteFile)
+        # self._findImagesPath(inputSet)
+        
+        coorSet = self.protocol._createSetOfCoordinates(inputMics)
+        coorSet.copyInfo(inputSet)
+        coorSet.setObjComment('Coordinates imported from sqlite file:\n%s'
+                             % self._sqliteFile)
+
+        # Update both samplingRate and acquisition with parameters
+        # selected in the protocol form.
+        # Acquisition should be updated before, just to ensure that
+        # scannedPixedSize will be computed properly when calling
+        # setSamplingRate
+        coorSet.setBoxSize(self.protocol.boxSize.get())
+        # Read the micrographs from the 'self._sqliteFile' metadata
+        # but fixing the filenames with new ones (linked or copy to extraDir)
+        coorSet.copyItems(inputSet)
+        self.protocol._defineOutputs(outputCoordinates=coorSet)
+        self.protocol._defineSourceRelation(inputMics, coorSet)
+
     def importParticles(self):
         """ Import particles from a metadata 'images.xmd' """
         inputSet = emobj.SetOfParticles(filename=self._sqliteFile)
