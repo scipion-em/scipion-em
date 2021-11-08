@@ -40,7 +40,7 @@ from pwem.protocols.protocol_import.images import cleanFileName
 from .base import ProtImport
 
 class ImportMaskOutput(enum.Enum):
-    outputMask = VolumeMask()
+    outputMask = VolumeMask
 
 
 class ProtImportMask(ProtImport):
