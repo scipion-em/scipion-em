@@ -102,7 +102,7 @@ OTHER = 1
 
 class ProtExtractParticlesOutput(enum.Enum):
     """Predefined outputs for particle extraction protocols"""
-    outputParticles = emobj.SetOfParticles()
+    outputParticles = emobj.SetOfParticles
 
 class ProtExtractParticles(ProtParticles):
     """ Base class for all extract-particles protocols.

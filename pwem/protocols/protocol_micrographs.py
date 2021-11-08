@@ -47,7 +47,7 @@ class ProtMicrographs(EMProtocol):
 
 
 class ProtCTFMicOutputs(enum.Enum):
-    outputCTF = emobj.SetOfCTF()
+    outputCTF = emobj.SetOfCTF
     
 class ProtCTFMicrographs(ProtMicrographs):
     """ Base class for all protocols that estimates the CTF"""

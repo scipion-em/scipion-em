@@ -48,9 +48,9 @@ from pwem.protocols import ProtProcessMovies
 
 class ProtAlignMoviesOutput(enum.Enum):
     """Pre-definition of outputs for movie alignments"""
-    outputMicrographs = emobj.SetOfMicrographs()
-    outputMicrographsDoseWeighted = emobj.SetOfMicrographs()
-    outputMovies =emobj.SetOfMovies()
+    outputMicrographs = emobj.SetOfMicrographs
+    outputMicrographsDoseWeighted = emobj.SetOfMicrographs
+    outputMovies =emobj.SetOfMovies
 
 class ProtAlignMovies(ProtProcessMovies):
     """

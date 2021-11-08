@@ -40,7 +40,7 @@ from pwem.protocols import ProtParticles
 class ProtParticlePickingOutput(enum.Enum):
     """ Possible outputs for particle picking protocols
     """
-    outputCoordinates = emobj.SetOfCoordinates()
+    outputCoordinates = emobj.SetOfCoordinates
 
 
 class ProtParticlePicking(ProtParticles):

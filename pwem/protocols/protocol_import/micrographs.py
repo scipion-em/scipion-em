@@ -297,7 +297,7 @@ class ProtImportMicBase(ProtImportImages):
         return False
 
 class ImportMicsOutput(enum.Enum):
-    outputMicrographs = SetOfMicrographs()
+    outputMicrographs = SetOfMicrographs
 
 class ProtImportMicrographs(ProtImportMicBase):
     """Protocol to import a set of micrographs to the project"""
@@ -432,7 +432,7 @@ class ProtImportMicrographs(ProtImportMicBase):
             return None
 
 class ImportMoviesOutput(enum.Enum):
-    outputMovies = SetOfMovies()
+    outputMovies = SetOfMovies
 
 class ProtImportMovies(ProtImportMicBase):
     """ Protocol to import a set of movies (from direct detector cameras)
