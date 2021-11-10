@@ -303,7 +303,7 @@ class ProtImportMicrographs(ProtImportMicBase):
     """Protocol to import a set of micrographs to the project"""
     _label = 'import micrographs'
     _possibleOutputs = ImportMicsOutput
-    _outputClassName = ImportMicsOutput.outputMicrographs.value.__class__.__name__
+    _outputClassName = ImportMicsOutput.outputMicrographs.value.__name__
 
     IMPORT_FROM_EMX = 1
     IMPORT_FROM_XMIPP3 = 2
@@ -440,7 +440,7 @@ class ProtImportMovies(ProtImportMicBase):
     """
     _label = 'import movies'
     _possibleOutputs = ImportMoviesOutput
-    _outputClassName = ImportMoviesOutput.outputMovies.value.__class__.__name__
+    _outputClassName = ImportMoviesOutput.outputMovies.value.__name__
 
     def __init__(self, **kwargs):
         ProtImportMicBase.__init__(self, **kwargs)
