@@ -518,6 +518,7 @@ class ProtSubSet(ProtSets):
         add('inputSubSet', pwprot.params.PointerParam,
             pointerClass='EMSet', condition='not chooseAtRandom',
             label="Other set",
+            allowsNull=True,
             help='The elements present in this set will be used to pick \n'
                  'elements from the input full set.     \n'
                  'This means that the output set will contain elements with \n'
