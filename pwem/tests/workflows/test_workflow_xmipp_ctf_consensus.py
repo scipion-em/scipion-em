@@ -68,7 +68,7 @@ class TestCtfConsensus(pwtests.BaseTest):
                             "The outputCTF%s has different attributes "
                             "than the input." % label)
         else:
-            self.assertAlmostEqual(avgCTF['defocusU'], firstCTF.getDefocusU(), delta=100,
+            self.assertAlmostEqual(avgCTF['defocusU'], firstCTF.getDefocusU(), delta=200,
                                    msg="DefocusU doesn't match when defocus averaging.")
             self.assertAlmostEqual(avgCTF['defocusV'], firstCTF.getDefocusV(), delta=100,
                                    msg="DefocusV doesn't match when defocus averaging.")
