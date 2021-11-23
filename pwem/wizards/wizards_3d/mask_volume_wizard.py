@@ -50,7 +50,7 @@ class MaskVolumeWizard(object):
         self.xmippOrigin = np.array((self.volume.shape[0] / 2,
                                      self.volume.shape[1] / 2,
                                      self.volume.shape[2] / 2))
-        self.origin = np.array((0, 0, 0))  # (z,y,x)
+        self.origin = np.array((0, 0, 0))  # (x,y,z)
         self.pressed = False
         self.radio = None
         self.cb = None
@@ -74,10 +74,10 @@ class MaskVolumeWizard(object):
             origin = self.origin
         else:
             # Bottom Left convention (all coordinates positive)
-            origin = self.origin + self.xmippOrigin.astype(int)
-        return np.hstack([origin[2],
+            origin = self.origin + np.flip(self.xmippOrigin.astype(int))
+        return np.hstack([origin[0],
                           origin[1],
-                          origin[0],
+                          origin[2],
                           self.radius])
 
     def is_window_closed(self):
@@ -107,9 +107,9 @@ class MaskVolumeWizard(object):
 
     def plotScatter(self):
         self.ax_3d.clear()
-        xi = self.coordsDownsampled[:, 0]
+        zi = self.coordsDownsampled[:, 0]
         yi = self.coordsDownsampled[:, 1]
-        zi = self.coordsDownsampled[:, 2]
+        xi = self.coordsDownsampled[:, 2]
         ori_x, ori_y, ori_z = self.origin[0], self.origin[1], self.origin[2]
         plt.ion()
         self.ax_3d.scatter(xi, yi, zi, s=12, c='purple', edgecolors='k', alpha=0.3)
@@ -192,16 +192,16 @@ class MaskVolumeWizard(object):
 
     def change_view(self, event):
         if event == "X":
-            self.ax_3d.view_init(elev=90., azim=0.)
-            self.M = [0, np.pi / 2., 0]
+            self.ax_3d.view_init(elev=0., azim=0.)
+            self.M = [-0., 0., 0.]
             self.dr.M = self.M
         elif event == "Y":
             self.ax_3d.view_init(elev=0., azim=90.)
-            self.M = [-np.pi / 2., 0., 0]
+            self.M = [-np.pi / 2., 0., 0.]
             self.dr.M = self.M
         elif event == "Z":
-            self.ax_3d.view_init(elev=0., azim=0.)
-            self.M = [-0., 0., 0]
+            self.ax_3d.view_init(elev=90., azim=0.)
+            self.M = [0., np.pi / 2., 0.]
             self.dr.M = self.M
         self.fig.canvas.draw()
 
