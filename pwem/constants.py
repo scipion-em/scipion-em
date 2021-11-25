@@ -166,3 +166,5 @@ FREQ_BANDPASS_WIZ_MSG = \
     'frequency and angstroms.'
 
 EM_ROOT_VAR = 'EM_ROOT'
+
+DEFAULT_MAX_PREVIEW_FILE_SIZE = 500  # Unit is MB: 500 MB
