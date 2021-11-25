@@ -10,7 +10,7 @@ users:
      ctf estimators
      pickings
      extraction
-  - Filebrowser preview for images limited to 20MB (default). MAX_PREVIEW_FILE_SIZE (in MB) can be used to change this value.
+  - Filebrowser preview for images limited to 500MB (default). MAX_PREVIEW_FILE_SIZE (in MB) can be used to change this value.
 
 V3.0.13
 users:
