@@ -79,8 +79,11 @@ class DataViewer(pwviewer.Viewer):
 
         if issubclass(cls, emobj.Volume):
             fn = emlib.image.ImageHandler.locationToXmipp(obj)
+
             if fn.endswith(':mrc'):
-                ccp4header = Ccp4Header(fn, readHeader=True)
+                # fn may came in the form of 000001@Runs/..../vol.mrc". We need to pass an actual file to Ccp4Header
+                actualFile = fn.split("@")[-1]
+                ccp4header = Ccp4Header(actualFile, readHeader=True)
                 if ccp4header.getISPG() == 1:
                     fn = fn.replace(':mrc', '')
                 else:
