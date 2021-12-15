@@ -1437,6 +1437,7 @@ class SetOfSequences(EMSet):
     ITEM_TYPE = Sequence
 
     def writeCombinedFasta(self, outPath):
+        '''Writes a single fasta file with all the sequences included in the set'''
         fastaStr = ''
         for seqItem in self:
             fastaStr += seqItem.getFastaText()
