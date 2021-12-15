@@ -828,6 +828,29 @@ class Sequence(EMObject):
     def getIsAminoacids(self):
         return self._isAminoacids
 
+    def getSequenceFastaName(self):
+        '''Return a fasta name for the sequence.
+        Priorizes the name, if None, the Id; if None, just "sequence"'''
+        inName = self.getSeqName()
+        if inName is None:
+            inName = self.getId()
+        if inName is None:
+            inName = 'sequence'
+        return inName
+
+    def getFastaText(self):
+        '''Returns the fasta of the sequence in string format'''
+        inName = self.getSequenceFastaName()
+        return '>{}\n{}\n'.format(inName, self.getSequence())
+
+    def writeFasta(self, outDir):
+        '''Writes a fasta file with the sequence in the specified directory'''
+        inName = self.getSequenceFastaName()
+        outFasta = os.path.join(outDir, inName + '.fasta')
+        with open(outFasta, 'w') as f:
+            f.write(self.getFastaText())
+        return outFasta
+
     def __str__(self):
         return "Sequence (name = {})\n".format(self.getSeqName())
 
@@ -1412,6 +1435,14 @@ class SetOfPDBs(SetOfAtomStructs):
 class SetOfSequences(EMSet):
     """Set containing Sequence items."""
     ITEM_TYPE = Sequence
+
+    def writeCombinedFasta(self, outPath):
+        fastaStr = ''
+        for seqItem in self:
+            fastaStr += seqItem.getFastaText()
+        with open(outPath, 'w') as f:
+            f.write(fastaStr)
+        return outPath
 
 
 class Coordinate(EMObject):
