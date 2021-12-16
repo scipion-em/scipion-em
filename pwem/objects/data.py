@@ -851,6 +851,14 @@ class Sequence(EMObject):
             f.write(self.getFastaText())
         return outFasta
 
+    def guessIsAminoacids(self):
+        '''Try to guess if a sequence is DNA/RNA checking the elements
+        For nucleotides, checks if elements are in ['A', 'C', 'G', 'T', 'U']'''
+        for element in self.getSequence():
+            if not element.upper() in ['A', 'C', 'G', 'T', 'U']:
+                return True
+        return False
+
     def __str__(self):
         return "Sequence (name = {})\n".format(self.getSeqName())
 
