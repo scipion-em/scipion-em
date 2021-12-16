@@ -845,9 +845,9 @@ class Sequence(EMObject):
         seqHandler = emconv.SequenceHandler(self.getSequence(),
                                             isAminoacid=self.getIsAminoacids())
         # retrieving  args from scipion object
-        seqID = self.getId()
-        seqName = self.getSeqName()
-        seqDescription = self.getDescription()
+        seqID = self.getId() if self.getId() is not None else 'seqID'
+        seqName = self.getSeqName() if self.getSeqName() is not None else 'seqName'
+        seqDescription = self.getDescription() if self.getDescription() is not None else ''
         seqHandler.appendFile(seqFileName, seqID,
                             name=seqName, seqDescription=seqDescription,
                             type=None)
@@ -1437,6 +1437,10 @@ class SetOfPDBs(SetOfAtomStructs):
 class SetOfSequences(EMSet):
     """Set containing Sequence items."""
     ITEM_TYPE = Sequence
+
+    def exportToFile(self, seqFileName):
+        for sequence in self:
+            sequence.appendToFile(seqFileName)
 
 
 

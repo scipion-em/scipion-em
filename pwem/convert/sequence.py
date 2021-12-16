@@ -27,6 +27,7 @@
 # **************************************************************************
 from urllib.error import URLError, HTTPError
 from urllib.request import urlopen
+from os.path import exists
 
 
 # sequence related stuff
@@ -90,7 +91,7 @@ class SequenceHandler:
         if type is None:
             type = self.getTypeFromFile(fileName)
 
-        if os.path.exists(fileName):
+        if exists(fileName):
             records = list(SeqIO.parse(fileName, type))
         else:
             records = []
