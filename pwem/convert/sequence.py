@@ -53,7 +53,7 @@ import sys
 from Bio.SeqRecord import SeqRecord
 from Bio.Align.Applications import ClustalOmegaCommandline, MuscleCommandline
 from Bio import pairwise2
-
+from pyworkflow.utils import getExt
 
 class SequenceHandler:
     def __init__(self, sequence=None,
@@ -70,19 +70,70 @@ class SequenceHandler:
             self._sequence = None
             # type(self._sequence):  <class 'Bio.Seq.Seq'>
 
-    def saveFile(self, fileName, seqID, sequence=None, name=None,
+    def getTypeFromFile(self, fileName):
+        '''Returns the expected BioPython file type according to the filename'''
+        ext = getExt(fileName)
+        if ext == '.fasta':
+            type = 'fasta'
+        elif ext == '.genbank' or ext == '.gb':
+            type = 'genbank'
+        else:
+            type = 'fasta'
+        return type
+
+    def appendFile(self, fileName, seqID, sequence=None, name=None,
                  seqDescription=None, type="fasta"):
+        '''Appends a sequence to the sequences in a file'''
         if sequence is not None:
             self._sequence = sequence
-        record = SeqRecord(self._sequence, id=seqID, name=name,
-                           description=seqDescription)
+
+        if type is None:
+            type = self.getTypeFromFile(fileName)
+
+        if os.path.exists(fileName):
+            records = list(SeqIO.parse(fileName, type))
+        else:
+            records = []
+        records.append(SeqRecord(self._sequence, id=seqID, name=name,
+                                 description=seqDescription))
+        with open(fileName, "w") as output_handle:
+            SeqIO.write(records, output_handle, type)
+
+    def saveFile(self, fileName, seqID, sequence=None, name=None,
+                 seqDescription=None, type="fasta"):
+        '''Saves a single sequence into a specified file'''
+        if sequence is not None:
+            self._sequence = sequence
+
+        self.saveFiles(fileName, [seqID], [self._sequence], [name], [seqDescription], type)
+
+    def saveFiles(self, fileName, seqIDs, sequences, names,
+                  seqDescriptions, type="fasta"):
+        '''Saves multiple sequences into a specified file'''
+        if type is None:
+            type = self.getTypeFromFile(fileName)
+
+        records = []
+        for seq, seqID, name, seqDescription in zip(sequences, seqIDs, names, seqDescriptions):
+            records.append(SeqRecord(seq, id=seqID, name=name,
+                               description=seqDescription))
         # type(record): < class 'Bio.SeqRecord.SeqRecord'>
         with open(fileName, "w") as output_handle:
-            SeqIO.write(record, output_handle, type)
+            SeqIO.write(records, output_handle, type)
 
     def downloadSeqFromFile(self, fileName, type="fasta"):
         record = next(SeqIO.parse(fileName, type))
         return record
+
+    def readSequencesFromFile(self, fileName, type='fasta'):
+        '''From a sequences file, returns a list of dictionaries with each sequence info.
+        Dictionary: [{'seqID': seqID1, 'sequence': sequence1, 'description': description1},
+                     ...]'''
+        sequences = []
+        records = SeqIO.parse(fileName, type)
+        for rec in records:
+            sequences.append({'seqID': rec.id, 'sequence': rec.seq, 'description': rec.description})
+        return sequences
 
     def downloadSeqFromDatabase(self, seqID):
         # see http://biopython.org/DIST/docs/api/Bio.SeqIO-module.html

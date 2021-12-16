@@ -828,36 +828,30 @@ class Sequence(EMObject):
     def getIsAminoacids(self):
         return self._isAminoacids
 
-    def getSequenceFastaName(self):
-        '''Return a fasta name for the sequence.
-        Priorizes the name, if None, the Id; if None, just "sequence"'''
-        inName = self.getSeqName()
-        if inName is None:
-            inName = self.getId()
-        if inName is None:
-            inName = 'sequence'
-        return inName
+    def exportToFile(self, seqFileName):
+        import pwem.convert as emconv
+        seqHandler = emconv.SequenceHandler(self.getSequence(),
+                                            isAminoacid=self.getIsAminoacids())
+        # retrieving  args from scipion object
+        seqID = self.getId()
+        seqName = self.getSeqName()
+        seqDescription = self.getDescription()
+        seqHandler.saveFile(seqFileName, seqID,
+                            name=seqName, seqDescription=seqDescription,
+                            type=None)
 
-    def getFastaText(self):
-        '''Returns the fasta of the sequence in string format'''
-        inName = self.getSequenceFastaName()
-        return '>{}\n{}\n'.format(inName, self.getSequence())
+    def appendToFile(self, seqFileName):
+        import pwem.convert as emconv
+        seqHandler = emconv.SequenceHandler(self.getSequence(),
+                                            isAminoacid=self.getIsAminoacids())
+        # retrieving  args from scipion object
+        seqID = self.getId()
+        seqName = self.getSeqName()
+        seqDescription = self.getDescription()
+        seqHandler.appendFile(seqFileName, seqID,
+                            name=seqName, seqDescription=seqDescription,
+                            type=None)
 
-    def writeFasta(self, outDir):
-        '''Writes a fasta file with the sequence in the specified directory'''
-        inName = self.getSequenceFastaName()
-        outFasta = os.path.join(outDir, inName + '.fasta')
-        with open(outFasta, 'w') as f:
-            f.write(self.getFastaText())
-        return outFasta
-
-    def guessIsAminoacids(self):
-        '''Try to guess if a sequence is DNA/RNA checking the elements
-        For nucleotides, checks if elements are in ['A', 'C', 'G', 'T', 'U']'''
-        for element in self.getSequence():
-            if not element.upper() in ['A', 'C', 'G', 'T', 'U']:
-                return True
-        return False
 
     def __str__(self):
         return "Sequence (name = {})\n".format(self.getSeqName())
@@ -1444,14 +1438,6 @@ class SetOfSequences(EMSet):
     """Set containing Sequence items."""
     ITEM_TYPE = Sequence
 
-    def writeCombinedFasta(self, outPath):
-        '''Writes a single fasta file with all the sequences included in the set'''
-        fastaStr = ''
-        for seqItem in self:
-            fastaStr += seqItem.getFastaText()
-        with open(outPath, 'w') as f:
-            f.write(fastaStr)
-        return outPath
 
 
 class Coordinate(EMObject):
