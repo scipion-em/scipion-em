@@ -39,7 +39,6 @@ from pyworkflow.object import (Object, Float, Integer, String,
                                Scalar)
 from pwem.constants import (NO_INDEX, ALIGN_NONE, ALIGN_2D, ALIGN_3D,
                             ALIGN_PROJ, ALIGNMENTS)
-import pwem.convert as emconv
 
 
 class EMObject(Object):
@@ -831,6 +830,7 @@ class Sequence(EMObject):
 
     def importFromFile(self, seqFileName):
         '''Fills the sequence attributes from the FIRST sequence found in the specified file'''
+        import pwem.convert as emconv
         seqHandler = emconv.SequenceHandler()
         seqDic = seqHandler.readSequenceFromFile(seqFileName, type=None)
         self._sequence, self._id = seqDic['sequence'], seqDic['seqID']
@@ -838,6 +838,7 @@ class Sequence(EMObject):
 
     def exportToFile(self, seqFileName):
         '''Exports the sequence to the specified file'''
+        import pwem.convert as emconv
         seqHandler = emconv.SequenceHandler(self.getSequence(),
                                             isAminoacid=self.getIsAminoacids())
         # retrieving  args from scipion object
@@ -851,6 +852,7 @@ class Sequence(EMObject):
     def appendToFile(self, seqFileName):
         '''Exports the sequence to the specified file. If it already exists,
         the sequence is appended to the ones in the file'''
+        import pwem.convert as emconv
         seqHandler = emconv.SequenceHandler(self.getSequence(),
                                             isAminoacid=self.getIsAminoacids())
         # retrieving  args from scipion object
@@ -1454,6 +1456,7 @@ class SetOfSequences(EMSet):
 
     def importFromFile(self, seqFileName):
         '''Appends elements to the set from sequences found in the specified file'''
+        import pwem.convert as emconv
         seqHandler = emconv.SequenceHandler()
         seqsDic = seqHandler.readSequencesFromFile(seqFileName, type=None)
         for seqDic in seqsDic:
