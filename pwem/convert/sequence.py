@@ -122,14 +122,14 @@ class SequenceHandler:
         with open(fileName, "w") as output_handle:
             SeqIO.write(records, output_handle, type)
 
-    def readSequenceFromFile(self, fileName, type="fasta"):
+    def readSequenceFromFile(self, fileName, type="fasta", isAmino=True):
         '''From a sequences file, returns a dictionary with ther FIRST sequence info.
         Dictionary: {'seqID': seqID1, 'sequence': sequence1, 'description': description1, 'alphabet': alphabet1}'''
         if type is None:
             type = self.getTypeFromFile(fileName)
-        return self.readSequencesFromFile(fileName)[0]
+        return self.readSequencesFromFile(fileName, isAmino=isAmino)[0]
 
-    def readSequencesFromFile(self, fileName, type='fasta'):
+    def readSequencesFromFile(self, fileName, type='fasta', isAmino=True):
         '''From a sequences file, returns a list of dictionaries with each sequence info.
         Dictionary: [{'seqID': seqID1, 'sequence': sequence1, 'description': description1, 'alphabet': alphabet1},
                      ...]'''
@@ -139,8 +139,10 @@ class SequenceHandler:
         sequences = []
         records = SeqIO.parse(fileName, type)
         for rec in records:
-            sequences.append({'seqID': rec.id, 'sequence': str(rec.seq), 'description': rec.description,
-                              'alphabet': rec.seq.alphabet})
+            alphabet = alphabetToIndex(isAmino, rec.seq.alphabet)
+            sequences.append({'seqID': rec.id, 'sequence': str(rec.seq),
+                              'name': rec.name, 'description': rec.description,
+                              'alphabet': alphabet, 'isAminoacids': isAmino})
         return sequences
 
     def downloadSeqFromDatabase(self, seqID):

@@ -828,13 +828,15 @@ class Sequence(EMObject):
     def getIsAminoacids(self):
         return self._isAminoacids
 
-    def importFromFile(self, seqFileName):
+    def importFromFile(self, seqFileName, isAmino=True):
         '''Fills the sequence attributes from the FIRST sequence found in the specified file'''
         import pwem.convert as emconv
         seqHandler = emconv.SequenceHandler()
-        seqDic = seqHandler.readSequenceFromFile(seqFileName, type=None)
-        self._sequence, self._id = seqDic['sequence'], seqDic['seqID']
-        self._description, self._alphabet = seqDic['description'], seqDic['alphabet']
+        seqDic = seqHandler.readSequenceFromFile(seqFileName, type=None, isAmino=isAmino)
+        self.setSequence(seqDic['sequence']), self.setId(seqDic['seqID'])
+        self.setName(seqDic['name']), self.setDescription(seqDic['description'])
+        self._alphabet.set(Integer(seqDic['alphabet']))
+        self._isAminoacids.set(Boolean(seqDic['isAminoacids']))
 
     def exportToFile(self, seqFileName):
         '''Exports the sequence to the specified file'''
@@ -842,9 +844,9 @@ class Sequence(EMObject):
         seqHandler = emconv.SequenceHandler(self.getSequence(),
                                             isAminoacid=self.getIsAminoacids())
         # retrieving  args from scipion object
-        seqID = self.getId()
-        seqName = self.getSeqName()
-        seqDescription = self.getDescription()
+        seqID = self.getId() if self.getId() is not None else 'seqID'
+        seqName = self.getSeqName() if self.getSeqName() is not None else 'seqName'
+        seqDescription = self.getDescription() if self.getDescription() is not None else ''
         seqHandler.saveFile(seqFileName, seqID,
                             name=seqName, seqDescription=seqDescription,
                             type=None)
@@ -1454,14 +1456,15 @@ class SetOfSequences(EMSet):
         for sequence in self:
             sequence.appendToFile(seqFileName)
 
-    def importFromFile(self, seqFileName):
+    def importFromFile(self, seqFileName, isAmino=True):
         '''Appends elements to the set from sequences found in the specified file'''
         import pwem.convert as emconv
         seqHandler = emconv.SequenceHandler()
-        seqsDic = seqHandler.readSequencesFromFile(seqFileName, type=None)
+        seqsDic = seqHandler.readSequencesFromFile(seqFileName, type=None, isAmino=isAmino)
         for seqDic in seqsDic:
             newSeq = Sequence(sequence=seqDic['sequence'], id=seqDic['seqID'],
-                              description=seqDic['description'], alphabet=seqsDic['alphabet'])
+                              name=seqDic['name'], description=seqDic['description'],
+                              alphabet=seqDic['alphabet'], isAminoacids=seqDic['isAminoacids'])
         self.append(newSeq)
 
 
