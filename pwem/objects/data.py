@@ -39,6 +39,7 @@ from pyworkflow.object import (Object, Float, Integer, String,
                                Scalar)
 from pwem.constants import (NO_INDEX, ALIGN_NONE, ALIGN_2D, ALIGN_3D,
                             ALIGN_PROJ, ALIGNMENTS)
+import pwem.convert as emconv
 
 
 class EMObject(Object):
@@ -828,8 +829,15 @@ class Sequence(EMObject):
     def getIsAminoacids(self):
         return self._isAminoacids
 
+    def importFromFile(self, seqFileName):
+        '''Fills the sequence attributes from the FIRST sequence found in the specified file'''
+        seqHandler = emconv.SequenceHandler()
+        seqDic = seqHandler.readSequenceFromFile(seqFileName, type=None)
+        self._sequence, self._id = seqDic['sequence'], seqDic['seqID']
+        self._description, self._alphabet = seqDic['description'], seqDic['alphabet']
+
     def exportToFile(self, seqFileName):
-        import pwem.convert as emconv
+        '''Exports the sequence to the specified file'''
         seqHandler = emconv.SequenceHandler(self.getSequence(),
                                             isAminoacid=self.getIsAminoacids())
         # retrieving  args from scipion object
@@ -841,7 +849,8 @@ class Sequence(EMObject):
                             type=None)
 
     def appendToFile(self, seqFileName):
-        import pwem.convert as emconv
+        '''Exports the sequence to the specified file. If it already exists,
+        the sequence is appended to the ones in the file'''
         seqHandler = emconv.SequenceHandler(self.getSequence(),
                                             isAminoacid=self.getIsAminoacids())
         # retrieving  args from scipion object
@@ -1439,9 +1448,18 @@ class SetOfSequences(EMSet):
     ITEM_TYPE = Sequence
 
     def exportToFile(self, seqFileName):
+        '''Writes the sequences in the set in the specified file'''
         for sequence in self:
             sequence.appendToFile(seqFileName)
 
+    def importFromFile(self, seqFileName):
+        '''Appends elements to the set from sequences found in the specified file'''
+        seqHandler = emconv.SequenceHandler()
+        seqsDic = seqHandler.readSequencesFromFile(seqFileName, type=None)
+        for seqDic in seqsDic:
+            newSeq = Sequence(sequence=seqDic['sequence'], id=seqDic['seqID'],
+                              description=seqDic['description'], alphabet=seqsDic['alphabet'])
+        self.append(newSeq)
 
 
 class Coordinate(EMObject):

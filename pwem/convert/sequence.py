@@ -125,12 +125,17 @@ class SequenceHandler:
     def readSequenceFromFile(self, fileName, type="fasta"):
         '''From a sequences file, returns a dictionary with ther FIRST sequence info.
         Dictionary: {'seqID': seqID1, 'sequence': sequence1, 'description': description1, 'alphabet': alphabet1}'''
+        if type is None:
+            type = self.getTypeFromFile(fileName)
         return self.readSequencesFromFile(fileName)[0]
 
     def readSequencesFromFile(self, fileName, type='fasta'):
         '''From a sequences file, returns a list of dictionaries with each sequence info.
         Dictionary: [{'seqID': seqID1, 'sequence': sequence1, 'description': description1, 'alphabet': alphabet1},
                      ...]'''
+        if type is None:
+            type = self.getTypeFromFile(fileName)
+
         sequences = []
         records = SeqIO.parse(fileName, type)
         for rec in records:
