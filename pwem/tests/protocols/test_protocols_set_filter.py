@@ -25,15 +25,14 @@
 # **************************************************************************
 
 
-import unittest
 import numpy as np
 from PIL import Image
 
 import pyworkflow.tests as pwtests
 import pwem.objects as emobj
-from pwem.protocols import ProtImportCoordinates, ProtSetFilter, EMProtocol
-from pwem.objects.data import SetOfCoordinates
-from pwem.constants import (SYM_I222, SYM_I222r)
+from pwem.protocols import ProtSetFilter, EMProtocol
+
+OUTPUT_COORDINATES = "outputCoordinates"
 
 class TestSetFilter(pwtests.BaseTest):
     """Run different tests related to the editor set protocol."""
@@ -100,7 +99,7 @@ class TestSetFilter(pwtests.BaseTest):
                     coordSet.append(coord)
                     coord.cleanObjId()
         coordSet.write()
-        outputArgs = {'outputCoordinates': coordSet,
+        outputArgs = {OUTPUT_COORDINATES: coordSet,
                       'outputMic': micSet}
         dummyProt._defineOutputs(**outputArgs)
         dummyProt._store()
@@ -112,7 +111,7 @@ class TestSetFilter(pwtests.BaseTest):
         protSetFilter = self.newProtocol(ProtSetFilter,
                                           objLabel="operate")
         protSetFilter.inputSet.set(dummyProt)
-        protSetFilter.inputSet.setExtended("outputCoordinates")
+        protSetFilter.inputSet.setExtended(OUTPUT_COORDINATES)
         protSetFilter.operation.set(protSetFilter.CHOICE_FORMULA)
         protSetFilter.formula.set('item._x.get()>200')
         self.launchProtocol(protSetFilter)
@@ -127,7 +126,7 @@ class TestSetFilter(pwtests.BaseTest):
         protSetFilter = self.newProtocol(ProtSetFilter,
                                          objLabel="center")
         protSetFilter.inputSet.set(dummyProt)
-        protSetFilter.inputSet.setExtended("outputCoordinates")
+        protSetFilter.inputSet.setExtended(OUTPUT_COORDINATES)
         protSetFilter.operation.set(protSetFilter.CHOICE_DISTANCE_CENTER)
         protSetFilter.distance.set(200)
         self.launchProtocol(protSetFilter)
@@ -140,7 +139,7 @@ class TestSetFilter(pwtests.BaseTest):
         protSetFilter = self.newProtocol(ProtSetFilter,
                                          objLabel="distance- keepfirst true")
         protSetFilter.inputSet.set(dummyProt)
-        protSetFilter.inputSet.setExtended("outputCoordinates")
+        protSetFilter.inputSet.setExtended(OUTPUT_COORDINATES)
         protSetFilter.operation.set(protSetFilter.CHOICE_DISTANCE_BETWEEN_COORDS)
         protSetFilter.distance.set(10)
         protSetFilter.keepFirst.set(True)
@@ -150,7 +149,7 @@ class TestSetFilter(pwtests.BaseTest):
         protSetFilter = self.newProtocol(ProtSetFilter,
                                          objLabel="distance- keepfirst false")
         protSetFilter.inputSet.set(dummyProt)
-        protSetFilter.inputSet.setExtended("outputCoordinates")
+        protSetFilter.inputSet.setExtended(OUTPUT_COORDINATES)
         protSetFilter.operation.set(protSetFilter.CHOICE_DISTANCE_BETWEEN_COORDS)
         protSetFilter.distance.set(10)
         protSetFilter.keepFirst.set(False)
@@ -158,10 +157,23 @@ class TestSetFilter(pwtests.BaseTest):
         self.assertEqual(len(protSetFilter.outputCoordinates), 1008)
         self.assertEqual(len(dummyProt.outputCoordinates), 1200)
 
+    def testRanking(self):
+        """Test ranking filtering"""
+        dummyProt = self.createCoorSetProtocol()
+        self.addFilterSetProtocol(dummyProt, '10%', dummyProt.outputCoordinates.getSize()*0.1)
+        self.addFilterSetProtocol(dummyProt, '-0.3', dummyProt.outputCoordinates.getSize() * 0.3)
 
-#
-# Auxiliary functions
-#
+        self.addFilterSetProtocol(dummyProt, '10', 10)
+        self.addFilterSetProtocol(dummyProt, '-20', 20)
 
-if __name__ == '__main__':
-    unittest.main()
+    def addFilterSetProtocol(self, inputProt, threshold, expectedSize):
+
+        protSetFilter = self.newProtocol(ProtSetFilter,
+                                          objLabel="ranking %s" % threshold)
+        protSetFilter.inputSet.set(inputProt)
+        protSetFilter.inputSet.setExtended(OUTPUT_COORDINATES)
+        protSetFilter.operation.set(protSetFilter.CHOICE_RANKED)
+        protSetFilter.threshold.set(threshold)
+        protSetFilter.rankingField.set('_x')
+        self.launchProtocol(protSetFilter)
+        self.assertSetSize(protSetFilter.outputCoordinates, expectedSize)

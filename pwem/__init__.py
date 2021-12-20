@@ -65,6 +65,7 @@ class Config(pw.Config):
     # CUDA
     CUDA_LIB = _get('CUDA_LIB', '/usr/local/cuda/lib64')
     CUDA_BIN = _get('CUDA_BIN', '/usr/local/cuda/bin')
+    MAX_PREVIEW_FILE_SIZE = float(_get("MAX_PREVIEW_FILE_SIZE", DEFAULT_MAX_PREVIEW_FILE_SIZE))
 
 
 class Domain(pyworkflow.plugin.Domain):

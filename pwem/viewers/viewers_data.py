@@ -38,6 +38,7 @@ from .views import (ObjectView, MicrographsView, CoordinatesObjectView,
                     ClassesView, Classes3DView, CtfView, DataView)
 from .showj import (RENDER, SAMPLINGRATE, ORDER, VISIBLE, MODE, MODE_MD,
                     SORT_BY, getJvmMaxMemory, launchTiltPairPickerGUI)
+from ..convert.headers import Ccp4Header
 
 
 class DataViewer(pwviewer.Viewer):
@@ -78,6 +79,17 @@ class DataViewer(pwviewer.Viewer):
 
         if issubclass(cls, emobj.Volume):
             fn = emlib.image.ImageHandler.locationToXmipp(obj)
+
+            if fn.endswith(':mrc'):
+                # fn may came in the form of 000001@Runs/..../vol.mrc". We need to pass an actual file to Ccp4Header
+                actualFile = fn.split("@")[-1]
+                ccp4header = Ccp4Header(actualFile, readHeader=True)
+                if ccp4header.getISPG() == 1:
+                    fn = fn.replace(':mrc', '')
+                else:
+                    print('Developers warning: %s headers do not match the standard for volumes. '
+                          'You can use fixVolume(pwem.convert.headers.py) '
+                          'method to fix the headers' % fn)
             self._addObjView(obj, fn,
                              {RENDER: 'image',
                               SAMPLINGRATE: obj.getSamplingRate()})

@@ -32,6 +32,7 @@ This module contains protocols related to Set operations such us:
 """
 
 import random
+import sys
 
 import pyworkflow.protocol as pwprot
 import pyworkflow.object as pwobj
@@ -39,6 +40,7 @@ import pyworkflow.object as pwobj
 import pwem.objects as emobj
 from pwem.protocols import EMProtocol
 from pwem.objects import Volume, EMSet
+from pyworkflow.utils import ProgressBar
 
 
 class ProtSets(EMProtocol):
@@ -516,6 +518,7 @@ class ProtSubSet(ProtSets):
         add('inputSubSet', pwprot.params.PointerParam,
             pointerClass='EMSet', condition='not chooseAtRandom',
             label="Other set",
+            allowsNull=True,
             help='The elements present in this set will be used to pick \n'
                  'elements from the input full set.     \n'
                  'This means that the output set will contain elements with \n'
@@ -554,11 +557,30 @@ class ProtSubSet(ProtSets):
         outputSet.copyInfo(inputFullSet)
 
         if self.chooseAtRandom:
-            chosen = random.sample(range(len(inputFullSet)),
-                                   self.nElements.get())
+            nElementsFull = len(inputFullSet)
+            nElements = self.nElements.get()
+            chosen = random.sample(range(nElementsFull),
+                                   nElements)
+            doProgressBar = False
+            if nElementsFull > 100000:  # show progressBar for large sets
+                progress = ProgressBar(total=len(inputFullSet), fmt=ProgressBar.NOBAR)
+                progress.start()
+                sys.stdout.flush()
+                step = max(100, len(inputFullSet) // 100)
+                doProgressBar = True
+            j = 0  # index for chosen list
+            chosen.sort()  # sort list of numbers
             for i, elem in enumerate(inputFullSet):
-                if i in chosen:
-                    self._append(outputSet, elem)
+                if doProgressBar and (i % step == 0):
+                     progress.update(i+1)
+                if i == chosen[j]:
+                     j += 1
+                     outputSet.append(elem)
+                     if j >= nElements:
+                          break # all needed elements have been appended
+            if doProgressBar:
+                progress.finish()
+
         else:
             # Iterate over the elements in the smaller set
             # and take the info from the full set
