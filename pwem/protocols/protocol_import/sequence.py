@@ -357,8 +357,8 @@ class ProtImportSequence(ProtImportFiles):
         elif self._getGeneBankID() is not None:
             seqHandler = emconv.SequenceHandler(isAminoacid=False)
 
-        record, error = seqHandler.downloadSeqFromDatabase(sequenceDB)
-        if record is None:
+        seqDic, error = seqHandler.downloadSeqFromDatabase(sequenceDB)
+        if seqDic is None:
             print("Error: ", error)
             self.setAborted()
             exit(0)
@@ -369,31 +369,31 @@ class ProtImportSequence(ProtImportFiles):
             self.id = sequenceDB
         else:
             self.id = self.name
-        if record.description != '':
-            self.description = record.description
+        if seqDic['description'] != '':
+            self.description = seqDic['description']
 
-        self.sequence = str(record.seq)
+        self.sequence = seqDic['sequence']
         self.alphabet = emconv.alphabetToIndex(self.inputSequence ==
-                                               emconv.SEQ_TYPE_AMINOACIDS, record.seq.alphabet)
+                                               emconv.SEQ_TYPE_AMINOACIDS, seqDic['alphabet'])
 
     def fileDownloadStep(self, sequenceFile):
         # If sequencePath contains more than one sequence, only
         # the first one will be considered
         seqHandler = emconv.SequenceHandler()
-        record = seqHandler.downloadSeqFromFile(sequenceFile,
-                                                type="fasta")
+        seqDic = seqHandler.readSequenceFromFile(sequenceFile,
+                                                 type="fasta")
         if self.inputSequenceID.get() is not None:
             self.id = self.inputSequenceID.get()
-        elif record.id != '':
-            self.id = record.id
+        elif seqDic['seqID'] != '':
+            self.id = seqDic['seqID']
         else:
             self.id = self.name
-        if record.description != '':
-            self.description = record.description
+        if seqDic['description'] != '':
+            self.description = seqDic['description']
 
-        self.sequence = str(record.seq)
+        self.sequence = seqDic['sequence']
         self.alphabet = emconv.alphabetToIndex(self.inputSequence ==
-                                               emconv.SEQ_TYPE_AMINOACIDS, record.seq.alphabet)
+                                               emconv.SEQ_TYPE_AMINOACIDS, seqDic['alphabet'])
 
     def createOutputStep(self):
         """ Register the output object. """
