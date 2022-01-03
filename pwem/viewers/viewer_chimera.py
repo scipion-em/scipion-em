@@ -34,7 +34,7 @@ import pyworkflow.viewer as pwviewer
 import pwem.constants as emcts
 import pwem.emlib.metadata as md
 import pwem.objects as emobj
-from pwem import emlib
+from pwem import emlib, Domain
 from pwem import Config as emConfig
 
 chimeraPdbTemplateFileName = "Atom_struct__%06d.cif"
@@ -316,7 +316,7 @@ class ChimeraDataView(ChimeraView):
 class ChimeraViewer(pwviewer.Viewer):
     """ Wrapper to visualize PDB object with Chimera. """
     _environments = [pwviewer.DESKTOP_TKINTER]
-    _targets = [emobj.AtomStruct, emobj.PdbFile]
+    _targets = [emobj.AtomStruct, emobj.PdbFile, emobj.SetOfAtomStructs]
 
     def __init__(self, **kwargs):
         pwviewer.Viewer.__init__(self, **kwargs)
@@ -371,6 +371,48 @@ class ChimeraViewer(pwviewer.Viewer):
             # (that are shown)
             # for the second, the visualize directly shows the objects.
             # the first approach is better
+
+        elif issubclass(cls, emobj.SetOfAtomStructs):
+            if hasattr(obj, '_chimeraScript'):
+                fn = obj._chimeraScript.get()
+                ChimeraView(fn).show()
+                return
+            else:
+                bildFileName = self.protocol._getExtraPath("axis_output.bild")
+                _inputVol = obj.getFirstItem().getVolume()
+                if _inputVol is not None:
+                    dim, sampling = _inputVol.getDim()[0], _inputVol.getSamplingRate()
+                else:
+                    dim, sampling = 150., 1.
+
+                Chimera.createCoordinateAxisFile(dim,
+                                                 bildFileName=bildFileName,
+                                                 sampling=sampling)
+
+                fnCmd = self.protocol._getExtraPath("chimera_output.cxc")
+                f = open(fnCmd, 'w')
+                f.write('cd %s\n' % os.getcwd())
+                f.write("open %s\n" % bildFileName)
+                f.write("cofr 0,0,0\n")  # set center of coordinates
+
+                if _inputVol is not None:
+                    f.write("open %s\n" % _inputVol.getFileName())
+                    x, y, z = _inputVol.getOrigin(force=True).getShifts()
+                    sampling = _inputVol.getSamplingRate()
+                    f.write("volume #%d style surface voxelSize %f\nvolume #%d origin "
+                            "%0.2f,%0.2f,%0.2f\n"
+                            % (2, sampling, 2, x, y, z))
+
+                for AS in obj:
+                    f.write("open %s\n" % AS.getFileName())
+                    #f.write("style stick\n")
+
+                f.close()
+                # run in the background
+                chimeraPlugin = Domain.importFromPlugin('chimera', 'Plugin', doRaise=True)
+                chimeraPlugin.runChimeraProgram(chimeraPlugin.getProgram(), fnCmd + "&",
+                                                cwd=os.getcwd())
+
         else:
             raise Exception('ChimeraViewer.visualize: '
                             'can not visualize class: %s' % obj.getClassName())
