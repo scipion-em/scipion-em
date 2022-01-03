@@ -340,15 +340,14 @@ class ChimeraViewer(pwviewer.Viewer):
                 ChimeraView(fn).show()
                 return
             else:
-                bildFileName = self.protocol._getExtraPath("axis_output.bild")
-                _inputVol = obj.getFirstItem().getVolume()
-
                 fnCmd = self.protocol._getExtraPath("chimera_output.cxc")
+
                 f = open(fnCmd, 'w')
                 f.write('cd %s\n' % os.getcwd())
                 f.write("cofr 0,0,0\n")  # set center of coordinates
                 f.write("style stick\n")
 
+                _inputVol = obj.getFirstItem().getVolume()
                 if _inputVol is not None:
                     volID = 1
                     dim, sampling = _inputVol.getDim()[0], _inputVol.getSamplingRate()
@@ -361,6 +360,7 @@ class ChimeraViewer(pwviewer.Viewer):
                 else:
                     dim, sampling = 150., 1.
 
+                bildFileName = self.protocol._getExtraPath("axis_output.bild")
                 Chimera.createCoordinateAxisFile(dim, bildFileName=bildFileName, sampling=sampling)
                 f.write("open %s\n" % bildFileName)
 
