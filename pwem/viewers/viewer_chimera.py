@@ -325,7 +325,7 @@ class ChimeraViewer(pwviewer.Viewer):
     def visualize(self, obj, **kwargs):
         cls = type(obj)
         if issubclass(cls, emobj.AtomStruct):
-            objSet = SetOfAtomStructs.create('/tmp')
+            objSet = SetOfAtomStructs.create(outputPath='/tmp', suffix=self.protocol.getPid())
             objSet.append(obj)
             obj, cls = objSet, type(objSet)
             # FIXME: there is an asymmetry between ProtocolViewer and Viewer
