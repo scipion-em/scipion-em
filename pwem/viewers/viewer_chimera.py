@@ -327,6 +327,9 @@ class ChimeraViewer(pwviewer.Viewer):
         if issubclass(cls, emobj.AtomStruct):
             objSet = SetOfAtomStructs.create(outputPath='/tmp', suffix=self.protocol.getObjId())
             objSet.append(obj)
+            if hasattr(obj, '_chimeraScript'):
+                objSet.copyAttributes(obj, '_chimeraScript')
+
             obj, cls = objSet, type(objSet)
 
         if issubclass(cls, emobj.SetOfAtomStructs):
