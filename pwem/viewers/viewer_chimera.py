@@ -369,10 +369,7 @@ class ChimeraViewer(pwviewer.Viewer):
                     #f.write("style stick\n")
 
                 f.close()
-                # run in the background
-                chimeraPlugin = Domain.importFromPlugin('chimera', 'Plugin', doRaise=True)
-                chimeraPlugin.runChimeraProgram(chimeraPlugin.getProgram(), fnCmd + "&",
-                                                cwd=os.getcwd())
+                ChimeraView(fnCmd).show()
 
         else:
             raise Exception('ChimeraViewer.visualize: '
