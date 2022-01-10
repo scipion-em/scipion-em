@@ -325,14 +325,9 @@ class ChimeraViewer(pwviewer.Viewer):
     def visualize(self, obj, **kwargs):
         cls = type(obj)
         if issubclass(cls, emobj.AtomStruct):
-            objSet = SetOfAtomStructs.create(outputPath='/tmp', suffix=self.protocol.getPid())
+            objSet = SetOfAtomStructs.create(outputPath='/tmp', suffix=self.protocol.getObjId())
             objSet.append(obj)
             obj, cls = objSet, type(objSet)
-            # FIXME: there is an asymmetry between ProtocolViewer and Viewer
-            # for the first, the visualize method return a list of View's
-            # (that are shown)
-            # for the second, the visualize directly shows the objects.
-            # the first approach is better
 
         if issubclass(cls, emobj.SetOfAtomStructs):
             if hasattr(obj, '_chimeraScript'):
