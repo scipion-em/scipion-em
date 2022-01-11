@@ -27,10 +27,16 @@
 import os
 
 import pyworkflow.viewer as pwviewer
-import pwem.constants as emcts
-from pwem import emlib, splitRange
-from pwem.viewers.viewer_chimera import mapVolsWithColorkey
+import pyworkflow.protocol.params as params
 import pyworkflow.gui.plotter as plotter
+
+import pwem.constants as emcts
+import pwem.protocols as emprot
+from pwem import emlib, splitRange
+from pwem.viewers.viewer_chimera import mapVolsWithColorkey, chimeraScriptFileName, Chimera, ChimeraView
+from pwem.wizards import ColorScaleWizardBase
+
+from .plotter import EmPlotter, plt
 
 
 class LocalResolutionViewer(pwviewer.ProtocolViewer):
@@ -108,3 +114,121 @@ class LocalResolutionViewer(pwviewer.ProtocolViewer):
 
     def _getColorName(self):
         return self.colorMap.get()
+
+
+class RMSDPerResidueViewer(pwviewer.ProtocolViewer):
+    """ Viewer for plot the histogram of per-residue RMSD of a SetOfAtomStruct. """
+    _label = 'RMSD per-residue viewer'
+    _targets = [emprot.ProtRMSDAtomStructs]
+    _environments = [pwviewer.DESKTOP_TKINTER, pwviewer.WEB_DJANGO]
+
+    def __init__(self, **kwargs):
+      pwviewer.ProtocolViewer.__init__(self, **kwargs)
+
+    def _defineParams(self, form):
+      form.addSection(label='Visualization of per-residue RMSD')
+      group = form.addGroup('Visualization in Chimera')
+      ColorScaleWizardBase.defineColorScaleParams(group, defaultLowest=0, defaultHighest=2,
+                                                  defaultColorMap='seismic_r')
+      group.addParam('displayStruct', params.LabelParam,
+                     label='Display output AtomStruct RMSD: ',
+                     help='*PyMol*: display AtomStruct and pockets as points / surface.'
+                     )
+
+      group = form.addGroup('RMSD histogram')
+      group.addParam('displayHistogram', params.LabelParam,
+                     label='Display histogram of RMSD per-residue: ',
+                     help='Display the pockets set in the set in table format with their respective attributes')
+
+    def _getVisualizeDict(self):
+      return {
+        'displayStruct': self._showChimera,
+        'displayHistogram': self._showHistogram,
+      }
+
+    def _showChimera(self, paramName=None):
+      obj = self.protocol
+      chimScript = obj._getExtraPath(chimeraScriptFileName)
+      f = open(chimScript, "w")
+      f.write('cd %s\n' % os.getcwd())
+      f.write("cofr 0,0,0\n")  # set center of coordinates
+
+      # building coordinate axes
+      _inputStruct = obj.outputAtomStructs.getFirstItem()
+      _inputVol = _inputStruct.getVolume()
+      if _inputVol is not None:
+        dim, sampling = _inputVol.getDim()[0], _inputVol.getSamplingRate()
+
+        f.write("open %s\n" % _inputVol.getFileName())
+        x, y, z = _inputVol.getOrigin(force=True).getShifts()
+        f.write("volume #%d style surface voxelSize %f\nvolume #%d origin "
+                "%0.2f,%0.2f,%0.2f\n"
+                % (1, sampling, 1, x, y, z))
+        strId = 3
+      else:
+        dim, sampling = 150., 1.
+        strId = 2
+
+      tmpFileName = os.path.abspath(obj._getExtraPath("axis_input.bild"))
+      Chimera.createCoordinateAxisFile(dim,
+                                       bildFileName=tmpFileName,
+                                       sampling=sampling)
+      f.write("open %s\n" % tmpFileName)
+
+      # Open atomstruct and color it by the bfactor (which is actually the DAQ score)
+      f.write("open %s\n" % _inputStruct.getFileName())
+      defAttrFile = self.reformatRMSDFile(strId)
+      f.write("defattr %s\n" % defAttrFile)
+
+      stepColors, colorList = self.getColors()
+      scolorStr = ''
+      for step, color in zip(stepColors, colorList):
+        scolorStr += '%s,%s:' % (step, color)
+      scolorStr = scolorStr[:-1]
+
+      f.write("color byattribute perResidueRMSD palette {} range 0,4".format(scolorStr))
+      f.close()
+      view = ChimeraView(chimScript)
+      return [view]
+
+    def _showHistogram(self, paramName=None):
+      obj = self.protocol
+      self.plotter = EmPlotter(x=1, y=1, windowTitle='RMSD', figure='active')
+      rmsdPerResidueDic = obj.parsePerResidueRMSD()
+      rmsdValues = list(rmsdPerResidueDic.values())
+
+      a = self.plotter.createSubPlot("Per-residue RMSD", "RMSD", "Count")
+      a.set_xlim([0, 4])
+
+      bins = [i / 10 for i in range(0, 40, 1)]
+      _, _, bars = a.hist(rmsdValues, bins=bins, linewidth=1, label="Map", rwidth=0.9)
+      for bar in bars:
+        if bar.get_x() < 1:
+          bar.set_facecolor('blue')
+        elif bar.get_x() < 3:
+          bar.set_facecolor('grey')
+        else:
+          bar.set_facecolor('red')
+      a.grid(True)
+      self.show()
+
+    def reformatRMSDFile(self, strId):
+      defattrFile = self.protocol._getExtraPath('overAllRMSD.defattr')
+      with open(defattrFile, 'w') as f:
+        with open(self.protocol.getPerResidueRMSDFile()) as fIn:
+          for i in range(2):
+            f.write(fIn.readline())
+          for line in fIn:
+            spec, value = line.strip().split()
+            f.write('\t#{}/{}:{}\t{}\n'.format(strId, spec.split('.')[1],
+                                               spec.split('.')[0][1:], value))
+      return defattrFile
+
+    def show(self, block=True):
+      self.plotter.show(block=block)
+
+    def getColors(self):
+      stepColors = splitRange(self.highest.get(), self.lowest.get(),
+                              splitNum=self.intervals.get())
+      colorList = plotter.getHexColorList(len(stepColors), self.colorMap.get())
+      return stepColors, colorList
