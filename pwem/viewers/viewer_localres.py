@@ -127,18 +127,23 @@ class RMSDPerResidueViewer(pwviewer.ProtocolViewer):
 
     def _defineParams(self, form):
       form.addSection(label='Visualization of per-residue RMSD')
-      group = form.addGroup('Visualization in Chimera')
-      ColorScaleWizardBase.defineColorScaleParams(group, defaultLowest=0, defaultHighest=2,
+      ColorScaleWizardBase.defineColorScaleParams(form, defaultLowest=0, defaultHighest=2, defaultIntervals=20,
                                                   defaultColorMap='seismic_r')
+      group = form.addGroup('Visualization in Chimera')
       group.addParam('displayStruct', params.LabelParam,
                      label='Display output AtomStruct RMSD: ',
-                     help='*PyMol*: display AtomStruct and pockets as points / surface.'
+                     help='Display one of the AtomStruct in the set, coloured by the RMSD per residue.\n'
+                          'The color palette, intervals, lowest and highest values can be chosen in the '
+                          'parameters above.'
                      )
 
       group = form.addGroup('RMSD histogram')
       group.addParam('displayHistogram', params.LabelParam,
                      label='Display histogram of RMSD per-residue: ',
-                     help='Display the pockets set in the set in table format with their respective attributes')
+                     help='Display a histogram with the number of RMSD-per residue.\n'
+                          'The intervals, lowest and highest values can be chosen in the parameters above.\n'
+                          'The bars are coloured by their RMSD value: lower 25% (blue), 25-75% (grey), higher 25% (red)'
+                     )
 
     def _getVisualizeDict(self):
       return {
@@ -198,14 +203,18 @@ class RMSDPerResidueViewer(pwviewer.ProtocolViewer):
       rmsdValues = list(rmsdPerResidueDic.values())
 
       a = self.plotter.createSubPlot("Per-residue RMSD", "RMSD", "Count")
-      a.set_xlim([0, 4])
+      low, high = self.lowest.get(), self.highest.get()
+      a.set_xlim([low, high])
 
-      bins = [i / 10 for i in range(0, 40, 1)]
+      n = 2
+      mult = 10 ** n
+      stepSize = int(round(high / self.intervals.get(), n) * mult)
+      bins = [i / mult for i in range(int(low * mult), int(high * mult), stepSize)]
       _, _, bars = a.hist(rmsdValues, bins=bins, linewidth=1, label="Map", rwidth=0.9)
       for bar in bars:
-        if bar.get_x() < 1:
+        if bar.get_x() < high/4:
           bar.set_facecolor('blue')
-        elif bar.get_x() < 3:
+        elif bar.get_x() < 3*high/4:
           bar.set_facecolor('grey')
         else:
           bar.set_facecolor('red')
