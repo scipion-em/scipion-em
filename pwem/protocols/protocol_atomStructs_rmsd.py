@@ -228,15 +228,8 @@ def get_coordinates(filename, hydrogen, chain=None, backbone=None, weight=1.0):
     if hydrogen:
         atomlist.append("H")
 
-    # PDB files tend to be a bit of a mess. The x, y and z coordinates
-    # are supposed to be in column 31-38, 39-46 and 47-54, but this is not always the case.
-    # Because of this the three first columns containing a decimal is used.
-    # Since the format doesn't require a space between columns, we use the above
-    # column indices as a fallback.
     x_column = None
     V = []
-    # Same with atoms and atom naming. The most robust way to do this is probably
-    # to assume that the atomtype is given in column 3.
 
     # resarray contains the coordinates
     resarray = []
@@ -292,21 +285,6 @@ def get_coordinates(filename, hydrogen, chain=None, backbone=None, weight=1.0):
                 except:
                     exit("Error parsing atomtype for the following line: \n%s" % line)
 
-                #				if x_column == None:
-                #					try:
-                #						# look for x column
-                #						for i, x in enumerate(tokens):
-                #							if "." in x and "." in tokens[i+1] and "." in tokens[i+2]:
-                #								x_column = i
-                #								break
-                #					except IndexError:
-                #						exit("Error parsing coordinates for the following line: \n%s" % line)
-                #				# Try to read the coordinates
-                #				try:
-                #					V.append(np.asarray(tokens[x_column:x_column+3],dtype=float)*multiplier)
-                #					presarray.append(np.asarray(tokens[x_column:x_column+3],dtype=float)*multiplier)
-                #				except:
-                # If that doesn't work, use hardcoded indices
                 try:
                     x = line[30:38]
                     y = line[38:46]
