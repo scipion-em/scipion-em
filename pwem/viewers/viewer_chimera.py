@@ -322,7 +322,7 @@ class ChimeraViewer(pwviewer.Viewer):
     def __init__(self, **kwargs):
         pwviewer.Viewer.__init__(self, **kwargs)
 
-    def visualize(self, obj, **kwargs):
+    def _visualize(self, obj, **kwargs):
         cls = type(obj)
         if issubclass(cls, emobj.AtomStruct):
             objSet = SetOfAtomStructs.create(outputPath='/tmp', suffix=self.protocol.getObjId())
@@ -335,8 +335,8 @@ class ChimeraViewer(pwviewer.Viewer):
         if issubclass(cls, emobj.SetOfAtomStructs):
             if hasattr(obj, '_chimeraScript'):
                 fn = obj._chimeraScript.get()
-                ChimeraView(fn).show()
-                return
+                view = ChimeraView(fn)
+                return [view]
             else:
                 fnCmd = self.protocol._getExtraPath("chimera_output.cxc")
 
@@ -367,7 +367,8 @@ class ChimeraViewer(pwviewer.Viewer):
                     #f.write("style stick\n")
 
                 f.close()
-                ChimeraView(fnCmd).show()
+                view = ChimeraView(fnCmd)
+                return [view]
 
         else:
             raise Exception('ChimeraViewer.visualize: '
