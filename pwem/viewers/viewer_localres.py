@@ -220,9 +220,9 @@ class RMSDPerResidueViewer(pwviewer.ProtocolViewer):
       bins = [i / mult for i in range(int(low * mult), int(high * mult), stepSize)]
       _, _, bars = a.hist(rmsdValues, bins=bins, linewidth=1, label="Map", rwidth=0.9)
       for bar in bars:
-        if bar.get_x() < high/4:
+        if bar.get_x() < ((high - low) / 4) + low:
           bar.set_facecolor('blue')
-        elif bar.get_x() < 3*high/4:
+        elif bar.get_x() < (3 * (high - low) / 4) + low:
           bar.set_facecolor('grey')
         else:
           bar.set_facecolor('red')
