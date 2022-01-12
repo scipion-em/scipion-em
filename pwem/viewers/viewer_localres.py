@@ -227,7 +227,7 @@ class RMSDPerResidueViewer(pwviewer.ProtocolViewer):
         else:
           bar.set_facecolor('red')
       a.grid(True)
-      self.show()
+      return [self.plotter]
 
     def reformatRMSDFile(self, strId):
       defattrFile = self.protocol._getExtraPath('overAllRMSD.defattr')
@@ -241,8 +241,8 @@ class RMSDPerResidueViewer(pwviewer.ProtocolViewer):
                                                spec.split('.')[0][1:], value))
       return defattrFile
 
-    def show(self, block=True):
-      self.plotter.show(block=block)
+
+    ######################3 UTILS #########################
 
     def getColors(self):
       stepColors = splitRange(self.highest.get(), self.lowest.get(),
