@@ -33,7 +33,7 @@ import pyworkflow.gui.plotter as plotter
 import pwem.constants as emcts
 import pwem.protocols as emprot
 from pwem import emlib, splitRange
-from pwem.viewers.viewer_chimera import mapVolsWithColorkey, chimeraScriptFileName, Chimera, ChimeraView
+from pwem.viewers.viewer_chimera import mapVolsWithColorkey, Chimera, ChimeraView
 from pwem.wizards import ColorScaleWizardBase
 
 from .plotter import EmPlotter, plt
@@ -127,8 +127,8 @@ class RMSDPerResidueViewer(pwviewer.ProtocolViewer):
 
     def _defineParams(self, form):
       form.addSection(label='Visualization of per-residue RMSD')
-      ColorScaleWizardBase.defineColorScaleParams(form, defaultLowest=0, defaultHighest=2, defaultIntervals=20,
-                                                  defaultColorMap='seismic_r')
+      ColorScaleWizardBase.defineColorScaleParams(form, defaultLowest=0, defaultHighest=2, defaultIntervals=21,
+                                                  defaultColorMap='RdBu')
       group = form.addGroup('Visualization in Chimera')
       group.addParam('displayStruct', params.LabelParam,
                      label='Display output AtomStruct RMSD: ',
@@ -153,10 +153,15 @@ class RMSDPerResidueViewer(pwviewer.ProtocolViewer):
 
     def _showChimera(self, paramName=None):
       obj = self.protocol
-      chimScript = obj._getExtraPath(chimeraScriptFileName)
+      chimScript = obj._getExtraPath('chimera_script.py')
       f = open(chimScript, "w")
-      f.write('cd %s\n' % os.getcwd())
-      f.write("cofr 0,0,0\n")  # set center of coordinates
+      f.write("from chimerax.core.commands import run\n")
+      f.write("from chimerax.graphics.windowsize import window_size\n")
+      f.write("from PyQt5.QtGui import QFontMetrics\n")
+      f.write("from PyQt5.QtGui import QFont\n")
+      
+      f.write("run(session, 'cd %s')\n" % os.getcwd())
+      f.write("run(session, 'cofr 0,0,0')\n")  # set center of coordinates
 
       # building coordinate axes
       _inputStruct = obj.outputAtomStructs.getFirstItem()
@@ -164,11 +169,10 @@ class RMSDPerResidueViewer(pwviewer.ProtocolViewer):
       if _inputVol is not None:
         dim, sampling = _inputVol.getDim()[0], _inputVol.getSamplingRate()
 
-        f.write("open %s\n" % _inputVol.getFileName())
+        f.write("run(session, 'open %s')\n" % _inputVol.getFileName())
         x, y, z = _inputVol.getOrigin(force=True).getShifts()
-        f.write("volume #%d style surface voxelSize %f\nvolume #%d origin "
-                "%0.2f,%0.2f,%0.2f\n"
-                % (1, sampling, 1, x, y, z))
+        f.write("run(session, 'volume #%d style surface voxelSize %f')\n" % (1, sampling))
+        f.write("run(session, 'volume #%d origin %0.2f,%0.2f,%0.2f')\n" % (1, x, y, z))
         strId = 3
       else:
         dim, sampling = 150., 1.
@@ -178,12 +182,12 @@ class RMSDPerResidueViewer(pwviewer.ProtocolViewer):
       Chimera.createCoordinateAxisFile(dim,
                                        bildFileName=tmpFileName,
                                        sampling=sampling)
-      f.write("open %s\n" % tmpFileName)
+      f.write("run(session, 'open %s')\n" % tmpFileName)
 
       # Open atomstruct and color it by the bfactor (which is actually the DAQ score)
-      f.write("open %s\n" % _inputStruct.getFileName())
+      f.write("run(session, 'open %s')\n" % _inputStruct.getFileName())
       defAttrFile = self.reformatRMSDFile(strId)
-      f.write("defattr %s\n" % defAttrFile)
+      f.write("run(session, 'defattr %s')\n" % defAttrFile)
 
       stepColors, colorList = self.getColors()
       scolorStr = ''
@@ -191,7 +195,11 @@ class RMSDPerResidueViewer(pwviewer.ProtocolViewer):
         scolorStr += '%s,%s:' % (step, color)
       scolorStr = scolorStr[:-1]
 
-      f.write("color byattribute perResidueRMSD palette {} range 0,4".format(scolorStr))
+      f.write("run(session, 'color byattribute perResidueRMSD palette {} range {},{}')\n".
+              format(scolorStr, self.lowest.get(), self.highest.get()))
+      f.write(self.generateColorLegend(stepColors, colorList))
+      f.write("run(session, 'view')\n")
+
       f.close()
       view = ChimeraView(chimScript)
       return [view]
@@ -241,3 +249,37 @@ class RMSDPerResidueViewer(pwviewer.ProtocolViewer):
                               splitNum=self.intervals.get())
       colorList = plotter.getHexColorList(len(stepColors), self.colorMap.get())
       return stepColors, colorList
+
+    def generateColorLegend(self, stepColors, colorList):
+      '''Return a string to write in the file for getting the color legend'''
+      colorStr = ''
+      colorStr += "v = session.main_view\n"
+      colorStr += "vx,vy=v.window_size\n"
+
+      # Calculate heights and Y positions: font, scale height and firstY
+      ptSize = 12  # default size chimera font
+      colorStr += 'font = QFont("Ariel", %d)\n' % ptSize
+      colorStr += 'f = QFontMetrics(font)\n'
+      colorStr += '_height =  1 * f.height()/vy\n'  # Font height
+      colorStr += '_half_scale_height = _height * %f/2\n' % len(stepColors)  # Full height of the scale
+      colorStr += "_firstY= 0.5 + _half_scale_height\n"  # Y location for first label
+
+      colorStr += "step = "
+      # place labels in right place
+      # unfortunately chimera has no colorbar
+      labelCount = 0
+      for step, color in zip(stepColors, colorList):
+        if step > 99.9:
+          step = "%.2f" % step
+        else:
+          step = "{:05.2f}".format(step)
+        command = 'run(session, "2dlabel text ' + step + \
+                  ' bgColor ' + color + \
+                  ' xpos 0.01 ypos %f' + \
+                  ' size ' + str(ptSize) + \
+                  '" % ' + \
+                  '(_firstY - %f*_height))\n' % (labelCount)
+
+        colorStr += command
+        labelCount += 1
+      return colorStr
