@@ -34,7 +34,6 @@ import pwem.constants as emcts
 import pwem.protocols as emprot
 from pwem import emlib, splitRange
 from pwem.viewers.viewer_chimera import mapVolsWithColorkey, Chimera, ChimeraView
-from pwem.wizards import ColorScaleWizardBase
 
 from .plotter import EmPlotter, plt
 
@@ -127,6 +126,7 @@ class RMSDPerResidueViewer(pwviewer.ProtocolViewer):
 
     def _defineParams(self, form):
       form.addSection(label='Visualization of per-residue RMSD')
+      from pwem.wizards.wizard import ColorScaleWizardBase
       ColorScaleWizardBase.defineColorScaleParams(form, defaultLowest=0, defaultHighest=2, defaultIntervals=21,
                                                   defaultColorMap='RdBu')
       group = form.addGroup('Visualization in Chimera')
