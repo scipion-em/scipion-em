@@ -1,6 +1,7 @@
 # **************************************************************************
 # *
 # * Authors:     J.M. De la Rosa Trevin (delarosatrevin@scilifelab.se) [1]
+# * Authors:     Daniel Del Hoyo (ddelhoyo@cnb.csic.es)
 # *
 # * [1] SciLifeLab, Stockholm University
 # *
@@ -33,6 +34,7 @@ import pyworkflow.gui.plotter as plotter
 import pwem.constants as emcts
 import pwem.protocols as emprot
 from pwem import emlib, splitRange
+from pwem.objects import AtomStruct, SetOfAtomStructs
 from pwem.viewers.viewer_chimera import mapVolsWithColorkey, Chimera, ChimeraView
 
 from .plotter import EmPlotter, plt
@@ -115,9 +117,10 @@ class LocalResolutionViewer(pwviewer.ProtocolViewer):
         return self.colorMap.get()
 
 
-class RMSDPerResidueViewer(pwviewer.ProtocolViewer):
-    """ Viewer for plot the histogram of per-residue RMSD of a SetOfAtomStruct. """
-    _label = 'RMSD per-residue viewer'
+class ChimeraAttributeViewer(pwviewer.ProtocolViewer):
+    """ Viewer for attributes of a SetOfAtomStruct or AtomStruct.
+    Includes visualization in chimera and in histograms"""
+    _label = 'Atomic structure attributes viewer'
     _targets = [emprot.ProtRMSDAtomStructs]
     _environments = [pwviewer.DESKTOP_TKINTER, pwviewer.WEB_DJANGO]
 
@@ -125,25 +128,54 @@ class RMSDPerResidueViewer(pwviewer.ProtocolViewer):
       pwviewer.ProtocolViewer.__init__(self, **kwargs)
 
     def _defineParams(self, form):
-      form.addSection(label='Visualization of per-residue RMSD')
-      from pwem.wizards.wizard import ColorScaleWizardBase
-      ColorScaleWizardBase.defineColorScaleParams(form, defaultLowest=0, defaultHighest=2, defaultIntervals=21,
-                                                  defaultColorMap='RdBu')
-      group = form.addGroup('Visualization in Chimera')
-      group.addParam('displayStruct', params.LabelParam,
-                     label='Display output AtomStruct RMSD: ',
-                     help='Display one of the AtomStruct in the set, coloured by the RMSD per residue.\n'
+      form.addSection(label='Visualization of attributes')
+      form.addParam('attrName', params.EnumParam,
+                    choices=self._getStructureAttributes(), default=0,
+                    label='Atrribute to display: ',
+                    help='Display this attribute of the structure'
+                    )
+      group = form.addGroup('Attribute histogram')
+      group.addParam('displayHistogram', params.LabelParam,
+                     label='Display histogram of attribute: ',
+                     help='Display a histogram with the count of the attribute.\n'
                           'The color palette, intervals, lowest and highest values can be chosen in the '
-                          'parameters above.'
+                          'parameters below.'
                      )
 
-      group = form.addGroup('RMSD histogram')
-      group.addParam('displayHistogram', params.LabelParam,
-                     label='Display histogram of RMSD per-residue: ',
-                     help='Display a histogram with the number of RMSD-per residue.\n'
-                          'The intervals, lowest and highest values can be chosen in the parameters above.\n'
-                          'The bars are coloured by their RMSD value: lower 25% (blue), 25-75% (grey), higher 25% (red)'
+      group = form.addGroup('Visualization in Chimera')
+      group.addParam('displayStruct', params.LabelParam,
+                     label='Display structure and color by attribute in Chimera: ',
+                     help='Display the AtomStruct, coloured by the attribute.\n'
+                          'The color palette, intervals, lowest and highest values can be chosen in the '
+                          'parameters below.'
                      )
+
+      from pwem.wizards.wizard import ColorScaleWizardBase
+      group = form.addGroup('Color settings')
+      ColorScaleWizardBase.defineColorScaleParams(group, defaultLowest=0, defaultHighest=2, defaultIntervals=21,
+                                                  defaultColorMap='RdBu')
+
+    def _getOutputObject(self):
+        '''Return the output object of the protocol (SetOfAtomStruct or AtomStruct)
+        To change in other viewers with different output name'''
+        return getattr(self.protocol, self.protocol._OUTNAME)
+
+    def getAtomStructObject(self):
+        obj = self._getOutputObject()
+        if issubclass(type(obj), SetOfAtomStructs):
+          _inputStruct = obj.getRepresentative()
+          if _inputStruct is None:
+              _inputStruct = obj.getFirstItem()
+        elif issubclass(type(obj), AtomStruct):
+          _inputStruct = obj
+        return _inputStruct
+
+    def _getStructureAttributes(self):
+        '''Returns a list with the names of the attributes of the output object'''
+        obj = self.getAtomStructObject()
+        attrDic = obj.parseChimeraAttributesFile()
+        return list(attrDic.keys())
+
 
     def _getVisualizeDict(self):
       return {
@@ -152,8 +184,8 @@ class RMSDPerResidueViewer(pwviewer.ProtocolViewer):
       }
 
     def _showChimera(self, paramName=None):
-      obj = self.protocol
-      chimScript = obj._getExtraPath('chimera_script.py')
+      prot = self.protocol
+      chimScript = prot._getExtraPath('chimera_script.py')
       f = open(chimScript, "w")
       f.write("from chimerax.core.commands import run\n")
       f.write("from chimerax.graphics.windowsize import window_size\n")
@@ -163,8 +195,7 @@ class RMSDPerResidueViewer(pwviewer.ProtocolViewer):
       f.write("run(session, 'cd %s')\n" % os.getcwd())
       f.write("run(session, 'cofr 0,0,0')\n")  # set center of coordinates
 
-      # building coordinate axes
-      _inputStruct = obj.outputAtomStructs.getFirstItem()
+      _inputStruct = self.getAtomStructObject()
       _inputVol = _inputStruct.getVolume()
       if _inputVol is not None:
         dim, sampling = _inputVol.getDim()[0], _inputVol.getSamplingRate()
@@ -178,7 +209,7 @@ class RMSDPerResidueViewer(pwviewer.ProtocolViewer):
         dim, sampling = 150., 1.
         strId = 2
 
-      tmpFileName = os.path.abspath(obj._getExtraPath("axis_input.bild"))
+      tmpFileName = os.path.abspath(prot._getExtraPath("axis_input.bild"))
       Chimera.createCoordinateAxisFile(dim,
                                        bildFileName=tmpFileName,
                                        sampling=sampling)
@@ -186,7 +217,7 @@ class RMSDPerResidueViewer(pwviewer.ProtocolViewer):
 
       # Open atomstruct and color it by the bfactor (which is actually the DAQ score)
       f.write("run(session, 'open %s')\n" % _inputStruct.getFileName())
-      defAttrFile = self.reformatRMSDFile(strId)
+      defAttrFile = self.reformatAttributesFile(_inputStruct, strId)
       f.write("run(session, 'defattr %s')\n" % defAttrFile)
 
       stepColors, colorList = self.getColors()
@@ -195,8 +226,8 @@ class RMSDPerResidueViewer(pwviewer.ProtocolViewer):
         scolorStr += '%s,%s:' % (step, color)
       scolorStr = scolorStr[:-1]
 
-      f.write("run(session, 'color byattribute perResidueRMSD palette {} range {},{}')\n".
-              format(scolorStr, self.lowest.get(), self.highest.get()))
+      f.write("run(session, 'color byattribute {} palette {} range {},{}')\n".
+              format(self.getEnumText('attrName'), scolorStr, self.lowest.get(), self.highest.get()))
       f.write(self.generateColorLegend(stepColors, colorList))
       f.write("run(session, 'view')\n")
 
@@ -205,42 +236,32 @@ class RMSDPerResidueViewer(pwviewer.ProtocolViewer):
       return [view]
 
     def _showHistogram(self, paramName=None):
-      obj = self.protocol
-      self.plotter = EmPlotter(x=1, y=1, windowTitle='RMSD', figure='active')
-      rmsdPerResidueDic = obj.parsePerResidueRMSD()
-      rmsdValues = list(rmsdPerResidueDic.values())
+      prot = self.protocol
+      attrname = self.getEnumText('attrName')
 
-      a = self.plotter.createSubPlot("Per-residue RMSD", "RMSD", "Count")
+      attrDic = self.getAtomStructObject().parseChimeraAttributesFile(parseIdentifiers=False)
+      #TODO: admit non float attributes
+      attrValues = list(map(float, attrDic[attrname].values()))
+
+      self.plotter = EmPlotter(x=1, y=1, windowTitle=attrname)
+      a = self.plotter.createSubPlot("{} counts".format(self.getEnumText('attrName')),
+                                     self.getEnumText('attrName'), "Count")
       low, high = self.lowest.get(), self.highest.get()
       a.set_xlim([low, high])
 
       n = 2
       mult = 10 ** n
-      stepSize = int(round(high / self.intervals.get(), n) * mult)
+      stepSize = int(round((high-low) / self.intervals.get(), n) * mult)
       bins = [i / mult for i in range(int(low * mult), int(high * mult), stepSize)]
-      _, _, bars = a.hist(rmsdValues, bins=bins, linewidth=1, label="Map", rwidth=0.9)
-      for bar in bars:
-        if bar.get_x() < ((high - low) / 4) + low:
-          bar.set_facecolor('blue')
-        elif bar.get_x() < (3 * (high - low) / 4) + low:
-          bar.set_facecolor('grey')
-        else:
-          bar.set_facecolor('red')
+      _, _, bars = a.hist(attrValues, bins=bins, linewidth=1, label="Map", rwidth=0.9)
+
+      colorSteps, colorList = self.getColors()
+      colorList.reverse()
+      for bar, colorS, color in zip(bars, colorSteps, colorList):
+          bar.set_facecolor(color)
+
       a.grid(True)
       return [self.plotter]
-
-    def reformatRMSDFile(self, strId):
-      defattrFile = self.protocol._getExtraPath('overAllRMSD.defattr')
-      with open(defattrFile, 'w') as f:
-        with open(self.protocol.getPerResidueRMSDFile()) as fIn:
-          for i in range(2):
-            f.write(fIn.readline())
-          for line in fIn:
-            spec, value = line.strip().split()
-            f.write('\t#{}/{}:{}\t{}\n'.format(strId, spec.split('.')[1],
-                                               spec.split('.')[0][1:], value))
-      return defattrFile
-
 
     ######################3 UTILS #########################
 
@@ -283,3 +304,11 @@ class RMSDPerResidueViewer(pwviewer.ProtocolViewer):
         colorStr += command
         labelCount += 1
       return colorStr
+
+    def reformatAttributesFile(self, AS, chiEleId):
+        defAttrStr = open(AS.getChimeraAttributesFile()).read()
+        defAttrStr = defAttrStr.replace('#chimEleID/', '#{}/'.format(modelId))
+        with open(AS.getChimeraAttributesFile(), 'w') as f:
+            f.write(defAttrStr)
+        return AS.getChimeraAttributesFile()
+

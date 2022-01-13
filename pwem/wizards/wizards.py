@@ -263,4 +263,4 @@ class PythonTopRankWizard(pwizard.Wizard):
         form.setVar('rankingField', dlg.values[0].get())
 
 class ColorScaleWizardRMSD(ColorScaleWizardBase):
-  _targets = ColorScaleWizardBase.defineTargets(emview.RMSDPerResidueViewer)
+  _targets = ColorScaleWizardBase.defineTargets(emview.ChimeraAttributeViewer)

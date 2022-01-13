@@ -43,6 +43,9 @@ class ProtRMSDAtomStructs(EMProtocol):
     """
 
     _label = 'RMSD validate map'
+    _ATTRNAME = 'perResidueRMSD'
+    _OUTNAME = 'outputAtomStructs'
+    _possibleOutputs = {_OUTNAME: SetOfAtomStructs}
 
     averageRMSDs = []
     combinedResRMSDs = []
@@ -126,38 +129,20 @@ class ProtRMSDAtomStructs(EMProtocol):
         rmsdval = rmsd(P, Q)
         self.averageRMSDs.append(rmsdval)
         self.combinedResRMSDs.append(per_res_rmsd)
-
-        print("RMSD %s to %s: %.3f" % (os.path.basename(pdbFiles[0]), os.path.basename(pdbFiles[1]), rmsdval))
+        print("RMSD %s to %s: %.4f" % (os.path.basename(pdbFiles[0]), os.path.basename(pdbFiles[1]), rmsdval))
     
     def createOutputStep(self):
-        combinedResAvgs = []
-        # get average per-residue RMSD
-        for i in range(self.numRes):
-            rmsdval = 0
-            for struct in self.combinedResRMSDs:
-                rmsdval += struct[i]
-            # this gives us mean RMSD for this residue
-            rmsdval /= len(self.combinedResRMSDs)
-            combinedResAvgs.append(rmsdval)
-
         overFinalRMSD = np.mean(self.averageRMSDs)
         print("Overall RMSD:", overFinalRMSD)
-
-        f = open(self.getPerResidueRMSDFile(), 'w')
-        f.write("attribute: perResidueRMSD\n")
-        f.write("recipient: residues\n")
-        for i in range(len(combinedResAvgs)):
-            reschain = self.Preslist[i][4]
-            resnum = self.Preslist[i][5:].strip()
-            f.write("\t:%s.%s\t%.3f\n" % (resnum, reschain, combinedResAvgs[i]))
-        f.close()
+        rmsdAttrDic = self.getRMSDAttributeDic()
 
         outSet = SetOfAtomStructs.create(self._getPath())
         for AS in self.inputStructureSet.get():
+            AS.writeChimeraAttributesFile(rmsdAttrDic, self.getPerResidueRMSDFile())
+            AS.appendChimeraAttributesFile(self.getPerResidueRMSDFile())
             outSet.append(AS.clone())
         outSet.overallRMSD = Float(overFinalRMSD)
-        outSet.RMSDFile = String(self.getPerResidueRMSDFile())
-        self._defineOutputs(outputAtomStructs=outSet)
+        self._defineOutputs(**{self._OUTNAME:outSet})
 
 
     # --------------------------- INFO functions ------------------------------
@@ -200,17 +185,28 @@ class ProtRMSDAtomStructs(EMProtocol):
             return None
 
     def getPerResidueRMSDFile(self):
-        return self._getPath('overAllRMSD.txt')
+        return self._getPath('{}.defattr'.format(self._ATTRNAME))
 
-    def parsePerResidueRMSD(self):
-        rmsdDic = {}
-        with open(self.getPerResidueRMSDFile()) as fIn:
-            [fIn.readline() for i in range(2)]
-            for line in fIn:
-                rmsdDic[line.split()[0].strip().split(':')[1]] = float(line.split()[1].strip())
-        return rmsdDic
+    def getRMSDAttributeDic(self):
+        '''Returns a dictionary {attrName: {'attribute': attrName, 'recipient': residues,
+                                            'resId': value}
+                                }'''
+        combinedResAvgs = []
+        # get average per-residue RMSD
+        for i in range(self.numRes):
+            rmsdval = 0
+            for struct in self.combinedResRMSDs:
+                rmsdval += struct[i]
+            # this gives us mean RMSD for this residue
+            rmsdval /= len(self.combinedResRMSDs)
+            combinedResAvgs.append(rmsdval)
 
-
+        attrDic = {self._ATTRNAME: {'attribute': self._ATTRNAME,
+                                    'recipient': 'residues'}}
+        for i in range(len(combinedResAvgs)):
+            resId = '{}:{}'.format(self.Preslist[i][4], self.Preslist[i][5:].strip())
+            attrDic[self._ATTRNAME][resId] = combinedResAvgs[i]
+        return attrDic
 
 
 def rmsd(V, W):

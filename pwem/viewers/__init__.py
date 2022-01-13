@@ -33,7 +33,7 @@ from .viewer_base import EmProtocolViewer
 from .plotter import EmPlotter
 from .viewers_data import DataViewer
 
-from .viewer_localres import LocalResolutionViewer, RMSDPerResidueViewer
+from .viewer_localres import LocalResolutionViewer, ChimeraAttributeViewer
 from .viewer_vmd import Vmd, VmdView, VmdViewer
 from .viewer_fsc import FscViewer
 from .viewer_pdf import PDFReportViewer
