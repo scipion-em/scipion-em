@@ -575,7 +575,7 @@ class ProtSubSet(ProtSets):
                      progress.update(i+1)
                 if i == chosen[j]:
                      j += 1
-                     outputSet.append(elem)
+                     self._append(outputSet, elem)
                      if j >= nElements:
                           break # all needed elements have been appended
             if doProgressBar:
