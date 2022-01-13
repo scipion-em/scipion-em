@@ -47,6 +47,10 @@ class ProtRMSDAtomStructs(EMProtocol):
     averageRMSDs = []
     combinedResRMSDs = []
 
+    def __init__(self, **kwargs):
+        EMProtocol.__init__(self, **kwargs)
+        self.stepsExecutionMode = STEPS_PARALLEL
+
     # -------------------------- DEFINE param functions -----------------------
     def _defineParams(self, form):
         form.addSection(label='Input')
@@ -70,6 +74,8 @@ class ProtRMSDAtomStructs(EMProtocol):
         group.addParam('hydrogen', BooleanParam, default=False,
                        label='Consider hydrogens: ',
                        help='Consider hydrogens into calculation')
+
+        form.addParallelSection(threads=4, mpi=1)
 
     # --------------------------- INSERT steps functions ---------------
     def _insertAllSteps(self):
