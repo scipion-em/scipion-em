@@ -24,6 +24,7 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
+from datetime import datetime
 
 import pyworkflow.tests as pwtests
 
@@ -34,9 +35,8 @@ class TestMetaData(pwtests.unittest.TestCase):
     
     _labels = [pwtests.WEEKLY]
 
-    def _newMd(self):
+    def _newMd(self, n=5):
         md0 = md.MetaData()
-        n = 5
         xcoor = range(n)
         ycoor = [x*x for x in xcoor]
         for i in range(n):
@@ -92,4 +92,21 @@ class TestMetaData(pwtests.unittest.TestCase):
 
         self.assertEqual(md0, md1)
 
+    def test_iterRowMetadata(self):
+            n = 10000
+            md0 = self._newMd(n)
+            count = 0
+            _dt = datetime.now()
+            for row in enumerate(md.iterRows(md0)):
+                self.assertIsNotNone(row)
+                rowValues = row[1]
+                image = rowValues.getValue(label='image')
+                xcorr = rowValues.getValue(label='xcoor')
+                ycorr = rowValues.getValue(label='ycoor')
+                self.assertEqual(xcorr*xcorr, ycorr)
+                count += 1
+            elapsedTime = datetime.now() - _dt
+            self.assertTrue(elapsedTime.seconds < 8,
+                            msg="Metadata iteration is too slow")
+            self.assertEqual(count, n)
 
