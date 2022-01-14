@@ -307,7 +307,7 @@ class ChimeraAttributeViewer(pwviewer.ProtocolViewer):
 
     def reformatAttributesFile(self, AS, chiEleId):
         defAttrStr = open(AS.getChimeraAttributesFile()).read()
-        defAttrStr = defAttrStr.replace('#chimEleID/', '#{}/'.format(modelId))
+        defAttrStr = defAttrStr.replace('#chimEleID/', '#{}/'.format(chiEleId))
         with open(AS.getChimeraAttributesFile(), 'w') as f:
             f.write(defAttrStr)
         return AS.getChimeraAttributesFile()
