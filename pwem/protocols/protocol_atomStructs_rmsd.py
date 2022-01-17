@@ -32,7 +32,7 @@ from pyworkflow.protocol.params import FloatParam, PointerParam, EnumParam, Bool
     STEPS_PARALLEL, StringParam
 from pyworkflow.object import Float, String
 from pwem.protocols import EMProtocol
-from pwem.convert.atom_struct import toPdb
+from pwem.convert.atom_struct import toPdb, toCIF, AtomicStructHandler, addScipionAttribute
 from pwem.objects import AtomStruct, SetOfAtomStructs
 
 class ProtRMSDAtomStructs(EMProtocol):
@@ -132,15 +132,24 @@ class ProtRMSDAtomStructs(EMProtocol):
         print("RMSD %s to %s: %.4f" % (os.path.basename(pdbFiles[0]), os.path.basename(pdbFiles[1]), rmsdval))
     
     def createOutputStep(self):
+        outStructFileBase = self._getPath('{}.cif')
         overFinalRMSD = np.mean(self.averageRMSDs)
         print("Overall RMSD:", overFinalRMSD)
         rmsdAttrDic = self.getRMSDAttributeDic()
 
+        ASH = AtomicStructHandler()
         outSet = SetOfAtomStructs.create(self._getPath())
         for AS in self.inputStructureSet.get():
-            AS.writeChimeraAttributesFile(rmsdAttrDic, self.getPerResidueRMSDFile())
-            AS.appendChimeraAttributesFile(self.getPerResidueRMSDFile())
-            outSet.append(AS.clone())
+            outStructFileName = outStructFileBase.format(os.path.splitext(os.path.basename(AS.getFileName()))[0])
+            inpAS = toCIF(AS.getFileName(), self._getTmpPath('inputStruct.cif'))
+            cifDic = ASH.readLowLevel(inpAS)
+            cifDic = addScipionAttribute(cifDic, rmsdAttrDic, self._ATTRNAME)
+            ASH._writeLowLevel(outStructFileName, cifDic)
+
+            outAS = AS.clone()
+            outAS.setFileName(outStructFileName)
+            outSet.append(outAS.clone())
+
         outSet.overallRMSD = Float(overFinalRMSD)
         self._defineOutputs(**{self._OUTNAME:outSet})
 
@@ -153,9 +162,7 @@ class ProtRMSDAtomStructs(EMProtocol):
     def _summary(self):
         summary = []
         try:
-            summary.append('Overall RMSD: {:.4f}\nMean RMSD per residue in: {}'
-                           .format(float(self.outputAtomStructs.overallRMSD),
-                                   self.outputAtomStructs.RMSDFile))
+            summary.append('Overall RMSD: {:.4f}\n'.format(float(self.outputAtomStructs.overallRMSD)))
         except:
             summary = ["Overall RMSD not yet computed"]
         return summary
@@ -184,13 +191,9 @@ class ProtRMSDAtomStructs(EMProtocol):
         else:
             return None
 
-    def getPerResidueRMSDFile(self):
-        return self._getPath('{}.defattr'.format(self._ATTRNAME))
-
     def getRMSDAttributeDic(self):
-        '''Returns a dictionary {attrName: {'attribute': attrName, 'recipient': residues,
-                                            'resId': value}
-                                }'''
+        '''Return a dictionary with {spec: value}
+        "spec" should be a chimera specifier'''
         combinedResAvgs = []
         # get average per-residue RMSD
         for i in range(self.numRes):
@@ -201,11 +204,10 @@ class ProtRMSDAtomStructs(EMProtocol):
             rmsdval /= len(self.combinedResRMSDs)
             combinedResAvgs.append(rmsdval)
 
-        attrDic = {self._ATTRNAME: {'attribute': self._ATTRNAME,
-                                    'recipient': 'residues'}}
+        attrDic = {}
         for i in range(len(combinedResAvgs)):
             resId = '{}:{}'.format(self.Preslist[i][4], self.Preslist[i][5:].strip())
-            attrDic[self._ATTRNAME][resId] = combinedResAvgs[i]
+            attrDic[resId] = str(round(combinedResAvgs[i], 4))
         return attrDic
 
 

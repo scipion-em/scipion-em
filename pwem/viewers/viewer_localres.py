@@ -26,6 +26,7 @@
 # **************************************************************************
 
 import os
+import numpy as np
 
 import pyworkflow.viewer as pwviewer
 import pyworkflow.protocol.params as params
@@ -36,6 +37,7 @@ import pwem.protocols as emprot
 from pwem import emlib, splitRange
 from pwem.objects import AtomStruct, SetOfAtomStructs
 from pwem.viewers.viewer_chimera import mapVolsWithColorkey, Chimera, ChimeraView
+from pwem.convert.atom_struct import AtomicStructHandler
 
 from .plotter import EmPlotter, plt
 
@@ -123,6 +125,8 @@ class ChimeraAttributeViewer(pwviewer.ProtocolViewer):
     _label = 'Atomic structure attributes viewer'
     _targets = [emprot.ProtRMSDAtomStructs]
     _environments = [pwviewer.DESKTOP_TKINTER, pwviewer.WEB_DJANGO]
+    SECTION = '_scipion_attributes'
+    NAME, RECIP, SPEC, VALUE = SECTION + '.name', SECTION + '.recipient', SECTION + '.specifier', SECTION + '.value'
 
     def __init__(self, **kwargs):
       pwviewer.ProtocolViewer.__init__(self, **kwargs)
@@ -130,8 +134,8 @@ class ChimeraAttributeViewer(pwviewer.ProtocolViewer):
     def _defineParams(self, form):
       form.addSection(label='Visualization of attributes')
       form.addParam('attrName', params.EnumParam,
-                    choices=self._getStructureAttributes(), default=0,
-                    label='Atrribute to display: ',
+                    choices=self._getStructureAttributes(), default=self._getAttributeIndex(self.protocol._ATTRNAME),
+                    label='Attribute to display: ',
                     help='Display this attribute of the structure'
                     )
       group = form.addGroup('Attribute histogram')
@@ -173,8 +177,14 @@ class ChimeraAttributeViewer(pwviewer.ProtocolViewer):
     def _getStructureAttributes(self):
         '''Returns a list with the names of the attributes of the output object'''
         obj = self.getAtomStructObject()
-        attrDic = obj.parseChimeraAttributesFile()
-        return list(attrDic.keys())
+        ASH = AtomicStructHandler()
+        cifDic = ASH.readLowLevel(obj.getFileName())
+        return list(set(cifDic[self.NAME]))
+
+    def _getAttributeIndex(self, attrName):
+        '''Returns a list with the names of the attributes of the output object'''
+        names = self._getStructureAttributes()
+        return names.index(attrName)
 
 
     def _getVisualizeDict(self):
@@ -217,7 +227,7 @@ class ChimeraAttributeViewer(pwviewer.ProtocolViewer):
 
       # Open atomstruct and color it by the bfactor (which is actually the DAQ score)
       f.write("run(session, 'open %s')\n" % _inputStruct.getFileName())
-      defAttrFile = self.reformatAttributesFile(_inputStruct, strId)
+      defAttrFile = self.createAttributesFile(_inputStruct, strId)
       f.write("run(session, 'defattr %s')\n" % defAttrFile)
 
       stepColors, colorList = self.getColors()
@@ -239,9 +249,11 @@ class ChimeraAttributeViewer(pwviewer.ProtocolViewer):
       prot = self.protocol
       attrname = self.getEnumText('attrName')
 
-      attrDic = self.getAtomStructObject().parseChimeraAttributesFile(parseIdentifiers=False)
+      cifDic = AtomicStructHandler().readLowLevel(self.getAtomStructObject().getFileName())
       #TODO: admit non float attributes
-      attrValues = list(map(float, attrDic[attrname].values()))
+      names, values = np.array(cifDic[self.NAME]), np.array(cifDic[self.VALUE])
+      attrValues = values[names == attrname]
+      attrValues = list(map(float, attrValues))
 
       self.plotter = EmPlotter(x=1, y=1, windowTitle=attrname)
       a = self.plotter.createSubPlot("{} counts".format(self.getEnumText('attrName')),
@@ -305,10 +317,23 @@ class ChimeraAttributeViewer(pwviewer.ProtocolViewer):
         labelCount += 1
       return colorStr
 
-    def reformatAttributesFile(self, AS, chiEleId):
-        defAttrStr = open(AS.getChimeraAttributesFile()).read()
-        defAttrStr = defAttrStr.replace('#chimEleID/', '#{}/'.format(chiEleId))
-        with open(AS.getChimeraAttributesFile(), 'w') as f:
+    def createAttributesFile(self, AS, chiEleId):
+        ASH = AtomicStructHandler()
+        cifDic = ASH.readLowLevel(AS.getFileName())
+
+        attrName = self.getEnumText('attrName')
+        defAttrStr = 'attribute: {}\n'.format(self.getEnumText('attrName'))
+        first = True
+        for name, recip, spec, value in zip(cifDic[self.NAME], cifDic[self.RECIP],
+                                            cifDic[self.SPEC], cifDic[self.VALUE]):
+            if name == attrName:
+                if first:
+                    defAttrStr += 'recipient: {}\n'.format(recip)
+                    first = False
+                defAttrStr += '\t#{}/{}\t{}\n'.format(chiEleId, spec, value)
+
+        defattrFile = self.protocol._getExtraPath('{}.defattr'.format(attrName))
+        with open(defattrFile, 'w') as f:
             f.write(defAttrStr)
-        return AS.getChimeraAttributesFile()
+        return defattrFile
 
