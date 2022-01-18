@@ -37,7 +37,7 @@ import pwem.protocols as emprot
 from pwem import emlib, splitRange
 from pwem.objects import AtomStruct, SetOfAtomStructs
 from pwem.viewers.viewer_chimera import mapVolsWithColorkey, Chimera, ChimeraView
-from pwem.convert.atom_struct import AtomicStructHandler
+from pwem.convert.atom_struct import *
 
 from .plotter import EmPlotter, plt
 
@@ -123,10 +123,8 @@ class ChimeraAttributeViewer(pwviewer.ProtocolViewer):
     """ Viewer for attributes of a SetOfAtomStruct or AtomStruct.
     Includes visualization in chimera and in histograms"""
     _label = 'Atomic structure attributes viewer'
-    _targets = [emprot.ProtRMSDAtomStructs]
+    _targets = []
     _environments = [pwviewer.DESKTOP_TKINTER, pwviewer.WEB_DJANGO]
-    SECTION = '_scipion_attributes'
-    NAME, RECIP, SPEC, VALUE = SECTION + '.name', SECTION + '.recipient', SECTION + '.specifier', SECTION + '.value'
 
     def __init__(self, **kwargs):
       pwviewer.ProtocolViewer.__init__(self, **kwargs)
@@ -179,7 +177,7 @@ class ChimeraAttributeViewer(pwviewer.ProtocolViewer):
         obj = self.getAtomStructObject()
         ASH = AtomicStructHandler()
         cifDic = ASH.readLowLevel(obj.getFileName())
-        return list(set(cifDic[self.NAME]))
+        return list(set(cifDic[NAME]))
 
     def _getAttributeIndex(self, attrName):
         '''Returns a list with the names of the attributes of the output object'''
@@ -198,10 +196,7 @@ class ChimeraAttributeViewer(pwviewer.ProtocolViewer):
       chimScript = prot._getExtraPath('chimera_script.py')
       f = open(chimScript, "w")
       f.write("from chimerax.core.commands import run\n")
-      f.write("from chimerax.graphics.windowsize import window_size\n")
-      f.write("from PyQt5.QtGui import QFontMetrics\n")
-      f.write("from PyQt5.QtGui import QFont\n")
-      
+
       f.write("run(session, 'cd %s')\n" % os.getcwd())
       f.write("run(session, 'cofr 0,0,0')\n")  # set center of coordinates
 
@@ -230,7 +225,7 @@ class ChimeraAttributeViewer(pwviewer.ProtocolViewer):
       # Open atomstruct and color it by the bfactor (which is actually the DAQ score)
       f.write("run(session, 'open %s')\n" % _inputStruct.getFileName())
       defAttrFile = self.createAttributesFile(_inputStruct, strId)
-      f.write("run(session, 'defattr %s')\n" % defAttrFile)
+      f.write("run(session, 'open %s')\n" % defAttrFile)
 
       stepColors, colorList = self.getColors()
       scolorStr = ''
@@ -248,12 +243,11 @@ class ChimeraAttributeViewer(pwviewer.ProtocolViewer):
       return [view]
 
     def _showHistogram(self, paramName=None):
-      prot = self.protocol
       attrname = self.getEnumText('attrName')
 
       cifDic = AtomicStructHandler().readLowLevel(self.getAtomStructObject().getFileName())
       #TODO: admit non float attributes
-      names, values = np.array(cifDic[self.NAME]), np.array(cifDic[self.VALUE])
+      names, values = np.array(cifDic[NAME]), np.array(cifDic[VALUE])
       attrValues = values[names == attrname]
       attrValues = list(map(float, attrValues))
 
@@ -287,37 +281,17 @@ class ChimeraAttributeViewer(pwviewer.ProtocolViewer):
 
     def generateColorLegend(self, stepColors, colorList):
       '''Return a string to write in the file for getting the color legend'''
-      colorStr = ''
-      colorStr += "v = session.main_view\n"
-      colorStr += "vx,vy=v.window_size\n"
-
-      # Calculate heights and Y positions: font, scale height and firstY
-      ptSize = 12  # default size chimera font
-      colorStr += 'font = QFont("Ariel", %d)\n' % ptSize
-      colorStr += 'f = QFontMetrics(font)\n'
-      colorStr += '_height =  0.3 * f.height()/vy\n'  # Font height
-      colorStr += '_half_scale_height = _height * %f/2\n' % len(stepColors)  # Full height of the scale
-      colorStr += "_firstY= 0.5 + _half_scale_height\n"  # Y location for first label
-
-      colorStr += "step = "
-      # place labels in right place
-      # unfortunately chimera has no colorbar
-      labelCount = 0
+      colorStr = 'run(session, "key{} fontSize 15 size 0.025,0.4 pos 0.01,0.3")\n'
+      labelCount, keyStr = 0, ''
+      stepColors.reverse(), colorList.reverse()
       for step, color in zip(stepColors, colorList):
-        if step > 99.9:
-          step = "%.2f" % step
-        else:
-          step = "{:05.2f}".format(step)
-        command = 'run(session, "2dlabel text ' + step + \
-                  ' bgColor ' + color + \
-                  ' xpos 0.01 ypos %f' + \
-                  ' size ' + str(ptSize) + \
-                  '" % ' + \
-                  '(_firstY - %f*_height))\n' % (labelCount)
+          if labelCount in [0, len(colorList) - 1, (len(colorList) - 1)//2]:
+              keyStr += ' {}:{}'.format(color, step)
+          else:
+              keyStr += ' {}:'.format(color)
 
-        colorStr += command
-        labelCount += 1
-      return colorStr
+          labelCount += 1
+      return colorStr.format(keyStr)
 
     def createAttributesFile(self, AS, chiEleId):
         ASH = AtomicStructHandler()
@@ -326,8 +300,8 @@ class ChimeraAttributeViewer(pwviewer.ProtocolViewer):
         attrName = self.getEnumText('attrName')
         defAttrStr = 'attribute: {}\n'.format(self.getEnumText('attrName'))
         first = True
-        for name, recip, spec, value in zip(cifDic[self.NAME], cifDic[self.RECIP],
-                                            cifDic[self.SPEC], cifDic[self.VALUE]):
+        for name, recip, spec, value in zip(cifDic[NAME], cifDic[RECIP],
+                                            cifDic[SPEC], cifDic[VALUE]):
             if name == attrName:
                 if first:
                     defAttrStr += 'recipient: {}\n'.format(recip)
