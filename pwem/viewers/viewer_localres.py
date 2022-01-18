@@ -208,13 +208,15 @@ class ChimeraAttributeViewer(pwviewer.ProtocolViewer):
       _inputStruct = self.getAtomStructObject()
       _inputVol = _inputStruct.getVolume()
       if _inputVol is not None:
+        strId = 3
         dim, sampling = _inputVol.getDim()[0], _inputVol.getSamplingRate()
 
         f.write("run(session, 'open %s')\n" % _inputVol.getFileName())
         x, y, z = _inputVol.getOrigin(force=True).getShifts()
         f.write("run(session, 'volume #%d style surface voxelSize %f')\n" % (1, sampling))
         f.write("run(session, 'volume #%d origin %0.2f,%0.2f,%0.2f')\n" % (1, x, y, z))
-        strId = 3
+        f.write("run(session, 'hide #!%d models')\n" % 1)
+
       else:
         dim, sampling = 150., 1.
         strId = 2
@@ -293,7 +295,7 @@ class ChimeraAttributeViewer(pwviewer.ProtocolViewer):
       ptSize = 12  # default size chimera font
       colorStr += 'font = QFont("Ariel", %d)\n' % ptSize
       colorStr += 'f = QFontMetrics(font)\n'
-      colorStr += '_height =  1 * f.height()/vy\n'  # Font height
+      colorStr += '_height =  0.3 * f.height()/vy\n'  # Font height
       colorStr += '_half_scale_height = _height * %f/2\n' % len(stepColors)  # Full height of the scale
       colorStr += "_firstY= 0.5 + _half_scale_height\n"  # Y location for first label
 
