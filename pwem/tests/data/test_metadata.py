@@ -26,6 +26,8 @@
 # **************************************************************************
 from datetime import datetime
 
+import emtable
+
 import pyworkflow.tests as pwtests
 
 import pwem.emlib.metadata as md
@@ -92,21 +94,68 @@ class TestMetaData(pwtests.unittest.TestCase):
 
         self.assertEqual(md0, md1)
 
+    def iterRowBinding(self, n):
+        md0 = self._newMd(n)
+        count = 0
+        _dt = datetime.now()
+        for row in enumerate(md.iterRows(md0)):
+            self.assertIsNotNone(row)
+            rowValues = row[1]
+            image = rowValues.getValue(label='image')
+            xcorr = rowValues.getValue(label='xcoor')
+            ycorr = rowValues.getValue(label='ycoor')
+            self.assertEqual(xcorr*xcorr, ycorr)
+            count += 1
+        elapsedTime = datetime.now() - _dt
+        self.assertTrue(elapsedTime.seconds < 8,
+                        msg="Metadata iteration is too slow")
+        self.assertEqual(count, n)
+        return elapsedTime
+
+    def iterRowsEMTable(self, n):
+        cols = ['image', 'xcoor', 'ycoor']
+        table = emtable.Table(columns=cols)
+        xcoor = range(n)
+        ycoor = [x * x for x in xcoor]
+        _dict = dict
+        for i in range(n):
+            _dict = {'image': '%02d@proj.stk' % i,
+                     'xcoor': xcoor[i],
+                     'ycoor': ycoor[i]}
+            table.addRow(*_dict.values())
+
+        starFile = '/tmp/test.star'
+        with open(starFile, 'w') as f:
+            f.write("# Star file generated with Scipion\n")
+            f.write("# version 30001\n")
+            table.writeStar(f, tableName='test')
+
+        count = 0
+        _dt = datetime.now()
+
+        for row in enumerate(table.iterRows(fileName=starFile, tableName='test')):
+            self.assertIsNotNone(row)
+            rowValues = row[1]
+            image = rowValues.get('image')
+            xcorr = rowValues.get('xcoor')
+            ycorr = rowValues.get('ycoor')
+            self.assertEqual(xcorr * xcorr, ycorr)
+            count += 1
+
+        elapsedTime = datetime.now() - _dt
+        self.assertTrue(elapsedTime.seconds < 1,
+                        msg="Metadata iteration is too slow")
+        self.assertEqual(count, n)
+        return elapsedTime
+
     def test_iterRowMetadata(self):
-            n = 10000
-            md0 = self._newMd(n)
-            count = 0
-            _dt = datetime.now()
-            for row in enumerate(md.iterRows(md0)):
-                self.assertIsNotNone(row)
-                rowValues = row[1]
-                image = rowValues.getValue(label='image')
-                xcorr = rowValues.getValue(label='xcoor')
-                ycorr = rowValues.getValue(label='ycoor')
-                self.assertEqual(xcorr*xcorr, ycorr)
-                count += 1
-            elapsedTime = datetime.now() - _dt
-            self.assertTrue(elapsedTime.seconds < 8,
-                            msg="Metadata iteration is too slow")
-            self.assertEqual(count, n)
+        """
+        Check if iterating over N rows using the binding is faster than emtable
+        """
+        n = 10000  # number of .star file rows
+        iterRowBindingElapsedTime = self.iterRowBinding(n)
+        iterRowsEMTableElapsedTime = self.iterRowsEMTable(n)
+        self.assertTrue(iterRowsEMTableElapsedTime < iterRowBindingElapsedTime,
+                        msg="Iterating over %d rows using the binding is "
+                            "faster than using emtable" % n)
 
