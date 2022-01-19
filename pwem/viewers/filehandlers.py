@@ -150,6 +150,8 @@ class MdFileHandler(ImageFileHandler):
             if emlib.labelIsImage(label):
                 imgPath = self._getImgPath(filename,
                                            md.getValue(label, md.firstObject()))
+                if not os.path.exists(imgPath):
+                    imgPath = None
                 break
 
         # If there is an image and is not too big
