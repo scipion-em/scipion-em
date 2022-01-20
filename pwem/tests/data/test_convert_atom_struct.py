@@ -1005,3 +1005,28 @@ HETATM 5 C CB . PRO B 1 . 1 ? 6.460 21.723 20.211 1.00 22.26 ? ? ? ? ? ? ? 1 PRO
         self.assertAlmostEqual(x2, 328.960 + 3, places=2)
         self.assertAlmostEqual(y2,   2.663 + 3, places=2)
         self.assertAlmostEqual(z2, 352.586 + 3, places=2)
+
+    def testFunctionAddAttribute(self):
+        from .hexonAtomStruct import saveFiles
+        import pwem.convert.atom_struct as convAS
+        h1Fn, h2Fn = saveFiles()
+        outFileName = '/tmp/scipionAttributes.cif'
+        attrName = 'hidrophobicity'
+
+        attrDic = {':asp':	3.49, ':glu': 2.68, ':asn':	2.05, ':gln': 2.36, ':lys':	2.71,
+                	 ':arg':	2.58, ':his':	2.06, ':gly':	0.74, ':pro':	2.23, ':ser':	0.84,
+                   ':thr':	0.52, ':cys':	-0.13, ':met':	-0.10, ':mse':	-0.10, ':ala':	0.11,
+                   ':val':	-0.31, ':ile':	-0.60, ':leu':	-0.55, ':phe':	-0.32, ':trp':	0.30,
+                	 ':tyr':	0.68}
+
+        aSH = emconv.AtomicStructHandler()
+        cifDic = aSH.readLowLevel(h1Fn)
+        cifDic = convAS.addScipionAttribute(cifDic, attrDic, attrName, 'residues')
+        aSH._writeLowLevel(outFileName, cifDic)
+
+        cifDicOut = aSH.readLowLevel(outFileName)
+        self.assertEqual(cifDicOut[convAS.NAME][0], attrName)
+        self.assertEqual(cifDicOut[convAS.RECIP][0], 'residues')
+        self.assertEqual(cifDicOut[convAS.SPEC][0], ':asp')
+        self.assertEqual(cifDicOut[convAS.VALUE][0], '3.49')
+
