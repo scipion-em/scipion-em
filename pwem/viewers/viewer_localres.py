@@ -233,8 +233,8 @@ class ChimeraAttributeViewer(pwviewer.ProtocolViewer):
         scolorStr += '%s,%s:' % (step, color)
       scolorStr = scolorStr[:-1]
 
-      f.write("run(session, 'color byattribute {} palette {} range {},{}')\n".
-              format(self.getEnumText('attrName'), scolorStr, self.lowest.get(), self.highest.get()))
+      f.write("run(session, 'color byattribute {} palette {}')\n".
+              format(self.getEnumText('attrName'), scolorStr))
       f.write(self.generateColorLegend(stepColors, colorList))
       f.write("run(session, 'view')\n")
 
@@ -248,12 +248,13 @@ class ChimeraAttributeViewer(pwviewer.ProtocolViewer):
       cifDic = AtomicStructHandler().readLowLevel(self.getAtomStructObject().getFileName())
       #TODO: admit non float attributes
       names, values = np.array(cifDic[NAME]), np.array(cifDic[VALUE])
+      recipient = cifDic[RECIP][0]
       attrValues = values[names == attrname]
       attrValues = list(map(float, attrValues))
 
       self.plotter = EmPlotter(x=1, y=1, windowTitle=attrname)
       a = self.plotter.createSubPlot("{} counts".format(self.getEnumText('attrName')),
-                                     self.getEnumText('attrName'), "Count")
+                                     self.getEnumText('attrName'), "{} count".format(recipient))
       low, high = self.lowest.get(), self.highest.get()
       a.set_xlim([low, high])
 
