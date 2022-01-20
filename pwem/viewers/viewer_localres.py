@@ -141,7 +141,8 @@ class ChimeraAttributeViewer(pwviewer.ProtocolViewer):
                      label='Display histogram of attribute: ',
                      help='Display a histogram with the count of the attribute.\n'
                           'The color palette, intervals, lowest and highest values can be chosen in the '
-                          'parameters below.'
+                          'parameters below. If the highest and lowest values you input are the same, '
+                          'the lowest and higher values in the date are used.'
                      )
 
       group = form.addGroup('Visualization in Chimera')
@@ -149,7 +150,8 @@ class ChimeraAttributeViewer(pwviewer.ProtocolViewer):
                      label='Display structure and color by attribute in Chimera: ',
                      help='Display the AtomStruct, coloured by the attribute.\n'
                           'The color palette, intervals, lowest and highest values can be chosen in the '
-                          'parameters below.'
+                          'parameters below. If the highest and lowest values you input are the same, '
+                          'the lowest and highest values in the date are used.'
                      )
 
       from pwem.wizards.wizard import ColorScaleWizardBase
@@ -255,7 +257,7 @@ class ChimeraAttributeViewer(pwviewer.ProtocolViewer):
       self.plotter = EmPlotter(x=1, y=1, windowTitle=attrname)
       a = self.plotter.createSubPlot("{} counts".format(self.getEnumText('attrName')),
                                      self.getEnumText('attrName'), "{} count".format(recipient))
-      low, high = self.lowest.get(), self.highest.get()
+      low, high = self.getValuesRange()
       a.set_xlim([low, high])
 
       n = 2
@@ -272,11 +274,22 @@ class ChimeraAttributeViewer(pwviewer.ProtocolViewer):
       a.grid(True)
       return [self.plotter]
 
-    ######################3 UTILS #########################
+    ###################### UTILS #########################
+    def getValuesRange(self):
+        if self.lowest.get() != self.highest.get():
+            return self.lowest.get(), self.highest.get()
+        else:
+            attrname = self.getEnumText('attrName')
+            cifDic = AtomicStructHandler().readLowLevel(self.getAtomStructObject().getFileName())
+            names, values = np.array(cifDic[NAME]), np.array(cifDic[VALUE])
+            recipient = cifDic[RECIP][0]
+            attrValues = values[names == attrname]
+            attrValues = list(map(float, attrValues))
+            return min(attrValues), max(attrValues)
 
     def getColors(self):
-      stepColors = splitRange(self.highest.get(), self.lowest.get(),
-                              splitNum=self.intervals.get())
+      low, high = self.getValuesRange()
+      stepColors = splitRange(high, low, splitNum=self.intervals.get())
       colorList = plotter.getHexColorList(len(stepColors), self.colorMap.get())
       return stepColors, colorList
 
