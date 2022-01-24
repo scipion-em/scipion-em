@@ -36,7 +36,7 @@ import pwem.constants as emcts
 import pwem.protocols as emprot
 from pwem import emlib, splitRange
 from pwem.objects import AtomStruct, SetOfAtomStructs
-from pwem.viewers.viewer_chimera import mapVolsWithColorkey, Chimera, ChimeraView
+from pwem.viewers.viewer_chimera import mapVolsWithColorkey, Chimera, ChimeraView, generateColorLegend
 from pwem.convert.atom_struct import *
 
 from .plotter import EmPlotter, plt
@@ -127,7 +127,7 @@ class ChimeraAttributeViewer(pwviewer.ProtocolViewer):
     _environments = [pwviewer.DESKTOP_TKINTER, pwviewer.WEB_DJANGO]
 
     def __init__(self, **kwargs):
-      pwviewer.ProtocolViewer.__init__(self, **kwargs)
+        pwviewer.ProtocolViewer.__init__(self, **kwargs)
 
     def _defineParams(self, form):
       form.addSection(label='Visualization of attributes')
@@ -153,6 +153,12 @@ class ChimeraAttributeViewer(pwviewer.ProtocolViewer):
                           'parameters below. If the highest and lowest values you input are the same, '
                           'the lowest and highest values in the date are used.'
                      )
+      group.addParam('attrRecipient', params.EnumParam,
+                    choices=['residues', 'atoms'], default=0,
+                    label='Recipient to display: ',
+                    help='Displays the counts and colors of the recipient chosen.\n'
+                         'If the chosen attribute has residue level, it will not activate the atom recipient mode'
+                    )
 
       from pwem.wizards.wizard import ColorScaleWizardBase
       group = form.addGroup('Color settings')
@@ -180,6 +186,17 @@ class ChimeraAttributeViewer(pwviewer.ProtocolViewer):
         ASH = AtomicStructHandler()
         cifDic = ASH.readLowLevel(obj.getFileName())
         return list(set(cifDic[NAME]))
+
+    def _getStructureRecipient(self):
+        '''Returns a list with the names of the attributes of the output object'''
+        obj = self.getAtomStructObject()
+        ASH = AtomicStructHandler()
+        cifDic = ASH.readLowLevel(obj.getFileName())
+
+        recipDic = {}
+        for name, recip in zip(cifDic[NAME], cifDic[RECIP]):
+            recipDic[name] = recip
+        return recipDic[self.getEnumText('attrName')]
 
     def _getAttributeIndex(self, attrName):
         '''Returns a list with the names of the attributes of the output object'''
@@ -235,9 +252,13 @@ class ChimeraAttributeViewer(pwviewer.ProtocolViewer):
         scolorStr += '%s,%s:' % (step, color)
       scolorStr = scolorStr[:-1]
 
-      f.write("run(session, 'color byattribute {} palette {}')\n".
-              format(self.getEnumText('attrName'), scolorStr))
-      f.write(self.generateColorLegend(stepColors, colorList))
+      average = ''
+      if self._getStructureRecipient() == 'atoms' and self.getEnumText('attrRecipient') == 'residues':
+          average = 'average residues'
+
+      f.write("run(session, 'color byattribute {} palette {} {}')\n".
+              format(self.getEnumText('attrName'), scolorStr, average))
+      f.write(generateColorLegend(stepColors, colorList))
       f.write("run(session, 'view')\n")
 
       f.close()
@@ -292,20 +313,6 @@ class ChimeraAttributeViewer(pwviewer.ProtocolViewer):
       stepColors = splitRange(high, low, splitNum=self.intervals.get())
       colorList = plotter.getHexColorList(len(stepColors), self.colorMap.get())
       return stepColors, colorList
-
-    def generateColorLegend(self, stepColors, colorList):
-      '''Return a string to write in the file for getting the color legend'''
-      colorStr = 'run(session, "key{} fontSize 15 size 0.025,0.4 pos 0.01,0.3")\n'
-      labelCount, keyStr = 0, ''
-      stepColors.reverse(), colorList.reverse()
-      for step, color in zip(stepColors, colorList):
-          if labelCount in [0, len(colorList) - 1, (len(colorList) - 1)//2]:
-              keyStr += ' {}:{}'.format(color, step)
-          else:
-              keyStr += ' {}:'.format(color)
-
-          labelCount += 1
-      return colorStr.format(keyStr)
 
     def createAttributesFile(self, AS, chiEleId):
         ASH = AtomicStructHandler()
