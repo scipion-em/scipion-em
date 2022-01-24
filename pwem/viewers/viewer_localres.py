@@ -153,11 +153,9 @@ class ChimeraAttributeViewer(pwviewer.ProtocolViewer):
                           'parameters below. If the highest and lowest values you input are the same, '
                           'the lowest and highest values in the date are used.'
                      )
-      group.addParam('attrRecipient', params.EnumParam,
-                    choices=['residues', 'atoms'], default=0,
-                    label='Recipient to display: ',
-                    help='Displays the counts and colors of the recipient chosen.\n'
-                         'If the chosen attribute has residue level, it will not activate the atom recipient mode'
+      group.addParam('residuesAverages', params.BooleanParam,
+                    default=True, label='Average attribute on residues: ',
+                    help='In case the recipients are the atoms, their values are averaged on the residues.\n'
                     )
 
       from pwem.wizards.wizard import ColorScaleWizardBase
@@ -253,7 +251,7 @@ class ChimeraAttributeViewer(pwviewer.ProtocolViewer):
       scolorStr = scolorStr[:-1]
 
       average = ''
-      if self._getStructureRecipient() == 'atoms' and self.getEnumText('attrRecipient') == 'residues':
+      if self._getStructureRecipient() == 'atoms' and self.residuesAverages:
           average = 'average residues'
 
       f.write("run(session, 'color byattribute {} palette {} {}')\n".
