@@ -449,21 +449,29 @@ def mapVolsWithColorkey(displayVolFileName,
                 "palette " % (chimeraVolId - 1, chimeraVolId) +
                 scolorStr + "')\n"
                 )
-    fhCmd.write(generateColorLegend(stepColors, colorList))
+    fhCmd.write(generateColorLegend(stepColors, colorList, threeLabelsOnly=False))
     fhCmd.write("run(session, 'view')\n")
     fhCmd.close()
 
 
-def generateColorLegend(stepColors, colorList):
-  '''Return a string to write in the file for getting the color legend'''
-  colorStr = 'run(session, "key{} fontSize 15 size 0.025,0.4 pos 0.01,0.3")\n'
-  labelCount, keyStr = 0, ''
-  stepColors.reverse(), colorList.reverse()
-  for step, color in zip(stepColors, colorList):
-      if labelCount in [0, len(colorList) - 1, (len(colorList) - 1)//2]:
+def generateColorLegend(stepColors, colorList, threeLabelsOnly=True):
+    """Return a string to write in a chimera script file a color legend - key command
+
+    :param stepColors: list with the values for the colors
+    :param colorList: list with the colors
+    :param threeLabelsOnly: True, with ignore stepColors and show just 3 values: min, max and medium."""
+
+    colorStr = 'run(session, "key{} fontSize 15 size 0.025,0.4 pos 0.01,0.3")\n'
+    labelCount, keyStr = 0, ''
+    stepColors.reverse(), colorList.reverse()
+    if threeLabelsOnly:
+        labelsIndex = [0, len(colorList) - 1, (len(colorList) - 1) // 2]
+
+    for step, color in zip(stepColors, colorList):
+      if not threeLabelsOnly or labelCount in labelsIndex:
           keyStr += ' {}:{}'.format(color, step)
       else:
           keyStr += ' {}:'.format(color)
 
       labelCount += 1
-  return colorStr.format(keyStr)
+    return colorStr.format(keyStr)
