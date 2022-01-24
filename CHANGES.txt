@@ -1,3 +1,6 @@
+V3.0.15
+users:
+  - Local resolution viewers use now native ChimeraX key
 V3.0.14
 users:
   - New protocol: numeric classes extractor: Extracts items from a SetOfClasses based on number of items assigned to the classes
