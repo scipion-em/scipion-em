@@ -31,6 +31,7 @@ import numpy as np
 import pyworkflow.viewer as pwviewer
 import pyworkflow.protocol.params as params
 import pyworkflow.gui.plotter as plotter
+import pyworkflow.gui.dialog as dialog
 
 import pwem.constants as emcts
 import pwem.protocols as emprot
@@ -40,6 +41,10 @@ from pwem.viewers.viewer_chimera import mapVolsWithColorkey, Chimera, ChimeraVie
 from pwem.convert.atom_struct import *
 
 from .plotter import EmPlotter, plt
+
+CHIMERA_ERROR = 'Chimera program is not found were it was expected: \n\n{}\n\n' \
+                'Either install ChimeraX in this path or install our ' \
+                'scipion-em-chimera plugin'.format(Chimera.getProgram())
 
 
 class LocalResolutionViewer(pwviewer.ProtocolViewer):
@@ -128,6 +133,8 @@ class ChimeraAttributeViewer(pwviewer.ProtocolViewer):
 
     def __init__(self, **kwargs):
         pwviewer.ProtocolViewer.__init__(self, **kwargs)
+        if not chimeraInstalled():
+            print(CHIMERA_ERROR)
 
     def _defineParams(self, form):
       form.addSection(label='Visualization of attributes')
@@ -154,9 +161,9 @@ class ChimeraAttributeViewer(pwviewer.ProtocolViewer):
                           'the lowest and highest values in the date are used.'
                      )
       group.addParam('residuesAverages', params.BooleanParam,
-                    default=True, label='Average attribute on residues: ',
-                    help='In case the recipients are the atoms, their values are averaged on the residues.\n'
-                    )
+                     default=True, label='Average attribute on residues: ',
+                     help='In case the recipients are the atoms, their values are averaged on the residues.\n'
+                     )
 
       from pwem.wizards.wizard import ColorScaleWizardBase
       group = form.addGroup('Color settings')
@@ -209,59 +216,68 @@ class ChimeraAttributeViewer(pwviewer.ProtocolViewer):
       }
 
     def _showChimera(self, paramName=None):
-      prot = self.protocol
-      chimScript = prot._getExtraPath('chimera_script.py')
-      f = open(chimScript, "w")
-      f.write("from chimerax.core.commands import run\n")
+      if chimeraInstalled():
+          prot = self.protocol
+          chimScript = prot._getExtraPath('chimera_script.py')
+          f = open(chimScript, "w")
+          f.write("from chimerax.core.commands import run\n")
 
-      f.write("run(session, 'cd %s')\n" % os.getcwd())
-      f.write("run(session, 'cofr 0,0,0')\n")  # set center of coordinates
+          f.write("run(session, 'cd %s')\n" % os.getcwd())
+          f.write("run(session, 'cofr 0,0,0')\n")  # set center of coordinates
 
-      _inputStruct = self.getAtomStructObject()
-      _inputVol = _inputStruct.getVolume()
-      if _inputVol is not None:
-        strId = 3
-        dim, sampling = _inputVol.getDim()[0], _inputVol.getSamplingRate()
+          _inputStruct = self.getAtomStructObject()
+          _inputVol = _inputStruct.getVolume()
+          if _inputVol is not None:
+            strId = 3
+            dim, sampling = _inputVol.getDim()[0], _inputVol.getSamplingRate()
 
-        f.write("run(session, 'open %s')\n" % _inputVol.getFileName())
-        x, y, z = _inputVol.getOrigin(force=True).getShifts()
-        f.write("run(session, 'volume #%d style surface voxelSize %f')\n" % (1, sampling))
-        f.write("run(session, 'volume #%d origin %0.2f,%0.2f,%0.2f')\n" % (1, x, y, z))
-        f.write("run(session, 'hide #!%d models')\n" % 1)
+            f.write("run(session, 'open %s')\n" % _inputVol.getFileName())
+            x, y, z = _inputVol.getOrigin(force=True).getShifts()
+            f.write("run(session, 'volume #%d style surface voxelSize %f')\n" % (1, sampling))
+            f.write("run(session, 'volume #%d origin %0.2f,%0.2f,%0.2f')\n" % (1, x, y, z))
+            f.write("run(session, 'hide #!%d models')\n" % 1)
+
+          else:
+            dim, sampling = 150., 1.
+            strId = 2
+
+          tmpFileName = os.path.abspath(prot._getExtraPath("axis_input.bild"))
+          Chimera.createCoordinateAxisFile(dim,
+                                           bildFileName=tmpFileName,
+                                           sampling=sampling)
+          f.write("run(session, 'open %s')\n" % tmpFileName)
+
+          # Open atomstruct and color it by the bfactor (which is actually the DAQ score)
+          if self._getStructureRecipient() in ['atoms', 'residues']:
+              f.write("run(session, 'open %s')\n" % self.replaceOcuppancyWithAttribute(_inputStruct))
+              attrColorName = 'occupancy'
+          else:
+              f.write("run(session, 'open %s')\n" % _inputStruct.getFileName())
+              defAttrFile = self.createAttributesFile(_inputStruct, strId)
+              f.write("run(session, 'open %s')\n" % defAttrFile)
+              attrColorName = self.getEnumText('attrName')
+
+          stepColors, colorList = self.getColors()
+          scolorStr = ''
+          for step, color in zip(stepColors, colorList):
+            scolorStr += '%s,%s:' % (step, color)
+          scolorStr = scolorStr[:-1]
+
+          average = ''
+          if self._getStructureRecipient() == 'atoms' and self.residuesAverages:
+              average = 'average residues'
+
+          f.write("run(session, 'color byattribute {} palette {} {}')\n".
+                  format(attrColorName, scolorStr, average))
+          f.write(generateColorLegend(stepColors, colorList))
+          f.write("run(session, 'view')\n")
+
+          f.close()
+          view = ChimeraView(chimScript)
+          return [view]
 
       else:
-        dim, sampling = 150., 1.
-        strId = 2
-
-      tmpFileName = os.path.abspath(prot._getExtraPath("axis_input.bild"))
-      Chimera.createCoordinateAxisFile(dim,
-                                       bildFileName=tmpFileName,
-                                       sampling=sampling)
-      f.write("run(session, 'open %s')\n" % tmpFileName)
-
-      # Open atomstruct and color it by the bfactor (which is actually the DAQ score)
-      f.write("run(session, 'open %s')\n" % _inputStruct.getFileName())
-      defAttrFile = self.createAttributesFile(_inputStruct, strId)
-      f.write("run(session, 'open %s')\n" % defAttrFile)
-
-      stepColors, colorList = self.getColors()
-      scolorStr = ''
-      for step, color in zip(stepColors, colorList):
-        scolorStr += '%s,%s:' % (step, color)
-      scolorStr = scolorStr[:-1]
-
-      average = ''
-      if self._getStructureRecipient() == 'atoms' and self.residuesAverages:
-          average = 'average residues'
-
-      f.write("run(session, 'color byattribute {} palette {} {}')\n".
-              format(self.getEnumText('attrName'), scolorStr, average))
-      f.write(generateColorLegend(stepColors, colorList))
-      f.write("run(session, 'view')\n")
-
-      f.close()
-      view = ChimeraView(chimScript)
-      return [view]
+          return [self.warnMessage(CHIMERA_ERROR, 'Chimera not found')]
 
     def _showHistogram(self, paramName=None):
       attrname = self.getEnumText('attrName')
@@ -269,7 +285,7 @@ class ChimeraAttributeViewer(pwviewer.ProtocolViewer):
       cifDic = AtomicStructHandler().readLowLevel(self.getAtomStructObject().getFileName())
       #TODO: admit non float attributes
       names, values = np.array(cifDic[NAME]), np.array(cifDic[VALUE])
-      recipient = cifDic[RECIP][0]
+      recipient = self._getStructureRecipient()
       attrValues = values[names == attrname]
       attrValues = list(map(float, attrValues))
 
@@ -332,3 +348,38 @@ class ChimeraAttributeViewer(pwviewer.ProtocolViewer):
             f.write(defAttrStr)
         return defattrFile
 
+    def replaceOcuppancyWithAttribute(self, AS):
+        '''Instead of defining the atribute in a defattr file, switch it with the occupancy and color by it.
+        It notably speeds up chimera colouring'''
+        attrName = self.getEnumText('attrName')
+        outFile = self.protocol._getExtraPath('chimeraAttribute_{}.cif'.format(attrName))
+        if not os.path.exists(outFile):
+            ASH = AtomicStructHandler()
+            cifDic = ASH.readLowLevel(AS.getFileName())
+
+            names, values, specs = np.array(cifDic[NAME]), np.array(cifDic[VALUE]), np.array(cifDic[SPEC])
+            recipient = self._getStructureRecipient()
+            attrValues, attrSpecs = values[names == attrName], specs[names == attrName]
+            if recipient == 'atoms':
+                cifDic['_atom_site.occupancy'] = attrValues
+            elif recipient == 'residues':
+                atomValues = []
+                resDic = self.makeResidueValuesDic(cifDic)
+                for i, resNumber in enumerate(cifDic['_atom_site.pdbx_auth_seq_id']):
+                    atomValues.append(resDic[resNumber])
+                cifDic['_atom_site.occupancy'] = atomValues
+
+            ASH._writeLowLevel(outFile, cifDic)
+        return outFile
+
+    def makeResidueValuesDic(self, cifDic):
+        resDic = {}
+        attrName = self.getEnumText('attrName')
+        names, values, specs = np.array(cifDic[NAME]), np.array(cifDic[VALUE]), np.array(cifDic[SPEC])
+        attrValues, attrSpecs = values[names == attrName], specs[names == attrName]
+        for spec, val in zip(attrSpecs, attrValues):
+            resDic[spec.split(':')[1]] = val
+        return resDic
+
+def chimeraInstalled():
+    return os.path.exists(Chimera.getProgram())

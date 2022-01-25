@@ -1,5 +1,6 @@
 V3.0.15
 users:
+  - New viewer: ChimeraAttributeViewer: analyze scalar attributes of the residues or atoms in a structure
   - Local resolution viewers use now native ChimeraX key
 V3.0.14
 users:
