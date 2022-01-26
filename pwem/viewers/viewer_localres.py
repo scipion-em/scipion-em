@@ -396,7 +396,7 @@ class ChimeraAttributeViewer(pwviewer.ProtocolViewer):
         return resDic
 
 def chimeraInstalled():
-    return os.path.exists(Chimera.getProgram())
+  return Chimera.getHome() and os.path.exists(Chimera.getProgram())
 
 def getCifKeyName(cifDic, keyBase):
     base = '_atom_site.{}' + '_{}_id'.format(keyBase)
