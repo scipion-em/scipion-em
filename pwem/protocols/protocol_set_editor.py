@@ -271,9 +271,9 @@ class ProtSetEditor(EMProtocol):
 
     def shiftPartCenterStep(self):
         S = np.array([
-                [0, 0, 0, self.dx.get()],
-                [0, 0, 0, self.dy.get()],
-                [0, 0, 0, self.dz.get()],
+                [0, 0, 0, -self.dx.get()],
+                [0, 0, 0, -self.dy.get()],
+                [0, 0, 0, -self.dz.get()],
                 [0, 0, 0, 0]])
         inputSet = self.inputSet.get()
         modifiedSet = inputSet.createCopy(self._getExtraPath(), copyInfo=True)
