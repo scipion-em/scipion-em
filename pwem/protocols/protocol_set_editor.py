@@ -50,9 +50,11 @@ class ProtSetEditor(EMProtocol):
     CHOICE_FORMULA = 0
     CHOICE_ROTATE_VECTOR = 1
     CHOICE_ROTATE_ICOSAHEDRAL = 2
+    CHOICE_SHIFT_PARTICLE_CENTER = 3
     CHOICE_LABEL = {CHOICE_FORMULA: 'formula',
                     CHOICE_ROTATE_VECTOR: 'rotate to vector',
-                    CHOICE_ROTATE_ICOSAHEDRAL: 'rotate icosahedral'}
+                    CHOICE_ROTATE_ICOSAHEDRAL: 'rotate icosahedral',
+                    CHOICE_SHIFT_PARTICLE_CENTER: 'shift particle center'}
     LOCAL_SYM_NAME = {SYM_I222: 'I1',
                       SYM_I222r: 'I2',
                       SYM_In25: 'I3',
@@ -75,7 +77,8 @@ class ProtSetEditor(EMProtocol):
         form.addParam('operation', params.EnumParam,
                       choices=[self.CHOICE_LABEL[self.CHOICE_FORMULA],
                                self.CHOICE_LABEL[self.CHOICE_ROTATE_VECTOR],
-                               self.CHOICE_LABEL[self.CHOICE_ROTATE_ICOSAHEDRAL]
+                               self.CHOICE_LABEL[self.CHOICE_ROTATE_ICOSAHEDRAL],
+                               self.CHOICE_LABEL[self.CHOICE_SHIFT_PARTICLE_CENTER]
                                ],
                       default = self.CHOICE_FORMULA,
                       label="Select operation",
@@ -96,19 +99,29 @@ class ProtSetEditor(EMProtocol):
                            'the elements of the set. E.g.: item._resolution.set(item._resolution.get() +1).'
                            'You could also use modules like "import numpy;  item._resolution .... "')
 
+        line = form.addLine('shifts (pix.)',
+                            condition="operation==%d" % self.CHOICE_SHIFT_PARTICLE_CENTER,
+                            help='Values used to shift the center of the particle, in pixels.')
+        line.addParam('dx', params.FloatParam,
+                      default=0,
+                      label="x")
+        line.addParam('dy', params.FloatParam,
+                      default=0,
+                      label="y")
+        line.addParam('dz', params.FloatParam,
+                      default=0,
+                      label="z")
+
         line = form.addLine('source vector',
                             condition="operation==%d" % self.CHOICE_ROTATE_VECTOR,
                             help='Vector will be rotated until overlaps target vector')
         line.addParam('xs', params.FloatParam, default=0,
-                      condition="operation==%d" % self.CHOICE_ROTATE_VECTOR,
                       label="x",
                       help="X Coordinate ")
         line.addParam('ys', params.FloatParam, default=0,
-                      condition="operation==%d" % self.CHOICE_ROTATE_VECTOR,
                       label="y",
                       help="Y dim ")
         line.addParam('zs', params.FloatParam, default=1,
-                      condition="operation==%d" % self.CHOICE_ROTATE_VECTOR,
                       label="z",
                       help="Z dim ")
 
@@ -117,16 +130,12 @@ class ProtSetEditor(EMProtocol):
                             help='source vector will be rotated until '
                                  'overlaps target vector')
         line.addParam('xt', params.FloatParam, default=1,
-                      condition="operation==%d" % self.CHOICE_ROTATE_VECTOR,
                       label="x",
                       help="X Coordinate ")
         line.addParam('yt', params.FloatParam, default=0,
-                      condition=
-                      "operation==%d" % self.CHOICE_ROTATE_VECTOR,
                       label="y",
                       help="Y dim ")
         line.addParam('zt', params.FloatParam, default=0,
-                      condition="operation==%d" % self.CHOICE_ROTATE_VECTOR,
                       label="z",
                       help="Z dim ")
 
@@ -135,7 +144,6 @@ class ProtSetEditor(EMProtocol):
                             "operation==%d" % self.CHOICE_ROTATE_ICOSAHEDRAL,
                             help='convert between icosahedral symmetries')
         line.addParam("originSymmetryGroup", params.EnumParam,
-                      condition="operation==%d" % self.CHOICE_ROTATE_ICOSAHEDRAL,
                       label="origin",
                       help = "Source symmetry. "
                              "Only implemented for icosahedral symmetry",
@@ -159,7 +167,6 @@ class ProtSetEditor(EMProtocol):
                       default=SYM_I222r - SYM_I222,
                       )
         line.addParam("targetSymmetryGroup", params.EnumParam,
-                      condition="operation==%d" % self.CHOICE_ROTATE_ICOSAHEDRAL,
                       label="target",
                       help = "Target symmetry. "
                              "Only implemented for icosahedral symmetry",
@@ -183,16 +190,31 @@ class ProtSetEditor(EMProtocol):
                       default=SYM_I222r - SYM_I222,
                       )
 
+    # -------------------------- INSERT steps functions -----------------------
     def _insertAllSteps(self):
-        operation =  self.operation.get()
-        if (operation == self.CHOICE_FORMULA):
-            self._insertFunctionStep('formulaStep')
-        elif (operation == self.CHOICE_ROTATE_VECTOR):
-            self._insertFunctionStep('rotateStep')
-        elif (operation == self.CHOICE_ROTATE_ICOSAHEDRAL):
-            self._insertFunctionStep('rotateIcoStep')
+        # JORGE
+        import os
+        fname = "/home/jjimenez/Desktop/test_JJ.txt"
+        if os.path.exists(fname):
+            os.remove(fname)
+        fjj = open(fname, "a+")
+        fjj.write('JORGE--------->onDebugMode PID {}'.format(os.getpid()))
+        fjj.close()
+        print('JORGE--------->onDebugMode PID {}'.format(os.getpid()))
+        import time
+        time.sleep(10)
+        # JORGE_END
+        operation = self.operation.get()
+        if operation == self.CHOICE_FORMULA:
+            self._insertFunctionStep(self.formulaStep)
+        elif operation == self.CHOICE_ROTATE_VECTOR:
+            self._insertFunctionStep(self.rotateStep)
+        elif operation == self.CHOICE_ROTATE_ICOSAHEDRAL:
+            self._insertFunctionStep(self.rotateIcoStep)
+        elif operation == self.CHOICE_SHIFT_PARTICLE_CENTER:
+            self._insertFunctionStep(self.shiftPartCenterStep)
 
-
+    # -------------------------- STEPS functions ------------------------------
     def rotateIcoStep(self):
         """
         Compute rotation matrix from one icosahedral
@@ -220,10 +242,6 @@ class ProtSetEditor(EMProtocol):
             modifiedSet.append(item)
         self.createOutput(self.inputSet, modifiedSet)
 
-    def createOutput(self, inputSet, modifiedSet):
-        outputArgs = {inputSet.getExtended(): modifiedSet}
-        self._defineOutputs(**outputArgs)
-
     def rotateStep(self):
         """
         Compute rotation matrix between user provided vectors
@@ -234,7 +252,7 @@ class ProtSetEditor(EMProtocol):
         v_source = np.array([self.xs.get(), self.ys.get(), self.zs.get()])
         v_source = v_source / np.linalg.norm(v_source)
         v_target = np.array([self.xt.get(), self.yt.get(), self.zt.get()])
-        v_target = v_target / np.linalg.norm(v_target   )
+        v_target = v_target / np.linalg.norm(v_target)
         matrix = rotation_matrix(angle_between_vectors(v_source, v_target),
                                  vector_product(v_source, v_target))
         inputSet = self.inputSet.get()
@@ -246,7 +264,6 @@ class ProtSetEditor(EMProtocol):
             modifiedSet.append(item)
 
         self.createOutput(self.inputSet, modifiedSet)
-
 
     def formulaStep(self):
         """
@@ -264,14 +281,38 @@ class ProtSetEditor(EMProtocol):
 
         self.createOutput(self.inputSet, modifiedSet)
 
+    def shiftPartCenterStep(self):
+        S = np.array([
+                [0, 0, 0, self.dx.get()],
+                [0, 0, 0, self.dy.get()],
+                [0, 0, 0, self.dz.get()],
+                [0, 0, 0, 0]])
+        inputSet = self.inputSet.get()
+        modifiedSet = inputSet.createCopy(self._getExtraPath(), copyInfo=True)
 
+        for sourceItem in inputSet.iterItems():
+            item = sourceItem.clone()
+            M = item.getTransform().getMatrix()
+            R = np.linalg.inv(M) + S
+            item.getTransform().setMatrix(np.linalg.inv(R))
+            modifiedSet.append(item)
+
+        self.createOutput(self.inputSet, modifiedSet)
+
+    def createOutput(self, inputSet, modifiedSet):
+        outputArgs = {inputSet.getExtended(): modifiedSet}
+        self._defineOutputs(**outputArgs)
+
+    # -------------------------- INFO functions -------------------------------
     def _validate(self):
         errors = []
         inputSet = self.inputSet.get()
         operation = self.operation.get()
-        if operation != self.CHOICE_FORMULA:
+        if operation not in [self.CHOICE_FORMULA, self.CHOICE_SHIFT_PARTICLE_CENTER]:
             if not isinstance(inputSet, SetOfParticles):
                 errors.append("The input data set is not a set of projections")
             elif not inputSet.hasAlignmentProj():
                 errors.append("The input data set does not have alignment 3D")
         return errors
+
+    # --------------------------- UTILS functions -----------------------------
