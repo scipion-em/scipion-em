@@ -48,7 +48,11 @@ def runProgram(program, params):
     programName = basename(program)
 
     from pwem import Domain
-    if programName.startswith('xmipp'):
+    # Avoid detecting xmipp installation script to be run as xmipp, since
+    # it will run devel installation with production xmippEnv.json environment:
+    # Example: want to compile devel with java 8, but production was compiled with java 11.
+    # So java 11 makes it into the PATH taking priority
+    if programName.startswith('xmipp_'):
         print("Xmipp command detected")
         xmipp3 = Domain.getPlugin('xmipp3').Plugin
         env = xmipp3.getEnviron()
