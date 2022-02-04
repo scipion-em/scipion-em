@@ -1015,6 +1015,8 @@ class EMSet(Set, EMObject):
         if suffix:
             fn += '_%s' % suffix
 
+        if ext and ext[0] == '.':
+            ext = ext[1:]
         fn += '.%s' % (ext or 'sqlite')
 
         setPath = os.path.join(outputPath, fn)
