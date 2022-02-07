@@ -155,6 +155,10 @@ class TestMetaData(pwtests.unittest.TestCase):
         n = 10000  # number of .star file rows
         iterRowBindingElapsedTime = self.iterRowBinding(n)
         iterRowsEMTableElapsedTime = self.iterRowsEMTable(n)
+
+        print("Binding iteration : %s" % iterRowBindingElapsedTime)
+        print("Emtable iteration : %s" % iterRowsEMTableElapsedTime)
+
         self.assertTrue(iterRowsEMTableElapsedTime < iterRowBindingElapsedTime,
                         msg="Iterating over %d rows using the binding is "
                             "faster than using emtable" % n)
