@@ -326,7 +326,7 @@ class Ccp4Header:
         elif ext == '.mrc:mrcs':  # Movie --> dims = [X, Y, Z = 1, N]
             self.isMovie = True
             fileName = fileName.replace(':mrcs', '')
-        elif ext == '.mrc:mrc':  # Volume --> dims = [X, Y, Z, N = 1]
+        elif ext in ['.mrc:mrc', '.map:mrc']:  # Volume --> dims = [X, Y, Z, N = 1]
             fileName = fileName.replace(':mrc', '')
 
         return fileName

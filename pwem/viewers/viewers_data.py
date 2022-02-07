@@ -231,4 +231,7 @@ class DataViewer(pwviewer.Viewer):
                 if os.path.exists(gainFn):
                     self._views.append(DataView(gainFn))
 
+        elif issubclass(cls, emobj.SetOfNormalModes):
+            self._views.append(DataView(obj.getFileName()))
+
         return self._views

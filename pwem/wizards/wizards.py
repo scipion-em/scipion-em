@@ -37,8 +37,9 @@ from pyworkflow.gui.tree import ListTreeProviderString
 
 import pwem.convert as emconv
 
-from pwem.wizards.wizard import EmWizard, FormulaDialog
+from pwem.wizards.wizard import EmWizard, FormulaDialog, ColorScaleWizardBase
 import pwem.protocols as emprot
+import pwem.viewers as emview
 import pwem.objects as emobj
 
 
@@ -260,3 +261,6 @@ class PythonTopRankWizard(pwizard.Wizard):
         dlg = dialog.ListDialog(form.root, "Filter set", provider,
                                 "Select one of the attributes")
         form.setVar('rankingField', dlg.values[0].get())
+
+class ColorScaleWizardRMSD(ColorScaleWizardBase):
+  _targets = ColorScaleWizardBase.defineTargets(emview.ChimeraAttributeViewer)
