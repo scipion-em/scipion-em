@@ -122,7 +122,7 @@ class EmPlotter(Plotter):
                    , **kwargs):
         interpolation = kwargs.get('interpolation', "none")
         plot = img.imshow(matrix, interpolation=interpolation, cmap=cmap,
-                          vmin=vminData, vmax=vmaxData)
+                          vmin=vminData, vmax=vmaxData, **kwargs)
         if xticksLablesMajor is not None:
             plt.xticks(range(len(xticksLablesMajor)),
                        xticksLablesMajor[:len(xticksLablesMajor)],
