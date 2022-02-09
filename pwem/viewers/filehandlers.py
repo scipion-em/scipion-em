@@ -150,7 +150,7 @@ class MdFileHandler(ImageFileHandler):
             if emlib.labelIsImage(label):
                 imgPath = self._getImgPath(filename,
                                            md.getValue(label, md.firstObject()))
-                if not os.path.exists(imgPath):
+                if imgPath is None or not os.path.exists(imgPath):
                     imgPath = None
                 break
 
