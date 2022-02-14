@@ -2,8 +2,9 @@ V3.0.15
 users:
   - New viewer: ChimeraAttributeViewer: analyze scalar attributes of the residues or atoms in a structure
   - Local resolution viewers use now native ChimeraX key
-  - Adding the protocolo ProtManualCheckpoint that kept running for a time determined by a parameter or until
+  - Adding the protocolo "Manual check point" that kept running for a time determined by a parameter or until
     the user determines it is convenient.
+  - Calculating the FSC resolution value and displaying it in the viewer.
 V3.0.14
 users:
   - New protocol: numeric classes extractor: Extracts items from a SetOfClasses based on number of items assigned to the classes
