@@ -59,3 +59,6 @@ from .protocol_set_editor import ProtSetEditor
 from .protocol_set_filter import ProtSetFilter
 from .protocol_movie_eraser import ProtMovieEraser
 from .protocol_classes_selector import ProtClassesSelector
+
+from .protocol_tools import *
+

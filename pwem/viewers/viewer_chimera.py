@@ -34,8 +34,9 @@ import pyworkflow.viewer as pwviewer
 import pwem.constants as emcts
 import pwem.emlib.metadata as md
 import pwem.objects as emobj
-from pwem import emlib
+from pwem import emlib, Domain
 from pwem import Config as emConfig
+from pwem.objects import SetOfAtomStructs
 
 chimeraPdbTemplateFileName = "Atom_struct__%06d.cif"
 chimeraMapTemplateFileName = "Map__%06d.mrc"
@@ -316,61 +317,59 @@ class ChimeraDataView(ChimeraView):
 class ChimeraViewer(pwviewer.Viewer):
     """ Wrapper to visualize PDB object with Chimera. """
     _environments = [pwviewer.DESKTOP_TKINTER]
-    _targets = [emobj.AtomStruct, emobj.PdbFile]
+    _targets = [emobj.AtomStruct, emobj.PdbFile, emobj.SetOfAtomStructs]
 
     def __init__(self, **kwargs):
         pwviewer.Viewer.__init__(self, **kwargs)
 
-    def visualize(self, obj, **kwargs):
+    def _visualize(self, obj, **kwargs):
         cls = type(obj)
         if issubclass(cls, emobj.AtomStruct):
-            # if attribute _chimeraScript exists then protocol
-            # has create a script file USE IT
+            objSet = SetOfAtomStructs.create(outputPath='/tmp', suffix=self.protocol.getObjId())
+            objSet.append(obj)
+            if hasattr(obj, '_chimeraScript'):
+                objSet.copyAttributes(obj, '_chimeraScript')
+
+            obj, cls = objSet, type(objSet)
+
+        if issubclass(cls, emobj.SetOfAtomStructs):
             if hasattr(obj, '_chimeraScript'):
                 fn = obj._chimeraScript.get()
-                ChimeraView(fn).show()
-                return
-            # if not create a script file with: coordinates axis, PDB and
-            # volume (if available)
+                view = ChimeraView(fn)
+                return [view]
             else:
-                fn = obj.getFileName()
-                extraPath = self.protocol._getExtraPath()
-                fnCmd = os.path.join(extraPath, "chimera.cxc")
+                fnCmd = self.protocol._getExtraPath("chimera_output.cxc")
+
                 f = open(fnCmd, 'w')
+                f.write('cd %s\n' % os.getcwd())
                 f.write("cofr 0,0,0\n")  # set center of coordinates
-                if obj.hasVolume():
-                    volID = 1
-                    volumeObject = obj.getVolume()
-                    dim = volumeObject.getDim()[0]
-                    sampling = volumeObject.getSamplingRate()
-                    f.write("open %s\n" % os.path.abspath(
-                        emlib.image.ImageHandler.removeFileType(volumeObject.getFileName())))
-                    f.write("volume #%d style surface voxelSize %f\n"
-                            % (volID, sampling))
-                    x, y, z = volumeObject.getShiftsFromOrigin()
-                    f.write("volume #%d origin %0.2f,%0.2f,%0.2f\n"
-                            % (volID, x, y, z))
-                else:
-                    dim = 150  # eventually we will create a PDB library that
-                    # computes PDB dim
-                    sampling = 1.
-                # Construct the coordinate file
-                bildFileName = os.path.abspath(
-                    os.path.join(extraPath, "axis.bild"))
-                Chimera.createCoordinateAxisFile(dim,
-                                                 bildFileName=bildFileName,
-                                                 sampling=sampling)
-                f.write("open %s\n" % bildFileName)
-                f.write("open %s\n" % os.path.abspath(fn))
                 f.write("style stick\n")
-                f.write("view\n")
+
+                _inputVol = obj.getFirstItem().getVolume()
+                if _inputVol is not None:
+                    volID = 1
+                    dim, sampling = _inputVol.getDim()[0], _inputVol.getSamplingRate()
+
+                    f.write("open %s\n" % _inputVol.getFileName())
+                    x, y, z = _inputVol.getOrigin(force=True).getShifts()
+                    f.write("volume #%d style surface voxelSize %f\nvolume #%d origin "
+                            "%0.2f,%0.2f,%0.2f\n"
+                            % (volID, sampling, volID, x, y, z))
+                else:
+                    dim, sampling = 150., 1.
+
+                bildFileName = self.protocol._getExtraPath("axis_output.bild")
+                Chimera.createCoordinateAxisFile(dim, bildFileName=bildFileName, sampling=sampling)
+                f.write("open %s\n" % bildFileName)
+
+                for AS in obj:
+                    f.write("open %s\n" % AS.getFileName())
+                    #f.write("style stick\n")
+
                 f.close()
-                ChimeraView(fnCmd).show()
-            # FIXME: there is an asymmetry between ProtocolViewer and Viewer
-            # for the first, the visualize method return a list of View's
-            # (that are shown)
-            # for the second, the visualize directly shows the objects.
-            # the first approach is better
+                view = ChimeraView(fnCmd)
+                return [view]
+
         else:
             raise Exception('ChimeraViewer.visualize: '
                             'can not visualize class: %s' % obj.getClassName())
@@ -394,9 +393,6 @@ def mapVolsWithColorkey(displayVolFileName,
     scriptFile = scriptFileName
     fhCmd = open(scriptFile, 'w')
     fhCmd.write("from chimerax.core.commands import run\n")
-    fhCmd.write("from chimerax.graphics.windowsize import window_size\n")
-    fhCmd.write("from PyQt5.QtGui import QFontMetrics\n")
-    fhCmd.write("from PyQt5.QtGui import QFont\n")
     fhCmd.write("run(session, 'set bgColor %s')\n" % bgColorImage)
 
     chimeraVolId = 1
@@ -453,36 +449,29 @@ def mapVolsWithColorkey(displayVolFileName,
                 "palette " % (chimeraVolId - 1, chimeraVolId) +
                 scolorStr + "')\n"
                 )
-    # get window size so we can place labels properly
-
-    fhCmd.write("v = session.main_view\n")
-    fhCmd.write("vx,vy=v.window_size\n")
-
-    # Calculate heights and Y positions: font, scale height and firstY
-    ptSize = fontSize  # default size chimera font
-    fhCmd.write('font = QFont("Ariel", %d)\n' % ptSize)
-    fhCmd.write('f = QFontMetrics(font)\n')
-    fhCmd.write('_height =  1 * f.height()/vy\n')  # Font height
-    fhCmd.write('_half_scale_height = _height * %f/2\n' % len(stepColors))  # Full height of the scale
-    fhCmd.write("_firstY= 0.5 + _half_scale_height\n")  # Y location for first label
-
-    fhCmd.write("step = ")
-    # place labels in right place
-    # unfortunately chimera has no colorbar
-    labelCount = 0
-    for step, color in zip(stepColors, colorList):
-        if step > 99.9:
-            step = "%.2f" % step
-        else:
-            step = "{:05.2f}".format(step)
-        command = 'run(session, "2dlabel text ' + step + \
-                  ' bgColor ' + color + \
-                  ' xpos 0.01 ypos %f' + \
-                  ' size ' + str(ptSize) + \
-                  '" % ' + \
-                  '(_firstY - %f*_height))\n' % (labelCount)
-
-        fhCmd.write(command)
-        labelCount += 1
+    fhCmd.write(generateColorLegend(stepColors, colorList, threeLabelsOnly=False))
     fhCmd.write("run(session, 'view')\n")
     fhCmd.close()
+
+
+def generateColorLegend(stepColors, colorList, threeLabelsOnly=True):
+    """Return a string to write in a chimera script file a color legend - key command
+
+    :param stepColors: list with the values for the colors
+    :param colorList: list with the colors
+    :param threeLabelsOnly: True, with ignore stepColors and show just 3 values: min, max and medium."""
+
+    colorStr = 'run(session, "key{} fontSize 15 size 0.025,0.4 pos 0.01,0.3")\n'
+    labelCount, keyStr = 0, ''
+    stepColors.reverse(), colorList.reverse()
+    if threeLabelsOnly:
+        labelsIndex = [0, len(colorList) - 1, (len(colorList) - 1) // 2]
+
+    for step, color in zip(stepColors, colorList):
+      if not threeLabelsOnly or labelCount in labelsIndex:
+          keyStr += ' {}:{}'.format(color, step)
+      else:
+          keyStr += ' {}:'.format(color)
+
+      labelCount += 1
+    return colorStr.format(keyStr)

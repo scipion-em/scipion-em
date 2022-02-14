@@ -36,5 +36,5 @@ from .images import ProtImportImages
 from .masks import ProtImportMask
 from .micrographs import ProtImportMicrographs, ProtImportMovies
 from .particles import ProtImportParticles, ProtImportAverages
-from .volumes import ProtImportVolumes, ProtImportPdb
+from .volumes import ProtImportVolumes, ProtImportPdb, ProtImportSetOfAtomStructs
 from .sequence import ProtImportSequence

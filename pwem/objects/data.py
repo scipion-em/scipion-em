@@ -828,6 +828,44 @@ class Sequence(EMObject):
     def getIsAminoacids(self):
         return self._isAminoacids
 
+    def importFromFile(self, seqFileName, isAmino=True):
+        '''Fills the sequence attributes from the FIRST sequence found in the specified file'''
+        import pwem.convert as emconv
+        seqHandler = emconv.SequenceHandler()
+        seqDic = seqHandler.readSequenceFromFile(seqFileName, type=None, isAmino=isAmino)
+        self.setSequence(seqDic['sequence']), self.setId(seqDic['seqID'])
+        self.setName(seqDic['name']), self.setDescription(seqDic['description'])
+        self._alphabet.set(Integer(seqDic['alphabet']))
+        self._isAminoacids.set(Boolean(seqDic['isAminoacids']))
+
+    def exportToFile(self, seqFileName):
+        '''Exports the sequence to the specified file'''
+        import pwem.convert as emconv
+        seqHandler = emconv.SequenceHandler(self.getSequence(),
+                                            isAminoacid=self.getIsAminoacids())
+        # retrieving  args from scipion object
+        seqID = self.getId() if self.getId() is not None else 'seqID'
+        seqName = self.getSeqName() if self.getSeqName() is not None else 'seqName'
+        seqDescription = self.getDescription() if self.getDescription() is not None else ''
+        seqHandler.saveFile(seqFileName, seqID,
+                            name=seqName, seqDescription=seqDescription,
+                            type=None)
+
+    def appendToFile(self, seqFileName):
+        '''Exports the sequence to the specified file. If it already exists,
+        the sequence is appended to the ones in the file'''
+        import pwem.convert as emconv
+        seqHandler = emconv.SequenceHandler(self.getSequence(),
+                                            isAminoacid=self.getIsAminoacids())
+        # retrieving  args from scipion object
+        seqID = self.getId() if self.getId() is not None else 'seqID'
+        seqName = self.getSeqName() if self.getSeqName() is not None else 'seqName'
+        seqDescription = self.getDescription() if self.getDescription() is not None else ''
+        seqHandler.appendFile(seqFileName, seqID,
+                            name=seqName, seqDescription=seqDescription,
+                            type=None)
+
+
     def __str__(self):
         return "Sequence (name = {})\n".format(self.getSeqName())
 
@@ -977,6 +1015,8 @@ class EMSet(Set, EMObject):
         if suffix:
             fn += '_%s' % suffix
 
+        if ext and ext[0] == '.':
+            ext = ext[1:]
         fn += '.%s' % (ext or 'sqlite')
 
         setPath = os.path.join(outputPath, fn)
@@ -1412,6 +1452,22 @@ class SetOfPDBs(SetOfAtomStructs):
 class SetOfSequences(EMSet):
     """Set containing Sequence items."""
     ITEM_TYPE = Sequence
+
+    def exportToFile(self, seqFileName):
+        '''Writes the sequences in the set in the specified file'''
+        for sequence in self:
+            sequence.appendToFile(seqFileName)
+
+    def importFromFile(self, seqFileName, isAmino=True):
+        '''Appends elements to the set from sequences found in the specified file'''
+        import pwem.convert as emconv
+        seqHandler = emconv.SequenceHandler()
+        seqsDic = seqHandler.readSequencesFromFile(seqFileName, type=None, isAmino=isAmino)
+        for seqDic in seqsDic:
+            newSeq = Sequence(sequence=seqDic['sequence'], id=seqDic['seqID'],
+                              name=seqDic['name'], description=seqDic['description'],
+                              alphabet=seqDic['alphabet'], isAminoacids=seqDic['isAminoacids'])
+        self.append(newSeq)
 
 
 class Coordinate(EMObject):
@@ -2341,6 +2397,20 @@ class FSC(EMObject):
     def setData(self, xData, yData):
         self._x.set(xData)
         self._y.set(yData)
+
+    def calculateResolution(self, threshold=0.143):
+        """
+        Calculate the FSC resolution value
+        """
+        for i in range(len(self._x)):
+            if float(self._y[i]) < threshold:
+                above_res = float(self._x[i-1])
+                above_fsc = float(self._y[i-1])
+                bellow_res = float(self._x[i])
+                bellow_fsc = float(self._y[i])
+                break
+        resolution = bellow_res - ((threshold-bellow_fsc)/(above_fsc-bellow_fsc) * (bellow_res-above_res))
+        return "{0:.1f}".format(1/resolution)
 
 
 class SetOfFSCs(EMSet):
