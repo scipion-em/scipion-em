@@ -250,8 +250,8 @@ class ChimeraAttributeViewer(pwviewer.ProtocolViewer):
               f.write("run(session, 'open %s')\n" % replaceOcuppancyWithAttribute(cifFile, attrName, outFile))
               attrColorName = 'occupancy'
           else:
-              f.write("run(session, 'open %s')\n" % _inputStruct.getFileName())
-              defAttrFile = self.createAttributesFile(_inputStruct, strId)
+              f.write("run(session, 'open %s')\n" % cifFile)
+              defAttrFile = self.createAttributesFile(cifFile, strId)
               f.write("run(session, 'open %s')\n" % defAttrFile)
               attrColorName = attrName
 
@@ -325,9 +325,8 @@ class ChimeraAttributeViewer(pwviewer.ProtocolViewer):
       colorList = plotter.getHexColorList(len(stepColors), self.colorMap.get())
       return stepColors, colorList
 
-    def createAttributesFile(self, AS, chiEleId):
-        ASH = AtomicStructHandler()
-        cifDic = ASH.readLowLevel(AS.getFileName())
+    def createAttributesFile(self, cifFile, chiEleId):
+        cifDic = AtomicStructHandler().readLowLevel(cifFile)
 
         attrName = self.getEnumText('attrName')
         defAttrStr = 'attribute: {}\n'.format(self.getEnumText('attrName'))
