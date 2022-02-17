@@ -544,7 +544,7 @@ def fetch_emdb_map(id, directory, tmpDirectory):
                                                           )
             break
         except Exception as e:
-            print("Retieving 3D map with id=", id, "failed retrying (%d/%d)" %
+            print("Retrieving 3D map with id=", id, "failed retrying (%d/%d)" %
                   (i+1, nTimes))
             print("Error:", e)
     # Loop statements may have an else clause; it is executed
@@ -571,7 +571,7 @@ def fetch_emdb_map(id, directory, tmpDirectory):
               "WARNING: origin  stored in EMDB\n"
               "database and 3D map header file do not match\n"
               "API=%f, header=%f\n"
-              "###########################\n" % (originAPI, originHeader))
+              "###########################\n" % (originAPI[0], originHeader[0]))
     return map_path, samplingAPI, originAPI
 
 
