@@ -364,8 +364,6 @@ def replaceOcuppancyWithAttribute(cifFile, attrName, outFile=None):
         outFile = os.path.join(outDir, 'chimeraAttribute_{}.cif'.format(attrName))
 
     if not os.path.exists(outFile):
-        ASH = AtomicStructHandler()
-
         names, values, specs = np.array(cifDic[NAME]), np.array(cifDic[VALUE]), np.array(cifDic[SPEC])
         recipient = getStructureRecipient(cifDic, attrName)
         attrValues, attrSpecs = values[names == attrName], specs[names == attrName]
@@ -387,7 +385,7 @@ def replaceOcuppancyWithAttribute(cifFile, attrName, outFile=None):
 
             cifDic['_atom_site.occupancy'] = atomValues
 
-        ASH._writeLowLevel(outFile, cifDic)
+        AtomicStructHandler()._writeLowLevel(outFile, cifDic)
     return outFile
 
 def getStructureRecipient(cifDic, attrName):
