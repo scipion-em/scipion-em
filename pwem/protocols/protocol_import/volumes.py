@@ -511,7 +511,7 @@ def fetch_emdb_map(id, directory, tmpDirectory):
     import socket
 
     # get computer name and select server
-    url_rest_api = "https://www.ebi.ac.uk/pdbe/api/emdb/entry/map/EMD-%d"
+    url_rest_api = "https://www.ebi.ac.uk/pdbe/api/emdb/entry/map/EMD-%s"
     hname = socket.gethostname()
     if hname.endswith('.edu') or hname.endswith('.gov'):
         site = 'ftp.wwpdb.org'
@@ -523,10 +523,15 @@ def fetch_emdb_map(id, directory, tmpDirectory):
         site = 'ftp.ebi.ac.uk'
         url_pattern = 'ftp://%s/pub/databases/emdb/structures/EMD-%s/map/%s'
 
+    if len(str(id)) < 4:
+        id = '%04d' % id
+    else:
+        id = '%d' % id
+
     map_name = 'emd_%s.map' % id
     map_gz_name = map_name + '.gz'
     map_url = url_pattern % (site, id, map_gz_name)
-    name = 'EMD-%d' % id
+    name = 'EMD-%s' % id
     minimum_map_size = 8192  # bytes
     url_rest_api = url_rest_api % id
 
