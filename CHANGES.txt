@@ -1,3 +1,7 @@
+V3.0.16
+users:
+   - Fixing an error calculating the FSC resolution value
+
 V3.0.15
 users:
   - New viewer: ChimeraAttributeViewer: analyze scalar attributes of the residues or atoms in a structure
