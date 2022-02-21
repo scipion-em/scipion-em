@@ -2402,8 +2402,9 @@ class FSC(EMObject):
         """
         Calculate the FSC resolution value
         """
-        for i in range(len(self._x)):
-            if float(self._y[i]) < threshold:
+        dataLength = len(self._x)
+        for i in range(dataLength):
+            if float(self._y[i]) < threshold or i == dataLength-1:
                 above_res = float(self._x[i-1])
                 above_fsc = float(self._y[i-1])
                 bellow_res = float(self._x[i])
