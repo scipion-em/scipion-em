@@ -118,7 +118,7 @@ class FscViewer(pwviewer.Viewer):
             a.grid(True)
             a.xaxis.set_major_formatter(FuncFormatter(self._formatFreq))
             self._lastSubPlot = a
-        resolution = obj.calculateResolution()
+        resolution = obj.calculateResolution(self.threshold)
         self.label = kwargs.get('label', self.protocol.getRunName()) + " (" + str(resolution) + "Å)"
         self.plotter.plotData(x, y, '-', label=self.label)
         self.plotter.legend()
