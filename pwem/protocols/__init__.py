@@ -60,5 +60,7 @@ from .protocol_set_filter import ProtSetFilter
 from .protocol_movie_eraser import ProtMovieEraser
 from .protocol_classes_selector import ProtClassesSelector
 
+from .protocol_mathematical_operator import ProtMathematicalOperator
+
 from .protocol_tools import *
 

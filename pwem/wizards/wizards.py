@@ -37,7 +37,7 @@ from pyworkflow.gui.tree import ListTreeProviderString
 
 import pwem.convert as emconv
 
-from pwem.wizards.wizard import EmWizard, FormulaDialog, ColorScaleWizardBase
+from pwem.wizards.wizard import EmWizard, FormulaDialog, ColorScaleWizardBase, FormulaDialog2
 import pwem.protocols as emprot
 import pwem.viewers as emview
 import pwem.objects as emobj
@@ -239,7 +239,31 @@ class PythonFormulaeWizard(pwizard.Wizard):
         # If accepted
         if d.resultYes():
             form.setVar('formula',d.getFormula())
-            
+
+class PythonFormulaWizardX1(pwizard.Wizard):
+    """Assist in the creation of python formula to be evaluated. In Steps"""
+    _targets = [(emprot.ProtMathematicalOperator, ['attribute1'])]
+
+    def show(self, form, *params):
+
+        d = FormulaDialog(form.root, form.protocol.inputSet1.get(), formula=form.protocol.attribute1.get())
+
+        # If accepted
+        if d.resultYes():
+            form.setVar('attribute1', d.getFormula())
+
+class PythonFormulaWizardX2(pwizard.Wizard):
+    """Assist in the creation of python formula to be evaluated. In Steps"""
+    _targets = [(emprot.ProtMathematicalOperator, ['attribute2'])]
+
+    def show(self, form, *params):
+
+        d2 = FormulaDialog(form.root, form.protocol.inputSet2.get(), formula=form.protocol.attribute2.get())
+
+        # If accepted
+        if d2.resultYes():
+            form.setVar('attribute2', d2.getFormula())
+
 class PythonTopRankWizard(pwizard.Wizard):
     """Assist in the creation of python formula to be evaluated. In Steps"""
     _targets = [(emprot.ProtSetFilter, ['rankingField'])]
