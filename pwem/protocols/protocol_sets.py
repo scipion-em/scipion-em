@@ -140,7 +140,7 @@ class ProtUnionSet(ProtSets):
                            'but we really want to insert as new items in the '
                            'output. \n'
                            'On the other hand, items originated in a previous common '
-                           'protocol (above in the workflow) might have identical items'
+                           'protocol (above in the workflow) might have identical items '
                            'and you would like to remove them. '
                            'Therefore, set this option to *Yes* to remove duplicates and keep only '
                            'one copy of the item (the first occurrence).')
