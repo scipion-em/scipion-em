@@ -2398,6 +2398,21 @@ class FSC(EMObject):
         self._x.set(xData)
         self._y.set(yData)
 
+    def calculateResolution(self, threshold=0.143):
+        """
+        Calculate the FSC resolution value
+        """
+        dataLength = len(self._x)
+        for i in range(dataLength):
+            if float(self._y[i]) < threshold or i == dataLength-1:
+                above_res = float(self._x[i-1])
+                above_fsc = float(self._y[i-1])
+                bellow_res = float(self._x[i])
+                bellow_fsc = float(self._y[i])
+                break
+        resolution = bellow_res - ((threshold-bellow_fsc)/(above_fsc-bellow_fsc) * (bellow_res-above_res))
+        return "{0:.1f}".format(1/resolution)
+
 
 class SetOfFSCs(EMSet):
     """Represents a set of FSCs"""
