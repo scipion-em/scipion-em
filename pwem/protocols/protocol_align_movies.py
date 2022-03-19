@@ -49,6 +49,8 @@ from pwem.protocols import ProtProcessMovies
 OUT_MICS = "outputMicrographs"
 OUT_MICS_DW = "outputMicrographsDoseWeighted"
 OUT_MOVIES = "outputMovies"
+OUT_MICS_ODD = 'outputMicrographsOdd'
+OUT_MICS_EVEN = 'outputMicrographsEven'
 
 
 class ProtAlignMovies(ProtProcessMovies):
@@ -62,7 +64,12 @@ class ProtAlignMovies(ProtProcessMovies):
     """
     _possibleOutputs = dict({OUT_MICS: emobj.SetOfMicrographs,
                              OUT_MICS_DW: emobj.SetOfMicrographs,
+                             OUT_MICS_ODD: emobj.SetOfMicrographs,
+                             OUT_MICS_EVEN: emobj.SetOfMicrographs,
                              OUT_MOVIES: emobj.SetOfMovies})
+
+    # Even / odd functionality
+    evenOddCapable = False
 
     # -------------------------- DEFINE param functions -----------------------
     def _defineParams(self, form):
@@ -115,6 +122,14 @@ class ProtAlignMovies(ProtProcessMovies):
         form.addParam('doSaveMovie', params.BooleanParam, default=False,
                       label="Save movie", expertLevel=pwcts.LEVEL_ADVANCED,
                       help="Save Aligned movie")
+
+        if self.evenOddCapable:
+            form.addParam('splitEvenOdd', params.BooleanParam,
+                          default=False,
+                          label='Split & sum odd/even frames?',
+                          expertLevel=params.LEVEL_ADVANCED,
+                          help='Generate odd and even sums using odd and even frames '
+                               'respectively when this option is enabled.')
 
     # --------------------------- STEPS functions ----------------------------
     def createOutputStep(self):
@@ -281,6 +296,14 @@ class ProtAlignMovies(ProtProcessMovies):
                                 self._getOutputMicWtName,
                                 OUT_MICS_DW)
 
+        if self._doSplitEvenOdd():
+            _updateOutputMicSet('micrographs_even.sqlite',
+                                self._getOutputMicEvenName,
+                                OUT_MICS_EVEN)
+            _updateOutputMicSet('micrographs_odd.sqlite',
+                                self._getOutputMicOddName,
+                                OUT_MICS_ODD)
+
         if self.finished:  # Unlock createOutputStep if finished all jobs
             outputStep = self._getFirstJoinStep()
             if outputStep and outputStep.isWaiting():
@@ -355,6 +378,13 @@ class ProtAlignMovies(ProtProcessMovies):
         return [self.summaryVar.get('')]
 
     # --------------------------- UTILS functions ----------------------------
+    def _doSplitEvenOdd(self):
+        """ Returns if even/odd stuff has to be done"""
+        if not self.evenOddCapable:
+            return False
+        else:
+            return self.splitEvenOdd.get()
+
     def _useAlignToSum(self):
         return self.getAttributeValue('useAlignToSum', False)
 
@@ -460,6 +490,18 @@ class ProtAlignMovies(ProtProcessMovies):
         (relative to micFolder)
         """
         return self._getMovieRoot(movie) + '_aligned_mic_DW.mrc'
+
+    def _getOutputMicEvenName(self, movie):
+        """ Returns the name of the output EVEN micrograph
+        (relative to micFolder)
+        """
+        return self._getMovieRoot(movie) + '_aligned_mic_EVN.mrc'
+
+    def _getOutputMicOddName(self, movie):
+        """ Returns the name of the output EVEN micrograph
+        (relative to micFolder)
+        """
+        return self._getMovieRoot(movie) + '_aligned_mic_ODD.mrc'
 
     def _getOutputMicThumbnail(self, movie):
         return self._getExtraPath(self._getMovieRoot(movie) + '_thumbnail.png')
