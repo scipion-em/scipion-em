@@ -143,12 +143,12 @@ class ProtUnionSet(ProtSets):
                            'protocol (above in the workflow) might have identical items'
                            'and you would like to remove them. '
                            'Therefore, set this option to *Yes* to remove duplicates and keep only '
-                           'one copy of the item. (the first occurrence)')
+                           'one copy of the item (the first occurrence).')
         form.addParam('renumber', pwprot.params.BooleanParam, default=False,
                       expertLevel=pwprot.LEVEL_ADVANCED,
                       label="Force new ids",
-                      help='Make an automatic renumbering of the ids, so all '
-                           'new objects will not be associated to the old ones.')
+                      help='Perform an automatic renumbering of ids to ensure all objects have unique ids. '
+                           'This will mean new objects will not be associated to the old ones.')
 
         # TODO: See what kind of restrictions we add,
         # like "All sets should have the same sampling rate."
