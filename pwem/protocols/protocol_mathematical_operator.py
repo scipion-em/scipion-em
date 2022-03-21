@@ -91,6 +91,9 @@ class ProtMathematicalOperator(EMProtocol):
                       allowsNull=True,
                       help="")
         # RESULT
+        #form.addParam('resultName', params.StringParam, label="Results name:",
+        #              default='result',
+        #             help='')
         form.addParam('typeResult', params.EnumParam, default=0,
                       choices=['Int', 'Float', 'String'],
                       label='Result type:',
@@ -173,7 +176,7 @@ class ProtMathematicalOperator(EMProtocol):
             elif tpR == 2:
                 resultNum = String(result)
 
-            self._defineOutputs(result=resultNum)
+            self._defineOutputs(result=resultNum) # Somehow we should name this output
 
     def _summary(self):
         summary = []

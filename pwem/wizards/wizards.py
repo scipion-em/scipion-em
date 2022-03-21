@@ -37,7 +37,7 @@ from pyworkflow.gui.tree import ListTreeProviderString
 
 import pwem.convert as emconv
 
-from pwem.wizards.wizard import EmWizard, FormulaDialog, ColorScaleWizardBase, FormulaDialog2
+from pwem.wizards.wizard import EmWizard, FormulaDialog, ColorScaleWizardBase
 import pwem.protocols as emprot
 import pwem.viewers as emview
 import pwem.objects as emobj
