@@ -51,19 +51,20 @@ class ProtMathematicalOperator(EMProtocol):
                       help='')
 
         # Attribute X1
-        form.addParam('bool1', params.BooleanParam, default=True,
+        group1 = form.addGroup('Input X1', condition="boolMain==%d" % False)
+        group1.addParam('bool1', params.BooleanParam, default=True,
                       label='Is X1 a Set attribute?',
                       condition="boolMain==%d" % False,
                       help='')
-        form.addParam('inputSet1', params.PointerParam, pointerClass='EMSet, SetOfImages',
+        group1.addParam('inputSet1', params.PointerParam, pointerClass='EMSet, SetOfImages',
                       condition="bool1==%d and boolMain==%d" % (True, False),
                       label='Set 1',
                       help='')
-        form.addParam('attribute1', params.StringParam, label="Select attribute X1:",
+        group1.addParam('attribute1', params.StringParam, label="Select attribute X1:",
                       condition="bool1==%d and boolMain==%d" % (True, False),
                       allowsNull=True,
                       help='')
-        form.addParam('input1', params.IntParam,
+        group1.addParam('input1', params.IntParam,
                       label='Input X1:',
                       condition="bool1==%d and boolMain==%d" % (False, False),
                       default=0,
@@ -71,19 +72,20 @@ class ProtMathematicalOperator(EMProtocol):
                       allowsNull=True,
                       help="")
         # Attribute X2
-        form.addParam('bool2', params.BooleanParam, default=False,
+        group2 = form.addGroup('Input X2', condition="boolMain==%d" % False)
+        group2.addParam('bool2', params.BooleanParam, default=False,
                       label='Is X2 a Set attribute?',
                       condition="boolMain==%d" % False,
                       help='')
-        form.addParam('inputSet2', params.PointerParam, pointerClass='EMSet, SetOfImages',
+        group2.addParam('inputSet2', params.PointerParam, pointerClass='EMSet, SetOfImages',
                       condition="bool2==%d and boolMain==%d" % (True, False),
                       label='Set 2',
                       help='')
-        form.addParam('attribute2', params.StringParam, label="Select attribute X2:",
+        group2.addParam('attribute2', params.StringParam, label="Select attribute X2:",
                       condition="bool2==%d and boolMain==%d" % (True, False),
                       allowsNull=True,
                       help='')
-        form.addParam('input2', params.IntParam,
+        group2.addParam('input2', params.IntParam,
                       label='Input X2:',
                       condition="bool2==%d and boolMain==%d" % (False, False),
                       default=0,
@@ -94,11 +96,12 @@ class ProtMathematicalOperator(EMProtocol):
         #form.addParam('resultName', params.StringParam, label="Results name:",
         #              default='result',
         #             help='')
-        form.addParam('typeResult', params.EnumParam, default=0,
+        group3 = form.addGroup('Result')
+        group3.addParam('typeResult', params.EnumParam, default=0,
                       choices=['Int', 'Float', 'String'],
                       label='Result type:',
                       help='create set of')
-        form.addParam('expression', params.StringParam, label="Result =",
+        group3.addParam('expression', params.StringParam, label="Result =",
                       important=True,
                       help='')
 
