@@ -1467,7 +1467,7 @@ class SetOfSequences(EMSet):
             newSeq = Sequence(sequence=seqDic['sequence'], id=seqDic['seqID'],
                               name=seqDic['name'], description=seqDic['description'],
                               alphabet=seqDic['alphabet'], isAminoacids=seqDic['isAminoacids'])
-        self.append(newSeq)
+            self.append(newSeq)
 
 
 class Coordinate(EMObject):
