@@ -62,14 +62,14 @@ class ProtMathematicalOperator(EMProtocol):
                       help='')
         group1.addParam('attribute1', params.StringParam, label="Select attribute X1:",
                       condition="bool1==%d and boolMain==%d" % (True, False),
-                      allowsNull=True,
+                      #allowsNull=True,
                       help='')
         group1.addParam('input1', params.IntParam,
                       label='Input X1:',
                       condition="bool1==%d and boolMain==%d" % (False, False),
                       default=0,
                       allowsPointers=True,
-                      allowsNull=True,
+                      #allowsNull=True,
                       help="")
         # Attribute X2
         group2 = form.addGroup('Input X2', condition="boolMain==%d" % False)
@@ -83,14 +83,14 @@ class ProtMathematicalOperator(EMProtocol):
                       help='')
         group2.addParam('attribute2', params.StringParam, label="Select attribute X2:",
                       condition="bool2==%d and boolMain==%d" % (True, False),
-                      allowsNull=True,
+                      #allowsNull=True,
                       help='')
         group2.addParam('input2', params.IntParam,
                       label='Input X2:',
                       condition="bool2==%d and boolMain==%d" % (False, False),
                       default=0,
                       allowsPointers=True,
-                      allowsNull=True,
+                      #allowsNull=True,
                       help="")
         # RESULT
         #form.addParam('resultName', params.StringParam, label="Results name:",
