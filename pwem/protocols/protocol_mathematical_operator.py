@@ -1,7 +1,6 @@
 # **************************************************************************
 # *
-# * Authors:     Pablo Conesa(pconesa@cnb.csic.es)
-# *              Roberto Marabini (roberto@cnb.csic.es)
+# * Authors:    Daniel Marchán (da.marchan@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -47,54 +46,58 @@ class ProtMathematicalOperator(EMProtocol):
         # Manual
         form.addParam('boolMain', params.BooleanParam, default=False,
                       label='Manual Operation',
-                      help='')
+                      help='Select yes if you want to make a manual operation, e.g: 2 + 2 ')
 
         # Attribute X1
         group1 = form.addGroup('Input X1', condition="boolMain==%d" % False)
         group1.addParam('bool1', params.BooleanParam, default=True,
-                      label='Is X1 a Set attribute?',
-                      condition="boolMain==%d" % False,
-                      help='')
+                        label='Is X1 a Set attribute?',
+                        condition="boolMain==%d" % False,
+                        help='Select yes if X1 is a set attribute, e.g: sampling rate')
         group1.addParam('inputSet1', params.PointerParam, pointerClass='EMSet, SetOfImages',
-                      condition="bool1==%d and boolMain==%d" % (True, False),
-                      label='Set 1',
-                      help='')
+                        condition="bool1==%d and boolMain==%d" % (True, False),
+                        label='Set 1',
+                        help='Please select the Set from where you want to extract the attribute.')
         group1.addParam('attribute1', params.StringParam, label="Select attribute X1:",
-                      condition="bool1==%d and boolMain==%d" % (True, False),
-                      help='')
+                        condition="bool1==%d and boolMain==%d" % (True, False),
+                        help='Use the wizard to list all the sets attributes and select one.')
         group1.addParam('input1', params.IntParam,
-                      label='Input X1:',
-                      condition="bool1==%d and boolMain==%d" % (False, False),
-                      default=0,
-                      allowsPointers=True,
-                      help="")
+                        label='Input X1:',
+                        condition="bool1==%d and boolMain==%d" % (False, False),
+                        default=0,
+                        allowsPointers=True,
+                        help='Write the value you want to consider as X1 or'
+                             ' if it is a input pointer select from the list of available inputs.')
         # Attribute X2
         group2 = form.addGroup('Input X2', condition="boolMain==%d" % False)
         group2.addParam('bool2', params.BooleanParam, default=False,
-                      label='Is X2 a Set attribute?',
-                      condition="boolMain==%d" % False,
-                      help='')
+                        label='Is X2 a Set attribute?',
+                        condition="boolMain==%d" % False,
+                        help='Select yes if X2 is a set attribute, e.g: sampling rate')
         group2.addParam('inputSet2', params.PointerParam, pointerClass='EMSet, SetOfImages',
-                      condition="bool2==%d and boolMain==%d" % (True, False),
-                      label='Set 2',
-                      help='')
+                        condition="bool2==%d and boolMain==%d" % (True, False),
+                        label='Set 2',
+                        help='Please select the Set from where you want to extract the attribute.')
         group2.addParam('attribute2', params.StringParam, label="Select attribute X2:",
-                      condition="bool2==%d and boolMain==%d" % (True, False),
-                      help='')
+                        condition="bool2==%d and boolMain==%d" % (True, False),
+                        help='Use the wizard to list all the sets attributes and select one.')
         group2.addParam('input2', params.IntParam,
-                      label='Input X2:',
-                      condition="bool2==%d and boolMain==%d" % (False, False),
-                      default=0,
-                      allowsPointers=True,
-                      help="")
+                        label='Input X2:',
+                        condition="bool2==%d and boolMain==%d" % (False, False),
+                        default=0,
+                        allowsPointers=True,
+                        help='Write the value you want to consider as X2 or'
+                             ' if it is a input pointer select from the list of available inputs.')
         group3 = form.addGroup('Result')
         group3.addParam('typeResult', params.EnumParam, default=0,
-                      choices=['Int', 'Float', 'String'],
-                      label='Result type:',
-                      help='create set of')
+                        choices=['Int', 'Float', 'String'],
+                        label='Result type:',
+                        help='Choose the variable type you want your result to be, e.g: Integer')
         group3.addParam('expression', params.StringParam, label="Result =",
-                      important=True,
-                      help='')
+                        important=True,
+                        help='Write the mathematical expression you want to calculate, e.g: (X1 + X2) * X1 * 0.9 \n'
+                             'Please note that X1 and X2 would be replaced by the value you selected for each case.'
+                             ' It is important to use upper cases when writing the expression. ')
 
         form.addParallelSection(threads=1, mpi=1)
 
@@ -170,7 +173,7 @@ class ProtMathematicalOperator(EMProtocol):
             elif tpR == 2:
                 resultNum = String(result)
 
-            self._defineOutputs(result=resultNum) # Somehow we should name this output
+            self._defineOutputs(result=resultNum)
 
     def _summary(self):
         summary = []
@@ -185,5 +188,19 @@ class ProtMathematicalOperator(EMProtocol):
 
     def _validate(self):
         errors = []
+        if not self.boolMain.get():
+            if self.bool1.get():
+                if self.attribute1.get() == None:
+                    errors.append('Input X1 is None please select another value.')
+            else:
+                if self.input1.get() == None:
+                    errors.append('Input X1 is None please select another value.')
+
+            if self.bool2.get():
+                if self.attribute2.get() == None:
+                    errors.append('Input X2 is None please select another value.')
+            else:
+                if self.input2.get() == None:
+                    errors.append('Input X2 is None please select another value.')
 
         return errors
