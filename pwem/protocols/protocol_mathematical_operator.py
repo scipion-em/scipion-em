@@ -115,19 +115,23 @@ class ProtMathematicalOperator(EMProtocol):
         if hasattr(self, 'attr1') and hasattr(self, 'attr2'):
             return None
 
-        if self.bool1:
-            str1 = self.attribute1.get()
-            str1 = str1[str1.find('_'):]
-            self.attr1 = getattr(self.inputSet1.get(), str1)
-        else:
-            self.attr1 = self.input1.get()
+        if not self.boolMain.get():
+            if self.bool1:
+                str1 = self.attribute1.get()
+                str1 = str1[str1.find('_'):]
+                self.attr1 = getattr(self.inputSet1.get(), str1)
+            else:
+                self.attr1 = self.input1.get()
 
-        if self.bool2:
-            str2 = self.attribute2.get()
-            str2 = str2[str2.find('_'):]
-            self.attr2 = getattr(self.inputSet2.get(), str2)
+            if self.bool2:
+                str2 = self.attribute2.get()
+                str2 = str2[str2.find('_'):]
+                self.attr2 = getattr(self.inputSet2.get(), str2)
+            else:
+                self.attr2 = self.input2.get()
         else:
-            self.attr2 = self.input2.get()
+            self.attr1 = ''
+            self.attr2 = ''
 
         fDeps = self._insertNewOperationStep(self.attr1, self.attr2)
         self.updateSteps()
