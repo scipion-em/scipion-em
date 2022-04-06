@@ -88,6 +88,7 @@ class ProtMathematicalOperator(EMProtocol):
                         allowsPointers=True,
                         help='Write the value you want to consider as X2 or'
                              ' if it is a input pointer select from the list of available inputs.')
+        # Result
         group3 = form.addGroup('Result')
         group3.addParam('typeResult', params.EnumParam, default=0,
                         choices=['Int', 'Float', 'String'],
