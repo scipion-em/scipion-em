@@ -20,6 +20,7 @@
 # *  All comments concerning this program package may be sent to the
 # *  e-mail address 'scipion@cnb.csic.es'
 # ***************************************************************************/
+from pyworkflow.object import Pointer
 from pyworkflow.tests import BaseTest, setupTestProject, DataSet
 from pwem.protocols.protocol_import import ProtImportMicrographs
 from pwem.protocols.protocol_mathematical_operator import ProtMathematicalOperator
@@ -30,73 +31,62 @@ class TestMathematicalOperator(BaseTest):
     """ Test mathematical operator protocol"""
 
     @classmethod
-    def setData(cls):
-        cls.ds = DataSet.getDataSet('relion_tutorial')
-
-    @classmethod
     def setUpClass(cls):
         setupTestProject(cls)
-        cls.setData()
-        # Run needed protocols
-        cls.runImportMicrograph()
-        cls.runManualOperator()
 
-    @classmethod
-    def runImportMicrograph(cls):
+    def testMethods(self):
 
-        """ Run an Import micrograph protocol. """
-        protImport = cls.newProtocol(
-            ProtImportMicrographs,
-            samplingRateMode=0,
-            filesPath=TestMathematicalOperator.ds.getFile('micrographs/*.mrc'),
-            samplingRate=3.54,
-            magnification=59000,
-            voltage=300,
-            sphericalAberration=2)
-
-        cls.launchProtocol(protImport)
-        cls.protImport = protImport
-
-    @classmethod
-    def runManualOperator(cls):
-        protBoxSize = cls.newProtocol(ProtMathematicalOperator,
+        prot = self.newProtocol(ProtMathematicalOperator,
                                       boolMain=True)
+        self.assertTrue(prot.formulaNeedsParam(ProtMathematicalOperator.PARAM1), "formulaNeedsParam false negative for PARAM1")
+        self.assertTrue(prot.formulaNeedsParam(ProtMathematicalOperator.PARAM2), "formulaNeedsParam false negative for PARAM2")
 
-        protBoxSize.expression.set('100 + (3 * 10)')
-        protBoxSize.setObjLabel('box size')
-        cls.launchProtocol(protBoxSize)
-        cls.protBoxSize = protBoxSize
+        # validation
+        self.assertEqual(0, len(prot.validate()), "validation for default value do not work")
 
-    def testMathematicalOperatorBoxSize(self):
-        # Transform box size (px) to box size (A), X1 is a set attribute and X2 an input pointer
-        prot = self._runMathematicalOperatorBoxSize(label='Transform box size (px) to box size (A)')
-        self.assertEqual(prot.result, 460, "Box size in Angstroms does not match.")
+        prot.expression.set("SDSKJSL")
+        self.assertFalse(prot.formulaNeedsParam(ProtMathematicalOperator.PARAM1), "formulaNeedsParam false positive for PARAM1")
+        self.assertFalse(prot.formulaNeedsParam(ProtMathematicalOperator.PARAM2), "formulaNeedsParam false positive for PARAM2")
+
+        prot.expression.set(ProtMathematicalOperator.PARAM1 + "LOLO")
+        self.assertTrue(prot.formulaNeedsParam(ProtMathematicalOperator.PARAM1), "formulaNeedsParam false negative for PARAM1")
+        self.assertFalse(prot.formulaNeedsParam(ProtMathematicalOperator.PARAM2), "formulaNeedsParam false positive for PARAM2")
+
 
     def testMathematicalOperatorManual(self):
+
         # Calculate a manual operation
-        prot = self._runMathematicalOperatorManual(label='Manual operation')
-        self.assertEqual(prot.result, 8, "Manual operation does not match.")
+        protNoInput = self.newProtocol(ProtMathematicalOperator)
 
+        protNoInput.expression.set('2 + (3 * 2)')
+        protNoInput.setObjLabel("No inputs")
+        self.launchProtocol(protNoInput)
 
-    def _runMathematicalOperatorBoxSize(cls, label):
-        protBoxSizeParams = cls.newProtocol(ProtMathematicalOperator,
-                                            inputSet1=cls.protImport.outputMicrographs,
-                                            input2=cls.protBoxSize.result)
+        self.assertEqual(protNoInput.result, 8, "Computation without input does not match.")
 
-        protBoxSizeParams.attribute1.set('item._samplingRate')
-        protBoxSizeParams.input2.set(cls.protBoxSize.result)
-        protBoxSizeParams.expression.set('X1 * X2')
-        protBoxSizeParams.setObjLabel(label)
-        cls.launchProtocol(protBoxSizeParams)
+        # Feed the protocol with inputs
+        # Calculate a manual operation
+        protWithInput = self.newProtocol(ProtMathematicalOperator)
+        pntToOutput = Pointer(protNoInput, extended="result")
+        protWithInput.input1.setPointer(pntToOutput)
+        protWithInput.expression.set('X1 + 1')
+        protWithInput.setObjLabel("X1 as input")
+        self.launchProtocol(protWithInput)
 
-        return protBoxSizeParams
+        self.assertEqual(protWithInput.result.get(), 9, "Computation without input does not match.")
 
-    def _runMathematicalOperatorManual(cls, label):
-        protBoxSizeParams = cls.newProtocol(ProtMathematicalOperator,
-                                            boolMain=True)
+        # Feed the protocol with X2 input as well
+        # Calculate a manual operation
+        protWithBothInput = self.newProtocol(ProtMathematicalOperator)
+        pntToOutput = Pointer(protNoInput, extended="result")
+        protWithBothInput.input1.setPointer(pntToOutput)
 
-        protBoxSizeParams.expression.set('2 + (3 * 2)')
-        protBoxSizeParams.setObjLabel(label)
-        cls.launchProtocol(protBoxSizeParams)
+        pntToOutput = Pointer(protWithInput, extended="result")
+        protWithBothInput.input2.setPointer(pntToOutput)
 
-        return protBoxSizeParams
+        protWithBothInput.expression.set('X1 - (X1*X2)')
+        protWithBothInput.setObjLabel("X1 and X2 as input")
+        self.launchProtocol(protWithBothInput)
+
+        self.assertEqual(protWithBothInput.result.get(), -64, "Computation without input does not match.")
+
