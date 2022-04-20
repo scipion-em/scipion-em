@@ -90,6 +90,7 @@ class ProtUserSubSet(BatchProtocol):
 
             # Define outputs, may be use something more specific than "subset"
             self._defineOutputs(subset=newSet)
+            self._defineSourceRelation(sourceSet, newSet)
             return
 
         if other and ',Volume' in other:
