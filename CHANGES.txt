@@ -1,6 +1,18 @@
 V3.0.16
 users:
-   - Fixing an error calculating the FSC resolution value
+   - Fixing an error calculating the FSC resolution value. 
+   - FSC plots legend shows "resolution" ;-)
+   - Align movies protocols: possible outputs for even odd mics defined
+   - Import volume: fix downloading some old EMD id not numeric
+   - hdf files can be open from the file browser
+   
+   
+developers:
+   - New method at pwem/convert/headers.setMRCSamplingRate: sets the sampling rate of an mrc file. Image Object has it: volume.setMRCSamplingRate(3.5) should work.
+   - protcols.conf minimized only containig its own protocols
+   
+   - 
+   
 
 V3.0.15
 users:
