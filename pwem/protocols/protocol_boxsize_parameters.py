@@ -23,10 +23,15 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
+import enum
+
 import pyworkflow.protocol.params as params
 from pwem.protocols import EMProtocol
 from pyworkflow.object import Integer
 from collections import OrderedDict
+
+RADIUS_GAUTOMATCH ='radiusGautomatch'
+EXTRACTION = 'boxSizeExtraction'
 
 class ProtBoxSizeParameters(EMProtocol):
     """
@@ -34,7 +39,9 @@ class ProtBoxSizeParameters(EMProtocol):
     """
 
     _label = 'box size related parameters'
-    listExpressions = []
+    _possibleOutputs = {RADIUS_GAUTOMATCH: Integer,
+                        EXTRACTION: Integer}
+    outputsToDefine = {}
 
     def __init__(self, **args):
         EMProtocol.__init__(self, **args)
@@ -205,13 +212,11 @@ class ProtBoxSizeParameters(EMProtocol):
         """
 
         if self.boolExtractPartBx.get():
-            extractPartDict = self.calculateParticleExtractionParams(boxSize)
-            self.dictParams['extractParticles'] = extractPartDict
-            print('Particle extraction box size: %d (px) \n' % self.dictParams['extractParticles']['boxSizeExtraction'])
+            self.calculateParticleExtractionParams(boxSize)
 
         if self.boolGautomatchParams.get():
             self.dictParams['gautomatch'] = self.calculateGautomatchParams(boxSize, samplingRate)
-            print('Gautomatch particle radius: %d (A)' % self.dictParams['gautomatch']['radiusGautomatch'])
+            print('Gautomatch particle radius: %d (A)' % self.dictParams['gautomatch'][RADIUS_GAUTOMATCH])
             print('Gautomatch min inter particle distance: %d (A)'
                   % self.dictParams['gautomatch']['minIntPartDistanceGautomatch'])
             print('Gautomatch local sigma diameter: %d (A)'
@@ -236,15 +241,20 @@ class ProtBoxSizeParameters(EMProtocol):
         self.outputDone = True
 
 
-    def calculateParticleExtractionParams(self, boxSize):
-        extractPartDict = {}
-        extractPartDict['boxSizeExtraction'] = Integer(boxSize * self.factorExtractPartBx.get())
+    def registerOutput(self, outputName, value, msg):
+        self.outputsToDefine[outputName] = value
+        self.info(msg % value)
 
-        return extractPartDict
+    def calculateParticleExtractionParams(self, boxSize):
+
+        self.registerOutput(EXTRACTION,
+                            Integer(boxSize * self.factorExtractPartBx.get()),
+                            'Particle extraction box size: %d (px) \n')
+
 
     def calculateGautomatchParams(self, boxSize, samplingRate):
         gautomatchDict = {}
-        gautomatchDict['radiusGautomatch'] = Integer(boxSize * samplingRate * self.factorGautRadius.get())
+        gautomatchDict[RADIUS_GAUTOMATCH] = Integer(boxSize * samplingRate * self.factorGautRadius.get())
         gautomatchDict['minIntPartDistanceGautomatch'] = Integer(boxSize * samplingRate * self.factorGautMinInterPartDist.get())
         gautomatchDict['sigmaDiameterGautomatch'] = Integer(boxSize * samplingRate * self.factorGautSigmaDiameter.get())
         gautomatchDict['averageDiameterGautomatch'] = Integer(boxSize * samplingRate * self.factorGautAvgDiameter.get())
@@ -277,13 +287,8 @@ class ProtBoxSizeParameters(EMProtocol):
         """ The output can be an Integer, Float or String. Other protocols can use it in those
             Params if it has set allowsPointer=True
         """
-        results = {}
 
-        for dict in dictParams.values():
-            for key, value in dict.items():
-                results[key] = value
-
-        self._defineOutputs(**results)
+        self._defineOutputs(**self.outputsToDefine)
 
     def _summary(self):
         summary = []

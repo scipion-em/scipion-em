@@ -20,9 +20,7 @@
 # *  All comments concerning this program package may be sent to the
 # *  e-mail address 'scipion@cnb.csic.es'
 # ***************************************************************************/
-
-
-
+from pyworkflow.object import Pointer
 from pyworkflow.tests import BaseTest, setupTestProject, DataSet
 from pyworkflow.plugin import Domain
 from pwem.protocols.protocol_import import ProtImportMicrographs
@@ -102,11 +100,10 @@ class TestBoxSizeParameters(BaseTest):
     def _runBoxSizeParamsTestExtrGaut(cls, label):
         protBoxSizeParams = cls.newProtocol(ProtBoxSizeParameters,
                                             inputMicrographs=cls.protImport.outputMicrographs,
-                                            boxSize=cls.protCryolo.boxsize,
                                             boolExtractPartBx=True,
                                             boolGautomatchParams=True)
 
-        protBoxSizeParams.boxSize.set(cls.protCryolo.boxsize)
+        protBoxSizeParams.boxSize.setPointer(Pointer(cls.protCryolo, extended="boxsize"))
         protBoxSizeParams.setObjLabel(label)
         cls.launchProtocol(protBoxSizeParams)
 
