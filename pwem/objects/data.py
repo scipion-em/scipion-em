@@ -620,6 +620,10 @@ class Image(EMObject):
         filePaths.add(self.getFileName())
         return filePaths
 
+    def setMRCSamplingRate(self):
+        """ Sets the sampling rate to the mrc file represented by this image"""
+        from pwem.convert.headers import setMRCSamplingRate
+        setMRCSamplingRate(self.getFileName(), self.getSamplingRate())
 
 class Micrograph(Image):
     """ Represents an EM Micrograph object """
@@ -739,6 +743,11 @@ class Volume(Image):
 
     def setHalfMaps(self, listFileNames):
         return self._halfMapFilenames.set(listFileNames)
+
+    def fixMRCVolume(self):
+        """ Fixes the header of the mrc file pointed by this object """
+        from pwem.convert.headers import fixVolume
+        fixVolume(self.getFileName())
 
     def __str__(self):
         """ returns string representation adding halves info to base image.__str__"""
@@ -1467,7 +1476,7 @@ class SetOfSequences(EMSet):
             newSeq = Sequence(sequence=seqDic['sequence'], id=seqDic['seqID'],
                               name=seqDic['name'], description=seqDic['description'],
                               alphabet=seqDic['alphabet'], isAminoacids=seqDic['isAminoacids'])
-        self.append(newSeq)
+            self.append(newSeq)
 
 
 class Coordinate(EMObject):
@@ -2402,8 +2411,9 @@ class FSC(EMObject):
         """
         Calculate the FSC resolution value
         """
-        for i in range(len(self._x)):
-            if float(self._y[i]) < threshold:
+        dataLength = len(self._x)
+        for i in range(dataLength):
+            if float(self._y[i]) < threshold or i == dataLength-1:
                 above_res = float(self._x[i-1])
                 above_fsc = float(self._y[i-1])
                 bellow_res = float(self._x[i])

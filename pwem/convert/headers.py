@@ -371,3 +371,16 @@ def fixVolume(paths):
         ccp4header = Ccp4Header(path, readHeader=True)
         ccp4header.setISPG(1)
         ccp4header.writeHeader()
+
+def setMRCSamplingRate(paths, samplingRate):
+    """
+    Sets the mrc file sampling rate value
+    :param paths: accept a string or a list of strings
+    :return: nothing, but mrc files header end up being updated with the right sampling rate
+    """
+    if isinstance(paths, str):
+        paths = [paths]
+    for path in paths:
+        ccp4header = Ccp4Header(path, readHeader=True)
+        ccp4header.setSampling(samplingRate)
+        ccp4header.writeHeader()

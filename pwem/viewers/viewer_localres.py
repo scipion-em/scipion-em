@@ -192,17 +192,6 @@ class ChimeraAttributeViewer(pwviewer.ProtocolViewer):
         cifDic = ASH.readLowLevel(obj.getFileName())
         return list(set(cifDic[NAME]))
 
-    def _getStructureRecipient(self):
-        '''Returns a list with the names of the attributes of the output object'''
-        obj = self.getAtomStructObject()
-        ASH = AtomicStructHandler()
-        cifDic = ASH.readLowLevel(obj.getFileName())
-
-        recipDic = {}
-        for name, recip in zip(cifDic[NAME], cifDic[RECIP]):
-            recipDic[name] = recip
-        return recipDic[self.getEnumText('attrName')]
-
     def _getAttributeIndex(self, attrName):
         '''Returns a list with the names of the attributes of the output object'''
         names = self._getStructureAttributes()
@@ -227,6 +216,8 @@ class ChimeraAttributeViewer(pwviewer.ProtocolViewer):
 
           _inputStruct = self.getAtomStructObject()
           _inputVol = _inputStruct.getVolume()
+          cifFile = _inputStruct.getFileName()
+          attrName = self.getEnumText('attrName')
           if _inputVol is not None:
             strId = 3
             dim, sampling = _inputVol.getDim()[0], _inputVol.getSamplingRate()
@@ -248,20 +239,21 @@ class ChimeraAttributeViewer(pwviewer.ProtocolViewer):
           f.write("run(session, 'open %s')\n" % tmpFileName)
 
           # Open atomstruct and color it by the bfactor (which is actually the DAQ score)
-          cifDic = AtomicStructHandler().readLowLevel(_inputStruct.getFileName())
-          if self._getStructureRecipient() in ['atoms']:
-              f.write("run(session, 'open %s')\n" % self.replaceOcuppancyWithAttribute(cifDic))
+          cifDic = AtomicStructHandler().readLowLevel(cifFile)
+          outFile = self.protocol._getExtraPath('chimeraAttribute_{}.cif'.format(attrName))
+          if getStructureRecipient(cifDic, attrName=attrName) in ['atoms']:
+              f.write("run(session, 'open %s')\n" % replaceOcuppancyWithAttribute(cifFile, attrName, outFile))
               attrColorName = 'occupancy'
               
-          elif self._getStructureRecipient() in ['residues'] and \
+          elif getStructureRecipient(cifDic, attrName=attrName) in ['residues'] and \
                   getCifKeyName(cifDic, 'asym') and getCifKeyName(cifDic, 'seq'):
-              f.write("run(session, 'open %s')\n" % self.replaceOcuppancyWithAttribute(cifDic))
+              f.write("run(session, 'open %s')\n" % replaceOcuppancyWithAttribute(cifFile, attrName, outFile))
               attrColorName = 'occupancy'
           else:
-              f.write("run(session, 'open %s')\n" % _inputStruct.getFileName())
-              defAttrFile = self.createAttributesFile(_inputStruct, strId)
+              f.write("run(session, 'open %s')\n" % cifFile)
+              defAttrFile = self.createAttributesFile(cifFile, strId)
               f.write("run(session, 'open %s')\n" % defAttrFile)
-              attrColorName = self.getEnumText('attrName')
+              attrColorName = attrName
 
           stepColors, colorList = self.getColors()
           scolorStr = ''
@@ -270,7 +262,7 @@ class ChimeraAttributeViewer(pwviewer.ProtocolViewer):
           scolorStr = scolorStr[:-1]
 
           average = ''
-          if self._getStructureRecipient() == 'atoms' and self.residuesAverages:
+          if getStructureRecipient(cifDic, attrName=attrName) == 'atoms' and self.residuesAverages:
               average = 'average residues'
 
           f.write("run(session, 'color byattribute {} palette {} {}')\n".
@@ -287,17 +279,16 @@ class ChimeraAttributeViewer(pwviewer.ProtocolViewer):
 
     def _showHistogram(self, paramName=None):
       attrname = self.getEnumText('attrName')
-
-      cifDic = AtomicStructHandler().readLowLevel(self.getAtomStructObject().getFileName())
+      cifFile = self.getAtomStructObject().getFileName()
+      cifDic = AtomicStructHandler().readLowLevel(cifFile)
       #TODO: admit non float attributes
       names, values = np.array(cifDic[NAME]), np.array(cifDic[VALUE])
-      recipient = self._getStructureRecipient()
+      recipient = getStructureRecipient(cifDic, attrName=attrname)
       attrValues = values[names == attrname]
       attrValues = list(map(float, attrValues))
 
       self.plotter = EmPlotter(x=1, y=1, windowTitle=attrname)
-      a = self.plotter.createSubPlot("{} counts".format(self.getEnumText('attrName')),
-                                     self.getEnumText('attrName'), "{} count".format(recipient))
+      a = self.plotter.createSubPlot("{} counts".format(attrname), attrname, "{} count".format(recipient))
       low, high = self.getValuesRange()
       a.set_xlim([low, high])
 
@@ -334,9 +325,8 @@ class ChimeraAttributeViewer(pwviewer.ProtocolViewer):
       colorList = plotter.getHexColorList(len(stepColors), self.colorMap.get())
       return stepColors, colorList
 
-    def createAttributesFile(self, AS, chiEleId):
-        ASH = AtomicStructHandler()
-        cifDic = ASH.readLowLevel(AS.getFileName())
+    def createAttributesFile(self, cifFile, chiEleId):
+        cifDic = AtomicStructHandler().readLowLevel(cifFile)
 
         attrName = self.getEnumText('attrName')
         defAttrStr = 'attribute: {}\n'.format(self.getEnumText('attrName'))
@@ -354,46 +344,6 @@ class ChimeraAttributeViewer(pwviewer.ProtocolViewer):
             f.write(defAttrStr)
         return defattrFile
 
-    def replaceOcuppancyWithAttribute(self, cifDic):
-        '''Instead of defining the atribute in a defattr file, switch it with the occupancy and color by it.
-        It notably speeds up chimera colouring'''
-        attrName = self.getEnumText('attrName')
-        outFile = self.protocol._getExtraPath('chimeraAttribute_{}.cif'.format(attrName))
-        if not os.path.exists(outFile):
-            ASH = AtomicStructHandler()
-
-            names, values, specs = np.array(cifDic[NAME]), np.array(cifDic[VALUE]), np.array(cifDic[SPEC])
-            recipient = self._getStructureRecipient()
-            attrValues, attrSpecs = values[names == attrName], specs[names == attrName]
-            if recipient == 'atoms':
-                cifDic['_atom_site.occupancy'] = attrValues
-            elif recipient == 'residues':
-                atomValues = []
-                resDic = self.makeResidueValuesDic(cifDic)
-
-                chainsStr, resStr = getCifKeyName(cifDic, 'asym'), getCifKeyName(cifDic, 'seq')
-                for resChain, resNumber in zip(cifDic[chainsStr], cifDic[resStr]):
-                    resKey = '{}:{}'.format(resChain, resNumber)
-                    if resKey in resDic:
-                        #HOH atoms may be ignored and not appear in the cif
-                        lastVal = resDic[resKey]
-                        atomValues.append(lastVal)
-                    else:
-                        atomValues.append(lastVal)
-
-                cifDic['_atom_site.occupancy'] = atomValues
-
-            ASH._writeLowLevel(outFile, cifDic)
-        return outFile
-
-    def makeResidueValuesDic(self, cifDic):
-        resDic = {}
-        attrName = self.getEnumText('attrName')
-        names, values, specs = np.array(cifDic[NAME]), np.array(cifDic[VALUE]), np.array(cifDic[SPEC])
-        attrValues, attrSpecs = values[names == attrName], specs[names == attrName]
-        for spec, val in zip(attrSpecs, attrValues):
-            resDic[spec] = val
-        return resDic
 
 def chimeraInstalled():
   return Chimera.getHome() and os.path.exists(Chimera.getProgram())
@@ -404,3 +354,51 @@ def getCifKeyName(cifDic, keyBase):
     for name in options:
       if name in cifDic:
         return name
+
+def replaceOcuppancyWithAttribute(cifFile, attrName, outFile=None):
+    '''Instead of defining the atribute in a defattr file, switch it with the occupancy and color by it.
+    It notably speeds up chimera colouring'''
+    cifDic = AtomicStructHandler().readLowLevel(cifFile)
+    if not outFile:
+        outDir = os.path.dirname(cifFile)
+        outFile = os.path.join(outDir, 'chimeraAttribute_{}.cif'.format(attrName))
+
+    if not os.path.exists(outFile):
+        names, values, specs = np.array(cifDic[NAME]), np.array(cifDic[VALUE]), np.array(cifDic[SPEC])
+        recipient = getStructureRecipient(cifDic, attrName)
+        attrValues, attrSpecs = values[names == attrName], specs[names == attrName]
+        if recipient == 'atoms':
+            cifDic['_atom_site.occupancy'] = attrValues
+        elif recipient == 'residues':
+            atomValues = []
+            resDic = makeResidueValuesDic(cifDic, attrName)
+
+            chainsStr, resStr = getCifKeyName(cifDic, 'asym'), getCifKeyName(cifDic, 'seq')
+            for resChain, resNumber in zip(cifDic[chainsStr], cifDic[resStr]):
+                resKey = '{}:{}'.format(resChain, resNumber)
+                if resKey in resDic:
+                    #HOH atoms may be ignored and not appear in the cif
+                    lastVal = resDic[resKey]
+                    atomValues.append(lastVal)
+                else:
+                    atomValues.append(lastVal)
+
+            cifDic['_atom_site.occupancy'] = atomValues
+
+        AtomicStructHandler()._writeLowLevel(outFile, cifDic)
+    return outFile
+
+def getStructureRecipient(cifDic, attrName):
+    '''Returns a list with the names of the attributes of the output object'''
+    recipDic = {}
+    for name, recip in zip(cifDic[NAME], cifDic[RECIP]):
+        recipDic[name] = recip
+    return recipDic[attrName]
+
+def makeResidueValuesDic(cifDic, attrName):
+    resDic = {}
+    names, values, specs = np.array(cifDic[NAME]), np.array(cifDic[VALUE]), np.array(cifDic[SPEC])
+    attrValues, attrSpecs = values[names == attrName], specs[names == attrName]
+    for spec, val in zip(attrSpecs, attrValues):
+        resDic[spec] = val
+    return resDic
