@@ -1,12 +1,13 @@
 V3.0.16
 users:
    - Fixing an error calculating the FSC resolution value
+   -Adding the protocol "box size related parameters" to estimate the different parameters needed for various pickers.
 
 V3.0.15
 users:
   - New viewer: ChimeraAttributeViewer: analyze scalar attributes of the residues or atoms in a structure
   - Local resolution viewers use now native ChimeraX key
-  - Adding the protocolo "Manual check point" that kept running for a time determined by a parameter or until
+  - Adding the protocol "Manual check point" that kept running for a time determined by a parameter or until
     the user determines it is convenient.
   - Calculating the FSC resolution value and displaying it in the viewer.
 V3.0.14

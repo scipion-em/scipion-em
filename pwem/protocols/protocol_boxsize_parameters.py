@@ -23,15 +23,20 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-import enum
-
 import pyworkflow.protocol.params as params
 from pwem.protocols import EMProtocol
 from pyworkflow.object import Integer
-from collections import OrderedDict
 
-RADIUS_GAUTOMATCH ='radiusGautomatch'
 EXTRACTION = 'boxSizeExtraction'
+RADIUS_GAUTOMATCH = 'radiusGautomatch'
+MIN_INTPAR_DIST_GAUTOMATCH= 'minIntPartDistanceGautomatch'
+SIGMA_DIAM_GAUTOMATCH = 'sigmaDiameterGautomatch'
+AVG_DIAM_GAUTOMATCH = 'averageDiameterGautomatch'
+MIN_LOG_FILTER_RELION = 'minLoGFilterRelion'
+MAX_LOG_FILTER_RELION = 'maxLoGFilterRelion'
+RADIUS_TOPAZ = 'radiusTopaz'
+NUM_PART_IMG_TOPAZ = 'numPartPerImgTopaz'
+RADIUS_CONSENSUS = 'radiusConsensus'
 
 class ProtBoxSizeParameters(EMProtocol):
     """
@@ -39,8 +44,17 @@ class ProtBoxSizeParameters(EMProtocol):
     """
 
     _label = 'box size related parameters'
-    _possibleOutputs = {RADIUS_GAUTOMATCH: Integer,
-                        EXTRACTION: Integer}
+    _possibleOutputs = {EXTRACTION: Integer,
+                        RADIUS_GAUTOMATCH: Integer,
+                        MIN_INTPAR_DIST_GAUTOMATCH: Integer,
+                        SIGMA_DIAM_GAUTOMATCH: Integer,
+                        AVG_DIAM_GAUTOMATCH: Integer,
+                        MIN_LOG_FILTER_RELION: Integer,
+                        MAX_LOG_FILTER_RELION: Integer,
+                        RADIUS_TOPAZ: Integer,
+                        NUM_PART_IMG_TOPAZ: Integer,
+                        RADIUS_CONSENSUS: Integer}
+
     outputsToDefine = {}
 
     def __init__(self, **args):
@@ -176,7 +190,6 @@ class ProtBoxSizeParameters(EMProtocol):
         self._checkNewInput()
 
     def initParams(self):
-        self.dictParams = OrderedDict()
         self.outputDone = False
 
     def createOutput(self, modifiedSet):
@@ -192,7 +205,6 @@ class ProtBoxSizeParameters(EMProtocol):
 
         self.boxSize = self.boxSize.get()
         self.samplingRate = self.inputMicrographs.get().getSamplingRate()
-
         fDeps = self._insertNewOperationsStep(self.boxSize, self.samplingRate)
         self.updateSteps()
 
@@ -204,7 +216,7 @@ class ProtBoxSizeParameters(EMProtocol):
 
     def _checkNewOutput(self):
         if self.outputDone:
-            self.createResultsOutput(self.dictParams)
+            self.createResultsOutput()
 
     def applyFormulaStep(self, boxSize, samplingRate):
         """
@@ -215,79 +227,57 @@ class ProtBoxSizeParameters(EMProtocol):
             self.calculateParticleExtractionParams(boxSize)
 
         if self.boolGautomatchParams.get():
-            self.dictParams['gautomatch'] = self.calculateGautomatchParams(boxSize, samplingRate)
-            print('Gautomatch particle radius: %d (A)' % self.dictParams['gautomatch'][RADIUS_GAUTOMATCH])
-            print('Gautomatch min inter particle distance: %d (A)'
-                  % self.dictParams['gautomatch']['minIntPartDistanceGautomatch'])
-            print('Gautomatch local sigma diameter: %d (A)'
-                  % self.dictParams['gautomatch']['sigmaDiameterGautomatch'])
-            print('Gautomatch local average diameter: %d (A) \n'
-                  % self.dictParams['gautomatch']['averageDiameterGautomatch'])
+            self.calculateGautomatchParams(boxSize, samplingRate)
 
         if self.boolRelionParams.get():
-            self.dictParams['relion'] = self.calculateRelionParams(boxSize, samplingRate)
-            print('Relion min diameter for loG filter: %d (A)' % self.dictParams['relion']['minLoGFilterRelion'])
-            print('Relion max diameter for loG filter: %d (A) \n' % self.dictParams['relion']['maxLoGFilterRelion'])
+            self.calculateRelionParams(boxSize, samplingRate)
 
         if self.boolTopazParams.get():
-            self.dictParams['topaz'] = self.calculateTopazParams(boxSize)
-            print('Topaz particle radius: %d (px)' % self.dictParams['topaz']['radiusTopaz'])
-            print('Topaz number of particles per image: %d \n' % self.dictParams['topaz']['numPartPerImgTopaz'])
+            self.calculateTopazParams(boxSize)
 
         if self.boolConsensusParams.get():
-            self.dictParams['consensus'] = self.calculateConsensusParams(boxSize)
-            print('Picking consensus radius: %d (px)' % self.dictParams['consensus']['radiusConsensus'])
+            self.calculateConsensusParams(boxSize)
 
         self.outputDone = True
 
-
-    def registerOutput(self, outputName, value, msg):
+    def registerOutput(self, outputName, value):
         self.outputsToDefine[outputName] = value
-        self.info(msg % value)
 
     def calculateParticleExtractionParams(self, boxSize):
-
         self.registerOutput(EXTRACTION,
-                            Integer(boxSize * self.factorExtractPartBx.get()),
-                            'Particle extraction box size: %d (px) \n')
-
+                            Integer(boxSize * self.factorExtractPartBx.get()))
 
     def calculateGautomatchParams(self, boxSize, samplingRate):
-        gautomatchDict = {}
-        gautomatchDict[RADIUS_GAUTOMATCH] = Integer(boxSize * samplingRate * self.factorGautRadius.get())
-        gautomatchDict['minIntPartDistanceGautomatch'] = Integer(boxSize * samplingRate * self.factorGautMinInterPartDist.get())
-        gautomatchDict['sigmaDiameterGautomatch'] = Integer(boxSize * samplingRate * self.factorGautSigmaDiameter.get())
-        gautomatchDict['averageDiameterGautomatch'] = Integer(boxSize * samplingRate * self.factorGautAvgDiameter.get())
-
-        return gautomatchDict
+        self.registerOutput(RADIUS_GAUTOMATCH,
+                            Integer(boxSize * samplingRate * self.factorGautRadius.get()))
+        self.registerOutput(MIN_INTPAR_DIST_GAUTOMATCH,
+                            Integer(boxSize * samplingRate * self.factorGautMinInterPartDist.get()))
+        self.registerOutput(SIGMA_DIAM_GAUTOMATCH,
+                            Integer(boxSize * samplingRate * self.factorGautSigmaDiameter.get()))
+        self.registerOutput(AVG_DIAM_GAUTOMATCH,
+                            Integer(boxSize * samplingRate * self.factorGautAvgDiameter.get()))
 
     def calculateRelionParams(self, boxSize, samplingRate):
-        relionDict = {}
-        relionDict['minLoGFilterRelion'] = Integer(boxSize * samplingRate * self.factorMinLoGFilter.get())
-        relionDict['maxLoGFilterRelion'] = Integer(boxSize * samplingRate * self.factorMaxLoGFilter.get())
-
-        return relionDict
+        self.registerOutput(MIN_LOG_FILTER_RELION,
+                            Integer(boxSize * samplingRate * self.factorMinLoGFilter.get()))
+        self.registerOutput(MAX_LOG_FILTER_RELION,
+                            Integer(boxSize * samplingRate * self.factorMaxLoGFilter.get()))
 
     def calculateTopazParams(self, boxSize):
-        topazDict = {}
-        topazDict['radiusTopaz'] = Integer(boxSize * self.factorTopazRadius.get())
+        self.registerOutput(RADIUS_TOPAZ,
+                            Integer(boxSize * self.factorTopazRadius.get()))
         # TODO: the numPartPerImg needs to be estimated
-        topazDict['numPartPerImgTopaz'] = Integer(self.numPartPerImg.get())
-
-        return topazDict
+        self.registerOutput(NUM_PART_IMG_TOPAZ,
+                            Integer(self.numPartPerImg.get()))
 
     def calculateConsensusParams(self, boxSize):
-        consensusDict = {}
-        consensusDict['radiusConsensus'] = Integer(boxSize * self.factorConsensusRadius.get())
+        self.registerOutput(RADIUS_CONSENSUS,
+                            Integer(boxSize * self.factorConsensusRadius.get()))
 
-        return consensusDict
-
-
-    def createResultsOutput(self, dictParams):
+    def createResultsOutput(self):
         """ The output can be an Integer, Float or String. Other protocols can use it in those
             Params if it has set allowsPointer=True
         """
-
         self._defineOutputs(**self.outputsToDefine)
 
     def _summary(self):
