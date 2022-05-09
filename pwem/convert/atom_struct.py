@@ -398,6 +398,16 @@ class AtomicStructHandler:
             label = label + "_%s" % str(chain_id)
         return label
 
+    def getStructureBFactorValues(self):
+        self.checkRead()
+        listOfBFactors = []
+        for model in self.structure:
+            for chain in model:
+                    for residue in chain:
+                        for atom in residue:
+                            listOfBFactors.append(atom.get_bfactor())
+        return listOfBFactors
+
     def readLowLevel(self, fileName):
         """ Return a dictionary with all mmcif fields. you should parse them
             Example: get the list of the y coordinates of all atoms
