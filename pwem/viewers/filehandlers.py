@@ -28,6 +28,7 @@ This modules contains file handlers to be registered in the scipion file browser
 """
 import os
 
+import pwem
 import pyworkflow.utils as pwutils
 from pyworkflow import gui
 from pyworkflow.gui.browser import FileHandler, isStandardImage
@@ -58,6 +59,11 @@ class ImageFileHandler(FileHandler):
         return (dimMsg + "\n" + expMsg) % locals()
 
     def _getImagePreview(self, filename):
+
+        # If file size if big
+        if pwutils.getFileSize(filename) > (pwem.Config.MAX_PREVIEW_FILE_SIZE * 1024*1024):
+            return
+
         dim = 128
 
         if isStandardImage(filename):
@@ -144,8 +150,13 @@ class MdFileHandler(ImageFileHandler):
             if emlib.labelIsImage(label):
                 imgPath = self._getImgPath(filename,
                                            md.getValue(label, md.firstObject()))
+                if imgPath is None or not os.path.exists(imgPath):
+                    imgPath = None
                 break
-        if imgPath:
+
+        # If there is an image and is not too big
+        if imgPath and pwutils.getFileSize(imgPath) < (pwem.Config.MAX_PREVIEW_FILE_SIZE * 1024*1024):
+
             self._imgPreview = self._getImagePreview(imgPath)
             self._imgInfo = self._getImageString(imgPath)
         return msg

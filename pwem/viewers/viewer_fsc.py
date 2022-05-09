@@ -87,7 +87,8 @@ class FscViewer(pwviewer.Viewer):
                 fscLabel = fsc.getObjLabel() or 'FSC %d' % (i + 1)
                 self.plotFsc(fsc, label=fscLabel, **kwargs)
         else:  # single FSC
-            self.plotFsc(obj, **kwargs)
+            fscLabel = obj.getObjLabel() or 'FSC 1'
+            self.plotFsc(obj, label=fscLabel, **kwargs)
             self.fscList.append(obj.clone())
 
         bcreateFSC = self._plotButton()  # if you do not assign the result
@@ -117,8 +118,8 @@ class FscViewer(pwviewer.Viewer):
             a.grid(True)
             a.xaxis.set_major_formatter(FuncFormatter(self._formatFreq))
             self._lastSubPlot = a
-
-        self.label = kwargs.get('label', self.protocol.getRunName())
+        resolution = obj.calculateResolution(self.threshold)
+        self.label = kwargs.get('label', self.protocol.getRunName()) + " (" + str(resolution) + "Å)"
         self.plotter.plotData(x, y, '-', label=self.label)
         self.plotter.legend()
         # if I run this

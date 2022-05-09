@@ -72,6 +72,19 @@ class TestImportCoordinates(TestImportBase):
         # Make sure that all 264 coordinates where correctly imported
         self.assertTrue(prot1.outputCoordinates.getSize() == 264)
 
+        filepath = prot1.outputCoordinates.getFileName()
+        prot2 = self.newProtocol(emprot.ProtImportCoordinates,
+                                 importFrom=emprot.ProtImportCoordinates.IMPORT_FROM_SCIPION,
+                                 filesPath=filepath, 
+                                 filesPattern='',
+                                 boxSize=110,
+                                 )
+        prot2.inputMicrographs.set(protImport.outputMicrographs)
+        prot2.setObjLabel('import coords from scipion ')
+        self.launchProtocol(prot2)
+        # Make sure that all 264 coordinates where correctly imported
+        self.assertTrue(prot2.outputCoordinates.getSize() == 264)
+
         # prot2 = self.newProtocol(ProtImportCoordinates,
         #                          importFrom=ProtImportCoordinates.IMPORT_FROM_RELION,
         #                          filesPath=self.dsXmipp.getFile('boxingDir'),#no dataset with picking

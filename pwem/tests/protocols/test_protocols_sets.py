@@ -30,6 +30,9 @@
 import random
 import unittest
 
+from pwem.protocols import ProtUserSubSet
+from pyworkflow.tests import DataSet
+
 try:
     from itertools import izip
 except ImportError:
@@ -39,6 +42,7 @@ import pyworkflow.tests as pwtests
 import pyworkflow.utils as pwutils
 
 import pwem.protocols as emprot
+import pwem.objects as emobj
 
 # Used by Roberto's test, where he creates the particles "by hand"
 from pwem.objects.data import Particle, SetOfParticles, Acquisition, CTFModel
@@ -602,6 +606,30 @@ class TestSets(pwtests.BaseTest):
 
         with self.assertRaises(Exception):
             self.launchProtocol(p_union)
+
+
+class TestUserSubSet(pwtests.BaseTest):
+    @classmethod
+    def setUpClass(cls):
+        cls.dataset = DataSet.getDataSet('model')
+        cls.selectionFn = cls.dataset.getFile('classesSelection')
+        pwtests.setupTestProject(cls)
+
+    def test_2DClasses(self):
+        """ Load an existing SetOfClasses and test basic properties
+        such us: _mapperPath, iteration and others.
+        """
+        emProt = self.newProtocol(emprot.ProtImportParticles)
+        classes2DSet = emobj.SetOfClasses2D(filename=self.selectionFn)
+        emProt._defineOutputs(outputClasses=classes2DSet)
+        emProt.setFinished()
+        emProt._store()
+
+        batchProt = self.newProtocol(ProtUserSubSet,
+                                     inputObject=classes2DSet,
+                                     sqliteFile=self.selectionFn + ',',
+                                     outputClassName='SetOfClasses2D')
+        self.launchProtocol(batchProt)
 
 
 if __name__ == '__main__':

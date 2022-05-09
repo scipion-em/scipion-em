@@ -68,7 +68,7 @@ class TestCtfConsensus(pwtests.BaseTest):
                             "The outputCTF%s has different attributes "
                             "than the input." % label)
         else:
-            self.assertAlmostEqual(avgCTF['defocusU'], firstCTF.getDefocusU(), delta=100,
+            self.assertAlmostEqual(avgCTF['defocusU'], firstCTF.getDefocusU(), delta=200,
                                    msg="DefocusU doesn't match when defocus averaging.")
             self.assertAlmostEqual(avgCTF['defocusV'], firstCTF.getDefocusV(), delta=100,
                                    msg="DefocusV doesn't match when defocus averaging.")
@@ -180,9 +180,9 @@ class TestCtfConsensus(pwtests.BaseTest):
 
         protCTF1.outputCTF.load()  # Needed to update the set
         protCTF2.outputCTF.load()  # Needed to update the set
-        ctfAveraged = {'defocusU': 24140.0898,
-                       'defocusV': 23569.0801,
-                       'defocusAngle': 58.3429}
+        ctfAveraged = {'defocusU': 24025.6729,
+                       'defocusV': 23610.2071,
+                       'defocusAngle': 57.1943}
         self.checkCTFs(protCTFcons3,
                        refMics=protImport.outputMicrographs,
                        refCTFs=protCTF1.outputCTF,

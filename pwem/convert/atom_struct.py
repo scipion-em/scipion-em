@@ -53,6 +53,8 @@ import numpy
 import pyworkflow.utils as pwutils
 import shutil
 
+SECTION = '_scipion_attributes'
+NAME, RECIP, SPEC, VALUE = SECTION + '.name', SECTION + '.recipient', SECTION + '.specifier', SECTION + '.value'
 
 class OutOfChainsError(Exception):
     pass
@@ -999,3 +1001,18 @@ def partiallyCleaningFolder(program, cwd):
                     os.remove(path1)
                 elif os.path.isdir(path1):
                     shutil.rmtree(path1)
+
+def addScipionAttribute(cifDic, attributeScoresDic, attrName, recipient='residues'):
+    '''Add a scipion attribute in a section of the CIF dictionary
+    "cifDic": must be a cif dictionary parsed by Biopython
+    "attributeScoresDic" a dictionary of the form {spec: value}"'''
+    if not NAME in cifDic:
+        cifDic[NAME], cifDic[RECIP] = [], []
+        cifDic[SPEC], cifDic[VALUE] = [], []
+    for spec in attributeScoresDic:
+        value = attributeScoresDic[spec]
+        cifDic[NAME].append(attrName)
+        cifDic[RECIP].append(recipient)
+        cifDic[SPEC].append(spec)
+        cifDic[VALUE].append(str(value))
+    return cifDic

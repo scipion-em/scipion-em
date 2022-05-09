@@ -1,7 +1,75 @@
+V3.0.16
+users:
+   - Fixing an error calculating the FSC resolution value. 
+   - FSC plots legend shows "resolution" ;-)
+   - Align movies protocols: possible outputs for even odd mics defined
+   - Import volume: fix downloading some old EMD id not numeric
+   - Hdf files can be open from the file browser
+   - Adding the protocol "box size related parameters" to estimate the different parameters needed for various pickers.
+      
+developers:
+   - New method at pwem/convert/headers.setMRCSamplingRate: sets the sampling rate of an mrc file. Image Object has it: volume.setMRCSamplingRate(3.5) should work.
+   - protcols.conf minimized only containig its own protocols 
+
+
+V3.0.15
+users:
+  - New viewer: ChimeraAttributeViewer: analyze scalar attributes of the residues or atoms in a structure
+  - Local resolution viewers use now native ChimeraX key
+  - Adding the protocol "Manual check point" that kept running for a time determined by a parameter or until
+    the user determines it is convenient.
+  - Calculating the FSC resolution value and displaying it in the viewer.
+V3.0.14
+users:
+  - New protocol: numeric classes extractor: Extracts items from a SetOfClasses based on number of items assigned to the classes
+  - Filter ser protocol can filter by ranking: ascending or descending getting N items or a percentage.
+  - Outputs predefined for:
+     import masks
+     import mics
+     import movies
+     movie alignments
+     ctf estimators
+     pickings
+     extraction
+  - Filebrowser preview for images limited to 500MB (default). MAX_PREVIEW_FILE_SIZE (in MB) can be used to change this value.
+
+V3.0.13
+users:
+  JAVA_MAX_MEMORY defaults to 4GB for a better user experience with large datasets
+  Take CHIMERA_HOME from chimera plugin if available. Otherwise will go for chimerax-1.2.5 as default
+  Clean problematic characters in filenames: ;<>?"()|*\'&
+  "filter set" protocols extended to filter by coordinate distance.
+  "edit set" protocol extended to allow editing angular information.
+  .gain files are treated as tiff files when getting its dimensions.
+
+developers:
+  Transform class provides a "create" (factory method) to create common transformations.
+  pwem.convert.headers.fixVolume: to fix mrc headers of volumes.
+
+V3.0.12
+users:
+  fix create user subsets with classes2D
+
+developers:
+  pwem.convert.headers.fixVolume: fixes the header of a volume defined as stack, so we can avoid :mrc suffix in paths the paths.
+  images imported by ProtImportImage and ProtImportMask remove problematic characters -> PROBLEMATIC_SHELL_CHARS = ;<>?"()|*\'&
+
+V3.0.11
+users:
+  mrc, pdb, vol files can be open with Chimera from the file browser
+  rec file can be imported (not yet displayed by xmipp)
+  fix import of particles stack with one image
+
+developers:
+  EmSet has a create copy method to properly copy a Set
+  useful for generic set handling (subset, join set, user subset)
+  tilt series subsets bug fixed
+  MaskVolumeWizard - Creates a mask for a volume interactively. Masks currently implemented: Spherical mask
+
 V3.0.10
 users:
   "set filter" protocol and wizard
-  protocol tree (left pannel) collapsed at loading
+  protocol tree (left panel) collapsed at loading
 developers:
   protocols.conf created taken from scipion-app defining its own protocols.
   Add getTransformMatrix function, finds transformation matrix between to PDB files

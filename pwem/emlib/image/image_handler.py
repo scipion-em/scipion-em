@@ -35,7 +35,6 @@ import pwem.objects as emobj
 import pwem.constants as emcts
 from .. import lib
 
-
 class ImageHandler(object):
     """ Class to provide several Image manipulation utilities. """
 
@@ -258,7 +257,7 @@ class ImageHandler(object):
                     'eman2.convert', 'getImageDimensions',
                     doRaise=True)
                 return getImageDimensions(fn)  # we are ignoring index here
-            elif ext == '.eer':
+            elif ext in ['.eer', '.gain']:
                 tif = TiffFile(fn)
                 frames = len(tif.pages)  # number of pages in the file
                 page = tif.pages[0]  # get shape and dtype of the image in the first page
@@ -383,6 +382,15 @@ class ImageHandler(object):
                                '-i %s --create_mask  %s --mask circular -%d'
                                % (inputRef, outputFile, radius))
 
+    def rotateVolume(self, inputFile, outputFile, transformation):
+        """ Apply geometric transformations to images. You can shift, rotate
+        and scale a group of images/volumes.
+        """
+        elementList = [str(item) for item in transformation.getRotationMatrix().flatten().tolist()]
+        unrolledMatrix = ' '.join(elementList)
+        self.__runXmippProgram('xmipp_transform_geometry',
+                               '-i %s -o %s --rotate_volume matrix %s' % (inputFile, outputFile, unrolledMatrix))
+
     def addNoise(self, inputFile, outputFile, std=1., avg=0.):
         """ Add Gaussian noise to an input image (or stack)
         to produce noisy images.
@@ -432,7 +440,11 @@ class ImageHandler(object):
         """ Check if imgFn has an image extension. The function
         is implemented in the Xmipp binding.
         """
-        return lib.FileName(imgFn).isImage()
+        # Local import to avoid import loop between ImageHandler and Ccp4Header.
+        from pwem.convert import headers
+
+        return (lib.FileName(imgFn).isImage() or
+                headers.getFileFormat(imgFn) == headers.MRC)
 
     def computeThumbnail(self, inputFn, outputFn, scaleFactor=6, flipOnY=False,
                          flipOnX=False):

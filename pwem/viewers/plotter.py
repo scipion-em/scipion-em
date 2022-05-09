@@ -120,9 +120,9 @@ class EmPlotter(Plotter):
                    , rotationX=90.
                    , rotationY=0.
                    , **kwargs):
-        interpolation = kwargs.get('interpolation', "none")
+        interpolation = kwargs.pop('interpolation', "none")
         plot = img.imshow(matrix, interpolation=interpolation, cmap=cmap,
-                          vmin=vminData, vmax=vmaxData)
+                          vmin=vminData, vmax=vmaxData, **kwargs)
         if xticksLablesMajor is not None:
             plt.xticks(range(len(xticksLablesMajor)),
                        xticksLablesMajor[:len(xticksLablesMajor)],

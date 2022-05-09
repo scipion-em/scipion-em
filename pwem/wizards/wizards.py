@@ -37,8 +37,9 @@ from pyworkflow.gui.tree import ListTreeProviderString
 
 import pwem.convert as emconv
 
-from pwem.wizards.wizard import EmWizard, FormulaDialog
+from pwem.wizards.wizard import EmWizard, FormulaDialog, ColorScaleWizardBase
 import pwem.protocols as emprot
+import pwem.viewers as emview
 import pwem.objects as emobj
 
 
@@ -228,7 +229,8 @@ class GetStructureChainsWizard(pwizard.Wizard):
 
 class PythonFormulaeWizard(pwizard.Wizard):
     """Assist in the creation of python formula to be evaluated. In Steps"""
-    _targets = [(emprot.ProtSetFilter, ['formula'])]
+    _targets = [(emprot.ProtSetFilter, ['formula']),
+                (emprot.ProtSetEditor, ['formula'])]
 
     def show(self, form, *params):
 
@@ -237,3 +239,63 @@ class PythonFormulaeWizard(pwizard.Wizard):
         # If accepted
         if d.resultYes():
             form.setVar('formula',d.getFormula())
+            
+class SelectAttributeWizard(pwizard.Wizard):
+  """Base wizard for selecting an attribute from those contained in the items of a given input
+  inputParam: Name of the input parameter where the items are stored
+  outputParam:
+  """
+  _targets, _inputs, _outputs = [], {}, {}
+
+  def addTarget(self, protocol, targets, inputs, outputs):
+      self._targets += [(protocol, targets)]
+      self._inputs.update({protocol: inputs})
+      self._outputs.update({protocol: outputs})
+
+  def getInputOutput(self, form):
+      '''Retrieving input and output corresponding to the protocol where the wizard is used'''
+      outParam = ''
+      for target in self._targets:
+          if form.protocol.__class__ == target[0]:
+              inParam, outParam = self._inputs[target[0]], self._outputs[target[0]]
+      return inParam, outParam
+
+  def getFirstItem(self, form, inputParam):
+      inputPointer = getattr(form.protocol, inputParam)
+      if issubclass(inputPointer.__class__, pwobj.PointerList):
+          inputPointer = inputPointer[0]
+
+      inputSet = inputPointer.get()
+      if issubclass(inputSet.__class__, pwobj.Set):
+          item = inputSet.getFirstItem()
+      elif issubclass(inputSet.__class__, pwobj.Object):
+          item = inputSet
+      return item
+
+  def getInputAttributes(self, form, inputParam):
+    attrNames = []
+    item = self.getFirstItem(form, inputParam[0])
+    for key, attr in item.getAttributesToStore():
+      attrNames.append(key)
+    return attrNames
+
+  def show(self, form, *params):
+    inputParam, outputParam = self.getInputOutput(form)
+    attrsList = self.getInputAttributes(form, inputParam)
+    finalAttrsList = []
+    for i in attrsList:
+      finalAttrsList.append(pwobj.String(i))
+    provider = ListTreeProviderString(finalAttrsList)
+    dlg = dialog.ListDialog(form.root, "Filter set", provider,
+                            "Select one of the attributes")
+    form.setVar(outputParam[0], dlg.values[0].get())
+
+
+class ColorScaleWizardRMSD(ColorScaleWizardBase):
+  _targets = ColorScaleWizardBase.defineTargets(emview.ChimeraAttributeViewer)
+
+#Defining target for the SelectAttributeWizard
+SelectAttributeWizard().addTarget(protocol=emprot.ProtSetFilter,
+                                  targets=['rankingField'],
+                                  inputs=['inputSet'],
+                                  outputs=['rankingField'])

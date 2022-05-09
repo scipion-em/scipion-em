@@ -17,6 +17,9 @@ import pyworkflow.utils as pwutils
 import pwem.objects as emobj
 from pwem import emlib
 from pwem.emlib import metadata as md
+import pwem.protocols as emprot
+import pyworkflow.tests as pwtests
+from pwem.convert import SequenceHandler
 
 # set to true if you want to check how fast is the access to
 # the database
@@ -1013,3 +1016,57 @@ class TestCTFModel(TestCase):
         ctf.setDefocusU(2.4545)
         print(ctf)
         self.assertTrue("2.45," in str(ctf))
+
+
+class TestSequenceHandler(pwtests.BaseTest):
+    NAME = 'USER_SEQ'
+    DESCRIPTION = 'User description'
+    UNIPROTID1 = 'P12345'
+    UNIPROTID2 = 'P03252'
+
+    @classmethod
+    def setUpClass(cls):
+        pwtests.setupTestProject(cls)
+
+    def testImportStructureAminoacidSequence1(self):
+        """
+        Import the sequence of chain B of atomic structure 3lqd.cif
+        """
+        args = {'inputSequenceName': self.NAME,
+                'inputProteinSequence':
+                    emprot.ProtImportSequence.IMPORT_FROM_UNIPROT,
+                'uniProtSequence': self.UNIPROTID1,
+                }
+        prot1 = self.newProtocol(emprot.ProtImportSequence, **args)
+        self.launchProtocol(prot1)
+        sequence1 = prot1.outputSequence
+
+        args = {'inputSequenceName': self.NAME,
+                'inputProteinSequence':
+                    emprot.ProtImportSequence.IMPORT_FROM_UNIPROT,
+                'uniProtSequence': self.UNIPROTID2,
+                }
+        prot2 = self.newProtocol(emprot.ProtImportSequence, **args)
+        self.launchProtocol(prot2)
+        sequence2 = prot2.outputSequence
+
+        #Saving Sequences into files
+        outFile = prot1._getPath('sequence.fasta')
+        sequence1.exportToFile(outFile)
+        # sequence2.exportToFile(prot2._getPath('sequence.genbank'))
+
+        #Reading exported sequence
+        readSequence = SequenceHandler()
+        sequencesDics = readSequence.readSequencesFromFile(outFile)
+        self.assertEqual(sequence1.getSequence(), sequencesDics[0]['sequence'])
+
+        #Appending sequence to existing sequence file
+        sequence2.appendToFile(outFile)
+
+        # Reading appended sequences
+        readSequence = SequenceHandler()
+        sequencesDics = readSequence.readSequencesFromFile(outFile)
+        self.assertEqual(sequence1.getSequence(), sequencesDics[0]['sequence'])
+        self.assertEqual(sequence2.getSequence(), sequencesDics[1]['sequence'])
+
+

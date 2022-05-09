@@ -33,7 +33,7 @@ from .viewer_base import EmProtocolViewer
 from .plotter import EmPlotter
 from .viewers_data import DataViewer
 
-from .viewer_localres import LocalResolutionViewer
+from .viewer_localres import LocalResolutionViewer, ChimeraAttributeViewer
 from .viewer_vmd import Vmd, VmdView, VmdViewer
 from .viewer_fsc import FscViewer
 from .viewer_pdf import PDFReportViewer
@@ -51,6 +51,6 @@ register(ParticleFileHandler(),
          '.xmp', '.tif', '.tiff', '.spi', '.mrc', '.map', '.raw',
          '.inf', '.dm3', '.em', '.pif', '.psd', '.spe', '.ser', '.img',
          '.hed', *STANDARD_IMAGE_EXTENSIONS)
-register(VolFileHandler(), '.vol')
+register(VolFileHandler(), '.vol', '.hdf')
 register(StackHandler(), '.stk', '.mrcs', '.st', '.pif', '.dm4')
-register(ChimeraHandler(), '.bild')
+register(ChimeraHandler(), '.bild', '.mrc', '.pdb', '.vol', 'hdf')

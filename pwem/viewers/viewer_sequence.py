@@ -59,11 +59,16 @@ class SequenceViewer(pwviewer.Viewer):
                                             isAminoacid=obj.getIsAminoacids())
         seqBio = seqHandler._sequence  # Bio.Seq.Seq object
         # Step 2: retrieving of the other args needed in the saveFile method
-        seqID = obj.getId()
-        seqName = obj.getSeqName()
-        seqDescription = obj.getDescription()
-        seqFileName = os.path.abspath(
-            self.protocol._getExtraPath(seqName + ".fasta"))
+        seqID = obj.getId() if obj.getId() is not None else 'seqID'
+        seqName = obj.getSeqName() if obj.getSeqName() is not None else 'sequence'
+        seqDescription = obj.getDescription() if obj.getDescription() is not None else ''
+        # check if protocol has created directory extructura, if not use /tmp
+        extraDir = self.protocol._getExtraPath() 
+        if os.path.isdir(extraDir):
+            seqFileName = os.path.abspath(
+                self.protocol._getExtraPath(seqName + ".fasta"))
+        else:
+            seqFileName = os.path.abspath(os.path.join("/tmp", seqName + ".fasta"))
         # Step 3: Sequence saved in the extra file
         seqHandler.saveFile(seqFileName, seqID, sequence=seqBio,
                             name=seqName, seqDescription=seqDescription,

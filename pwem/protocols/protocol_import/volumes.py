@@ -30,6 +30,7 @@ from os.path import exists, basename, abspath, relpath, join
 from os import stat
 from numpy import array
 from numpy.linalg import norm
+import glob
 
 import pyworkflow.utils as pwutils
 import pyworkflow.protocol.params as params
@@ -391,6 +392,114 @@ Format may be PDB or MMCIF"""
         return errors
 
 
+class ProtImportSetOfAtomStructs(ProtImportFiles):
+    """ Protocol to import a set of atomic structure  to the project.
+    Format may be PDB or MMCIF"""
+    _label = 'import set of atomic structures'
+    _OUTNAME = 'outputAtomStructs'
+    _possibleOutputs = {_OUTNAME: emobj.SetOfAtomStructs}
+
+    IMPORT_FROM_ID = 0
+    IMPORT_FROM_FILES = 1
+
+    def __init__(self, **args):
+      ProtImportFiles.__init__(self, **args)
+
+    def _defineParams(self, form):
+      form.addSection(label='Input')
+      form.addParam('inputPdbData', params.EnumParam, choices=['id', 'file'],
+                    label="Import atomic structures from",
+                    default=self.IMPORT_FROM_ID,
+                    display=params.EnumParam.DISPLAY_HLIST,
+                    help='Import mmCIF data from online server or local files')
+      form.addParam('pdbIds', params.StringParam,
+                    condition='inputPdbData == IMPORT_FROM_ID',
+                    label="Atomic structure IDs ", allowsNull=True,
+                    help='Type a mmCIF ID (four alphanumeric characters, comma-separated)\n'
+                         'i.e: 5ni1, 1ake')
+      form.addParam('filesPath', params.PathParam, label="Files directory path: ",
+                    condition='inputPdbData == IMPORT_FROM_FILES',
+                    allowsNull=True,
+                    help="Specify a path to the directory where the files are stored.\n"
+                         "The path can also contain wildcards to select"
+                         "from several folders. \n\n"
+                         "Examples:\n"
+                         "  ~/project/data/day??_files/\n"
+                         "Each '?' represents one unknown character\n\n"
+                         "  ~/project/data/day*_files/\n"
+                         "'*' represents any number of unknown characters\n\n"
+                         "  ~/project/data/day##_files/\n"
+                         "'##' represents two digits that will be used as "
+                         "file ID\n\n"
+                         "NOTE: wildcard characters ('*', '?', '#') "
+                         "cannot appear in the actual path.)")
+      form.addParam('filesPattern', params.StringParam, condition='inputPdbData == IMPORT_FROM_FILES',
+                    label='Pattern: ',
+                    default="*",
+                    help="Pattern of the files to be imported.\n\n"
+                         "The pattern can contain standard wildcards such as\n"
+                         "*, ?, etc, or special ones like ### to mark some\n"
+                         "digits in the filename as ID.\n\n"
+                         "NOTE: wildcards and special characters "
+                         "('*', '?', '#', ':', '%') cannot appear in the "
+                         "actual path.\n\n"
+                         "You may create AtomStruct from PDB (.pdb) or CIF/mmCIF (.cif)")
+
+    def _insertAllSteps(self):
+      if self.inputPdbData == self.IMPORT_FROM_ID:
+        self._insertFunctionStep('pdbDownloadStep')
+      else:
+        filenames = []
+        for fn in glob.glob(join(self.filesPath.get(), self.filesPattern.get())):
+          filenames.append(fn)
+        self._insertFunctionStep('createOutputStep', filenames)
+
+    def pdbDownloadStep(self):
+      """Download all pdb files in file_list and unzip them.
+      """
+      aSH = emconv.AtomicStructHandler()
+      ASPaths = []
+      for pdbId in self.pdbIds.get().split(','):
+          print("retrieving atomic structure with ID = %s" % pdbId)
+          ASPaths.append(aSH.readFromPDBDatabase(pdbId.strip(), type='mmCif', dir=self._getExtraPath()))
+      self.createOutputStep(ASPaths)
+
+    def createOutputStep(self, atomStructPaths):
+      """ Copy the PDB structures and register the output object.
+      """
+      outASs = emobj.SetOfAtomStructs().create(self._getPath())
+      for atomStructPath in atomStructPaths:
+          if not exists(atomStructPath):
+              raise Exception("Atomic structure not found at *%s*" % atomStructPath)
+
+          baseName = basename(atomStructPath)
+          localPath = abspath(self._getExtraPath(baseName))
+
+          if str(atomStructPath) != str(localPath):  # from local file
+              pwutils.copyFile(atomStructPath, localPath)
+
+          localPath = relpath(localPath)
+
+          outASs.append(emobj.AtomStruct(filename=localPath))
+
+      self._defineOutputs(**{self._OUTNAME:outASs})
+
+
+    def _summary(self):
+      if self.inputPdbData == self.IMPORT_FROM_ID:
+        summary = ['Atomic structure imported from IDs: *%s*' %
+                   self.pdbIds]
+      else:
+        summary = ['Atomic structure imported from files: *%s*' %
+                   self.filesPattern]
+
+      return summary
+
+    def _validate(self):
+      errors = []
+      return errors
+
+
 ######################################
 
 
@@ -402,7 +511,7 @@ def fetch_emdb_map(id, directory, tmpDirectory):
     import socket
 
     # get computer name and select server
-    url_rest_api = "https://www.ebi.ac.uk/pdbe/api/emdb/entry/map/EMD-%d"
+    url_rest_api = "https://www.ebi.ac.uk/pdbe/api/emdb/entry/map/EMD-%s"
     hname = socket.gethostname()
     if hname.endswith('.edu') or hname.endswith('.gov'):
         site = 'ftp.wwpdb.org'
@@ -414,10 +523,15 @@ def fetch_emdb_map(id, directory, tmpDirectory):
         site = 'ftp.ebi.ac.uk'
         url_pattern = 'ftp://%s/pub/databases/emdb/structures/EMD-%s/map/%s'
 
+    if len(str(id)) < 4:
+        id = '%04d' % id
+    else:
+        id = '%d' % id
+
     map_name = 'emd_%s.map' % id
     map_gz_name = map_name + '.gz'
     map_url = url_pattern % (site, id, map_gz_name)
-    name = 'EMD-%d' % id
+    name = 'EMD-%s' % id
     minimum_map_size = 8192  # bytes
     url_rest_api = url_rest_api % id
 
@@ -435,7 +549,7 @@ def fetch_emdb_map(id, directory, tmpDirectory):
                                                           )
             break
         except Exception as e:
-            print("Retieving 3D map with id=", id, "failed retrying (%d/%d)" %
+            print("Retrieving 3D map with id=", id, "failed retrying (%d/%d)" %
                   (i+1, nTimes))
             print("Error:", e)
     # Loop statements may have an else clause; it is executed
@@ -462,7 +576,7 @@ def fetch_emdb_map(id, directory, tmpDirectory):
               "WARNING: origin  stored in EMDB\n"
               "database and 3D map header file do not match\n"
               "API=%f, header=%f\n"
-              "###########################\n" % (originAPI, originHeader))
+              "###########################\n" % (originAPI[0], originHeader[0]))
     return map_path, samplingAPI, originAPI
 
 

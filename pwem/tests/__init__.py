@@ -283,3 +283,5 @@ def defineDatasets():
                 'allMics': 'micrographs/*.mrc',
                 'autoPickingCoordinates': 'autoPickingCoordinates'
             })
+
+
