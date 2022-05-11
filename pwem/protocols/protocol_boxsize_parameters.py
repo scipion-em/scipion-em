@@ -27,6 +27,7 @@ import pyworkflow.protocol.params as params
 from pwem.protocols import EMProtocol
 from pyworkflow.object import Integer
 
+BOXSIZE_EVEN = 'boxSizeEven'
 EXTRACTION = 'boxSizeExtraction'
 RADIUS_GAUTOMATCH = 'radiusGautomatch'
 MIN_INTPAR_DIST_GAUTOMATCH= 'minIntPartDistanceGautomatch'
@@ -40,11 +41,13 @@ RADIUS_CONSENSUS = 'radiusConsensus'
 
 class ProtBoxSizeParameters(EMProtocol):
     """
-    Protocol to make mathematical operations on particle picking boxsize
+    Protocol to make mathematical operations on particle picking boxsize.
+    For sanity check all the generated outputs are even numbers.
     """
 
     _label = 'box size related parameters'
-    _possibleOutputs = {EXTRACTION: Integer,
+    _possibleOutputs = {BOXSIZE_EVEN: Integer,
+                        EXTRACTION: Integer,
                         RADIUS_GAUTOMATCH: Integer,
                         MIN_INTPAR_DIST_GAUTOMATCH: Integer,
                         SIGMA_DIAM_GAUTOMATCH: Integer,
@@ -77,7 +80,8 @@ class ProtBoxSizeParameters(EMProtocol):
                       label='Particle box size (px)',
                       allowsPointers=True,
                       important=True,
-                      help='This is size of the boxed particles (in pixels)')
+                      help='This is size of the boxed particles (in pixels).\n'
+                           'For sanity check if it is not, it will be transform to an even number.')
 
         # Extraction box size
         form.addParam('boolExtractPartBx', params.BooleanParam, default=False,
@@ -223,6 +227,9 @@ class ProtBoxSizeParameters(EMProtocol):
         Applies the formula to each of the parameters selected by the user.
         """
 
+        boxSize = transform2EvenNumber(boxSize)
+        self.registerEvenBoxSize(boxSize)
+
         if self.boolExtractPartBx.get():
             self.calculateParticleExtractionParams(boxSize)
 
@@ -243,36 +250,39 @@ class ProtBoxSizeParameters(EMProtocol):
     def registerOutput(self, outputName, value):
         self.outputsToDefine[outputName] = value
 
+    def registerEvenBoxSize(self, boxSize):
+        self.registerOutput(BOXSIZE_EVEN, Integer(boxSize))
+
     def calculateParticleExtractionParams(self, boxSize):
         self.registerOutput(EXTRACTION,
-                            Integer(boxSize * self.factorExtractPartBx.get()))
+                            Integer(transform2EvenNumber(boxSize * self.factorExtractPartBx.get())))
 
     def calculateGautomatchParams(self, boxSize, samplingRate):
         self.registerOutput(RADIUS_GAUTOMATCH,
-                            Integer(boxSize * samplingRate * self.factorGautRadius.get()))
+                            Integer(transform2EvenNumber(boxSize * samplingRate * self.factorGautRadius.get())))
         self.registerOutput(MIN_INTPAR_DIST_GAUTOMATCH,
-                            Integer(boxSize * samplingRate * self.factorGautMinInterPartDist.get()))
+                            Integer(transform2EvenNumber(boxSize * samplingRate * self.factorGautMinInterPartDist.get())))
         self.registerOutput(SIGMA_DIAM_GAUTOMATCH,
-                            Integer(boxSize * samplingRate * self.factorGautSigmaDiameter.get()))
+                            Integer(transform2EvenNumber(boxSize * samplingRate * self.factorGautSigmaDiameter.get())))
         self.registerOutput(AVG_DIAM_GAUTOMATCH,
-                            Integer(boxSize * samplingRate * self.factorGautAvgDiameter.get()))
+                            Integer(transform2EvenNumber(boxSize * samplingRate * self.factorGautAvgDiameter.get())))
 
     def calculateRelionParams(self, boxSize, samplingRate):
         self.registerOutput(MIN_LOG_FILTER_RELION,
-                            Integer(boxSize * samplingRate * self.factorMinLoGFilter.get()))
+                            Integer(transform2EvenNumber(boxSize * samplingRate * self.factorMinLoGFilter.get())))
         self.registerOutput(MAX_LOG_FILTER_RELION,
-                            Integer(boxSize * samplingRate * self.factorMaxLoGFilter.get()))
+                            Integer(transform2EvenNumber(boxSize * samplingRate * self.factorMaxLoGFilter.get())))
 
     def calculateTopazParams(self, boxSize):
         self.registerOutput(RADIUS_TOPAZ,
-                            Integer(boxSize * self.factorTopazRadius.get()))
+                            Integer(transform2EvenNumber(boxSize * self.factorTopazRadius.get())))
         # TODO: the numPartPerImg needs to be estimated
         self.registerOutput(NUM_PART_IMG_TOPAZ,
-                            Integer(self.numPartPerImg.get()))
+                            Integer(transform2EvenNumber(self.numPartPerImg.get())))
 
     def calculateConsensusParams(self, boxSize):
         self.registerOutput(RADIUS_CONSENSUS,
-                            Integer(boxSize * self.factorConsensusRadius.get()))
+                            Integer(transform2EvenNumber(boxSize * self.factorConsensusRadius.get())))
 
     def createResultsOutput(self):
         """ The output can be an Integer, Float or String. Other protocols can use it in those
@@ -292,3 +302,11 @@ class ProtBoxSizeParameters(EMProtocol):
             errors.append('The input micrographs do not have a sampling rate')
 
         return errors
+
+
+def transform2EvenNumber(var):
+    var = round(var)
+    if var % 2 != 0:
+        var = var + 1
+
+    return var
