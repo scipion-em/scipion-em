@@ -2142,6 +2142,11 @@ class SetOfNormalModes(EMSet):
         self._pdbPointer.copy(other._pdbPointer, copyId=False)
 
 
+class SetOfPrincipalComponents(SetOfNormalModes):
+    "Set of Principal Components is a SetOfNormalModes with a new name"
+    pass
+
+
 class FramesRange(CsvList):
     """ Store first and last frames in a movie. The last element will be
      the index in the stack of the first frame.

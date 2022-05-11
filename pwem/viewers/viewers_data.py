@@ -55,6 +55,7 @@ class DataViewer(pwviewer.Viewer):
         emobj.SetOfImages,
         emobj.SetOfMovies,
         emobj.SetOfNormalModes,
+        emobj.SetOfPrincipalComponents,
         emobj.SetOfPDBs,
         emprot.ProtParticlePicking,
         emprot.ProtImportMovies,
