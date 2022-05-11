@@ -9,7 +9,8 @@ users:
       
 developers:
    - New method at pwem/convert/headers.setMRCSamplingRate: sets the sampling rate of an mrc file. Image Object has it: volume.setMRCSamplingRate(3.5) should work.
-   - protcols.conf minimized only containig its own protocols 
+   - protcols.conf minimized only containig its own protocols
+   - Variable wizard with customizable target, input and output parameters
 
 
 V3.0.15
