@@ -299,25 +299,10 @@ class PythonFormulaeWizard(pwizard.Wizard):
         if d.resultYes():
             form.setVar('formula',d.getFormula())
             
-class SelectAttributeWizard(pwizard.Wizard):
-  """Base wizard for selecting an attribute from those contained in the items of a given input
-  inputParam: Name of the input parameter where the items are stored
-  outputParam:
+class SelectAttributeWizard(VariableWizard):
+  """Wizard to select attributes stored in a scipion object or set
   """
   _targets, _inputs, _outputs = [], {}, {}
-
-  def addTarget(self, protocol, targets, inputs, outputs):
-      self._targets += [(protocol, targets)]
-      self._inputs.update({protocol: inputs})
-      self._outputs.update({protocol: outputs})
-
-  def getInputOutput(self, form):
-      '''Retrieving input and output corresponding to the protocol where the wizard is used'''
-      outParam = ''
-      for target in self._targets:
-          if form.protocol.__class__ == target[0]:
-              inParam, outParam = self._inputs[target[0]], self._outputs[target[0]]
-      return inParam, outParam
 
   def getFirstItem(self, form, inputParam):
       inputPointer = getattr(form.protocol, inputParam)
