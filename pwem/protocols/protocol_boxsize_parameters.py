@@ -227,7 +227,6 @@ class ProtBoxSizeParameters(EMProtocol):
         Applies the formula to each of the parameters selected by the user.
         """
 
-        boxSize = transform2EvenNumber(boxSize)
         self.registerEvenBoxSize(boxSize)
 
         if self.boolExtractPartBx.get():
@@ -251,6 +250,7 @@ class ProtBoxSizeParameters(EMProtocol):
         self.outputsToDefine[outputName] = value
 
     def registerEvenBoxSize(self, boxSize):
+        boxSize = transform2EvenNumber(boxSize)
         self.registerOutput(BOXSIZE_EVEN, Integer(boxSize))
 
     def calculateParticleExtractionParams(self, boxSize):
@@ -305,8 +305,7 @@ class ProtBoxSizeParameters(EMProtocol):
 
 
 def transform2EvenNumber(var):
-    var = round(var)
     if var % 2 != 0:
-        var = var + 1
+        var = round(var / 2) * 2
 
     return var
