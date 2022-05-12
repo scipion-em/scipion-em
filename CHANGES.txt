@@ -1,3 +1,7 @@
+V3.0.17
+users:
+   - Updating protocol box size related parameters. Now for sanity reasons, it outputs only even numbers.
+
 V3.0.16
 users:
    - Fixing an error calculating the FSC resolution value. 
