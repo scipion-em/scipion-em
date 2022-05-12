@@ -74,15 +74,15 @@ class TestBoxSizeParameters(BaseTest):
         prot = self._runBoxSizeParamsTestExtrGaut(label='Picking box size related parameters'
                                                                            ' extraction and gautomatch')
 
-        self.assertEqual(prot.boxSizeExtraction, 103, "Estimated box size extraction does not match.")
-        self.assertEqual(prot.radiusGautomatch, 183, "Estimated radius for "
+        self.assertEqual(prot.boxSizeExtraction, 102, "Estimated box size extraction does not match.")
+        self.assertEqual(prot.radiusGautomatch, 180, "Estimated radius for "
                                                                         "gautomatch does not match.")
-        self.assertEqual(prot.minIntPartDistanceGautomatch, 219, "Estimated min inter "
+        self.assertEqual(prot.minIntPartDistanceGautomatch, 216, "Estimated min inter "
                                                                                     "particle distance for gautomatch "
                                                                                     "does not match.")
-        self.assertEqual(prot.sigmaDiameterGautomatch, 293, "Estimated sigma diameter for "
+        self.assertEqual(prot.sigmaDiameterGautomatch, 288, "Estimated sigma diameter for "
                                                                                "gautomatch does not match.")
-        self.assertEqual(prot.averageDiameterGautomatch, 366, "Estimated average diameter "
+        self.assertEqual(prot.averageDiameterGautomatch, 362, "Estimated average diameter "
                                                                                  "for gautomatch does not match.")
 
     def testBoxSizeParametersRelionTopazConsensus(self):
@@ -90,9 +90,9 @@ class TestBoxSizeParameters(BaseTest):
         prot = self._runBoxSizeParamsTestRelionTopazConsensus(label='Picking box size related parameters '
                                                                     'relion, topaz and radius consensus')
 
-        self.assertEqual(prot.minLoGFilterRelion, 232, "Estimated minLoGFilterRelion for relion does not match.")
-        self.assertEqual(prot.maxLoGFilterRelion, 256, "Estimated maxLoGFilterRelion for relion does not match.")
-        self.assertEqual(prot.radiusTopaz, 31, "Estimated radius for topaz does not match.")
+        self.assertEqual(prot.minLoGFilterRelion, 228, "Estimated minLoGFilterRelion for relion does not match.")
+        self.assertEqual(prot.maxLoGFilterRelion, 252, "Estimated maxLoGFilterRelion for relion does not match.")
+        self.assertEqual(prot.radiusTopaz, 30, "Estimated radius for topaz does not match.")
         self.assertEqual(prot.numPartPerImgTopaz, 300, "Estimated average diameter numPartPerImgTopaz "
                                                        "for topaz does not match.")
         self.assertEqual(prot.radiusConsensus, 62, "Estimated radius for picking consensus does not match.")
