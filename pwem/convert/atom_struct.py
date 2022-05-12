@@ -401,14 +401,35 @@ class AtomicStructHandler:
         return label
 
     def getStructureBFactorValues(self):
+        """Using an atomic structure as input, this method returns two list:
+        * List 1: B-factor field values for each atom of the structure.
+        * List 2 is a list of lists. For each residue of the structure a list with
+        the model, chain, order number of residue, name of residue and average of
+        B-factor field values (atoms) is returned. An example
+        of each list item is:
+        [0, 'A', 103, 'PHE', 96.01]"""
         self.checkRead()
         listOfBFactors = []
+        listOfResiduesBFactors = []
         for model in self.structure:
             for chain in model:
-                    for residue in chain:
-                        for atom in residue:
-                            listOfBFactors.append(atom.get_bfactor())
-        return listOfBFactors
+                for residue in chain:
+                    residue_list = []
+                    residue_list.append(model.id)
+                    residue_list.append(chain.id)
+                    residue_list.append(residue.id[1])
+                    residue_list.append(residue.get_resname())
+                    sum_list = 0.00
+                    residue_atom_b_factor_list = []
+                    for atom in residue:
+                        listOfBFactors.append(atom.get_bfactor())
+                        residue_atom_b_factor_list.append(atom.get_bfactor())
+                    for item in residue_atom_b_factor_list:
+                        sum_list += item
+                    avg = sum_list / len(residue_atom_b_factor_list)
+                    residue_list.append(round(avg, 2))
+                    listOfResiduesBFactors.append(residue_list)
+        return listOfBFactors, listOfResiduesBFactors
 
     def readLowLevel(self, fileName):
         """ Return a dictionary with all mmcif fields. you should parse them
