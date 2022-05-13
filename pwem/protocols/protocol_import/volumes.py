@@ -26,7 +26,7 @@
 # **************************************************************************
 
 
-from os.path import exists, basename, abspath, relpath, join
+from os.path import exists, basename, abspath, relpath, join, splitext
 from os import stat
 from numpy import array
 from numpy.linalg import norm
@@ -468,19 +468,29 @@ class ProtImportSetOfAtomStructs(ProtImportFiles):
       """ Copy the PDB structures and register the output object.
       """
       outASs = emobj.SetOfAtomStructs().create(self._getPath())
+      
+      numStructs = len(atomStructPaths)
+      padding_format_str = '%0' + str(len(str(numStructs))) + 'd'
+
       for atomStructPath in atomStructPaths:
-          if not exists(atomStructPath):
-              raise Exception("Atomic structure not found at *%s*" % atomStructPath)
+        if not exists(atomStructPath):
+          raise Exception("Atomic structure not found at *%s*" % atomStructPath)
 
-          baseName = basename(atomStructPath)
-          localPath = abspath(self._getExtraPath(baseName))
+        baseName = basename(atomStructPath)
+        localPath = abspath(self._getExtraPath(baseName))
 
-          if str(atomStructPath) != str(localPath):  # from local file
-              pwutils.copyFile(atomStructPath, localPath)
+        if str(atomStructPath) != str(localPath):  # from local file
+          if exists(localPath):
+            localPath = splitext(localPath)[0] + padding_format_str % (i+1) + splitext(localPath)[1]
+            i += 1
+          else:
+            i = 0
+                  
+          pwutils.copyFile(atomStructPath, localPath)
 
-          localPath = relpath(localPath)
+        localPath = relpath(localPath)
 
-          outASs.append(emobj.AtomStruct(filename=localPath))
+        outASs.append(emobj.AtomStruct(filename=localPath))
 
       self._defineOutputs(**{self._OUTNAME:outASs})
 
