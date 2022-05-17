@@ -32,14 +32,13 @@ for EM data objects like: Image, SetOfImage and others
 import os
 import json
 import numpy as np
-
+import math
 import pyworkflow.utils as pwutils
 from pyworkflow.object import (Object, Float, Integer, String,
                                OrderedDict, CsvList, Boolean, Set, Pointer,
                                Scalar)
 from pwem.constants import (NO_INDEX, ALIGN_NONE, ALIGN_2D, ALIGN_3D,
                             ALIGN_PROJ, ALIGNMENTS)
-
 
 class EMObject(Object):
     """Base object for all EM classes"""
@@ -831,6 +830,75 @@ class Sequence(EMObject):
     def __str__(self):
         return "Sequence (name = {})\n".format(self.getSeqName())
 
+
+class PAE(EMFile):
+    """ In Alphafold two confidence measures has been defined.
+        The first is pLDDT (predicted lDDT-Cα), a per-residue measure of local confidence on a scale from 0 - 100. 
+        The second metric is PAE (Predicted Aligned Error), which reports AlphaFold’s expected position error 
+        at residue x, when the predicted and true structures are aligned on residue y. 
+    
+        PAE is stored in a json file with the follwoing format:
+        
+        For a protein of length num_res, the JSON has the following structure of arrays format:
+        [
+            {
+                "residue1": [ 1, 1, 1, 1, 1, ...], # Length: num_res^2.
+                "residue2": [ 1, 2, 3, 4, 5, ...], # Length: num_res^2.
+                "distance": [0.2, 1.2, 3.7, 6.6, 8.7, ...], # Length: num_res^2.
+                "max_predicted_aligned_error": 31.75
+            }
+        ]
+
+        The fields in the JSON are:
+
+            residue1: The residue on which the structure is aligned for the predicted error.
+            residue2: The residue on which the error is predicted.
+            distance: The PAE value of the residue pair.
+            max_predicted_aligned_error: A scalar that denotes the maximum possible value of PAE. The minimum PAE is 0.
+
+        """
+    matrix = None  # PAE data as a 2D array of floats
+    max_predicted_aligned_error = None
+
+    def __init__(self, filename=None, pseudoatoms=False, **kwargs):
+        EMFile.__init__(self, filename, **kwargs)
+
+    def read(self, index=0):
+        """read json file and assign content to matrix and max_predicted_aligned_error"""
+        with open(self.getFileName(), 'r') as f:
+            data = json.load(f)
+            data = data[index]
+            self.max_predicted_aligned_error = data['max_predicted_aligned_error']
+            residue1 = data['residue1']
+            residue2 = data['residue2']
+            distance = data['distance']
+            size = int(math.sqrt(len(residue1)))
+            self.matrix = np.zeros(shape=(size, size))
+            for res1 in residue1:
+                for res2 in residue2:
+                    self.matrix[res1-1][res2-1] = distance[(res1-1) * size + res2 -1]
+
+    def getMatrix(self):
+        if self.matrix is None:
+            raise("Error, matrix is None")
+        return self.matrix
+
+    def getMax_predicted_aligned_error(self):
+        if self.max_predicted_aligned_error is None:
+            raise("Error, max_predicted_aligned_error is None")
+        return self.max_predicted_aligned_error
+
+    # move to visualize
+    # def plot(self):
+    #     """plot pae data using matplotlib"""
+    #     if self.matrix is None:
+    #         raise("matrix is None. I cannot plot a empty matrix")
+    #     import numpy as np 
+    #     import matplotlib.pyplot as plt
+
+    #     H = self.matrix
+    #     plt.imshow(H, interpolation='none', cmap='greens')
+    #     plt.show()
 
 class AtomStruct(EMFile):
     """Represents an PDB file. """
