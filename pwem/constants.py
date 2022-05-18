@@ -168,3 +168,10 @@ FREQ_BANDPASS_WIZ_MSG = \
 EM_ROOT_VAR = 'EM_ROOT'
 
 DEFAULT_MAX_PREVIEW_FILE_SIZE = 500  # Unit is MB: 500 MB
+
+RESIDUES3TO1 = {'CYS': 'C', 'ASP': 'D', 'SER': 'S', 'GLN': 'Q', 'LYS': 'K',
+               'ILE': 'I', 'PRO': 'P', 'THR': 'T', 'PHE': 'F', 'ASN': 'N',
+               'GLY': 'G', 'HIS': 'H', 'LEU': 'L', 'ARG': 'R', 'TRP': 'W',
+               'ALA': 'A', 'VAL':'V', 'GLU': 'E', 'TYR': 'Y', 'MET': 'M'}
+
+RESIDUES1TO3 = {v: k for k, v in RESIDUES3TO1.items()}
