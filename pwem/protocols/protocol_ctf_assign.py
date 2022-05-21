@@ -184,17 +184,11 @@ class ProtCTFAssign(ProtCTFMicrographs):
         errors = []
         # Add some errors if input is not valid
         inputSet = self.inputSet.get()
-        inputCTF = self.inputCTF.get()
         if isinstance(inputSet, emobj.SetOfParticles):
             part = inputSet.getFirstItem()
             if not part.hasMicId():
                 errors.append("The input particles doesn't have any micrograph"
                               " assigned.")
-
-        if (isinstance(inputCTF, emobj.SetOfParticles) and
-                not isinstance(inputSet, emobj.SetOfParticles)):
-            errors.append("If input CTF is a set of particles, then both input "
-                          "sets must be particles.")
 
         # same micrographs in both CTF??
         return errors
