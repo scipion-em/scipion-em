@@ -260,7 +260,7 @@ class SelectResidueWizard(SelectChainWizard):
           for i in residueList:
             finalResiduesList.append(emobj.String(i))
 
-      elif issubclass(type(inputObj), emobj.Sequence) or str(type(AS).__name__) == 'SequenceVariants':
+      elif issubclass(type(inputObj), emobj.Sequence) or str(type(inputObj).__name__) == 'SequenceVariants':
           finalResiduesList = []
           for i, res in enumerate(inputObj.getSequence()):
             stri = '{"index": %s, "residue": "%s"}' % (i + 1, RESIDUES1TO3[res])
