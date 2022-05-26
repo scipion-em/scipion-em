@@ -1,3 +1,7 @@
+V3.0.17
+users:
+   - Updating protocol box size related parameters. Now for sanity reasons, it outputs only even numbers.
+
 V3.0.16
 users:
    - Fixing an error calculating the FSC resolution value. 
@@ -9,7 +13,8 @@ users:
       
 developers:
    - New method at pwem/convert/headers.setMRCSamplingRate: sets the sampling rate of an mrc file. Image Object has it: volume.setMRCSamplingRate(3.5) should work.
-   - protcols.conf minimized only containig its own protocols 
+   - protcols.conf minimized only containig its own protocols
+   - Variable wizard with customizable target, input and output parameters
 
 
 V3.0.15
