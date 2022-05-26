@@ -486,7 +486,7 @@ class ProtImportSetOfAtomStructs(ProtImportFiles):
               else:
                   i = 0
                   
-          pwutils.copyFile(atomStructPath, localPath)
+              pwutils.copyFile(atomStructPath, localPath)
 
           localPath = relpath(localPath)
 
