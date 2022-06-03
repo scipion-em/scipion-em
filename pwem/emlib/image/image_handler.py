@@ -26,6 +26,7 @@
 
 import os
 
+import h5py
 import numpy
 from PIL import Image
 from tifffile import TiffFile
@@ -263,6 +264,17 @@ class ImageHandler(object):
                 page = tif.pages[0]  # get shape and dtype of the image in the first page
                 x, y = page.shape
                 return x, y, frames, 1
+            elif ext == '.hdf':
+                with h5py.File(fn, "r") as f:
+                    imgsGroup = f['MDF']['images']
+                    nObj = len(imgsGroup)
+                    img = imgsGroup['0']['image']
+                    if img.ndim == 2:
+                        x, y = img.shape
+                        return x, y, nObj, 1
+                    else:  # 3d
+                        x, y, z = img.shape
+                        return x, y, z, nObj
             else:
                 self._img.read(location, lib.HEADER)
                 return self._img.getDimensions()
