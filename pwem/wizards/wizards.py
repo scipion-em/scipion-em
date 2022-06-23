@@ -278,8 +278,17 @@ class SelectResidueWizard(SelectChainWizard):
                               "residue name)")
       roiStr = ''
       idxs = [json.loads(dlg.values[0].get())['index'], json.loads(dlg.values[-1].get())['index']]
-      for i in range(idxs[0] - 1, idxs[1]):
-        roiStr += RESIDUES3TO1[json.loads(finalResiduesList[i].get())['residue']]
+      inSeq = False
+      for residue in finalResiduesList:
+          if json.loads(residue.get())['index'] == idxs[0]:
+              inSeq = True
+          elif json.loads(residue.get())['index'] == idxs[-1]:
+              inSeq = False
+              roiStr += RESIDUES3TO1[json.loads(residue.get())['residue']]
+              break
+
+          if inSeq:
+              roiStr += RESIDUES3TO1[json.loads(residue.get())['residue']]
 
       intervalStr = '{"index": "%s-%s", "residues": "%s"}' % (idxs[0], idxs[1], roiStr)
       form.setVar(outputParam[0], intervalStr)
