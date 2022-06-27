@@ -159,6 +159,75 @@ class ChangeOriginSamplingWizard(pwizard.Wizard):
         form.setVar('z', round(z, 3))
         form.setVar('samplingRate', round(sampling, 3))
 
+class GetStructureChainsWizard(pwizard.Wizard):
+  # WARNING: this wizard is deprecated. Instead, SelectChainWizard must be used, where inputs, targets and outputs
+  # can be specified.
+  """Load an atomic structure, parse chain related information as
+     name, number of residues, list of aminoacids (or other residues)"""
+  _targets = [(emprot.ProtImportSequence, ['inputStructureChain'])
+              # NOTE: be careful if you change this class since
+              # chimera-wizard inherits from it.
+              # (ChimeraModelFromTemplate, ['inputStructureChain'])
+              # (atomstructutils, ['inputStructureChain'])
+              ]
+
+  @classmethod
+  def getModelsChainsStep(cls, protocol):
+    """ Returns (1) list with the information
+       {"model": %d, "chain": "%s", "residues": %d} (modelsLength)
+       (2) list with residues, position and chain (modelsFirstResidue)"""
+    structureHandler = emconv.AtomicStructHandler()
+    fileName = ""
+    if hasattr(protocol, 'pdbId'):
+      if protocol.pdbId.get() is not None:
+        pdbID = protocol.pdbId.get()
+        url = "https://www.rcsb.org/structure/"
+        URL = url + ("%s" % pdbID)
+        try:
+          response = requests.get(URL)
+        except:
+          raise Exception("Cannot connect to PDB server")
+        if (response.status_code >= 400) and (response.status_code < 500):
+          raise Exception("%s is a wrong PDB ID" % pdbID)
+        fileName = structureHandler.readFromPDBDatabase(
+          os.path.basename(pdbID), dir="/tmp/")
+      else:
+        fileName = protocol.pdbFile.get()
+    else:
+      if protocol.pdbFileToBeRefined.get() is not None:
+        fileName = os.path.abspath(protocol.pdbFileToBeRefined.get(
+        ).getFileName())
+
+    structureHandler.read(fileName)
+    structureHandler.getStructure()
+    # listOfChains, listOfResidues = structureHandler.getModelsChains()
+    return structureHandler.getModelsChains()
+
+  def editionListOfChains(self, listOfChains):
+    self.chainList = []
+    for model, chainDic in listOfChains.items():
+      for chainID, lenResidues in chainDic.items():
+        self.chainList.append(
+          '{"model": %d, "chain": "%s", "residues": %d}' %
+          (model, str(chainID), lenResidues))
+
+  def show(self, form, *params):
+    protocol = form.protocol
+    try:
+      listOfChains, listOfResidues = self.getModelsChainsStep(protocol)
+    except Exception as e:
+      print("ERROR: ", e)
+      return
+
+    self.editionListOfChains(listOfChains)
+    finalChainList = []
+    for i in self.chainList:
+      finalChainList.append(pwobj.String(i))
+    provider = ListTreeProviderString(finalChainList)
+    dlg = dialog.ListDialog(form.root, "Model chains", provider,
+                            "Select one of the chains (model, chain, "
+                            "number of chain residues)")
+    form.setVar('inputStructureChain', dlg.values[0].get())
 
 class SelectChainWizard(VariableWizard):
     '''Opens the input AtomStruct and allows you to select one of the present chains'''
