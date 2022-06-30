@@ -27,127 +27,61 @@ import pyworkflow.protocol.params as params
 from pwem.protocols import EMProtocol
 from pyworkflow.object import Integer, Float, String
 
+
+
+
 class ProtMathematicalOperator(EMProtocol):
     """
     Protocol to make mathematical operations on different inputs
     """
-
+    PARAM1 = 'X1'
+    PARAM2 = 'X2'
     _label = 'mathematical operator'
 
     def __init__(self, **args):
         EMProtocol.__init__(self, **args)
 
     def _defineParams(self, form):
-        """
+        """attr2
         Defines the parameters the protocol form will show and its behaviour
         :param form:
         """
         form.addSection(label='Input')
-        # Manual
-        form.addParam('boolMain', params.BooleanParam, default=False,
-                      label='Manual Operation',
-                      help='Select yes if you want to make a manual operation, e.g: 2 + 2 ')
 
         # Attribute X1
-        group1 = form.addGroup('Input X1', condition="boolMain==%d" % False)
-        group1.addParam('bool1', params.BooleanParam, default=True,
-                        label='Is X1 a Set attribute?',
-                        condition="boolMain==%d" % False,
-                        help='Select yes if X1 is a set attribute, e.g: sampling rate')
-        group1.addParam('inputSet1', params.PointerParam, pointerClass='EMSet, SetOfImages',
-                        condition="bool1==%d and boolMain==%d" % (True, False),
-                        label='Set 1',
-                        help='Please select the Set from where you want to extract the attribute.')
-        group1.addParam('attribute1', params.StringParam, label="Select attribute X1:",
-                        condition="bool1==%d and boolMain==%d" % (True, False),
-                        help='Use the wizard to list all the sets attributes and select one.')
-        group1.addParam('input1', params.IntParam,
-                        label='Input X1:',
-                        condition="bool1==%d and boolMain==%d" % (False, False),
-                        default=0,
-                        allowsPointers=True,
-                        help='Write the value you want to consider as X1 or'
-                             ' if it is a input pointer select from the list of available inputs.')
-        # Attribute X2
-        group2 = form.addGroup('Input X2', condition="boolMain==%d" % False)
-        group2.addParam('bool2', params.BooleanParam, default=False,
-                        label='Is X2 a Set attribute?',
-                        condition="boolMain==%d" % False,
-                        help='Select yes if X2 is a set attribute, e.g: sampling rate')
-        group2.addParam('inputSet2', params.PointerParam, pointerClass='EMSet, SetOfImages',
-                        condition="bool2==%d and boolMain==%d" % (True, False),
-                        label='Set 2',
-                        help='Please select the Set from where you want to extract the attribute.')
-        group2.addParam('attribute2', params.StringParam, label="Select attribute X2:",
-                        condition="bool2==%d and boolMain==%d" % (True, False),
-                        help='Use the wizard to list all the sets attributes and select one.')
-        group2.addParam('input2', params.IntParam,
-                        label='Input X2:',
-                        condition="bool2==%d and boolMain==%d" % (False, False),
-                        default=0,
-                        allowsPointers=True,
-                        help='Write the value you want to consider as X2 or'
-                             ' if it is a input pointer select from the list of available inputs.')
-        # Result
-        group3 = form.addGroup('Result')
-        group3.addParam('typeResult', params.EnumParam, default=0,
-                        choices=['Int', 'Float', 'String'],
-                        label='Result type:',
-                        help='Choose the variable type you want your result to be, e.g: Integer')
-        group3.addParam('expression', params.StringParam, label="Result =",
-                        important=True,
-                        help='Write the mathematical expression you want to calculate, e.g: (X1 + X2) * X1 * 0.9 \n'
-                             'Please note that X1 and X2 would be replaced by the value you selected for each case.'
-                             ' It is important to use upper cases when writing the expression. ')
+        form.addParam('input1', params.IntParam,
+                      label='Input %s:' % self.PARAM1,
+                      default=3,
+                      allowsPointers=True,
+                      help='Write the value you want to consider as %s or'
+                             ' if it is a input pointer select from the list of available inputs.' % self.PARAM1)
 
-        form.addParallelSection(threads=1, mpi=1)
+        # Attribute X2
+        form.addParam('input2', params.IntParam,
+                      label='Input %s:' % self.PARAM2,
+                      default=2,
+                      allowsPointers=True,
+                      help='Write the value you want to consider as %s or'
+                             ' if it is a input pointer select from the list of available inputs.' % self.PARAM2)
+
+        # Result
+        form.addParam('expression', params.StringParam, label="Formula: ",
+                      important=True,
+                      default = "%s + (%s*3)" % (self.PARAM1, self.PARAM2),
+                      help='Write the mathematical formula you want to calculate, e.g: (%s + %s) * %s * 0.9 \n'
+                             'Please note that %s and %s would be replaced by the value you selected for each case.'
+                             ' It is important to use upper cases when writing the expression.' % (self.PARAM1, self.PARAM2, self.PARAM1, self.PARAM1, self.PARAM2))
+
+        form.addParam('typeResult', params.EnumParam, default=1,
+                      choices=['Int', 'Float', 'String'],
+                      label='Result type:',
+                      help='Choose the variable type you want your result to be, e.g: Integer',
+                      expertLevel=params.LEVEL_ADVANCED)
 
     def _insertAllSteps(self):
-        self._checkNewInput()
+        self._insertFunctionStep(self.computeStep, self.getParam1(), self.getParam2() , prerequisites=[])
 
-    def createOutput(self, modifiedSet):
-        pass
-
-    def _stepsCheck(self):
-        self._checkNewInput()
-        self._checkNewOutput()
-
-    def _checkNewInput(self):
-        if hasattr(self, 'attr1') and hasattr(self, 'attr2'):
-            return None
-
-        if not self.boolMain.get():
-            if self.bool1:
-                str1 = self.attribute1.get()
-                str1 = str1[str1.find('_'):]
-                self.attr1 = getattr(self.inputSet1.get(), str1)
-            else:
-                self.attr1 = self.input1.get()
-
-            if self.bool2:
-                str2 = self.attribute2.get()
-                str2 = str2[str2.find('_'):]
-                self.attr2 = getattr(self.inputSet2.get(), str2)
-            else:
-                self.attr2 = self.input2.get()
-        else:
-            self.attr1 = ''
-            self.attr2 = ''
-
-        fDeps = self._insertNewOperationStep(self.attr1, self.attr2)
-        self.updateSteps()
-
-    def _insertNewOperationStep(self, attr1, attr2):
-        deps = []
-        stepId = self._insertFunctionStep('formulaStep', attr1, attr2, prerequisites=[])
-        deps.append(stepId)
-        return deps
-
-    def _checkNewOutput(self):
-        if hasattr(self, 'result'):
-            self.createResultOutput(self.result)
-
-    def formulaStep(self, attr1, attr2):
+    def computeStep(self, attr1, attr2):
         """
         Applies the formula to each of the attributes or the numeric formula provided.
         Complex python code could be run separating lines with ;
@@ -158,27 +92,39 @@ class ProtMathematicalOperator(EMProtocol):
         str1 = str(attr1)
         str2 = str(attr2)
         strInit = self.expression.get()
-        strInit = strInit.replace('X1', str1)
-        self.formula = strInit.replace('X2', str2)
-        self.result = eval(self.formula)
+        strInit = strInit.replace(self.PARAM1, str1)
+        self.formula = strInit.replace(self.PARAM2, str2)
+        self.info("FORMULA after replacement: %s" % self.formula)
+        result = eval(self.formula)
+        self.info("RESULT: %s" % result )
+        self.createResultOutput(result)
 
-        print('To calculate: %s' % self.formula)
-        print('Result = %s' % self.result)
+        self.info('To calculate: %s' % self.formula)
+        self.info('Result = %s' % result)
 
     def createResultOutput(self, result):
         """ The output can be an Integer, Float or String. Other protocols can use it in those
             Params if it has set allowsPointer=True
         """
-        if hasattr(self, "result"):
-            tpR = self.typeResult.get()
-            if tpR == 0:
-                resultNum = Integer(result)
-            elif tpR == 1:
-                resultNum = Float(result)
-            elif tpR == 2:
-                resultNum = String(result)
 
-            self._defineOutputs(result=resultNum)
+        tpR = self.typeResult.get()
+        if tpR == 0:
+            resultNum = Integer(result)
+        elif tpR == 1:
+            resultNum = Float(result)
+        elif tpR == 2:
+            resultNum = String(result)
+
+        self._defineOutputs(result=resultNum)
+
+    def formulaNeedsParam(self, param):
+        """ return True if the formula uses the param passed"""
+
+        return param in self.expression.get()
+
+    def formulaNeedsInput(self):
+        """ Returns true if there is need for any input"""
+        return self.formulaNeedsParam(self.PARAM1) or self.formulaNeedsParam(self.PARAM2)
 
     def _summary(self):
         summary = []
@@ -193,19 +139,21 @@ class ProtMathematicalOperator(EMProtocol):
 
     def _validate(self):
         errors = []
-        if not self.boolMain.get():
-            if self.bool1.get():
-                if self.attribute1.get() == None:
-                    errors.append('Input X1 is None please select another value.')
-            else:
-                if self.input1.get() == None:
-                    errors.append('Input X1 is None please select another value.')
+        if self.formulaNeedsParam(self.PARAM1):
+            if self.getParam1() is None:
+                errors.append('Input %s should be provided.' % self.PARAM1)
 
-            if self.bool2.get():
-                if self.attribute2.get() == None:
-                    errors.append('Input X2 is None please select another value.')
-            else:
-                if self.input2.get() == None:
-                    errors.append('Input X2 is None please select another value.')
+        if self.formulaNeedsParam(self.PARAM2):
+            if self.getParam2() is None:
+                errors.append('Input %s should be provided.' % self.PARAM2)
 
         return errors
+
+
+    def getParam2(self):
+
+        return self.input2.get()
+
+    def getParam1(self):
+
+        return self.input1.get()
