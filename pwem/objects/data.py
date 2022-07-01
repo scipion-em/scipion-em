@@ -1462,16 +1462,21 @@ class SetOfSequences(EMSet):
     """Set containing Sequence items."""
     ITEM_TYPE = Sequence
 
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.aligned = Boolean(kwargs.get('aligned', False))
+
+
     def exportToFile(self, seqFileName):
         '''Writes the sequences in the set in the specified file'''
         for sequence in self:
             sequence.appendToFile(seqFileName)
 
-    def importFromFile(self, seqFileName, isAmino=True):
+    def importFromFile(self, seqFileName, isAmino=True, type=None):
         '''Appends elements to the set from sequences found in the specified file'''
         import pwem.convert as emconv
         seqHandler = emconv.SequenceHandler()
-        seqsDic = seqHandler.readSequencesFromFile(seqFileName, type=None, isAmino=isAmino)
+        seqsDic = seqHandler.readSequencesFromFile(seqFileName, type=type, isAmino=isAmino)
         for seqDic in seqsDic:
             newSeq = Sequence(sequence=seqDic['sequence'], id=seqDic['seqID'],
                               name=seqDic['name'], description=seqDic['description'],
