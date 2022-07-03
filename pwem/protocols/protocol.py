@@ -107,7 +107,7 @@ class EMProtocol(pwprot.Protocol):
                                 'movie_particles%s.sqlite', suffix)
 
     def _createSetOfClasses2D(self, imgSet, suffix=''):
-        classes = self.__createSet(emobj.SetOfClasses2D,
+        classes = self.__createSet(emobj.outputClasses,
                                    'classes2D%s.sqlite', suffix)
         classes.setImages(imgSet)
         return classes
