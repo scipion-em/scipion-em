@@ -351,7 +351,7 @@ class SelectResidueWizard(SelectChainWizard):
       for residue in finalResiduesList:
           if json.loads(residue.get())['index'] == idxs[0]:
               inSeq = True
-          elif json.loads(residue.get())['index'] == idxs[-1]:
+          if json.loads(residue.get())['index'] == idxs[-1]:
               inSeq = False
               roiStr += RESIDUES3TO1[json.loads(residue.get())['residue']]
               break
