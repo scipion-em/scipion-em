@@ -1,3 +1,16 @@
+V3.0.18
+users:
+   - "assign ctf" protocol now accepts SetOfParticles too.
+   -  "subset" protocol accepts now a range of ids.
+   - FIX:import atomic structures now works also when files are named the same but in different folders.
+developers:
+   - New model class: SetOfPrincipalComponents(SetOfNormalModes)
+   - New base wizard: VariableWizard - Wizard base where input and output paramNames can be modified and added, so
+     one wizard can be used in several protocols with parameters of different names.
+   - SelectChainWizard replaces GetStructureChainsWizard and uses VariableWizard
+   - SelectResidueWizard added: To select a residue
+   - SelectAttributeWizard added: Wizard to select attributes stored in a scipion object or set
+
 V3.0.17
 users:
    - Updating protocol box size related parameters. Now for sanity reasons, it outputs only even numbers.
@@ -13,7 +26,8 @@ users:
       
 developers:
    - New method at pwem/convert/headers.setMRCSamplingRate: sets the sampling rate of an mrc file. Image Object has it: volume.setMRCSamplingRate(3.5) should work.
-   - protcols.conf minimized only containig its own protocols 
+   - protcols.conf minimized only containig its own protocols
+   - Variable wizard with customizable target, input and output parameters
 
 
 V3.0.15
