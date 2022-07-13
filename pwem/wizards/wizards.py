@@ -369,6 +369,21 @@ class SelectResidueWizard(SelectChainWizard):
 
       return finalResiduesList
 
+    def getSequence(self, finalResiduesList, idxs):
+        roiStr, inSeq = '', False
+        for residue in finalResiduesList:
+          if json.loads(residue.get())['index'] == idxs[0]:
+            inSeq = True
+          elif json.loads(residue.get())['index'] == idxs[-1]:
+            inSeq = False
+            if json.loads(residue.get())['residue'] in RESIDUES3TO1:
+                roiStr += RESIDUES3TO1[json.loads(residue.get())['residue']]
+                break
+
+          if inSeq and json.loads(residue.get())['residue'] in RESIDUES3TO1:
+              roiStr += RESIDUES3TO1[json.loads(residue.get())['residue']]
+        return roiStr
+
     def show(self, form, *params):
       inputParams, outputParam = self.getInputOutput(form)
       finalResiduesList = self.getResidues(form, inputParams)
@@ -377,19 +392,9 @@ class SelectResidueWizard(SelectChainWizard):
       dlg = dialog.ListDialog(form.root, "Chain residues", provider,
                               "Select one residue (residue number, "
                               "residue name)")
-      roiStr = ''
-      idxs = [json.loads(dlg.values[0].get())['index'], json.loads(dlg.values[-1].get())['index']]
-      inSeq = False
-      for residue in finalResiduesList:
-          if json.loads(residue.get())['index'] == idxs[0]:
-              inSeq = True
-          elif json.loads(residue.get())['index'] == idxs[-1]:
-              inSeq = False
-              roiStr += RESIDUES3TO1[json.loads(residue.get())['residue']]
-              break
 
-          if inSeq:
-              roiStr += RESIDUES3TO1[json.loads(residue.get())['residue']]
+      idxs = [json.loads(dlg.values[0].get())['index'], json.loads(dlg.values[-1].get())['index']]
+      roiStr = self.getSequence(finalResiduesList, idxs)
 
       intervalStr = '{"index": "%s-%s", "residues": "%s"}' % (idxs[0], idxs[1], roiStr)
       form.setVar(outputParam[0], intervalStr)
