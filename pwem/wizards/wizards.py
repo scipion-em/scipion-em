@@ -314,7 +314,39 @@ class SelectResidueWizard(SelectChainWizard):
     def getResidues(self, form, inputParams):
       protocol = form.protocol
       inputObj = getattr(protocol, inputParams[0]).get()
-      if issubclass(type(inputObj), emobj.AtomStruct):
+
+      if type(inputObj) == str:
+          # Select the residues if the input structure parameter is a str (PDB id or PDB file)
+          if os.path.exists(inputObj):
+              fileName = inputObj
+          else:
+              pdbID = inputObj
+              url = "https://www.rcsb.org/structure/"
+              URL = url + ("%s" % pdbID)
+              try:
+                response = requests.get(URL)
+              except:
+                raise Exception("Cannot connect to PDB server")
+              if (response.status_code >= 400) and (response.status_code < 500):
+                raise Exception("%s is a wrong PDB ID" % pdbID)
+
+              structureHandler = emconv.AtomicStructHandler()
+              fileName = structureHandler.readFromPDBDatabase(os.path.basename(pdbID), dir="/tmp/")
+
+          structureHandler.read(fileName)
+          structureHandler.getStructure()
+          modelsLength, modelsFirstResidue = structureHandler.getModelsChains()
+
+          selection = getattr(protocol, inputParams[1]).get()
+          struct = json.loads(selection)  # From wizard dictionary
+          chain, model = struct["chain"].upper().strip(), int(struct["model"])
+
+          residueList = self.editionListOfResidues(modelsFirstResidue, model, chain)
+          finalResiduesList = []
+          for i in residueList:
+              finalResiduesList.append(emobj.String(i))
+
+      elif issubclass(type(inputObj), emobj.AtomStruct):
           try:
             modelsLength, modelsFirstResidue = self.getModelsChainsStep(protocol, inputParams[0])
           except Exception as e:
