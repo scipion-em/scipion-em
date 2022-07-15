@@ -364,7 +364,11 @@ class SelectResidueWizard(SelectChainWizard):
       elif issubclass(type(inputObj), emobj.Sequence) or str(type(inputObj).__name__) == 'SequenceVariants':
           finalResiduesList = []
           for i, res in enumerate(inputObj.getSequence()):
-            stri = '{"index": %s, "residue": "%s"}' % (i + 1, RESIDUES1TO3[res])
+            if res in RESIDUES1TO3:
+                res3 = RESIDUES1TO3[res]
+            else:
+                res3 = res
+            stri = '{"index": %s, "residue": "%s"}' % (i + 1, res3)
             finalResiduesList.append(emobj.String(stri))
 
       return finalResiduesList
