@@ -239,7 +239,6 @@ class SelectChainWizard(VariableWizard):
            {"model": %d, "chain": "%s", "residues": %d} (modelsLength)
            (2) list with residues, position and chain (modelsFirstResidue)"""
         structureHandler = emconv.AtomicStructHandler()
-        fileName = ""
         AS = getattr(protocol, inputParamName).get()
         if type(AS) == str:
             if os.path.exists(AS):
@@ -317,6 +316,7 @@ class SelectResidueWizard(SelectChainWizard):
 
       if type(inputObj) == str:
           # Select the residues if the input structure parameter is a str (PDB id or PDB file)
+          structureHandler = emconv.AtomicStructHandler()
           if os.path.exists(inputObj):
               fileName = inputObj
           else:
@@ -330,7 +330,6 @@ class SelectResidueWizard(SelectChainWizard):
               if (response.status_code >= 400) and (response.status_code < 500):
                 raise Exception("%s is a wrong PDB ID" % pdbID)
 
-              structureHandler = emconv.AtomicStructHandler()
               fileName = structureHandler.readFromPDBDatabase(os.path.basename(pdbID), dir="/tmp/")
 
           structureHandler.read(fileName)
