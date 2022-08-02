@@ -1,7 +1,7 @@
 import unittest
 from unittest.mock import patch
 
-from pwem import Plugin, findFolderWithPattern, CUDA_LIB_VAR
+from pwem import Plugin, findFolderWithPattern, CUDA_LIB_VAR, NO_VERSION_FOUND_STR
 
 
 class TestPluginCudaGuess(unittest.TestCase):
@@ -16,6 +16,9 @@ class TestPluginCudaGuess(unittest.TestCase):
         v = Plugin.getVersionFromPath("/usr/local/cuda-10.2")
         self.assertEqual(v.major, 10, "Major not parsed from path with version")
         self.assertEqual(v.minor, 2, "Minor not parsed from path with version")
+
+        v = Plugin.getVersionFromPath("/usr/local/cuda10.2")
+        self.assertEqual(str(v), NO_VERSION_FOUND_STR, "Default value not working")
 
     def test_cuda_version_in_variable(self):
 
