@@ -47,7 +47,7 @@ class ProtExportDataBases(EMProtocol):
         the protocol creates 4 versions of the atomic struct file with the hope that at least
         one of them will work.
     """
-    _label = 'export emdb/pdb'
+    _label = 'export to emdb/pdb'
     _program = ""
     _lastUpdateVersion = VERSION_1_2
     VOLUMENAME = 'main_map.mrc'

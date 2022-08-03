@@ -1,12 +1,45 @@
+V3.0.19
+developers:
+   - Methods to guess the cuda version from a variable that point to a folder in Plugin class:
+    (Plugin.guessCudaVersion(varname)). Follows links.
+
+V3.0.18
+users:
+   - "assign ctf" protocol now accepts SetOfParticles too.
+   -  "subset" protocol accepts now a range of ids.
+   - FIX:import atomic structures now works also when files are named the same but in different folders.
+developers:
+   - New model class: SetOfPrincipalComponents(SetOfNormalModes)
+   - New base wizard: VariableWizard - Wizard base where input and output paramNames can be modified and added, so
+     one wizard can be used in several protocols with parameters of different names.
+   - SelectChainWizard replaces GetStructureChainsWizard and uses VariableWizard
+   - SelectResidueWizard added: To select a residue
+   - SelectAttributeWizard added: Wizard to select attributes stored in a scipion object or set
+
+V3.0.17
+users:
+   - Updating protocol box size related parameters. Now for sanity reasons, it outputs only even numbers.
+
 V3.0.16
 users:
-   - Fixing an error calculating the FSC resolution value
+   - Fixing an error calculating the FSC resolution value. 
+   - FSC plots legend shows "resolution" ;-)
+   - Align movies protocols: possible outputs for even odd mics defined
+   - Import volume: fix downloading some old EMD id not numeric
+   - Hdf files can be open from the file browser
+   - Adding the protocol "box size related parameters" to estimate the different parameters needed for various pickers.
+      
+developers:
+   - New method at pwem/convert/headers.setMRCSamplingRate: sets the sampling rate of an mrc file. Image Object has it: volume.setMRCSamplingRate(3.5) should work.
+   - protcols.conf minimized only containig its own protocols
+   - Variable wizard with customizable target, input and output parameters
+
 
 V3.0.15
 users:
   - New viewer: ChimeraAttributeViewer: analyze scalar attributes of the residues or atoms in a structure
   - Local resolution viewers use now native ChimeraX key
-  - Adding the protocolo "Manual check point" that kept running for a time determined by a parameter or until
+  - Adding the protocol "Manual check point" that kept running for a time determined by a parameter or until
     the user determines it is convenient.
   - Calculating the FSC resolution value and displaying it in the viewer.
 V3.0.14
