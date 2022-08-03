@@ -159,6 +159,7 @@ class ChangeOriginSamplingWizard(pwizard.Wizard):
         form.setVar('z', round(z, 3))
         form.setVar('samplingRate', round(sampling, 3))
 
+
 class GetStructureChainsWizard(pwizard.Wizard):
   # WARNING: this wizard is deprecated. Instead, SelectChainWizard must be used, where inputs, targets and outputs
   # can be specified.
@@ -229,6 +230,7 @@ class GetStructureChainsWizard(pwizard.Wizard):
                             "number of chain residues)")
     form.setVar('inputStructureChain', dlg.values[0].get())
 
+
 class SelectChainWizard(VariableWizard):
     '''Opens the input AtomStruct and allows you to select one of the present chains'''
     _targets, _inputs, _outputs = [], {}, {}
@@ -298,6 +300,7 @@ SelectChainWizard().addTarget(protocol=emprot.ProtImportSequence,
                               inputs=[['pdbId', 'pdbFile']],
                               outputs=['inputStructureChain'])
 
+
 class SelectResidueWizard(SelectChainWizard):
     _targets, _inputs, _outputs = [], {}, {}
 
@@ -363,7 +366,6 @@ class SelectResidueWizard(SelectChainWizard):
       form.setVar(outputParam[0], intervalStr)
 
 
-
 class PythonFormulaeWizard(pwizard.Wizard):
     """Assist in the creation of python formula to be evaluated. In Steps"""
     _targets = [(emprot.ProtSetFilter, ['formula']),
@@ -376,45 +378,78 @@ class PythonFormulaeWizard(pwizard.Wizard):
         # If accepted
         if d.resultYes():
             form.setVar('formula',d.getFormula())
+
+
+class PythonFormulaWizardX1(pwizard.Wizard):
+    """Assist in the creation of python formula to be evaluated. In Steps"""
+    _targets = [(emprot.ProtMathematicalOperator, ['attribute1'])]
+
+    def show(self, form, *params):
+
+        d = FormulaDialog(form.root, form.protocol.inputSet1.get(), formula=form.protocol.attribute1.get())
+
+        # If accepted
+        if d.resultYes():
+            form.setVar('attribute1', d.getFormula())
+
+
+class PythonFormulaWizardX2(pwizard.Wizard):
+    """Assist in the creation of python formula to be evaluated. In Steps"""
+    _targets = [(emprot.ProtMathematicalOperator, ['attribute2'])]
+
+    def show(self, form, *params):
+
+        d2 = FormulaDialog(form.root, form.protocol.inputSet2.get(), formula=form.protocol.attribute2.get())
+
+        # If accepted
+        if d2.resultYes():
+            form.setVar('attribute2', d2.getFormula())
+
+
+class PythonTopRankWizard(pwizard.Wizard):
+    """Assist in the creation of python formula to be evaluated. In Steps"""
+    _targets = [(emprot.ProtSetFilter, ['rankingField'])]
+
             
+
 class SelectAttributeWizard(VariableWizard):
-  """Wizard to select attributes stored in a scipion object or set
-  """
-  _targets, _inputs, _outputs = [], {}, {}
+    """Wizard to select attributes stored in a scipion object or set """
+    _targets, _inputs, _outputs = [], {}, {}
 
-  def getFirstItem(self, form, inputParam):
-      inputPointer = getattr(form.protocol, inputParam)
-      if issubclass(inputPointer.__class__, pwobj.PointerList):
-          inputPointer = inputPointer[0]
+    def getFirstItem(self, form, inputParam):
+        inputPointer = getattr(form.protocol, inputParam)
+        if issubclass(inputPointer.__class__, pwobj.PointerList):
+            inputPointer = inputPointer[0]
 
-      inputSet = inputPointer.get()
-      if issubclass(inputSet.__class__, pwobj.Set):
-          item = inputSet.getFirstItem()
-      elif issubclass(inputSet.__class__, pwobj.Object):
-          item = inputSet
-      return item
+        inputSet = inputPointer.get()
+        if issubclass(inputSet.__class__, pwobj.Set):
+            item = inputSet.getFirstItem()
+        elif issubclass(inputSet.__class__, pwobj.Object):
+            item = inputSet
+        return item
 
-  def getInputAttributes(self, form, inputParam):
-    attrNames = []
-    item = self.getFirstItem(form, inputParam[0])
-    for key, attr in item.getAttributesToStore():
-      attrNames.append(key)
-    return attrNames
+    def getInputAttributes(self, form, inputParam):
+      attrNames = []
+      item = self.getFirstItem(form, inputParam[0])
+      for key, attr in item.getAttributesToStore():
+        attrNames.append(key)
+      return attrNames
 
-  def show(self, form, *params):
-    inputParam, outputParam = self.getInputOutput(form)
-    attrsList = self.getInputAttributes(form, inputParam)
-    finalAttrsList = []
-    for i in attrsList:
-      finalAttrsList.append(pwobj.String(i))
-    provider = ListTreeProviderString(finalAttrsList)
-    dlg = dialog.ListDialog(form.root, "Filter set", provider,
+    def show(self, form, *params):
+      inputParam, outputParam = self.getInputOutput(form)
+      attrsList = self.getInputAttributes(form, inputParam)
+      finalAttrsList = []
+      for i in attrsList:
+        finalAttrsList.append(pwobj.String(i))
+      provider = ListTreeProviderString(finalAttrsList)
+      dlg = dialog.ListDialog(form.root, "Filter set", provider,
                             "Select one of the attributes")
-    form.setVar(outputParam[0], dlg.values[0].get())
+      form.setVar(outputParam[0], dlg.values[0].get())
 
 
 class ColorScaleWizardRMSD(ColorScaleWizardBase):
-  _targets = ColorScaleWizardBase.defineTargets(emview.ChimeraAttributeViewer)
+    _targets = ColorScaleWizardBase.defineTargets(emview.ChimeraAttributeViewer)
+
 
 #Defining target for the SelectAttributeWizard
 SelectAttributeWizard().addTarget(protocol=emprot.ProtSetFilter,
