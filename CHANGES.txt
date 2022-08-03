@@ -1,3 +1,7 @@
+V3.0.19
+users:
+   - fixes numpy dependency conflict PyWavelets -> scipy 1.9 --> numpy > pyworkflow numpy.
+
 V3.0.18
 users:
    - "assign ctf" protocol now accepts SetOfParticles too.
