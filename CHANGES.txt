@@ -1,3 +1,14 @@
+V3.0.19
+users:
+   - New protocol: Mathematical operator.
+developers:
+   - Methods to guess the cuda version from a variable that point to a folder in Plugin class:
+    (Plugin.guessCudaVersion(varname)). Follows links.
+
+V3.0.19
+users:
+   - fixes numpy dependency conflict PyWavelets -> scipy 1.9 --> numpy > pyworkflow numpy.
+
 V3.0.18
 users:
    - "assign ctf" protocol now accepts SetOfParticles too.
