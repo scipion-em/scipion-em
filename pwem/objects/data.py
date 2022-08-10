@@ -28,6 +28,8 @@
 This modules contains basic hierarchy
 for EM data objects like: Image, SetOfImage and others
 """
+import logging
+logger = logging.getLogger(__name__)
 
 import os
 import json
@@ -1245,7 +1247,7 @@ class SetOfImages(EMSet):
         sampling = self.getSamplingRate()
 
         if not sampling:
-            print("FATAL ERROR: Object %s has no sampling rate!!!"
+            logger.error("FATAL ERROR: Object %s has no sampling rate!!!"
                   % self.getName())
             sampling = -999.0
 
@@ -1454,7 +1456,7 @@ class SetOfPDBs(SetOfAtomStructs):
 
     def __init__(self):
         SetOfAtomStructs.__init__(self)
-        print("SetOfPDBs class has been renamed to SetOfAtomStructs. "
+        logger.warning("FOR DEVELOPERS: SetOfPDBs class has been renamed to SetOfAtomStructs. "
               "Please update your code.")
 
 
@@ -1631,6 +1633,12 @@ class SetOfCoordinates(EMSet):
             self._micrographsPointer.copy(micrographs)
         else:
             self._micrographsPointer.set(micrographs)
+
+        if not self._micrographsPointer.hasExtended():
+            logger.warning("FOR DEVELOPERS: Direct pointers to objects should be avoided. "
+                         "They are problematic in complex streaming scenarios. "
+                         "Pass a pointer to a protocol with extended "
+                         "(e.g.: input param are this kind of pointers. Without get()!)")
 
     def getFiles(self):
         filePaths = set()
@@ -1917,7 +1925,20 @@ class SetOfClasses(EMSet):
         return self._imagesPointer.get()
 
     def setImages(self, images):
-        self._imagesPointer.set(images)
+        """ Set the images (particles 2d associated with this set of classes.
+        Params:
+            images: An indirect pointer (with extended) to a set of images.
+        """
+        if images.isPointer():
+            self._imagesPointer.copy(images)
+        else:
+            self._imagesPointer.set(images)
+
+        if not self._imagesPointer.hasExtended():
+            logger.warning("FOR DEVELOPERS: Direct pointers to objects should be avoided. "
+                         "They are problematic in complex streaming scenarios. "
+                         "Pass a pointer to a protocol with extended "
+                         "(e.g.: input param are this kind of pointers. Without get()!)")
 
     def getDimensions(self):
         """Return first image dimensions as a tuple: (xdim, ydim, zdim)"""
