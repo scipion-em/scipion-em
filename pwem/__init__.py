@@ -41,10 +41,10 @@ from .objects import EMObject
 from .tests import defineDatasets
 from .utils import *
 
-
-__version__ = '3.0.20'
+__version__ = '3.0.21'
 NO_VERSION_FOUND_STR = "0.0"
 CUDA_LIB_VAR = 'CUDA_LIB'
+
 _logo = "scipion_icon.gif"
 _references = ["delaRosaTrevin201693"]
 
