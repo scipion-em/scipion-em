@@ -1359,13 +1359,24 @@ class SetOfParticles(SetOfImages):
         """ Set the SetOfCoordinates associates with
         this set of particles.
          """
-        self._coordsPointer.set(coordinates)
+        if coordinates.isPointer():
+            self._coordsPointer.copy(coordinates)
+        else:
+            self._coordsPointer.set(coordinates)
+
+        if not self._coordsPointer.hasExtended():
+            logger.warning("FOR DEVELOPERS: Direct pointers to objects should be avoided. "
+                           "They are problematic in complex streaming scenarios. "
+                           "Pass a pointer to a protocol with extended "
+                           "(e.g.: input param are this kind of pointers. Without get()!)")
+
 
     def copyInfo(self, other):
         """ Copy basic information (voltage, spherical aberration and
         sampling rate) from other set of micrographs to current one.
         """
         SetOfImages.copyInfo(self, other)
+        self.copyAttributes(other, "_coordsPointer")
         self.setHasCTF(other.hasCTF())
 
 
@@ -1923,6 +1934,10 @@ class SetOfClasses(EMSet):
     def getImages(self):
         """ Return the SetOFImages used to create the SetOfClasses. """
         return self._imagesPointer.get()
+
+    def getImagesPointer(self):
+        """" Return the pointer to the SetOFImages used to create the SetOfClasses. """
+        return self._imagesPointer
 
     def setImages(self, images):
         """ Set the images (particles 2d associated with this set of classes.

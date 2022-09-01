@@ -159,8 +159,8 @@ class ProtExtractCoords(ProtParticlePickingAuto):
         alignType = inPart.getAlignment()
 
         suffix = self.getSuffix(partsIds[0]) if partsIds is not None else ''
-        outputCoords = self._createSetOfCoordinates(inMics, suffix=suffix)
-
+        #outputCoords = self._createSetOfCoordinates(inMics, suffix=suffix)
+        outputCoords = self._createSetOfCoordinates(self.getInputMicrographsPointer(), suffix=suffix)
         # Prepare a double key dictionary to do the match: micname and micId
         micDict = dict()
         for mic in inMics.iterItems():
@@ -272,10 +272,7 @@ class ProtExtractCoords(ProtParticlePickingAuto):
             self._defineTransformRelation(self.getInputParticles(), outputSet)
             self._defineSourceRelation(self.getInputMicrographs(), outputSet)
 
-        # copyInfo raise an error since particles has no _boxsize
-        #   copyInfo does not do anything else
-        # outputSet.copyInfo(self.getInputParticles())
-        outputSet.setMicrographs(self.getInputMicrographs())
+        outputSet.setMicrographs(self.getInputMicrographsPointer())
 
         return outputSet
 
