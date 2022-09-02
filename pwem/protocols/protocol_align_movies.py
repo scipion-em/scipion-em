@@ -62,11 +62,11 @@ class ProtAlignMovies(ProtProcessMovies):
     the frames range used for alignment and final sum, the binning factor
     or the cropping options (region of interest)
     """
-    _possibleOutputs = dict({OUT_MICS: emobj.SetOfMicrographs,
-                             OUT_MICS_DW: emobj.SetOfMicrographs,
-                             OUT_MICS_ODD: emobj.SetOfMicrographs,
-                             OUT_MICS_EVEN: emobj.SetOfMicrographs,
-                             OUT_MOVIES: emobj.SetOfMovies})
+    _possibleOutputs = {OUT_MICS: emobj.SetOfMicrographs,
+                        OUT_MICS_DW: emobj.SetOfMicrographs,
+                        OUT_MICS_ODD: emobj.SetOfMicrographs,
+                        OUT_MICS_EVEN: emobj.SetOfMicrographs,
+                        OUT_MOVIES: emobj.SetOfMovies}
 
     # Even / odd functionality
     evenOddCapable = False

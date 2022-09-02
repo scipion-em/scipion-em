@@ -40,7 +40,7 @@ import pyworkflow.object as pwobj
 import pwem.objects as emobj
 from pwem.protocols import EMProtocol
 from pwem.objects import Volume, EMSet
-from pyworkflow.utils import ProgressBar
+from pyworkflow.utils import ProgressBar, getListFromRangeString
 
 
 class ProtSets(EMProtocol):
@@ -256,8 +256,9 @@ class ProtUnionSet(ProtSets):
                 self.cleanExtraAttributes(value, verifyAttrs,
                                           prefixedAttribute + ".")
 
-    def getObjDict(self, includeClass=False):
-        return super(ProtUnionSet, self).getObjDict(includeClass)
+    def getObjDict(self, includeClass=False, includeBasic=False):
+        return super(ProtUnionSet, self).getObjDict(
+            includeClass=includeClass, includeBasic=includeBasic)
 
     def duplicatedIds(self):
         """ Check if there are duplicated ids to renumber from
@@ -515,8 +516,20 @@ class ProtSubSet(ProtSets):
             condition='chooseAtRandom',
             label="Number of elements",
             help='How many elements will be taken from the full set.')
+        add('selectIds', pwprot.params.BooleanParam, default=False,
+            condition='not chooseAtRandom',
+            label="Make a subset from specific IDs",
+            help="Choose specific elements form the full set.")
+        add('range', pwprot.params.NumericRangeParam,
+            label="IDs range or list",
+            condition='selectIds and not chooseAtRandom',
+            allowsNull=True,
+            help='Select the IDs that will be the subset.\n'
+                 'You have several ways to specify the IDs.\n'
+                 'Example: \n'
+                 '"1,3,5-8,17-20" -> [1,3, 5, 6, 7, 8, 17, 18, 19, 20]\n')
         add('inputSubSet', pwprot.params.PointerParam,
-            pointerClass='EMSet', condition='not chooseAtRandom',
+            pointerClass='EMSet', condition='not (chooseAtRandom or selectIds)',
             label="Other set",
             allowsNull=True,
             help='The elements present in this set will be used to pick \n'
@@ -528,7 +541,7 @@ class ProtSubSet(ProtSets):
                  'will be included. If _difference_, elements that\n'
                  'are in input but not in other will picked.')
         add('setOperation', pwprot.params.EnumParam,
-            condition='not chooseAtRandom',
+            condition='not (chooseAtRandom or selectIds)',
             default=self.SET_INTERSECTION,
             choices=['intersection', 'difference'],
             display=pwprot.params.EnumParam.DISPLAY_HLIST,
@@ -556,11 +569,16 @@ class ProtSubSet(ProtSets):
 
         outputSet.copyInfo(inputFullSet)
 
-        if self.chooseAtRandom:
+        if self.chooseAtRandom or self.selectIds:
             nElementsFull = len(inputFullSet)
-            nElements = self.nElements.get()
-            chosen = random.sample(range(nElementsFull),
+            if self.chooseAtRandom:
+                nElements = self.nElements.get()
+                chosen = random.sample(range(nElementsFull),
                                    nElements)
+            else:
+                chosen = [i-1 for i in getListFromRangeString(self.range.get())]
+                nElements = len(chosen)
+
             doProgressBar = False
             if nElementsFull > 100000:  # show progressBar for large sets
                 progress = ProgressBar(total=len(inputFullSet), fmt=ProgressBar.NOBAR)
@@ -606,7 +624,7 @@ class ProtSubSet(ProtSets):
             key = 'output' + inputClassName.replace('SetOf', '')
             self._defineOutputs(**{key: outputSet})
             self._defineTransformRelation(inputFullSet, outputSet)
-            if not self.chooseAtRandom.get():
+            if not (self.chooseAtRandom.get() or self.selectIds.get()):
                 self._defineSourceRelation(self.inputSubSet, outputSet)
         else:
             self.summaryVar.set('Output was not generated. Resulting set '

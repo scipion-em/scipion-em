@@ -91,7 +91,7 @@ class TestMixedRelionTutorial(TestWorkflow):
             doRaise=True)
         protCTF = self.newProtocol(grigorieffLabProtocols.CistemProtCTFFind,
                                    minDefocus=12000, maxDefocus=30000,
-                                   runMode=1, numberOfMpi=1, numberOfThreads=16)
+                                   numberOfThreads=16)
         protCTF.inputMicrographs.set(protPreprocess.outputMicrographs)
         protCTF.setObjLabel('CTF ctffind')
         self.launchProtocol(protCTF)
@@ -159,11 +159,9 @@ class TestMixedRelionTutorial(TestWorkflow):
         print("Run Relion Classification2d")
         relionProtocols = Domain.importFromPlugin('relion.protocols',
                                                   doRaise=True)
-        prot2D = relionProtocols.ProtRelionClassify2D(regularisationParamT=2,
-                                                      numberOfMpi=4,
+        prot2D = relionProtocols.ProtRelionClassify2D(numberOfMpi=1,
                                                       numberOfThreads=4)
         prot2D.numberOfClasses.set(50)
-        prot2D.numberOfIterations.set(25)
         prot2D.inputParticles.set(protExtract2.outputParticles)
         prot2D.setObjLabel('relion 2D')
         self.launchProtocol(prot2D)
@@ -243,7 +241,7 @@ class TestMixedFrealignClassify(TestWorkflow):
             doRaise=True)
         protCTF = self.newProtocol(grigorieffLabProtocols.CistemProtCTFFind,
                                    minDefocus=12000, maxDefocus=30000,
-                                   runMode=1, numberOfMpi=1, numberOfThreads=16)
+                                   numberOfThreads=16)
         protCTF.inputMicrographs.set(protPreprocess.outputMicrographs)
         protCTF.setObjLabel('CTF ctffind')
         self.launchProtocol(protCTF)
