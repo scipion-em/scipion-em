@@ -58,7 +58,7 @@ def createDummyProtocol(projName):
     try:
         proj.launchProtocol(prot)
     except Exception as e:
-        print(str(e))
+        logger.error("Can't launch EMProtocol")
     return prot
 
 
@@ -71,7 +71,6 @@ class TestFSC(unittest.TestCase):
         yList = [1.00, 0.95, 0.90, 0.85, 0.2]
         fsc = emobj.FSC()
         fsc.setData(xList, yList)
-        # fsc.printAll()
         x, y = fsc.getData()
         self.assertEqual(xList, x)
         self.assertEqual(yList, y)
@@ -253,7 +252,7 @@ class TestImageHandler(unittest.TestCase):
         ih = emlib.image.ImageHandler()
 
         outFn = join('/tmp', outSuffix)
-        print("Converting: \n%s -> %s" % (micFn, outFn))
+        logger.info("Converting: \n%s -> %s" % (micFn, outFn))
 
         ih.convert(micFn, outFn)
 
@@ -277,7 +276,7 @@ class TestImageHandler(unittest.TestCase):
         outSuffix = pwutils.replaceBaseExt(micFn, 'mrc')
 
         outFn = join('/tmp', outSuffix)
-        print("Converting: \n%s -> %s" % (micFn, outFn))
+        logger.info("Converting: \n%s -> %s" % (micFn, outFn))
 
         ih.convert(micFn, outFn)
 
@@ -303,7 +302,7 @@ class TestImageHandler(unittest.TestCase):
         outSuffix = pwutils.replaceBaseExt(micFn, 'mrc')
 
         outFn = join('/tmp', outSuffix)
-        print("Converting: \n%s -> %s" % ((1, micFn), outFn))
+        logger.info("Converting: \n%s -> %s" % ((1, micFn), outFn))
 
         ih.convert((1, micFn), outFn)
 
@@ -336,7 +335,7 @@ class TestImageHandler(unittest.TestCase):
         self.assertEqual(ih.getDataType(outFn), EXPECTED_DT)
 
         if pwutils.envVarOn(SCIPION_DEBUG_NOCLEAN):
-            print("Not cleaning output movie: ", outFn)
+            logger.info("Not cleaning output movie: ", outFn)
         else:
             pwutils.cleanPath(outFn)
 
@@ -428,7 +427,6 @@ class TestSetOfMicrographs(BaseTest):
         idCount = 1
 
         for mic1, fn in zip(micSet, self.mics):
-            # traceback.print_stack(file=sys.stdout)
             micFn = mic1.getFileName()
             self.assertEqual(fn, micFn,
                              "micrograph NAME in the set is wrong, \n   expected: '%s'\n        got: '%s'"
@@ -468,7 +466,7 @@ class TestSetOfMicrographs(BaseTest):
         """ Read micrographs from a an sqlite file.
         It should contains Acquisition info. """
         micFn = self.dataset.getFile('micsGoldSqlite2')
-        print(">>> Reading gold micrographs from: ", micFn)
+        logger.info(">>> Reading gold micrographs from %s " % micFn)
 
         micSet = emobj.SetOfMicrographs(filename=micFn)
         self.assertEqual(2, micSet.getSize())
@@ -508,7 +506,6 @@ class TestSetOfMicrographs(BaseTest):
 
         # check defined indexes
         setOfMicrographsFileName = prot._getPath("micrographs.sqlite")
-        # print os.path.abspath(setOfPArticleFileName)
         indexes = sorted([index[1] for index in
                           getIndex(setOfMicrographsFileName)])
         for index, indexName in zip(indexes, indexesNames):
@@ -565,7 +562,7 @@ class TestSetOfParticles(BaseTest):
         self.assertEquals(size, imgSet.getSize())  # Check same size
         self.assertEquals(xdim, imgSet.getDim()[0])  # Check same dimensions
 
-        print("writing particles to: ", outFn)
+        logger.info("writing particles to %s" % outFn)
         imgSet.write()
 
         imgSet2 = emobj.SetOfParticles(filename=':memory:')
@@ -578,8 +575,8 @@ class TestSetOfParticles(BaseTest):
         """
         # Allow what huge means to be defined with environment var
         n = int(os.environ.get('SCIPION_TEST_HUGE', 10000))
-        print(">>>> Creating a set of %d particles." % n)
-        print("     (set SCIPION_TEST_HUGE environment var to other value)")
+        logger.info(">>>> Creating a set of %d particles." % n)
+        logger.info("     (set SCIPION_TEST_HUGE environment var to other value)")
 
         dbFn = self.getOutputPath('huge_set.sqlite')
         # dbFn = ':memory:'
@@ -604,8 +601,8 @@ class TestSetOfParticles(BaseTest):
         """ Just as a benchrmark comparing to test_hugeSet ."""
         # Allow what huge means to be defined with environment var
         n = int(os.environ.get('SCIPION_TEST_HUGE', 10000))
-        print(">>>> Creating a set of %d particles." % n)
-        print("     (set SCIPION_TEST_HUGE environment var to other value)")
+        logger.info(">>>> Creating a set of %d particles." % n)
+        logger.info("     (set SCIPION_TEST_HUGE environment var to other value)")
 
         imgMd = md.MetaData()
 
@@ -617,24 +614,23 @@ class TestSetOfParticles(BaseTest):
             imgMd.setValue(md.MDL_IMAGE, '%06d@images.stk' % (i + 1), objId)
 
         mdFn = self.getOutputPath('huge_set.xmd')
-        print("Writing metadata to: ", mdFn)
+        logger.info("Writing metadata to %s." % mdFn)
         imgMd.write(mdFn)
 
     def test_hugeSetToText(self):
         """ Just as a benchrmark comparing to test_hugeSet ."""
         # Allow what huge means to be defined with environment var
         n = int(os.environ.get('SCIPION_TEST_HUGE', 10000))
-        print(">>>> Creating a set of %d particles." % n)
-        print("     (set SCIPION_TEST_HUGE environment var to other value)")
+        logger.info(">>>> Creating a set of %d particles." % n)
+        logger.info("     (set SCIPION_TEST_HUGE environment var to other value)")
 
         textFn = self.getOutputPath('huge_set.txt')
-        print("Writing to text file: ", textFn)
+        logger.info("Writing to text file %s " % textFn)
         f = open(textFn, 'w')
 
         for i in range(1, n + 1):
             string = '%06d@images.stk' % i
             f.write(string)
-            # print >> f, '%06d@images.stk' % i
 
         f.close()
 
@@ -683,7 +679,6 @@ class TestSetOfParticles(BaseTest):
 
         # check defined indexes
         setOfPArticleFileName = prot._getPath("particles.sqlite")
-        # print os.path.abspath(setOfPArticleFileName)
         indexes = sorted([index[1] for index in
                           getIndex(setOfPArticleFileName)])
         for index, indexName in zip(indexes, indexesNames):
@@ -725,7 +720,7 @@ class TestSetOfCoordinates(BaseTest):
         # check defined indexes
         setOfCoordinatesFileName = \
             prot._getPath("coordinates.sqlite")
-        print(os.path.abspath(setOfCoordinatesFileName))
+        logger.info(os.path.abspath(setOfCoordinatesFileName))
         indexes = sorted([index[1] for index in
                           getIndex(setOfCoordinatesFileName)])
         for index, indexName in zip(indexes, indexesNames):
@@ -949,7 +944,6 @@ class TestCopyItems(BaseTest):
         outputSet.copyItems(inputSet,
                             updateItemCallback=self._updateItem)
 
-        # print("writing particles to: ", outFn)
         outputSet.write()
         outputSet.close()
 
@@ -1011,10 +1005,10 @@ class TestCTFModel(TestCase):
     def test_stringContext(self):
         ctf = emobj.CTFModel()
         # All values to None should be printable without exception
-        print(ctf)
+        logger.info("Empty Ctf str converts to %s" % ctf)
 
         ctf.setDefocusU(2.4545)
-        print(ctf)
+        logger.info("Ctf with defocusU converts to %s" % ctf)
         self.assertTrue("2.45," in str(ctf))
 
 
