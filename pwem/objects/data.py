@@ -1376,7 +1376,8 @@ class SetOfParticles(SetOfImages):
         sampling rate) from other set of micrographs to current one.
         """
         SetOfImages.copyInfo(self, other)
-        self.copyAttributes(other, "_coordsPointer")
+        if hasattr(other, '_coordsPointer'):
+            self.copyAttributes(other, "_coordsPointer")
         self.setHasCTF(other.hasCTF())
 
 
