@@ -1,4 +1,4 @@
-V3.0.20
+V3.0.21
 users:
    - New protocol: Mathematical operator.
    - Import coordinates fixed for complex streaming cases.
@@ -10,6 +10,10 @@ developers:
    - Warning added in SetOfCoordinates.setMicrographs when not using an indirect pointer.
    - Warning added in SetOfClasses.setImages when not using an indirect pointer.
    - data.py test_workflow_mixed.py and uses logger instead of print
+
+V3.0.20
+users:
+   - fixes numpy dependency conflict PyWavelets for python3.6-> scipy <= 1.8.3
 
 V3.0.19
 users:
