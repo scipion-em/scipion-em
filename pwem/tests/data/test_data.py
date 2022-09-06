@@ -58,7 +58,7 @@ def createDummyProtocol(projName):
     try:
         proj.launchProtocol(prot)
     except Exception as e:
-        logger.error("Can't launch EMProtocol")
+        logger.error("Can't launch EMProtocol", exc_info=e)
     return prot
 
 
