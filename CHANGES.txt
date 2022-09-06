@@ -1,3 +1,9 @@
+V3.0.22
+users:
+    - Import sequence protocol can now download sequences from GeneBank. In the past only 
+    UniProt was accessible. In general Unitprot does not have information about 
+    proteins not well know AKA  "uncharacterized proteins" 
+
 V3.0.21
 users:
    - New protocol: Mathematical operator.
