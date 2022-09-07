@@ -104,6 +104,8 @@ class ProtExtractParticlesOutput(enum.Enum):
     """Predefined outputs for particle extraction protocols"""
     outputParticles = emobj.SetOfParticles
 
+
+# noinspection SqlDialectInspection
 class ProtExtractParticles(ProtParticles):
     """ Base class for all extract-particles protocols.
      This class will take care of the streaming functionality and
@@ -139,7 +141,7 @@ class ProtExtractParticles(ProtParticles):
                            'by micName or by micId. Difference in pixel size '
                            'will be handled automatically.')
 
-        form.addParam('inputMicrographs', params.PointerParam,
+        form.addParam('inputMicrographs', params.PointerParam, allowsNull=True,
                       pointerClass='SetOfMicrographs',
                       condition='downsampleType != %s' % SAME_AS_PICKING,
                       important=True, label='Input micrographs',
@@ -566,7 +568,7 @@ class ProtExtractParticles(ProtParticles):
             inputMics = self.getInputMicrographs()
             outputParts = self._createSetOfParticles()
             outputParts.copyInfo(inputMics)
-            outputParts.setCoordinates(self.getCoords())
+            outputParts.setCoordinates(self.inputCoordinates)
 
             if self.getAttributeValue('doFlip', False):
                 outputParts.setIsPhaseFlipped(not inputMics.isPhaseFlipped())

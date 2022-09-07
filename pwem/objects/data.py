@@ -28,6 +28,8 @@
 This modules contains basic hierarchy
 for EM data objects like: Image, SetOfImage and others
 """
+import logging
+logger = logging.getLogger(__name__)
 
 import os
 import json
@@ -1245,7 +1247,7 @@ class SetOfImages(EMSet):
         sampling = self.getSamplingRate()
 
         if not sampling:
-            print("FATAL ERROR: Object %s has no sampling rate!!!"
+            logger.error("FATAL ERROR: Object %s has no sampling rate!!!"
                   % self.getName())
             sampling = -999.0
 
@@ -1357,13 +1359,25 @@ class SetOfParticles(SetOfImages):
         """ Set the SetOfCoordinates associates with
         this set of particles.
          """
-        self._coordsPointer.set(coordinates)
+        if coordinates.isPointer():
+            self._coordsPointer.copy(coordinates)
+        else:
+            self._coordsPointer.set(coordinates)
+
+        if not self._coordsPointer.hasExtended():
+            logger.warning("FOR DEVELOPERS: Direct pointers to objects should be avoided. "
+                           "They are problematic in complex streaming scenarios. "
+                           "Pass a pointer to a protocol with extended "
+                           "(e.g.: input param are this kind of pointers. Without get()!)")
+
 
     def copyInfo(self, other):
         """ Copy basic information (voltage, spherical aberration and
         sampling rate) from other set of micrographs to current one.
         """
         SetOfImages.copyInfo(self, other)
+        if hasattr(other, '_coordsPointer'):
+            self.copyAttributes(other, "_coordsPointer")
         self.setHasCTF(other.hasCTF())
 
 
@@ -1454,7 +1468,7 @@ class SetOfPDBs(SetOfAtomStructs):
 
     def __init__(self):
         SetOfAtomStructs.__init__(self)
-        print("SetOfPDBs class has been renamed to SetOfAtomStructs. "
+        logger.warning("FOR DEVELOPERS: SetOfPDBs class has been renamed to SetOfAtomStructs. "
               "Please update your code.")
 
 
@@ -1631,6 +1645,12 @@ class SetOfCoordinates(EMSet):
             self._micrographsPointer.copy(micrographs)
         else:
             self._micrographsPointer.set(micrographs)
+
+        if not self._micrographsPointer.hasExtended():
+            logger.warning("FOR DEVELOPERS: Direct pointers to objects should be avoided. "
+                         "They are problematic in complex streaming scenarios. "
+                         "Pass a pointer to a protocol with extended "
+                         "(e.g.: input param are this kind of pointers. Without get()!)")
 
     def getFiles(self):
         filePaths = set()
@@ -1916,8 +1936,25 @@ class SetOfClasses(EMSet):
         """ Return the SetOFImages used to create the SetOfClasses. """
         return self._imagesPointer.get()
 
+    def getImagesPointer(self):
+        """" Return the pointer to the SetOFImages used to create the SetOfClasses. """
+        return self._imagesPointer
+
     def setImages(self, images):
-        self._imagesPointer.set(images)
+        """ Set the images (particles 2d associated with this set of classes.
+        Params:
+            images: An indirect pointer (with extended) to a set of images.
+        """
+        if images.isPointer():
+            self._imagesPointer.copy(images)
+        else:
+            self._imagesPointer.set(images)
+
+        if not self._imagesPointer.hasExtended():
+            logger.warning("FOR DEVELOPERS: Direct pointers to objects should be avoided. "
+                         "They are problematic in complex streaming scenarios. "
+                         "Pass a pointer to a protocol with extended "
+                         "(e.g.: input param are this kind of pointers. Without get()!)")
 
     def getDimensions(self):
         """Return first image dimensions as a tuple: (xdim, ydim, zdim)"""

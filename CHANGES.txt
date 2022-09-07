@@ -1,9 +1,15 @@
 V3.0.21
 users:
    - New protocol: Mathematical operator.
+   - Import coordinates fixed for complex streaming cases.
+   - Extract particles does not need SetOfMicrographs is "same as coordinates" is used.
 developers:
    - Methods to guess the cuda version from a variable that point to a folder in Plugin class:
     (Plugin.guessCudaVersion(varname)). Follows links.
+   - Allow indirect pointers in SetOfClasses.
+   - Warning added in SetOfCoordinates.setMicrographs when not using an indirect pointer.
+   - Warning added in SetOfClasses.setImages when not using an indirect pointer.
+   - data.py test_workflow_mixed.py and uses logger instead of print
 
 V3.0.20
 users:
