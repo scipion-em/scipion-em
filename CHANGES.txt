@@ -1,6 +1,7 @@
 V3.0.21
 users:
    - New protocol: Mathematical operator.
+   - "import particles" protocol accepts cryoSCPARC particles files
    - Import coordinates fixed for complex streaming cases.
    - Extract particles does not need SetOfMicrographs is "same as coordinates" is used.
 developers:
