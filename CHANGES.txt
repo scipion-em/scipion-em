@@ -1,10 +1,7 @@
-V3.0.22
-users:
-    - "import particles" protocol accepts cryoSCPARC files
-
 V3.0.21
 users:
    - New protocol: Mathematical operator.
+   - "import particles" protocol accepts cryoSCPARC particles files
 developers:
    - Methods to guess the cuda version from a variable that point to a folder in Plugin class:
     (Plugin.guessCudaVersion(varname)). Follows links.
