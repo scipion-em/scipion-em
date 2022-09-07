@@ -21,6 +21,8 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
+import  logging
+logger = logging.getLogger(__name__)
 
 import pyworkflow.tests as pwtests
 
@@ -54,7 +56,7 @@ class TestMixedBPV(TestWorkflow):
         #         self.validateFiles('protImport', protImport)
 
         # Import a set of volumes
-        print("Import Volume")
+        logger.info("Import Volume")
         protImportVol = self.newProtocol(emprot.ProtImportVolumes, filesPath=self.vol1,
                                          samplingRate=9.896)
         self.launchProtocol(protImportVol)
@@ -63,7 +65,7 @@ class TestMixedBPV(TestWorkflow):
         #        self.validateFiles('protImportVol', protImportVol)
 
         # Perform a downsampling on the micrographs
-        print("Downsampling...")
+        logger.info("Downsampling...")
         XmippProtPreprocessMicrographs = Domain.importFromPlugin('xmipp3.protocols',
                                                                  'XmippProtPreprocessMicrographs',
                                                                  doRaise=True)
@@ -77,7 +79,7 @@ class TestMixedBPV(TestWorkflow):
         #         self.validateFiles('protDownsampling', protDownsampling)
 
         # Estimate CTF on the downsampled micrographs
-        print("Performing CTFfind...")
+        logger.info("Performing CTFfind...")
         ProtCTFFind = Domain.importFromPlugin('cistem.protocols',
                                               'CistemProtCTFFind', doRaise=True)
         protCTF = self.newProtocol(ProtCTFFind, numberOfThreads=4,
@@ -96,7 +98,7 @@ class TestMixedBPV(TestWorkflow):
 
         #         self.validateFiles('protCTF', protCTF)
 
-        print("Running Eman import coordinates...")
+        logger.info("Running Eman import coordinates...")
         protPP = self.newProtocol(emprot.ProtImportCoordinates,
                                   importFrom=emprot.ProtImportCoordinates.IMPORT_FROM_EMAN,
                                   filesPath=self.crdsDir,
@@ -107,7 +109,7 @@ class TestMixedBPV(TestWorkflow):
                              "There was a problem with the Eman import coordinates")
 
         # Extract the SetOfParticles.
-        print("Run extract particles with other downsampling factor")
+        logger.info("Run extract particles with other downsampling factor")
         XmippProtExtractParticles = Domain.importFromPlugin(
             'xmipp3.protocols',
             'XmippProtExtractParticles')
@@ -147,7 +149,7 @@ class TestMixedBPV2(TestWorkflow):
         #         self.validateFiles('protImport', protImport)
 
         # Import a set of volumes
-        print("Import Volume")
+        logger.info("Import Volume")
         protImportVol = self.newProtocol(emprot.ProtImportVolumes, filesPath=self.vol1,
                                          samplingRate=9.896)
         self.launchProtocol(protImportVol)
@@ -156,7 +158,7 @@ class TestMixedBPV2(TestWorkflow):
         #        self.validateFiles('protImportVol', protImportVol)
 
         # Perform a downsampling on the micrographs
-        print("Downsampling...")
+        logger.info("Downsampling...")
         XmippProtPreprocessMicrographs = Domain.importFromPlugin(
             'xmipp3.protocols',
             'XmippProtPreprocessMicrographs',
@@ -171,7 +173,7 @@ class TestMixedBPV2(TestWorkflow):
         #         self.validateFiles('protDownsampling', protDownsampling)
 
         # Estimate CTF on the downsampled micrographs
-        print("Performing CTFfind...")
+        logger.info("Performing CTFfind...")
         ProtCTFFind = Domain.importFromPlugin('cistem.protocols',
                                               'CistemProtCTFFind', doRaise=True)
         protCTF = self.newProtocol(ProtCTFFind, numberOfThreads=4,
@@ -182,7 +184,7 @@ class TestMixedBPV2(TestWorkflow):
                              "There was a problem with the CTF estimation")
         #         self.validateFiles('protCTF', protCTF)
 
-        print("Running Eman import coordinates...")
+        logger.info("Running Eman import coordinates...")
         protPP = self.newProtocol(emprot.ProtImportCoordinates,
                                   importFrom=emprot.ProtImportCoordinates.IMPORT_FROM_EMAN,
                                   filesPath=self.crdsDir,
@@ -192,7 +194,7 @@ class TestMixedBPV2(TestWorkflow):
         self.assertIsNotNone(protPP.outputCoordinates,
                              "There was a problem with the Eman import coordinates")
 
-        print("<Run extract particles with Same as picking>")
+        logger.info("<Run extract particles with Same as picking>")
         XmippProtExtractParticles = Domain.importFromPlugin(
             'xmipp3.protocols',
             'XmippProtExtractParticles')
@@ -209,7 +211,7 @@ class TestMixedBPV2(TestWorkflow):
                              "There was a problem with the extract particles")
         # self.validateFiles('protExtract', protExtract)
 
-        print("Run Preprocess particles")
+        logger.info("Run Preprocess particles")
         XmippProtCropResizeParticles = Domain.importFromPlugin(
             'xmipp3.protocols',
             'XmippProtCropResizeParticles')
@@ -222,7 +224,7 @@ class TestMixedBPV2(TestWorkflow):
         self.assertIsNotNone(protCropResize.outputParticles,
                              "There was a problem with resize/crop the particles")
 
-        print("Run ML2D")
+        logger.info("Run ML2D")
         XmippProtML2D = Domain.importFromPlugin('xmipp3.protocols',
                                                 'XmippProtML2D')
         protML2D = self.newProtocol(XmippProtML2D, numberOfClasses=8, maxIters=2,
@@ -236,7 +238,7 @@ class TestMixedBPV2(TestWorkflow):
         #         #FIXME: Check the initial model with EMAn and restore the next step
         #         return
 
-        print("Run Initial Model")
+        logger.info("Run Initial Model")
 
         EmanProtInitModel = Domain.importFromPlugin('eman2.protocols',
                                                     'EmanProtInitModel',

@@ -1,3 +1,25 @@
+V3.0.21
+users:
+   - New protocol: Mathematical operator.
+   - Import sequence protocol can now download sequences from GeneBank. In the past only 
+     UniProt was accessible. In general Unitprot does not have information about 
+     proteins not well know AKA  "uncharacterized proteins" 
+   - "import particles" protocol accepts cryoSCPARC particles files
+   - Import coordinates fixed for complex streaming cases.
+   - Extract particles does not need SetOfMicrographs is "same as coordinates" is used.
+
+developers:
+   - Methods to guess the cuda version from a variable that point to a folder in Plugin class:
+     (Plugin.guessCudaVersion(varname)). Follows links.
+   - Allow indirect pointers in SetOfClasses.
+   - Warning added in SetOfCoordinates.setMicrographs when not using an indirect pointer.
+   - Warning added in SetOfClasses.setImages when not using an indirect pointer.
+   - data.py test_workflow_mixed.py and uses logger instead of print
+
+V3.0.20
+users:
+   - fixes numpy dependency conflict PyWavelets for python3.6-> scipy <= 1.8.3
+
 V3.0.19
 users:
    - fixes numpy dependency conflict PyWavelets -> scipy 1.9 --> numpy > pyworkflow numpy.
