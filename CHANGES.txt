@@ -1,3 +1,7 @@
+V3.0.22
+users:
+    - "import particles" protocol accepts cryoSCPARC files
+
 V3.0.21
 users:
    - New protocol: Mathematical operator.
