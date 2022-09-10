@@ -1,3 +1,6 @@
+V3.0.22 (hotfix)
+   - Plugin.guessCudaVersion returns Version("0.0") for cases like this /usr/lib/x86_64-linux-gnu
+
 V3.0.21
 users:
    - New protocol: Mathematical operator.
