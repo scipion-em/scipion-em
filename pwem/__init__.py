@@ -41,7 +41,7 @@ from .objects import EMObject
 from .tests import defineDatasets
 from .utils import *
 
-__version__ = '3.0.21'
+__version__ = '3.0.22'
 NO_VERSION_FOUND_STR = "0.0"
 CUDA_LIB_VAR = 'CUDA_LIB'
 
@@ -153,7 +153,7 @@ class Plugin(pyworkflow.plugin.Plugin):
         :param default: Default value in case cuda is not found
         :return Version after parsing the variable or default"""
 
-        return cls.getVersionFromVariable(variable, pattern="cuda")
+        return cls.getVersionFromVariable(variable, default=default, pattern="cuda")
 
     @classmethod
     def getVersionFromVariable(cls, variable, default=NO_VERSION_FOUND_STR, pattern=None):
@@ -186,6 +186,8 @@ class Plugin(pyworkflow.plugin.Plugin):
         path = os.path.realpath(path)
         if pattern is not None:
             path = findFolderWithPattern(path, pattern)
+            if path is None:
+                return parse_version(NO_VERSION_FOUND_STR)
 
         parts = path.split(separator)
         if len(parts)>=2:
