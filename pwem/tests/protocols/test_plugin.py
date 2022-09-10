@@ -42,9 +42,11 @@ class TestPluginCudaGuess(unittest.TestCase):
                 self.assertEqual(v.major, 13, "Major not parsed from link path with a pattern")
                 self.assertEqual(v.minor, 8, "Minor not parsed from link path with a pattern")
 
+                # Mock getVar return value. Grigory's case ;-)
+                realpath_faked.return_value = "/usr/lib/x86_64-linux-gnu"
 
-
-
+                v = Plugin.guessCudaVersion(CUDA_LIB_VAR)
+                self.assertEqual(str(v), NO_VERSION_FOUND_STR, "Guess cuda version does not return NO_VERSION_FOUND_STR")
 
 
 
