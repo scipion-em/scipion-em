@@ -47,16 +47,17 @@ class ProtImportParticles(ProtImportImages):
     IMPORT_FROM_SCIPION = 4
     IMPORT_FROM_FREALIGN = 5
     IMPORT_FROM_EMAN = 6
+    IMPORT_FROM_CRYOSPARC = 7
 
-    importFormats = ['emx', 'xmipp3', 'relion', 'scipion', 'frealign', 'eman']
-    importExts = ['emx', 'xmd', 'star', 'sqlite', 'par', 'lst']
+    importFormats = ['emx', 'xmipp3', 'relion', 'scipion', 'frealign', 'eman', 'cryosparc']
+    importExts = ['emx', 'xmd', 'star', 'sqlite', 'par', 'lst', 'cs']
     alignTypeList = [emcts.ALIGN_2D, emcts.ALIGN_3D, emcts.ALIGN_PROJ,
                      emcts.ALIGN_NONE]
 
     def _getImportChoices(self):
         """ Return a list of possible choices
         from which the import can be done.
-        (usually packages formats such as: xmipp3, eman2, relion...etc.
+        (usually packages formats such as: xmipp3, eman2, relion...etc.)
         """
         choices = ProtImportImages._getImportChoices(self)
         # Do not change the order of this list since
@@ -64,7 +65,9 @@ class ProtImportParticles(ProtImportImages):
         return choices + self.importFormats
     
     def _defineImportParams(self, form):
-        """ Import files from: emx, xmipp3, relion, scipion  formats. """
+        """
+        Import files from: emx, xmipp3, relion, scipion, cryosparc formats.
+        """
         param = form.getParam('importFrom')
         # Customize the help of this parameter with specific information
         # of the import particles
@@ -77,6 +80,7 @@ class ProtImportParticles(ProtImportImages):
                        "*relion*: itXX_data.star\n"
                        "*scipion*: particles.sqlite\n"
                        "*eman*: particleSet.lst\n"
+                       "*cryosparc*: particles.cs\n"
                        "" % ', '.join(self.importFormats))
 
         form.addParam('emxFile', params.FileParam,
@@ -139,6 +143,13 @@ class ProtImportParticles(ProtImportImages):
                       condition='(importFrom == %d)' % self.IMPORT_FROM_EMAN,
                       label='Lst file',
                       help='Select a *.lst set file from EMAN2 project.')
+
+        form.addParam('csFile', params.FileParam,
+                      condition='(importFrom == %d)' % self.IMPORT_FROM_CRYOSPARC,
+                      label='cs file',
+                      help="Select a .cs file.\n"
+                           "It is usually a .cs file result from cryoSPARC job "
+                           "execution.")
         
     def _defineAcquisitionParams(self, form):
         group = ProtImportImages._defineAcquisitionParams(self, form)
@@ -195,6 +206,13 @@ class ProtImportParticles(ProtImportImages):
             EmanImport = Domain.importFromPlugin('eman2.convert', 'EmanImport',
                                                  doRaise=True)
             return EmanImport(self, self.lstFile.get())
+
+        elif self.importFrom == self.IMPORT_FROM_CRYOSPARC:
+            cryoSPARCImport = Domain.importFromPlugin('cryosparc2.convert', 'cryoSPARCImport',
+                                                      'cryoSPARC is needed to import .cs files',
+                                                      doRaise=True)
+            self.importFilePath = self.csFile.get('').strip()
+            return cryoSPARCImport(self, self.csFile.get())
         else:
             self.importFilePath = ''
             return None 

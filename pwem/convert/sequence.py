@@ -145,7 +145,7 @@ class SequenceHandler:
                               'alphabet': alphabet, 'isAminoacids': isAmino})
         return sequences
 
-    def downloadSeqFromDatabase(self, seqID):
+    def downloadSeqFromDatabase(self, seqID, dataBase=None):
         # see http://biopython.org/DIST/docs/api/Bio.SeqIO-module.html
         # for format/databases
         print("Connecting to database...")
@@ -155,19 +155,27 @@ class SequenceHandler:
         retries = 5
         record = None
         error = ""
+        if dataBase is None:
+            if self.isAminoacid:
+                dataBase = 'UnitProt'
+            else:
+                dataBase = 'GeneBank'
+
         while counter <= retries:  # retry up to 5 times if server busy
             try:
-                if self.isAminoacid:
-                    dataBase = 'UnitProt'
+                if dataBase == 'UnitProt':
                     url = "http://www.uniprot.org/uniprot/%s.xml"
                     format = "uniprot-xml"
                     handle = urlopen(url % seqID)
                     print("URL", url % seqID)
                 else:
-                    dataBase = 'GeneBank'
-                    Entrez.email = "adam.richards@stat.duke.edu"
+                    if self.isAminoacid:
+                        db = "protein"
+                    else:
+                        db = "nucleotide"
+                    Entrez.email = "scipion@cnb.csic.es"
                     format = "fasta"
-                    handle = Entrez.efetch(db="nucleotide", id=seqID,
+                    handle = Entrez.efetch(db=db, id=seqID,
                                            rettype=format, retmode="text")
 
                 record = SeqIO.read(handle, format)
