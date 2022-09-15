@@ -601,7 +601,7 @@ class AtomicStructHandler:
                 [xmax + expand, ymax + expand, zmax + expand]]
 
 
-    def getTransformMatrix(self, atomStructFn, startId=-1, endId=-1):
+    def getTransformMatrix(self, atomStructFn, startId=-1, endId=-1, outFn=None):
         """find matrix that Superimposes two atom structures.
         this matrix moves atomStructFn to self """
         if endId == -1:
@@ -637,8 +637,9 @@ class AtomicStructHandler:
 
             # Iiterate through all residues in each chain a store CA atoms
             for id in ref_list_id:
-                ref_atoms.append(ref_chain[id]['CA'])
-                sample_atoms.append(sample_chain[id]['CA'])
+                if id in ref_chain and id in sample_chain:
+                    ref_atoms.append(ref_chain[id]['CA'])
+                    sample_atoms.append(sample_chain[id]['CA'])
         # Now we initiate the superimposer:
         super_imposer = Superimposer()
         super_imposer.set_atoms(ref_atoms, sample_atoms)
@@ -646,8 +647,9 @@ class AtomicStructHandler:
         (rot, trans) = super_imposer.rotran
         # DEBUG, uncomment next two lines to see
         # transformation applied to atomStructFn
-        # aSH.getStructure().transform(rot, trans)
-        # aSH.write("/tmp/pp.cif")
+        if outFn:
+            aSH.getStructure().transform(rot, trans)
+            aSH.write(outFn)
 
         # convert 3x3 rotation matrix to homogeneous matrix
         rot = numpy.transpose(rot)  # scipion and biopython use
