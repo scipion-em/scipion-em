@@ -159,6 +159,7 @@ class ChangeOriginSamplingWizard(pwizard.Wizard):
         form.setVar('z', round(z, 3))
         form.setVar('samplingRate', round(sampling, 3))
 
+
 class GetStructureChainsWizard(pwizard.Wizard):
   # WARNING: this wizard is deprecated. Instead, SelectChainWizard must be used, where inputs, targets and outputs
   # can be specified.
@@ -229,23 +230,22 @@ class GetStructureChainsWizard(pwizard.Wizard):
                             "number of chain residues)")
     form.setVar('inputStructureChain', dlg.values[0].get())
 
+
 class SelectChainWizard(VariableWizard):
     '''Opens the input AtomStruct and allows you to select one of the present chains'''
     _targets, _inputs, _outputs = [], {}, {}
 
     @classmethod
-    def getModelsChainsStep(cls, protocol, inputParamName):
+    def getModelsChainsStep(cls, protocol, inputObj):
         """ Returns (1) list with the information
            {"model": %d, "chain": "%s", "residues": %d} (modelsLength)
            (2) list with residues, position and chain (modelsFirstResidue)"""
         structureHandler = emconv.AtomicStructHandler()
-        fileName = ""
-        AS = getattr(protocol, inputParamName).get()
-        if type(AS) == str:
-            if os.path.exists(AS):
-                fileName = AS
+        if type(inputObj) == str:
+            if os.path.exists(inputObj):
+                fileName = inputObj
             else:
-                pdbID = AS
+                pdbID = inputObj
                 url = "https://www.rcsb.org/structure/"
                 URL = url + ("%s" % pdbID)
                 try:
@@ -256,10 +256,10 @@ class SelectChainWizard(VariableWizard):
                     raise Exception("%s is a wrong PDB ID" % pdbID)
                 fileName = structureHandler.readFromPDBDatabase(os.path.basename(pdbID), dir="/tmp/")
 
-        elif str(type(AS).__name__) == 'SchrodingerAtomStruct':
-            fileName = os.path.abspath(AS.convert2PDB())
+        elif str(type(inputObj).__name__) == 'SchrodingerAtomStruct':
+            fileName = os.path.abspath(inputObj.convert2PDB())
         else:
-            fileName = os.path.abspath(AS.getFileName())
+            fileName = os.path.abspath(inputObj.getFileName())
 
         structureHandler.read(fileName)
         structureHandler.getStructure()
@@ -278,7 +278,8 @@ class SelectChainWizard(VariableWizard):
         inputParams, outputParam = self.getInputOutput(form)
         protocol = form.protocol
         try:
-            listOfChains, listOfResidues = self.getModelsChainsStep(protocol, inputParams[0])
+            inputObj = getattr(protocol, inputParams[0]).get()
+            listOfChains, listOfResidues = self.getModelsChainsStep(protocol, inputObj)
         except Exception as e:
             print("ERROR: ", e)
             return
@@ -298,6 +299,7 @@ SelectChainWizard().addTarget(protocol=emprot.ProtImportSequence,
                               inputs=[['pdbId', 'pdbFile']],
                               outputs=['inputStructureChain'])
 
+
 class SelectResidueWizard(SelectChainWizard):
     _targets, _inputs, _outputs = [], {}, {}
 
@@ -311,17 +313,46 @@ class SelectResidueWizard(SelectChainWizard):
                 residueList.append('{"index": %d, "residue": "%s"}' % (i[0], str(i[1])))
       return residueList
 
-    def getResidues(self, form, inputParams):
+    def getResidues(self, form, inputObj, chainStr):
       protocol = form.protocol
-      inputObj = getattr(protocol, inputParams[0]).get()
-      if issubclass(type(inputObj), emobj.AtomStruct):
+
+      if type(inputObj) == str:
+          # Select the residues if the input structure parameter is a str (PDB id or PDB file)
+          structureHandler = emconv.AtomicStructHandler()
+          if os.path.exists(inputObj):
+              fileName = inputObj
+          else:
+              pdbID = inputObj
+              url = "https://www.rcsb.org/structure/"
+              URL = url + ("%s" % pdbID)
+              try:
+                response = requests.get(URL)
+              except:
+                raise Exception("Cannot connect to PDB server")
+              if (response.status_code >= 400) and (response.status_code < 500):
+                raise Exception("%s is a wrong PDB ID" % pdbID)
+
+              fileName = structureHandler.readFromPDBDatabase(os.path.basename(pdbID), dir="/tmp/")
+
+          structureHandler.read(fileName)
+          structureHandler.getStructure()
+          modelsLength, modelsFirstResidue = structureHandler.getModelsChains()
+
+          struct = json.loads(chainStr)  # From wizard dictionary
+          chain, model = struct["chain"].upper().strip(), int(struct["model"])
+
+          residueList = self.editionListOfResidues(modelsFirstResidue, model, chain)
+          finalResiduesList = []
+          for i in residueList:
+              finalResiduesList.append(emobj.String(i))
+
+      elif issubclass(type(inputObj), emobj.AtomStruct):
           try:
-            modelsLength, modelsFirstResidue = self.getModelsChainsStep(protocol, inputParams[0])
+            modelsLength, modelsFirstResidue = self.getModelsChainsStep(protocol, inputObj)
           except Exception as e:
             print("ERROR: ", e)
             return
-          selection = getattr(protocol, inputParams[1]).get()
-          struct = json.loads(selection)  # From wizard dictionary
+          struct = json.loads(chainStr)  # From wizard dictionary
           chain, model = struct["chain"].upper().strip(), int(struct["model"])
 
           residueList = self.editionListOfResidues(modelsFirstResidue, model, chain)
@@ -332,36 +363,48 @@ class SelectResidueWizard(SelectChainWizard):
       elif issubclass(type(inputObj), emobj.Sequence) or str(type(inputObj).__name__) == 'SequenceVariants':
           finalResiduesList = []
           for i, res in enumerate(inputObj.getSequence()):
-            stri = '{"index": %s, "residue": "%s"}' % (i + 1, RESIDUES1TO3[res])
+            if res in RESIDUES1TO3:
+                res3 = RESIDUES1TO3[res]
+            else:
+                res3 = res
+            stri = '{"index": %s, "residue": "%s"}' % (i + 1, res3)
             finalResiduesList.append(emobj.String(stri))
 
       return finalResiduesList
 
+    def getSequence(self, finalResiduesList, idxs):
+        roiStr, inSeq = '', False
+        for residue in finalResiduesList:
+            if json.loads(residue.get())['residue'] in RESIDUES3TO1:
+                if json.loads(residue.get())['index'] == idxs[0]:
+                  inSeq = True
+                if json.loads(residue.get())['index'] == idxs[-1]:
+                  inSeq = False
+                  roiStr += RESIDUES3TO1[json.loads(residue.get())['residue']]
+                  break
+
+                if inSeq:
+                    roiStr += RESIDUES3TO1[json.loads(residue.get())['residue']]
+        return roiStr
+
     def show(self, form, *params):
       inputParams, outputParam = self.getInputOutput(form)
-      finalResiduesList = self.getResidues(form, inputParams)
+      protocol = form.protocol
+      inputObj = getattr(protocol, inputParams[0]).get()
+      chainStr = getattr(protocol, inputParams[1]).get()
+      finalResiduesList = self.getResidues(form, inputObj, chainStr)
 
       provider = ListTreeProviderString(finalResiduesList)
       dlg = dialog.ListDialog(form.root, "Chain residues", provider,
                               "Select one residue (residue number, "
                               "residue name)")
-      roiStr = ''
-      idxs = [json.loads(dlg.values[0].get())['index'], json.loads(dlg.values[-1].get())['index']]
-      inSeq = False
-      for residue in finalResiduesList:
-          if json.loads(residue.get())['index'] == idxs[0]:
-              inSeq = True
-          if json.loads(residue.get())['index'] == idxs[-1]:
-              inSeq = False
-              roiStr += RESIDUES3TO1[json.loads(residue.get())['residue']]
-              break
 
-          if inSeq:
-              roiStr += RESIDUES3TO1[json.loads(residue.get())['residue']]
+      idxs = [json.loads(dlg.values[0].get())['index'], json.loads(dlg.values[-1].get())['index']]
+      roiStr = self.getSequence(finalResiduesList, idxs)
+
 
       intervalStr = '{"index": "%s-%s", "residues": "%s"}' % (idxs[0], idxs[1], roiStr)
       form.setVar(outputParam[0], intervalStr)
-
 
 
 class PythonFormulaeWizard(pwizard.Wizard):
@@ -376,45 +419,78 @@ class PythonFormulaeWizard(pwizard.Wizard):
         # If accepted
         if d.resultYes():
             form.setVar('formula',d.getFormula())
+
+
+class PythonFormulaWizardX1(pwizard.Wizard):
+    """Assist in the creation of python formula to be evaluated. In Steps"""
+    _targets = [(emprot.ProtMathematicalOperator, ['attribute1'])]
+
+    def show(self, form, *params):
+
+        d = FormulaDialog(form.root, form.protocol.inputSet1.get(), formula=form.protocol.attribute1.get())
+
+        # If accepted
+        if d.resultYes():
+            form.setVar('attribute1', d.getFormula())
+
+
+class PythonFormulaWizardX2(pwizard.Wizard):
+    """Assist in the creation of python formula to be evaluated. In Steps"""
+    _targets = [(emprot.ProtMathematicalOperator, ['attribute2'])]
+
+    def show(self, form, *params):
+
+        d2 = FormulaDialog(form.root, form.protocol.inputSet2.get(), formula=form.protocol.attribute2.get())
+
+        # If accepted
+        if d2.resultYes():
+            form.setVar('attribute2', d2.getFormula())
+
+
+class PythonTopRankWizard(pwizard.Wizard):
+    """Assist in the creation of python formula to be evaluated. In Steps"""
+    _targets = [(emprot.ProtSetFilter, ['rankingField'])]
+
             
+
 class SelectAttributeWizard(VariableWizard):
-  """Wizard to select attributes stored in a scipion object or set
-  """
-  _targets, _inputs, _outputs = [], {}, {}
+    """Wizard to select attributes stored in a scipion object or set """
+    _targets, _inputs, _outputs = [], {}, {}
 
-  def getFirstItem(self, form, inputParam):
-      inputPointer = getattr(form.protocol, inputParam)
-      if issubclass(inputPointer.__class__, pwobj.PointerList):
-          inputPointer = inputPointer[0]
+    def getFirstItem(self, form, inputParam):
+        inputPointer = getattr(form.protocol, inputParam)
+        if issubclass(inputPointer.__class__, pwobj.PointerList):
+            inputPointer = inputPointer[0]
 
-      inputSet = inputPointer.get()
-      if issubclass(inputSet.__class__, pwobj.Set):
-          item = inputSet.getFirstItem()
-      elif issubclass(inputSet.__class__, pwobj.Object):
-          item = inputSet
-      return item
+        inputSet = inputPointer.get()
+        if issubclass(inputSet.__class__, pwobj.Set):
+            item = inputSet.getFirstItem()
+        elif issubclass(inputSet.__class__, pwobj.Object):
+            item = inputSet
+        return item
 
-  def getInputAttributes(self, form, inputParam):
-    attrNames = []
-    item = self.getFirstItem(form, inputParam[0])
-    for key, attr in item.getAttributesToStore():
-      attrNames.append(key)
-    return attrNames
+    def getInputAttributes(self, form, inputParam):
+      attrNames = []
+      item = self.getFirstItem(form, inputParam[0])
+      for key, attr in item.getAttributesToStore():
+        attrNames.append(key)
+      return attrNames
 
-  def show(self, form, *params):
-    inputParam, outputParam = self.getInputOutput(form)
-    attrsList = self.getInputAttributes(form, inputParam)
-    finalAttrsList = []
-    for i in attrsList:
-      finalAttrsList.append(pwobj.String(i))
-    provider = ListTreeProviderString(finalAttrsList)
-    dlg = dialog.ListDialog(form.root, "Filter set", provider,
+    def show(self, form, *params):
+      inputParam, outputParam = self.getInputOutput(form)
+      attrsList = self.getInputAttributes(form, inputParam)
+      finalAttrsList = []
+      for i in attrsList:
+        finalAttrsList.append(pwobj.String(i))
+      provider = ListTreeProviderString(finalAttrsList)
+      dlg = dialog.ListDialog(form.root, "Filter set", provider,
                             "Select one of the attributes")
-    form.setVar(outputParam[0], dlg.values[0].get())
+      form.setVar(outputParam[0], dlg.values[0].get())
 
 
 class ColorScaleWizardRMSD(ColorScaleWizardBase):
-  _targets = ColorScaleWizardBase.defineTargets(emview.ChimeraAttributeViewer)
+    _targets = ColorScaleWizardBase.defineTargets(emview.ChimeraAttributeViewer)
+
 
 #Defining target for the SelectAttributeWizard
 SelectAttributeWizard().addTarget(protocol=emprot.ProtSetFilter,

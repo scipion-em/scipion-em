@@ -28,6 +28,7 @@ This modules contains classes related with EM
 """
 
 import os
+from pkg_resources import parse_version
 
 import pyworkflow as pw
 from pyworkflow.protocol import Protocol
@@ -40,7 +41,10 @@ from .objects import EMObject
 from .tests import defineDatasets
 from .utils import *
 
-__version__ = '3.0.17'
+__version__ = '3.0.22'
+NO_VERSION_FOUND_STR = "0.0"
+CUDA_LIB_VAR = 'CUDA_LIB'
+
 _logo = "scipion_icon.gif"
 _references = ["delaRosaTrevin201693"]
 
@@ -63,7 +67,7 @@ class Config(pw.Config):
     MPI_BINDIR = _get('MPI_BINDIR', '/usr/lib64/mpi/gcc/openmpi/bin')
 
     # CUDA
-    CUDA_LIB = _get('CUDA_LIB', '/usr/local/cuda/lib64')
+    CUDA_LIB = _get(CUDA_LIB_VAR, '/usr/local/cuda/lib64')
     CUDA_BIN = _get('CUDA_BIN', '/usr/local/cuda/bin')
     MAX_PREVIEW_FILE_SIZE = float(_get("MAX_PREVIEW_FILE_SIZE", DEFAULT_MAX_PREVIEW_FILE_SIZE))
 
@@ -139,3 +143,83 @@ class Plugin(pyworkflow.plugin.Plugin):
 
         maxit10 = env.getTarget(env._getExtName(MAXIT, "10.1"))
         maxit10.setDefault(default)
+
+
+    @classmethod
+    def guessCudaVersion(cls, variable, default="10.1"):
+        """ Guesses the cuda version from a variable
+
+        :param variable: Name of a variable defined by a plugin
+        :param default: Default value in case cuda is not found
+        :return Version after parsing the variable or default"""
+
+        return cls.getVersionFromVariable(variable, default=default, pattern="cuda")
+
+    @classmethod
+    def getVersionFromVariable(cls, variable, default=NO_VERSION_FOUND_STR, pattern=None):
+        """ Returns a Version instance from parsing the content of
+         a variable
+
+         :param variable: Variable name to use and parse
+         :param default: Optional. Default value to return in case version is not found
+         :param pattern: Optional. If passed, the pattern will be used to locate the folder
+         :return Version after parsing the variable"""
+
+        value = cls.getVar(variable)
+        return cls.getVersionFromPath(value, default= default, pattern=pattern)
+
+
+    @classmethod
+    def getVersionFromPath(cls, path, separator="-", default=NO_VERSION_FOUND_STR, pattern=None):
+        """ Resolves path to the realpath (links) and returns the last part
+         of the path after the separator as a Version object.
+         If separator is not present returns None
+
+         :param path: string containing a path with a version as part of its name
+         :param separator: Optional. defaults to "-".
+         :param default: Optional. Default version ("X.Y" string) to return if no version is found
+         :param pattern: Optional. If passed, the pattern will be used to locate the folder
+         :return Version object filled with version found or 0.0
+
+         """
+
+        path = os.path.realpath(path)
+        if pattern is not None:
+            path = findFolderWithPattern(path, pattern)
+            if path is None:
+                return parse_version(NO_VERSION_FOUND_STR)
+
+        parts = path.split(separator)
+        if len(parts)>=2:
+
+            # Version should be the last bit
+            versionStr = parts[-1]
+            return parse_version(versionStr)
+
+        else:
+
+            return parse_version(default)
+
+
+
+
+def findFolderWithPattern(path, pattern):
+    """
+    Returns the first folder found from the right that matches the pattern
+
+    :param path: path to do the search on
+    :param pattern: pattern to look for. No regex for now, just a contains
+
+    :return the folder matching the pattern or None
+
+    """
+
+    previous, last = os.path.split(path)
+
+    # If end reached: windows Paths and linux paths seems to end in a different way
+    if previous == "" or last=="":
+        return  None
+    elif pattern in last:
+        return last
+    else:
+        return findFolderWithPattern(previous, pattern)

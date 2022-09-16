@@ -52,6 +52,7 @@ class TestImportSequence(TestImportBase):
     pdbID2 = "205d"  # RNA
     pdbID3 = "1aoi"  # DNA and protein
     GENEBANKID = 'AJ520101.1'
+    GENEBANKIDPROT = 'CAE8970392.1'
     UNIPROTID = 'P12345'
 
     def testImportUserNucleotideSequence1(self):
@@ -329,7 +330,7 @@ class TestImportSequence(TestImportBase):
         args = {'inputSequenceName': self.NAME,
                 'inputSequence': emconv.SEQ_TYPE_NUCLEOTIDES,
                 'inputNucleotideSequence':
-                    emprot.ProtImportSequence.IMPORT_FROM_GENEBANK,
+                    emprot.ProtImportSequence.IMPORT_FROM_NUCLEOTIDE_GENEBANK,
                 'geneBankSequence': self.GENEBANKID
                 }
         prot11 = self.newProtocol(emprot.ProtImportSequence, **args)
@@ -352,25 +353,22 @@ class TestImportSequence(TestImportBase):
         """
         Import a single nucleotide sequence from GeneBank
         """
-        args = {'inputSequenceID': self.USERID,
-                'inputSequenceName': self.NAME,
-                'inputSequenceDescription': self.DESCRIPTION,
-                'inputSequence': emconv.SEQ_TYPE_NUCLEOTIDES,
-                'inputNucleotideSequence':
-                    emprot.ProtImportSequence.IMPORT_FROM_GENEBANK,
-                'geneBankSequence': self.GENEBANKID
+        args = {'inputSequenceName': self.NAME,
+                'inputProteinSequence':
+                    emprot.ProtImportSequence.IMPORT_FROM_PROTEIN_GENEBANK,
+                'geneBankSequence': self.GENEBANKIDPROT
                 }
         prot12 = self.newProtocol(emprot.ProtImportSequence, **args)
-        prot12.setObjLabel('12_import nucleotide,\nseq from '
+        prot12.setObjLabel('12.5_import protein,\nseq from '
                            'GeneBank')
         self.launchProtocol(prot12)
         sequence = prot12.outputSequence
-        self.assertEqual("UserID", sequence.getId())
+        self.assertEqual(self.GENEBANKIDPROT, sequence.getId())
         self.assertEqual('USER_SEQ', sequence.getSeqName())
-        self.assertEqual("User description",
+        self.assertEqual('CAE8970392.1 unnamed protein product, partial [Tetraselmis striata]',
                          sequence.getDescription())
-        self.assertEqual("GGATCCGAGA", sequence.getSequence()[:10])
-        self.assertEqual("GAUC",
+        self.assertEqual("MPDHHLRYFR", sequence.getSequence()[:10])
+        self.assertEqual("ACDEFGHIKLMNPQRSTVWY",
                          emconv.indexToAlphabet(sequence.getIsAminoacids(),
                                                 sequence.getAlphabet()).letters)
 
