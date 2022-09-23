@@ -250,7 +250,7 @@ class ProtUnionSet(ProtSets):
 
             if prefixedAttribute not in verifyAttrs:
                 value._objDoStore = False
-                print("INFO: %s will be lost." % attr)
+                self.info("%s will be lost." % attr)
 
             else:
                 self.cleanExtraAttributes(value, verifyAttrs,
@@ -571,13 +571,25 @@ class ProtSubSet(ProtSets):
 
         if self.chooseAtRandom or self.selectIds:
             nElementsFull = len(inputFullSet)
+
             if self.chooseAtRandom:
                 nElements = self.nElements.get()
+
+                # Get all ids form iput set
+                ids = list(inputFullSet.getIdSet())
+
+                # Values here releate to ids index above. This is the only way to
+                # do it rendomly since id are not warrantied to be continuous from 1 (subsets, joins,..)
                 chosen = random.sample(range(nElementsFull),
                                    nElements)
+
+                self.info("Subseting by random positions: %s" % chosen)
             else:
-                chosen = [i-1 for i in getListFromRangeString(self.range.get())]
+                chosen = getListFromRangeString(self.range.get())
                 nElements = len(chosen)
+                ids = None
+                self.info("Subseting by ids: %s" % chosen)
+
 
             doProgressBar = False
             if nElementsFull > 100000:  # show progressBar for large sets
@@ -587,15 +599,25 @@ class ProtSubSet(ProtSets):
                 step = max(100, len(inputFullSet) // 100)
                 doProgressBar = True
             j = 0  # index for chosen list
-            chosen.sort()  # sort list of numbers
-            for i, elem in enumerate(inputFullSet):
+
+            for value in chosen:
+
                 if doProgressBar and (i % step == 0):
                      progress.update(i+1)
-                if i == chosen[j]:
-                     j += 1
-                     self._append(outputSet, elem)
-                     if j >= nElements:
-                          break # all needed elements have been appended
+
+                # if coming from random id, random values are positions in ids
+                if self.chooseAtRandom:
+                    # get the id at index
+                    value = ids[value]
+
+                # Get the actual element by id
+                elem = inputFullSet[value]
+
+                if elem is None:
+                    self.warning("Item with id %s not found in set. Skipping it." % value)
+                else:
+                    self._append(outputSet, elem)
+
             if doProgressBar:
                 progress.finish()
 
