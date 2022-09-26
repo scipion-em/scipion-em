@@ -187,7 +187,7 @@ class Plugin(pyworkflow.plugin.Plugin):
         if pattern is not None:
             path = findFolderWithPattern(path, pattern)
             if path is None:
-                return parse_version(NO_VERSION_FOUND_STR)
+                return parse_version(default)
 
         parts = path.split(separator)
         if len(parts)>=2:
@@ -195,11 +195,8 @@ class Plugin(pyworkflow.plugin.Plugin):
             # Version should be the last bit
             versionStr = parts[-1]
             return parse_version(versionStr)
-
         else:
-
             return parse_version(default)
-
 
 
 
