@@ -583,26 +583,28 @@ class ProtSubSet(ProtSets):
                 chosen = random.sample(range(nElementsFull),
                                    nElements)
 
-                self.info("Subseting by random positions: %s" % chosen)
+                self.info("Subseting by random positions")
+
             else:
                 chosen = getListFromRangeString(self.range.get())
                 nElements = len(chosen)
                 ids = None
-                self.info("Subseting by ids: %s" % chosen)
+                self.info("Subseting by ids: %s" % self.range.get())
 
+            self.debug("Chosen ids: %s" % chosen)
 
             doProgressBar = False
-            if nElementsFull > 100000:  # show progressBar for large sets
-                progress = ProgressBar(total=len(inputFullSet), fmt=ProgressBar.NOBAR)
+            if nElementsFull > 10000:  # show progressBar for large sets
+                progress = ProgressBar(total=len(chosen), fmt=ProgressBar.NOBAR)
                 progress.start()
                 sys.stdout.flush()
-                step = max(100, len(inputFullSet) // 100)
+                step = max(100, len(chosen) // 100)
                 doProgressBar = True
             j = 0  # index for chosen list
 
-            for value in chosen:
+            for i,value in enumerate(chosen):
 
-                if doProgressBar and (i % step == 0):
+                if doProgressBar and ((i+1) % step == 0):
                      progress.update(i+1)
 
                 # if coming from random id, random values are positions in ids
@@ -619,7 +621,7 @@ class ProtSubSet(ProtSets):
                     self._append(outputSet, elem)
 
             if doProgressBar:
-                progress.finish()
+                progress.finish(printNewLine=True)
 
         else:
             # Iterate over the elements in the smaller set
