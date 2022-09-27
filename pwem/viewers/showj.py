@@ -276,8 +276,8 @@ def getJavaIJappArguments(memory, appName, appArgs):
     arch = '-d%s' % getArchitecture() if majorVersion <= 9 else ''
 
     return ("-Xmx%(memory)sg %(arch)s -Djava.library.path=%(lib)s -Dplugins.dir=%(plugins_dir)s "
-            "-cp %(jdkLib)s/*:%(imagej_home)s/*:%(javaLib)s/* %(appName)s "
-            "%(extraArgs)s %(appArgs)s" % locals())
+            "-cp %(jdkLib)s/*:%(imagej_home)s/*:%(javaLib)s/* %(extraArgs)s "
+            "%(appName)s %(appArgs)s" % locals())
 
 def runJavaIJapp(memory, appName, args, env=None):
     env = env or {}
