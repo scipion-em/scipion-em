@@ -193,7 +193,7 @@ class ProtUnionSet(ProtSets):
                 if "." not in attr:
                     copyAttrs.append(attr)
 
-        idsList = []
+        idsList = {}
         setNum = 0
         for itemSet in self.inputSets:
             setNum += 1
@@ -203,7 +203,7 @@ class ProtUnionSet(ProtSets):
                     if self.ignoreDuplicates.get():
                         if objId in idsList:
                             continue
-                        idsList.append(objId)
+                        idsList[objId] =objId
 
                     if self.ignoreExtraAttributes:
                         newObj = itemSet.get().ITEM_TYPE()
@@ -226,7 +226,7 @@ class ProtUnionSet(ProtSets):
                 if self.ignoreDuplicates.get():
                     if objId in idsList:
                         continue
-                    idsList.append(objId)
+                    idsList[objId] = objId
                 newObj = obj
                 if (cleanIds and setNum > 1) or self.renumber.get():
                     newObj.cleanObjId()
@@ -624,25 +624,27 @@ class ProtSubSet(ProtSets):
                 progress.finish(printNewLine=True)
 
         else:
-            # Iterate over the elements in the smaller set
-            # and take the info from the full set
-            inputSubSet = self.inputSubSet.get()
+            # Store the second set
+            inputSet = self.inputSubSet.get()
+
+            # Get the ids from both sets
+            fullSetIds = inputFullSet.getIdSet()
+            smallSetIds=inputSet.getIdSet()
+
             # The function to include an element or not
             # depends on the set operation
             # if it is 'intersection' we want that item is not None (found)
             # if it is 'difference' we want that item is None
             # (not found, different)
             if self.setOperation == self.SET_INTERSECTION:
-                checkElem = lambda e: e
+                finalIds = fullSetIds.intersection(smallSetIds)
             else:
-                checkElem = lambda e: not e
+                finalIds = fullSetIds.difference(smallSetIds)
 
-            for origElem in inputFullSet:
-                # TODO: this can be improved if we perform
-                # intersection directly in sqlite
-                exists = origElem.getObjId() in inputSubSet
-                if checkElem(exists):
-                    self._append(outputSet, origElem)
+            for finalId in finalIds:
+
+                item = inputFullSet[finalId]
+                self._append(outputSet, item)
 
         if outputSet.getSize():
             key = 'output' + inputClassName.replace('SetOf', '')
