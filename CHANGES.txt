@@ -1,3 +1,5 @@
+V3.0.23
+   - Subset optimized, specially for small parametric subsets (random or by ids)
 V3.0.22 (hotfix)
    - Plugin.guessCudaVersion returns Version("0.0") for cases like this /usr/lib/x86_64-linux-gnu
 
