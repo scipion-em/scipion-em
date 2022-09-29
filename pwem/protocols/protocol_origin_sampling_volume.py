@@ -60,7 +60,7 @@ class ProtOrigSampling(EMProtocol):
                       label="Copy volume",
                       help="Option Yes:\nA new volume file will be copied "
                            "otherwise a link to the input volume is made\n"
-                           "NOTE: if the copy option is selected the new samplig/origin"
+                           "NOTE: if the copy option is selected the new sampling/origin"
                            " is stored in the header. Otherwise this information "
                            " is only stored in Scipion's database",
                       expertLevel=params.LEVEL_ADVANCED,
