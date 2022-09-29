@@ -59,7 +59,10 @@ class ProtOrigSampling(EMProtocol):
         form.addParam('copyFiles', params.BooleanParam,
                       label="Copy volume",
                       help="Option Yes:\nA new volume file will be copied "
-                           "otherwise a link to the input volume is made\n",
+                           "otherwise a link to the input volume is made\n"
+                           "NOTE: if the copy option is selected the new samplig/origin"
+                           " is stored in the header. Otherwise this information "
+                           " is only stored in Scipion's database",
                       expertLevel=params.LEVEL_ADVANCED,
                       default=False)
         form.addParam('setSampling', params.BooleanParam,
