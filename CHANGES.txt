@@ -12,6 +12,7 @@ users:
    - "import particles" protocol accepts cryoSCPARC particles files
    - Import coordinates fixed for complex streaming cases.
    - Extract particles does not need SetOfMicrographs is "same as coordinates" is used.
+   - AtomStruct attributes viewer now can plot attributes over the structure sequence
 
 developers:
    - Methods to guess the cuda version from a variable that point to a folder in Plugin class:
