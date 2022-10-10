@@ -52,7 +52,7 @@ class ProtGoodClassesExtractor(EMProtocol):
                       help='Set of classes to extract items from.')
 
         form.addParam('inputGoodClasses', params.PointerParam,
-                      pointerClass='SetOfClasses',
+                      pointerClass='SetOfClasses2D, SetOfAverages',
                       label='Good classes',
                       help='Set of good classes to extract items from.')
 
@@ -71,7 +71,7 @@ class ProtGoodClassesExtractor(EMProtocol):
             print('Class ID')
             print(clazz.getObjId())
             print('SIZE')
-            print(clazz.getSize())
+            #print(clazz.getSize())
             self.goodClassesIDs.append(clazz.getObjId())
             # self._extractElementFromClass(clazz)
         print(self.goodClassesIDs)
