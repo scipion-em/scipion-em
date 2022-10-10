@@ -41,7 +41,7 @@ from .objects import EMObject
 from .tests import defineDatasets
 from .utils import *
 
-__version__ = '3.0.22'
+__version__ = '3.0.23'
 NO_VERSION_FOUND_STR = "0.0"
 CUDA_LIB_VAR = 'CUDA_LIB'
 
@@ -187,7 +187,7 @@ class Plugin(pyworkflow.plugin.Plugin):
         if pattern is not None:
             path = findFolderWithPattern(path, pattern)
             if path is None:
-                return parse_version(NO_VERSION_FOUND_STR)
+                return parse_version(default)
 
         parts = path.split(separator)
         if len(parts)>=2:
@@ -195,11 +195,8 @@ class Plugin(pyworkflow.plugin.Plugin):
             # Version should be the last bit
             versionStr = parts[-1]
             return parse_version(versionStr)
-
         else:
-
             return parse_version(default)
-
 
 
 

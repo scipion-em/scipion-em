@@ -1,3 +1,8 @@
+V3.0.23
+users:
+   - Subset protocol optimized, specially for small parametric subsets (random or by ids)
+   - Assign angles protocol optimized.
+
 V3.0.22 (hotfix)
    - Plugin.guessCudaVersion returns Version("0.0") for cases like this /usr/lib/x86_64-linux-gnu
 
@@ -10,6 +15,7 @@ users:
    - "import particles" protocol accepts cryoSCPARC particles files
    - Import coordinates fixed for complex streaming cases.
    - Extract particles does not need SetOfMicrographs is "same as coordinates" is used.
+   - AtomStruct attributes viewer now can plot attributes over the structure sequence
 
 developers:
    - Methods to guess the cuda version from a variable that point to a folder in Plugin class:
