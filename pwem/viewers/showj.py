@@ -270,18 +270,14 @@ def getJavaIJappArguments(memory, appName, appArgs):
     lib = join(emConfig.XMIPP_HOME, "lib")
     javaLib = join(javaBind, 'lib')
     plugins_dir = os.path.join(imagej_home, "plugins")
-    arch = getArchitecture()
-
-    import subprocess
     version = subprocess.check_output(['java', '-version'], stderr=subprocess.STDOUT)
     majorVersion = int(version.decode("utf-8").split('"')[1].split('.')[0])
-    if majorVersion > 9:
-        args = "-Xmx%(memory)sg -Djava.library.path=%(lib)s -Dplugins.dir=%(plugins_dir)s -cp %(jdkLib)s/*:%(imagej_home)s/*:%(javaLib)s/* %(appName)s %(appArgs)s" % locals()
-    else:
-        args = "-Xmx%(memory)sg -d%(arch)s -Djava.library.path=%(lib)s -Dplugins.dir=%(plugins_dir)s -cp %(jdkLib)s/*:%(imagej_home)s/*:%(javaLib)s/* %(appName)s %(appArgs)s" % locals()
+    extraArgs = emConfig.JAVA_EXTRA_ARGS
+    arch = '-d%s' % getArchitecture() if majorVersion <= 9 else ''
 
-    return args
-
+    return ("-Xmx%(memory)sg %(arch)s -Djava.library.path=%(lib)s -Dplugins.dir=%(plugins_dir)s "
+            "-cp %(jdkLib)s/*:%(imagej_home)s/*:%(javaLib)s/* %(extraArgs)s "
+            "%(appName)s %(appArgs)s" % locals())
 
 def runJavaIJapp(memory, appName, args, env=None):
     env = env or {}
