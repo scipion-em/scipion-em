@@ -82,7 +82,7 @@ class ProtUserSubSet(BatchProtocol):
 
 
         # New recommended way to create subsets: making the set responsible for his own subset process
-        # Once all Sets implement appendFromSet and the if bellow is gone we can remove this "if"
+        # Once all Sets implement appendFromSet and the if below is gone we can remove this "if"
         if getattr(markedSet, "USE_CREATE_COPY_FOR_SUBSET", False):
             markedSet.loadAllProperties()
             newSet = markedSet.createCopy(self._getPath(),
