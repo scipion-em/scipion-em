@@ -348,6 +348,10 @@ class Ccp4Header:
 
         ccp4header.writeHeader()
 
+    @classmethod
+    def isCompatible(cls, file):
+        return getFileFormat(file) == MRC
+
 
 def getFileFormat(fileName):
     ext = getExt(fileName)

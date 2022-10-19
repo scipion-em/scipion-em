@@ -69,11 +69,8 @@ class ProtAlignmentAssign(ProtAlign2D):
         update actions over each single item
         that will be stored in the output Set.
         """
-        # Add alignment info from corresponding item on inputAlignment
-        inputAlignment = self.inputAlignment.get()
-        scale = inputAlignment.getSamplingRate()/self.inputParticles.get().getSamplingRate()
 
-        alignedParticle = inputAlignment[item.getObjId()]
+        alignedParticle = self.alignmentData[item.getObjId()]
         # If alignment is found for this particle set the alignment info
         # on the output particle, if not do not write that item
         if alignedParticle is not None:
@@ -83,7 +80,7 @@ class ProtAlignmentAssign(ProtAlign2D):
             if item.hasCoordinate() and hasattr(item.getCoordinate(), "xFrac"):
                 coord = item.getCoordinate()
 
-                alignedParticle = inputAlignment[item.getObjId()]
+                # Useless: alignedParticle = inputAlignment[item.getObjId()]
 
                 alignment.invert()
                 alignment.setShifts(-coord.xFrac.get(),
@@ -91,7 +88,7 @@ class ProtAlignmentAssign(ProtAlign2D):
                                 0)
                 alignment.invert()
             else:
-                alignment.scaleShifts(scale)
+                alignment.scaleShifts(self.scale)
 
             item.setTransform(alignment)
 
@@ -104,11 +101,21 @@ class ProtAlignmentAssign(ProtAlign2D):
             item._appendItem = False
 
     def createOutputStep(self):
+
         inputParticles = self.inputParticles.get()
-        inputAlignment = self.inputAlignment.get()
+
+        # Store data to be used in the update item
+        self.alignmentData = self.inputAlignment.get()
+
+        # Trigger the connection to avoid connecting and disconnecting later when using self.alignmentData[23]
+        self.alignmentData.load()
+        self.scale = self.alignmentData.getSamplingRate()/inputParticles.getSamplingRate()
+
+        # Add alignment info from corresponding item on inputAlignment
+        # Output
         outputParticles = self._createSetOfParticles()
         outputParticles.copyInfo(inputParticles)
-        outputParticles.setAlignment(inputAlignment.getAlignment())
+        outputParticles.setAlignment(self.alignmentData.getAlignment())
 
         outputParticles.copyItems(inputParticles,
                                   updateItemCallback=self._updateItem)

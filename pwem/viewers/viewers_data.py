@@ -235,4 +235,7 @@ class DataViewer(pwviewer.Viewer):
         elif issubclass(cls, emobj.SetOfNormalModes):
             self._views.append(DataView(obj.getFileName()))
 
+        elif issubclass(cls, emobj.EMSet):
+            self._views.append(DataView(obj.getFileName()))
+
         return self._views
