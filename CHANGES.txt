@@ -2,6 +2,13 @@ V3.0.23
 users:
    - Subset protocol optimized, specially for small parametric subsets (random or by ids)
    - Assign angles protocol optimized.
+   - Filebrowser: thumbnails info shown always without the need of loading viewers.
+   - Thumbnails for mrc files (and its flavours) show also headers sampling rate.
+
+developers:
+   - Plugins discovery takes into account priority packages: pwem, tomo, ..
+   - FileHandler registration moved to main pwem.__init__.
+   - Import volumes uses logging
    - Import volumes fixed when downloading an EMDB.
 
 V3.0.22 (hotfix)
