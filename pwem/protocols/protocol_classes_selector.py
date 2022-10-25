@@ -76,8 +76,6 @@ class ProtClassesSelector(EMProtocol):
 
             # If haven't reached the Nelements
             if count <= self.firstNElements.get():
-
-                print(clazz.getSize())
                 self._extractElementFromClass(clazz)
 
         output = self._getOutputSet()
@@ -91,6 +89,7 @@ class ProtClassesSelector(EMProtocol):
         # If taking representatives
         if self.extractRepresentative.get():
             rep = clazz.getRepresentative().clone()
+            rep.setObjId(clazz.getObjId())
             output.append(rep)
         else:
             # Go through all items and append them

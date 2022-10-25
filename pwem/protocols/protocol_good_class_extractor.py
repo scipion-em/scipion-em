@@ -1,6 +1,6 @@
 # **************************************************************************
 # *
-# * Authors:     Pablo Conesa [1]
+# * Authors:     Daniel Marchan [1]
 # *
 # * [1] Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -24,22 +24,22 @@
 # *
 # **************************************************************************
 
-# import pyworkflow.utils as pwutils
 import pyworkflow.protocol.params as params
 import pwem.objects as emobj
 from pwem.protocols import EMProtocol
+import logging
+logger = logging.getLogger(__file__)
 
-# import logging
-# logger = logging.getLogger(__file__)
 
-OUTPUT_NAME = "outputClasses"
+OUTPUT_CLASSES = "outputClasses"
 
 
 class ProtGoodClassesExtractor(EMProtocol):
-    """ Extracts items from a SetOfClasses based on number of items assigned to the class
+    """ Extracts items from a SetOfClasses based on the IDs of the given good averages/classes
     """
 
     _label = "good classes selector"
+    outputsToDefine = {}
 
     def __init__(self, **args):
         EMProtocol.__init__(self, **args)
@@ -53,38 +53,40 @@ class ProtGoodClassesExtractor(EMProtocol):
 
         form.addParam('inputGoodClasses', params.PointerParam,
                       pointerClass='SetOfClasses2D, SetOfAverages',
-                      label='Good classes',
-                      help='Set of good classes to extract items from.')
+                      label='Good references',
+                      help='Set of good reference to stay with from the inputClasses.')
 
     # -------------------------- INSERT steps functions ---------------------------
     def _insertAllSteps(self):
         """ Insert all steps
             """
         self.goodClassesIDs = []
-        print('HOLAAAAA')
         self._insertFunctionStep(self.selectGoodClasses)
-        self._insertFunctionStep('createOutputStep')
+        self._insertFunctionStep(self.createOutputStep)
 
     def selectGoodClasses(self):
-        # For each class (order by number of items)
-        for clazz in self.inputGoodClasses.get().iterItems(orderBy="id", direction="ASC"):
-            print('Class ID')
-            print(clazz.getObjId())
-            print('SIZE')
-            #print(clazz.getSize())
-            self.goodClassesIDs.append(clazz.getObjId())
-            # self._extractElementFromClass(clazz)
-        print(self.goodClassesIDs)
+        """ Select only the good Classes from the Averages
+        """
+        #print(set(self.inputGoodClasses.get().getUniqueValues('filename')))
+        self.goodClassesIDs = self.inputGoodClasses.get().getIdSet()
+        self.info('Good classes IDs:')
+        self.info(self.goodClassesIDs)
+        # Change to list of filenames
+        #for clazz in self.inputGoodClasses.get().iterItems(orderBy="id", direction="ASC"):
+        #    print(clazz.getRepresentative()._filename)
+        #    self.info("Class filename selected: %s" % clazz.getObjName())
+        #    self.goodClassesIDs.append(clazz.getObjId())
 
     def createOutputStep(self):
-        # table = Table(fileName=self._getFileName('cls_selection'))
-        # self._clsSelection = table.getColumnValues('rlnSelected')
+        """ Create output
+                    """
         inputClasses = self.inputClasses.get()
-        output = emobj.SetOfClasses2D.create(self._getExtraPath())
-        output.copyInfo(inputClasses)
-        output.appendFromClasses(inputClasses, filterClassFunc=self._appendClass)
-        self._defineOutputs(**{OUTPUT_NAME: output})
+        outputClasses = emobj.SetOfClasses2D.create(self._getExtraPath())
+        outputClasses.copyInfo(inputClasses)
+        outputClasses.appendFromClasses(inputClasses, filterClassFunc=self._appendClass)
 
+        self.outputsToDefine[OUTPUT_CLASSES] = outputClasses
+        self._defineOutputs(**self.outputsToDefine)
 
     def _summary(self):
         summary = []
@@ -96,5 +98,4 @@ class ProtGoodClassesExtractor(EMProtocol):
 
 # --------------------------- UTILS functions -----------------------------
     def _appendClass(self, item):
-        print(item.getObjId())
         return False if not item.getObjId() in self.goodClassesIDs else True
