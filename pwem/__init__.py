@@ -220,3 +220,18 @@ def findFolderWithPattern(path, pattern):
         return last
     else:
         return findFolderWithPattern(previous, pattern)
+
+
+# register file handlers to preview info in the Filebrowser....
+from pyworkflow.gui.browser import FileTreeProvider, STANDARD_IMAGE_EXTENSIONS
+from .viewers.filehandlers import *
+
+register = FileTreeProvider.registerFileHandler
+register(MdFileHandler(), '.xmd', '.star', '.pos', '.ctfparam', '.doc')
+register(ParticleFileHandler(),
+         '.xmp', '.tif', '.tiff', '.spi', '.mrc', '.map', '.raw',
+         '.inf', '.dm3', '.em', '.pif', '.psd', '.spe', '.ser', '.img',
+         '.hed', *STANDARD_IMAGE_EXTENSIONS)
+register(VolFileHandler(), '.vol', '.hdf')
+register(StackHandler(), '.stk', '.mrcs', '.st', '.pif', '.dm4')
+register(ChimeraHandler(), '.bild', '.mrc', '.pdb', '.vol', '.hdf', '.cif', '.mmcif')
