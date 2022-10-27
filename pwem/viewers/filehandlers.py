@@ -28,7 +28,9 @@ This modules contains file handlers to be registered in the scipion file browser
 """
 import os
 
+import pwem
 import pyworkflow.utils as pwutils
+from pwem.convert import Ccp4Header
 from pyworkflow import gui
 from pyworkflow.gui.browser import FileHandler, isStandardImage
 
@@ -44,7 +46,8 @@ class ImageFileHandler(FileHandler):
             return "Image file."
         x, y, z, n = emlib.getImageSize(filename)
         objType = 'Image'
-        dimMsg = "*%(objType)s file*\n  dimensions: %(x)d x %(y)d"
+        objFileType = "link" if os.path.islink(filename) else "file"
+        dimMsg = "*%(objType)s %(objFileType)s*\n  dimensions: %(x)d x %(y)d"
         expMsg = "Columns x Rows "
         if z > 1:
             dimMsg += " x %(z)d"
@@ -54,9 +57,20 @@ class ImageFileHandler(FileHandler):
             dimMsg += " x %(n)d"
             expMsg += " x Objects"
             objType = 'Stack'
+
+        if Ccp4Header.isCompatible(filename):
+            ccp4Reader= Ccp4Header(filename, readHeader=True)
+            expMsg += "\nHeader info: \nSampling rate: %1.2f, %1.2f, %1.2f" % ccp4Reader.getSampling()
+
+
         return (dimMsg + "\n" + expMsg) % locals()
 
     def _getImagePreview(self, filename):
+
+        # If file size if big
+        if pwutils.getFileSize(filename) > (pwem.Config.MAX_PREVIEW_FILE_SIZE * 1024*1024):
+            return
+
         dim = 128
 
         if isStandardImage(filename):
@@ -81,19 +95,18 @@ class ImageFileHandler(FileHandler):
 
 class ParticleFileHandler(ImageFileHandler):
     def getFileIcon(self, objFile):
-        return 'file_image.gif'
+        return 'file_image.gif' if not objFile.isLink() else 'file_image_link.gif'
 
 
 class VolFileHandler(ImageFileHandler):
     def getFileIcon(self, objFile):
         return 'file_vol.gif'
 
-
 class StackHandler(ImageFileHandler):
     _index = '1@'
 
     def getFileIcon(self, objFile):
-        return 'file_stack.gif'
+        return 'file_stack.gif' if not objFile.isLink() else 'file_stack_link.gif'
 
 
 class ChimeraHandler(FileHandler):
@@ -144,8 +157,13 @@ class MdFileHandler(ImageFileHandler):
             if emlib.labelIsImage(label):
                 imgPath = self._getImgPath(filename,
                                            md.getValue(label, md.firstObject()))
+                if imgPath is None or not os.path.exists(imgPath):
+                    imgPath = None
                 break
-        if imgPath:
+
+        # If there is an image and is not too big
+        if imgPath and pwutils.getFileSize(imgPath) < (pwem.Config.MAX_PREVIEW_FILE_SIZE * 1024*1024):
+
             self._imgPreview = self._getImagePreview(imgPath)
             self._imgInfo = self._getImageString(imgPath)
         return msg

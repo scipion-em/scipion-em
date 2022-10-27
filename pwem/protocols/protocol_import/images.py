@@ -35,6 +35,7 @@ from datetime import timedelta, datetime
 
 import pyworkflow.utils as pwutils
 import pyworkflow.protocol.params as params
+from pwem import cleanFileName
 
 from pwem.emlib.image import ImageHandler
 from pwem.objects import Acquisition
@@ -162,7 +163,7 @@ class ProtImportImages(ProtImportFiles):
                     self._addImageToSet(img, imgSet)
             else:
                 img.setObjId(fileId)
-                img.setFileName(dst)
+                img.setLocation(dst)
                 # Fill the micName if img is either Micrograph or Movie
                 uniqueFn = uniqueFn.replace(' ', '')
                 self._fillMicName(img, uniqueFn)
@@ -246,12 +247,8 @@ class ProtImportImages(ProtImportFiles):
                 
                 dst = self._getExtraPath(uniqueFn)
                 self.importedFiles.add(uniqueFn)
-                if ' ' in dst:
-                    if not alreadyWarned:
-                        self.warning('Warning: your file names have white spaces!')
-                        self.warning('Removing white spaces from copies/symlinks.')
-                        alreadyWarned = True
-                    dst = dst.replace(' ', '')
+                dst, alreadyWarned = cleanFileName(dst, not alreadyWarned)
+
                 copyOrLink(fileName, dst)
 
                 self.debug('Importing file: %s' % fileName)

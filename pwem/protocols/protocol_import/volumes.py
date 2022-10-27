@@ -24,12 +24,16 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
+import enum
+import logging
+import os.path
 
-
-from os.path import exists, basename, abspath, relpath, join
+logger = logging.getLogger(__name__)
+from os.path import exists, basename, abspath, relpath, join, splitext
 from os import stat
 from numpy import array
 from numpy.linalg import norm
+import glob
 
 import pyworkflow.utils as pwutils
 import pyworkflow.protocol.params as params
@@ -40,11 +44,15 @@ from pwem import emlib
 from .base import ProtImportFiles
 from .images import ProtImportImages
 
+class ImportVolumeOutputs(enum.Enum):
+    outputVolume = emobj.Volume
+    outputVolumes = emobj.SetOfVolumes
 
 class ProtImportVolumes(ProtImportImages):
     """Protocol to import a set of volumes to the project"""
     _outputClassName = 'SetOfVolumes'
     _label = 'import volumes'
+    _possibleOutputs = ImportVolumeOutputs
     IMPORT_FROM_EMDB = 1
 
     def __init__(self, **args):
@@ -133,117 +141,126 @@ class ProtImportVolumes(ProtImportImages):
                       label="z", help="offset along z axis (Angstroms)")
 
     def _insertAllSteps(self):
-        self._insertFunctionStep('importVolumesStep',
+        if self.importFrom == self.IMPORT_FROM_FILES:
+            self._insertFunctionStep(self.importFromFileStep,
                                  self.getPattern(),
                                  self.samplingRate.get(),
                                  self.setOrigCoord.get())
+        else:
+            self._insertFunctionStep(self.importFromEMDBStep)
 
     # --------------------------- STEPS functions -----------------------------
 
-    def importVolumesStep(self, pattern, samplingRate, setOrigCoord=False):
+    def importFromFileStep(self, pattern, samplingRate, setOrigCoord=False):
         """ Copy images matching the filename pattern
         Register other parameters.
         """
         volSet = self._createSetOfVolumes()
         vol = emobj.Volume()
 
-        if self.importFrom == self.IMPORT_FROM_FILES:
-            self.info("Using pattern: '%s'" % pattern)
+        self.info("Using pattern: '%s'" % pattern)
 
-            # Create a Volume template object
-            vol.setSamplingRate(samplingRate)
+        # Create a Volume template object
+        vol.setSamplingRate(samplingRate)
 
-            imgh = emlib.image.ImageHandler()
+        imgh = emlib.image.ImageHandler()
 
-            volSet.setSamplingRate(samplingRate)
+        volSet.setSamplingRate(samplingRate)
 
-            for fileName, fileId in self.iterFiles():
-                x, y, z, n = imgh.getDimensions(fileName)
-                if fileName.endswith('.mrc') or fileName.endswith('.map'):
-                    fileName += ':mrc'
-                    if z == 1 and n != 1:
-                        zDim = n
-                        n = 1
-                    else:
-                        zDim = z
+        for fileName, fileId in self.iterFiles():
+            x, y, z, n = imgh.getDimensions(fileName)
+            if fileName.endswith('.mrc') or fileName.endswith('.map'):
+                fileName += ':mrc'
+                if z == 1 and n != 1:
+                    zDim = n
+                    n = 1
                 else:
                     zDim = z
-                origin = emobj.Transform()
-                if setOrigCoord:
-                    origin.setShiftsTuple(self._getOrigCoord())
-                else:
-                    origin.setShifts(x / -2. * samplingRate,
-                                     y / -2. * samplingRate,
-                                     zDim / -2. * samplingRate)
+            else:
+                zDim = z
+            origin = emobj.Transform()
+            if setOrigCoord:
+                origin.setShiftsTuple(self._getOrigCoord())
+            else:
+                origin.setShifts(x / -2. * samplingRate,
+                                 y / -2. * samplingRate,
+                                 zDim / -2. * samplingRate)
 
-                vol.setOrigin(origin)  # read origin from form
+            vol.setOrigin(origin)  # read origin from form
 
-                if self.copyFiles or setOrigCoord:
-                    newFileName = abspath(self._getVolumeFileName(fileName, "mrc"))
-                    emconv.Ccp4Header.fixFile(fileName, newFileName, origin.getShifts(),
+            if self.copyFiles or setOrigCoord:
+                newFileName = abspath(self._getVolumeFileName(fileName, "mrc"))
+                emconv.Ccp4Header.fixFile(fileName, newFileName, origin.getShifts(),
+                                          samplingRate, emconv.Ccp4Header.ORIGIN)
+                if self.setHalfMaps.get():
+                    newFileName1 = abspath(self._getVolumeFileName(self.half1map.get(), "mrc"))
+                    emconv.Ccp4Header.fixFile(self.half1map.get(), newFileName1, origin.getShifts(),
                                               samplingRate, emconv.Ccp4Header.ORIGIN)
-                    if self.setHalfMaps.get():
-                        newFileName1 = abspath(self._getVolumeFileName(self.half1map.get(), "mrc"))
-                        emconv.Ccp4Header.fixFile(self.half1map.get(), newFileName1, origin.getShifts(),
-                                                  samplingRate, emconv.Ccp4Header.ORIGIN)
-                        newFileName2 = abspath(self._getVolumeFileName(self.half2map.get(), "mrc"))
-                        emconv.Ccp4Header.fixFile(self.half2map.get(), newFileName2, origin.getShifts(),
-                                                  samplingRate, emconv.Ccp4Header.ORIGIN)
+                    newFileName2 = abspath(self._getVolumeFileName(self.half2map.get(), "mrc"))
+                    emconv.Ccp4Header.fixFile(self.half2map.get(), newFileName2, origin.getShifts(),
+                                              samplingRate, emconv.Ccp4Header.ORIGIN)
 
-                        vol.setHalfMaps([relpath(newFileName1), relpath(newFileName2)])
-                else:
-                    newFileName = abspath(self._getVolumeFileName(fileName))
+                    vol.setHalfMaps([relpath(newFileName1), relpath(newFileName2)])
+            else:
+                newFileName = abspath(self._getVolumeFileName(fileName))
 
-                    if fileName.endswith(':mrc'):
-                        fileName = fileName[:-4]
+                if fileName.endswith(':mrc'):
+                    fileName = fileName[:-4]
 
-                    pwutils.createAbsLink(fileName, newFileName)
-                    if self.setHalfMaps.get():
-                        pwutils.createAbsLink(self.half1map.get(),
-                                              abspath(self._getVolumeFileName(self.half1map.get())))
-                        pwutils.createAbsLink(self.half2map.get(),
-                                              abspath(self._getVolumeFileName(self.half2map.get())))
+                pwutils.createAbsLink(fileName, newFileName)
+                if self.setHalfMaps.get():
+                    pwutils.createAbsLink(self.half1map.get(),
+                                          abspath(self._getVolumeFileName(self.half1map.get())))
+                    pwutils.createAbsLink(self.half2map.get(),
+                                          abspath(self._getVolumeFileName(self.half2map.get())))
 
-                        vol.setHalfMaps([relpath(self._getVolumeFileName(self.half1map.get())),
-                                         relpath(self._getVolumeFileName(self.half2map.get()))
-                                         ])
+                    vol.setHalfMaps([relpath(self._getVolumeFileName(self.half1map.get())),
+                                     relpath(self._getVolumeFileName(self.half2map.get()))
+                                     ])
 
-                # Make newFileName relative
-                # https://github.com/I2PC/scipion/issues/1935
-                newFileName = relpath(newFileName)
-                if n == 1:
+            # Make newFileName relative
+            # https://github.com/I2PC/scipion/issues/1935
+            newFileName = relpath(newFileName)
+            if n == 1:
+                vol.cleanObjId()
+                vol.setFileName(newFileName)
+                volSet.append(vol)
+            else:
+                for index in range(1, n + 1):
                     vol.cleanObjId()
-                    vol.setFileName(newFileName)
+                    vol.setLocation(index, newFileName)
                     volSet.append(vol)
-                else:
-                    for index in range(1, n + 1):
-                        vol.cleanObjId()
-                        vol.setLocation(index, newFileName)
-                        volSet.append(vol)
-        else:  # import from EMDB
-            self.info("Downloading map with ID = %s" % self.emdbId)
-            try:
-                localFileName, sampling, origin = \
-                    fetch_emdb_map(self.emdbId,
-                                   self._getExtraPath(),
-                                   self._getTmpPath())
-            except Exception as e:
-                print(e)
-                return
-            # open volume and fill sampling and origin
-            self.samplingRate.set(sampling)
-            self._store(self.samplingRate)
-            vol.setSamplingRate(sampling)
-            vol.setFileName(localFileName)
-            from pwem.objects.data import Transform
-            originMat = Transform()
-            originMat.setShifts(origin[0], origin[1], origin[2])
-            vol.setOrigin(originMat)
 
         if volSet.getSize() > 1:
-            self._defineOutputs(outputVolumes=volSet)
+            self._defineOutputs(**{ImportVolumeOutputs.outputVolumes.name:volSet})
         else:
-            self._defineOutputs(outputVolume=vol)
+            self._defineOutputs(**{ImportVolumeOutputs.outputVolume.name:vol})
+
+    def importFromEMDBStep(self):
+        """ Copy images matching the filename pattern
+        Register other parameters.
+        """
+        vol = emobj.Volume()
+
+        self.info("Downloading map with ID = %s" % self.emdbId)
+
+        localFileName, sampling, origin = \
+            fetch_emdb_map(self.emdbId,
+                           self._getExtraPath(),
+                           self._getTmpPath())
+
+        # open volume and fill sampling and origin
+        self.samplingRate.set(sampling)
+        self._store(self.samplingRate)
+        vol.setSamplingRate(sampling)
+        vol.setFileName(localFileName)
+        from pwem.objects.data import Transform
+        originMat = Transform()
+        originMat.setShifts(origin[0], origin[1], origin[2])
+        vol.setOrigin(originMat)
+
+        self._defineOutputs(**{ImportVolumeOutputs.outputVolume.name:vol})
+
 
     # --------------------------- INFO functions ------------------------------
 
@@ -391,6 +408,124 @@ Format may be PDB or MMCIF"""
         return errors
 
 
+class ProtImportSetOfAtomStructs(ProtImportFiles):
+    """ Protocol to import a set of atomic structure  to the project.
+    Format may be PDB or MMCIF"""
+    _label = 'import set of atomic structures'
+    _OUTNAME = 'outputAtomStructs'
+    _possibleOutputs = {_OUTNAME: emobj.SetOfAtomStructs}
+
+    IMPORT_FROM_ID = 0
+    IMPORT_FROM_FILES = 1
+
+    def __init__(self, **args):
+      ProtImportFiles.__init__(self, **args)
+
+    def _defineParams(self, form):
+      form.addSection(label='Input')
+      form.addParam('inputPdbData', params.EnumParam, choices=['id', 'file'],
+                    label="Import atomic structures from",
+                    default=self.IMPORT_FROM_ID,
+                    display=params.EnumParam.DISPLAY_HLIST,
+                    help='Import mmCIF data from online server or local files')
+      form.addParam('pdbIds', params.StringParam,
+                    condition='inputPdbData == IMPORT_FROM_ID',
+                    label="Atomic structure IDs ", allowsNull=True,
+                    help='Type a mmCIF ID (four alphanumeric characters, comma-separated)\n'
+                         'i.e: 5ni1, 1ake')
+      form.addParam('filesPath', params.PathParam, label="Files directory path: ",
+                    condition='inputPdbData == IMPORT_FROM_FILES',
+                    allowsNull=True,
+                    help="Specify a path to the directory where the files are stored.\n"
+                         "The path can also contain wildcards to select"
+                         "from several folders. \n\n"
+                         "Examples:\n"
+                         "  ~/project/data/day??_files/\n"
+                         "Each '?' represents one unknown character\n\n"
+                         "  ~/project/data/day*_files/\n"
+                         "'*' represents any number of unknown characters\n\n"
+                         "  ~/project/data/day##_files/\n"
+                         "'##' represents two digits that will be used as "
+                         "file ID\n\n"
+                         "NOTE: wildcard characters ('*', '?', '#') "
+                         "cannot appear in the actual path.)")
+      form.addParam('filesPattern', params.StringParam, condition='inputPdbData == IMPORT_FROM_FILES',
+                    label='Pattern: ',
+                    default="*",
+                    help="Pattern of the files to be imported.\n\n"
+                         "The pattern can contain standard wildcards such as\n"
+                         "*, ?, etc, or special ones like ### to mark some\n"
+                         "digits in the filename as ID.\n\n"
+                         "NOTE: wildcards and special characters "
+                         "('*', '?', '#', ':', '%') cannot appear in the "
+                         "actual path.\n\n"
+                         "You may create AtomStruct from PDB (.pdb) or CIF/mmCIF (.cif)")
+
+    def _insertAllSteps(self):
+      if self.inputPdbData == self.IMPORT_FROM_ID:
+        self._insertFunctionStep('pdbDownloadStep')
+      else:
+        filenames = []
+        for fn in glob.glob(join(self.filesPath.get(), self.filesPattern.get())):
+          filenames.append(fn)
+        self._insertFunctionStep('createOutputStep', filenames)
+
+    def pdbDownloadStep(self):
+      """Download all pdb files in file_list and unzip them.
+      """
+      aSH = emconv.AtomicStructHandler()
+      ASPaths = []
+      for pdbId in self.pdbIds.get().split(','):
+          print("retrieving atomic structure with ID = %s" % pdbId)
+          ASPaths.append(aSH.readFromPDBDatabase(pdbId.strip(), type='mmCif', dir=self._getExtraPath()))
+      self.createOutputStep(ASPaths)
+
+    def createOutputStep(self, atomStructPaths):
+      """ Copy the PDB structures and register the output object.
+      """
+      outASs = emobj.SetOfAtomStructs().create(self._getPath())
+      
+      numStructs = len(atomStructPaths)
+      padding_format_str = '%0' + str(len(str(numStructs))) + 'd'
+
+      for atomStructPath in atomStructPaths:
+          if not exists(atomStructPath):
+              raise Exception("Atomic structure not found at *%s*" % atomStructPath)
+
+          baseName = basename(atomStructPath)
+          localPath = abspath(self._getExtraPath(baseName))
+
+          if str(atomStructPath) != str(localPath):  # from local file
+              if exists(localPath):
+                  localPath = splitext(localPath)[0] + padding_format_str % (i+1) + splitext(localPath)[1]
+                  i += 1
+              else:
+                  i = 0
+                  
+              pwutils.copyFile(atomStructPath, localPath)
+
+          localPath = relpath(localPath)
+
+          outASs.append(emobj.AtomStruct(filename=localPath))
+
+      self._defineOutputs(**{self._OUTNAME:outASs})
+
+
+    def _summary(self):
+      if self.inputPdbData == self.IMPORT_FROM_ID:
+        summary = ['Atomic structure imported from IDs: *%s*' %
+                   self.pdbIds]
+      else:
+        summary = ['Atomic structure imported from files: *%s*' %
+                   self.filesPattern]
+
+      return summary
+
+    def _validate(self):
+      errors = []
+      return errors
+
+
 ######################################
 
 
@@ -402,7 +537,7 @@ def fetch_emdb_map(id, directory, tmpDirectory):
     import socket
 
     # get computer name and select server
-    url_rest_api = "https://www.ebi.ac.uk/pdbe/api/emdb/entry/map/EMD-%d"
+    url_rest_api = "https://www.ebi.ac.uk/emdb/api/entry/map/%s"
     hname = socket.gethostname()
     if hname.endswith('.edu') or hname.endswith('.gov'):
         site = 'ftp.wwpdb.org'
@@ -414,10 +549,15 @@ def fetch_emdb_map(id, directory, tmpDirectory):
         site = 'ftp.ebi.ac.uk'
         url_pattern = 'ftp://%s/pub/databases/emdb/structures/EMD-%s/map/%s'
 
+    if len(str(id)) < 4:
+        id = '%04d' % id
+    else:
+        id = '%d' % id
+
     map_name = 'emd_%s.map' % id
     map_gz_name = map_name + '.gz'
     map_url = url_pattern % (site, id, map_gz_name)
-    name = 'EMD-%d' % id
+    name = 'EMD-%s' % id
     minimum_map_size = 8192  # bytes
     url_rest_api = url_rest_api % id
 
@@ -435,13 +575,11 @@ def fetch_emdb_map(id, directory, tmpDirectory):
                                                           )
             break
         except Exception as e:
-            print("Retieving 3D map with id=", id, "failed retrying (%d/%d)" %
-                  (i+1, nTimes))
-            print("Error:", e)
-    # Loop statements may have an else clause; it is executed
-    # when the loop terminates through exhaustion of the iterable
-    else:
-        raise Exception("Cannot retrieve File from EMDB")
+            if i+1<nTimes:
+                logger.info("Retrieving 3D map with id=%s failed retrying (%d/%d)" %
+                  (id, i+1, nTimes))
+            else:
+                logger.error("Cannot retrieve File from EMDB", exc_info=e)
 
 
     originAPI = array(originAPI) * samplingAPI  # convert to Angstrom
@@ -462,7 +600,7 @@ def fetch_emdb_map(id, directory, tmpDirectory):
               "WARNING: origin  stored in EMDB\n"
               "database and 3D map header file do not match\n"
               "API=%f, header=%f\n"
-              "###########################\n" % (originAPI, originHeader))
+              "###########################\n" % (originAPI[0], originHeader[0]))
     return map_path, samplingAPI, originAPI
 
 
@@ -489,36 +627,36 @@ def fetch_file(url, url_rest_api, name,
     noCompressName = join(save_dir, save_name)
     compressName = join(tmp_dir, save_name + ".gz")
 
-    try:
+    # If uncompressed file exists
+    if os.path.exists(noCompressName):
+        logger.info("File fetching skip: file %s exists." % noCompressName)
+    else:
+
+        logger.info("Fetching file from %s" % url)
         urllib.request.urlretrieve(url, filename=compressName)
-        # if retrieval fails retry another time
-        if not exists(compressName):
-            urllib.request.urlretrieve(url, filename=compressName)
-            if not exists(compressName):
-                raise Exception("Can not download file from EMDB")
-
-        json_results = requests.get(url_rest_api).json()
-        sampling_tag = "pixel_spacing"
-        sampling_x_tag = "x"
-        origin_tag = "origin"
-        origin_x_tag = "column"
-        origin_y_tag = "row"
-        origin_z_tag = "section"
-
-        # units A/px
-        results = json_results[name][0]['map']
-        sampling = results[sampling_tag][sampling_x_tag]['value']
-        # units unknown may be pixels since this is integer
-        x = results[origin_tag][origin_x_tag]
-        y = results[origin_tag][origin_y_tag]
-        z = results[origin_tag][origin_z_tag]
-    except Exception as e:
-        print("Error retrieving data from EMDB", str(e))
 
     if stat(compressName).st_size < minimum_file_size:
         raise Exception("File Downloaded from EMDB is empty")
 
     gunzip(compressName, noCompressName)
+
+    logger.info("Fetching metadata from %s" % url_rest_api)
+    json_results = requests.get(url_rest_api).json()
+    sampling_tag = "pixel_spacing"
+    sampling_x_tag = "x"
+    origin_tag = "origin"
+    origin_x_tag = "col"
+    origin_y_tag = "row"
+    origin_z_tag = "sec"
+
+    # units A/px
+    results = json_results['map']
+    sampling = float(results[sampling_tag][sampling_x_tag]['valueOf_'])
+    # units unknown may be pixels since this is integer
+    x = float(results[origin_tag][origin_x_tag])
+    y = float(results[origin_tag][origin_y_tag])
+    z = float(results[origin_tag][origin_z_tag])
+
     return noCompressName, sampling, (x, y, z)
 
 

@@ -27,6 +27,7 @@
 # **************************************************************************
 from urllib.error import URLError, HTTPError
 from urllib.request import urlopen
+from os.path import exists
 
 
 # sequence related stuff
@@ -53,7 +54,7 @@ import sys
 from Bio.SeqRecord import SeqRecord
 from Bio.Align.Applications import ClustalOmegaCommandline, MuscleCommandline
 from Bio import pairwise2
-
+from pyworkflow.utils import getExt
 
 class SequenceHandler:
     def __init__(self, sequence=None,
@@ -70,21 +71,81 @@ class SequenceHandler:
             self._sequence = None
             # type(self._sequence):  <class 'Bio.Seq.Seq'>
 
-    def saveFile(self, fileName, seqID, sequence=None, name=None,
+    def getTypeFromFile(self, fileName):
+        '''Returns the expected BioPython file type according to the filename'''
+        ext = getExt(fileName)
+        if ext == '.fasta':
+            type = 'fasta'
+        elif ext == '.genbank' or ext == '.gb':
+            type = 'genbank'
+        else:
+            type = 'fasta'
+        return type
+
+    def appendFile(self, fileName, seqID, sequence=None, name=None,
                  seqDescription=None, type="fasta"):
+        '''Appends a sequence to the sequences in a file'''
         if sequence is not None:
             self._sequence = sequence
-        record = SeqRecord(self._sequence, id=seqID, name=name,
-                           description=seqDescription)
+
+        if type is None:
+            type = self.getTypeFromFile(fileName)
+
+        if exists(fileName):
+            records = list(SeqIO.parse(fileName, type))
+        else:
+            records = []
+        records.append(SeqRecord(self._sequence, id=seqID, name=name,
+                                 description=seqDescription))
+        with open(fileName, "w") as output_handle:
+            SeqIO.write(records, output_handle, type)
+
+    def saveFile(self, fileName, seqID, sequence=None, name=None,
+                 seqDescription=None, type="fasta"):
+        '''Saves a single sequence into a specified file'''
+        if sequence is not None:
+            self._sequence = sequence
+
+        self.saveFiles(fileName, [seqID], [self._sequence], [name], [seqDescription], type)
+
+    def saveFiles(self, fileName, seqIDs, sequences, names,
+                  seqDescriptions, type="fasta"):
+        '''Saves multiple sequences into a specified file'''
+        if type is None:
+            type = self.getTypeFromFile(fileName)
+
+        records = []
+        for seq, seqID, name, seqDescription in zip(sequences, seqIDs, names, seqDescriptions):
+            records.append(SeqRecord(seq, id=seqID, name=name,
+                               description=seqDescription))
         # type(record): < class 'Bio.SeqRecord.SeqRecord'>
         with open(fileName, "w") as output_handle:
-            SeqIO.write(record, output_handle, type)
+            SeqIO.write(records, output_handle, type)
 
-    def downloadSeqFromFile(self, fileName, type="fasta"):
-        record = next(SeqIO.parse(fileName, type))
-        return record
+    def readSequenceFromFile(self, fileName, type="fasta", isAmino=True):
+        '''From a sequences file, returns a dictionary with ther FIRST sequence info.
+        Dictionary: {'seqID': seqID1, 'sequence': sequence1, 'description': description1, 'alphabet': alphabet1}'''
+        if type is None:
+            type = self.getTypeFromFile(fileName)
+        return self.readSequencesFromFile(fileName, isAmino=isAmino)[0]
 
-    def downloadSeqFromDatabase(self, seqID):
+    def readSequencesFromFile(self, fileName, type='fasta', isAmino=True):
+        '''From a sequences file, returns a list of dictionaries with each sequence info.
+        Dictionary: [{'seqID': seqID1, 'sequence': sequence1, 'description': description1, 'alphabet': alphabet1},
+                     ...]'''
+        if type is None:
+            type = self.getTypeFromFile(fileName)
+
+        sequences = []
+        records = SeqIO.parse(fileName, type)
+        for rec in records:
+            alphabet = alphabetToIndex(isAmino, rec.seq.alphabet)
+            sequences.append({'seqID': rec.id, 'sequence': str(rec.seq),
+                              'name': rec.name, 'description': rec.description,
+                              'alphabet': alphabet, 'isAminoacids': isAmino})
+        return sequences
+
+    def downloadSeqFromDatabase(self, seqID, dataBase=None):
         # see http://biopython.org/DIST/docs/api/Bio.SeqIO-module.html
         # for format/databases
         print("Connecting to database...")
@@ -94,19 +155,27 @@ class SequenceHandler:
         retries = 5
         record = None
         error = ""
+        if dataBase is None:
+            if self.isAminoacid:
+                dataBase = 'UnitProt'
+            else:
+                dataBase = 'GeneBank'
+
         while counter <= retries:  # retry up to 5 times if server busy
             try:
-                if self.isAminoacid:
-                    dataBase = 'UnitProt'
+                if dataBase == 'UnitProt':
                     url = "http://www.uniprot.org/uniprot/%s.xml"
                     format = "uniprot-xml"
                     handle = urlopen(url % seqID)
                     print("URL", url % seqID)
                 else:
-                    dataBase = 'GeneBank'
-                    Entrez.email = "adam.richards@stat.duke.edu"
+                    if self.isAminoacid:
+                        db = "protein"
+                    else:
+                        db = "nucleotide"
+                    Entrez.email = "scipion@cnb.csic.es"
                     format = "fasta"
-                    handle = Entrez.efetch(db="nucleotide", id=seqID,
+                    handle = Entrez.efetch(db=db, id=seqID,
                                            rettype=format, retmode="text")
 
                 record = SeqIO.read(handle, format)
@@ -124,7 +193,12 @@ class SequenceHandler:
             if counter == retries:
                 break
             counter += 1
-        return record, error
+
+        seqDic = None
+        if record is not None:
+            seqDic = {'seqID': record.id, 'sequence': str(record.seq), 'description': record.description,
+                      'alphabet': record.seq.alphabet}
+        return seqDic, error
 
     def alignSeq(self, referenceSeq):
         if self._sequence is not None:
@@ -138,7 +212,7 @@ class SequenceHandler:
 
 def sequenceLength(filename, format='fasta'):
     handler = SequenceHandler()
-    return len(handler.downloadSeqFromFile(filename, format))
+    return len(handler.readSequenceFromFile(filename, format)['sequence'])
 
 
 def cleanSequenceScipion(isAminoacid, iUPACAlphabet, sequence):

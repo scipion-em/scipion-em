@@ -42,14 +42,17 @@ class ProtImportSequence(ProtImportFiles):
     project"""
     _label = 'import sequence'
     # SEQUENCEFILENAME = '_sequence.fasta'
+    # proteins
     IMPORT_FROM_PLAIN_TEXT = 0
     IMPORT_FROM_STRUCTURE = 1
     IMPORT_FROM_FILES = 2
     IMPORT_FROM_UNIPROT = 3
+    IMPORT_FROM_PROTEIN_GENEBANK = 4
+    # nucleotics
     IMPORT_FROM_NUCLEOTIDE_PLAIN_TEXT = 0
     IMPORT_FROM_NUCLEOTIDE_STRUCTURE = 1
     IMPORT_FROM_NUCLEOTIDE_FILES = 2
-    IMPORT_FROM_GENEBANK = 3
+    IMPORT_FROM_NUCLEOTIDE_GENEBANK = 3
     IMPORT_STRUCTURE_FROM_ID = 0
     IMPORT_STRUCTURE_FROM_FILES = 1
 
@@ -98,7 +101,7 @@ class ProtImportSequence(ProtImportFiles):
                       help='Select the type of sequence to import.')
         form.addParam('inputProteinSequence', params.EnumParam,
                       choices=['plain text', 'atomic structure', 'file',
-                               'UniProt ID'],
+                               'UniProt ID', 'NCBI/GENBANK ID'],
                       display=params.EnumParam.DISPLAY_HLIST,
                       condition='inputSequence == %d' % emconv.SEQ_TYPE_AMINOACIDS,
                       label="From ",
@@ -137,6 +140,7 @@ class ProtImportSequence(ProtImportFiles):
                            'Pyrrolysine\nThis alphabet is not intended to be '
                            'used with X for Selenocysteine (an ad-hoc standard'
                            ' prior to the IUPAC adoption of U instead).\n')
+
         form.addParam('uniProtSequence', params.StringParam,
                       condition='inputSequence == %d and '
                                 'inputProteinSequence == %d' %
@@ -247,12 +251,17 @@ class ProtImportSequence(ProtImportFiles):
                            'file.\nIf your file contains more than one '
                            'sequence, only the first one will be considered.')
         form.addParam('geneBankSequence', params.StringParam,
-                      condition='inputSequence == %d and '
-                                'inputNucleotideSequence == %d' %
+                      condition='(inputSequence == %d and '
+                                'inputNucleotideSequence == %d) or '
+                                '(inputSequence == %d and '
+                                'inputProteinSequence == %d)' %
                                 (emconv.SEQ_TYPE_NUCLEOTIDES,
-                                 self.IMPORT_FROM_GENEBANK),
+                                 self.IMPORT_FROM_NUCLEOTIDE_GENEBANK,
+                                 emconv.SEQ_TYPE_AMINOACIDS,
+                                 self.IMPORT_FROM_PROTEIN_GENEBANK),
                       label="GeneBank accession ", allowsNull=True,
                       help='Write a GeneBank accession.\n')
+
 
     def _insertAllSteps(self):
         self.name = self.inputSequenceName.get()
@@ -268,6 +277,10 @@ class ProtImportSequence(ProtImportFiles):
                 sequenceDB = self._getUniProtID()
                 self._insertFunctionStep('sequenceDatabaseDownloadStep',
                                          sequenceDB)
+            elif self.inputProteinSequence == self.IMPORT_FROM_PROTEIN_GENEBANK:
+                sequenceDB = self._getGeneBankID()
+                self._insertFunctionStep('sequenceDatabaseDownloadStep',
+                                         sequenceDB)
             elif self.inputProteinSequence == self.IMPORT_FROM_FILES:
                 self.sequenceFile = self.fileSequence.get()
                 sequenceFile = self.sequenceFile
@@ -281,7 +294,7 @@ class ProtImportSequence(ProtImportFiles):
                     self.IMPORT_FROM_NUCLEOTIDE_STRUCTURE:
                 chainId = self.inputStructureChain.get()
                 self._insertFunctionStep('getSequenceOfChainStep', chainId)
-            elif self.inputNucleotideSequence == self.IMPORT_FROM_GENEBANK:
+            elif self.inputNucleotideSequence == self.IMPORT_FROM_NUCLEOTIDE_GENEBANK:
                 sequenceDB = self._getGeneBankID()
                 self._insertFunctionStep('sequenceDatabaseDownloadStep',
                                          sequenceDB)
@@ -351,14 +364,16 @@ class ProtImportSequence(ProtImportFiles):
         """Download UniProt/GeneBank sequence from its respective database
         """
         # sequenceDB = str(sequenceDB)
+        isAminoacid=(self.inputSequence == emconv.SEQ_TYPE_AMINOACIDS)
         if self.uniProtSequence.get() is not None:
-            seqHandler = emconv.SequenceHandler()
+            seqHandler = emconv.SequenceHandler(isAminoacid=isAminoacid)
+            dataBase = 'UnitProt'
 
         elif self._getGeneBankID() is not None:
-            seqHandler = emconv.SequenceHandler(isAminoacid=False)
-
-        record, error = seqHandler.downloadSeqFromDatabase(sequenceDB)
-        if record is None:
+            seqHandler = emconv.SequenceHandler(isAminoacid=isAminoacid)
+            dataBase = 'GeneBank'
+        seqDic, error = seqHandler.downloadSeqFromDatabase(seqID = sequenceDB, dataBase=dataBase)
+        if seqDic is None:
             print("Error: ", error)
             self.setAborted()
             exit(0)
@@ -369,31 +384,31 @@ class ProtImportSequence(ProtImportFiles):
             self.id = sequenceDB
         else:
             self.id = self.name
-        if record.description != '':
-            self.description = record.description
+        if seqDic['description'] != '':
+            self.description = seqDic['description']
 
-        self.sequence = str(record.seq)
+        self.sequence = seqDic['sequence']
         self.alphabet = emconv.alphabetToIndex(self.inputSequence ==
-                                               emconv.SEQ_TYPE_AMINOACIDS, record.seq.alphabet)
+                                               emconv.SEQ_TYPE_AMINOACIDS, seqDic['alphabet'])
 
     def fileDownloadStep(self, sequenceFile):
         # If sequencePath contains more than one sequence, only
         # the first one will be considered
         seqHandler = emconv.SequenceHandler()
-        record = seqHandler.downloadSeqFromFile(sequenceFile,
-                                                type="fasta")
+        seqDic = seqHandler.readSequenceFromFile(sequenceFile,
+                                                 type="fasta")
         if self.inputSequenceID.get() is not None:
             self.id = self.inputSequenceID.get()
-        elif record.id != '':
-            self.id = record.id
+        elif seqDic['seqID'] != '':
+            self.id = seqDic['seqID']
         else:
             self.id = self.name
-        if record.description != '':
-            self.description = record.description
+        if seqDic['description'] != '':
+            self.description = seqDic['description']
 
-        self.sequence = str(record.seq)
+        self.sequence = seqDic['sequence']
         self.alphabet = emconv.alphabetToIndex(self.inputSequence ==
-                                               emconv.SEQ_TYPE_AMINOACIDS, record.seq.alphabet)
+                                               emconv.SEQ_TYPE_AMINOACIDS, seqDic['alphabet'])
 
     def createOutputStep(self):
         """ Register the output object. """
@@ -459,7 +474,7 @@ class ProtImportSequence(ProtImportFiles):
                         self.IMPORT_STRUCTURE_FROM_FILES:
                     summary.append("Sequence *%s* imported from file *%s*\n"
                                    % (self.name, self.pdbFile.get()))
-            elif self.inputNucleotideSequence == self.IMPORT_FROM_GENEBANK:
+            elif self.inputNucleotideSequence == self.IMPORT_FROM_NUCLEOTIDE_GENEBANK:
                 summary.append("Sequence *%s* imported from geneBank ID "
                                "*%s*\n"
                                % (self.name, geneBankID))

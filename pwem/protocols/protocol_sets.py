@@ -32,19 +32,38 @@ This module contains protocols related to Set operations such us:
 """
 
 import random
+import sys
 
 import pyworkflow.protocol as pwprot
 import pyworkflow.object as pwobj
 
 import pwem.objects as emobj
 from pwem.protocols import EMProtocol
-from pwem.objects import Volume
-
+from pwem.objects import Volume, EMSet
+from pyworkflow.utils import ProgressBar, getListFromRangeString
 
 
 class ProtSets(EMProtocol):
     """ Base class for all protocols related to subsets. """
-    pass
+
+    def _append(self, outputSet, item, sourceItem=None):
+        """ Add an item to the outputSet.
+        If the item is a new copy of sourceItem(case of the join sets),
+        then use a sourceItem since item lost the information related with the
+        mapper
+        """
+        subElemList = []
+        if sourceItem is None:
+            sourceItem = item
+        if isinstance(item, EMSet):
+            for subElem in sourceItem.iterItems():
+                # We need to create a clone because all items have a same _objId
+                subElemList.append(subElem.clone())
+
+        outputSet.append(item)
+        if subElemList:
+            for subElem in subElemList:
+                item.append(subElem)
 
 
 class ProtUnionSet(ProtSets):
@@ -121,15 +140,15 @@ class ProtUnionSet(ProtSets):
                            'but we really want to insert as new items in the '
                            'output. \n'
                            'On the other hand, items originated in a previous common '
-                           'protocol (above in the workflow) might have identical items'
+                           'protocol (above in the workflow) might have identical items '
                            'and you would like to remove them. '
                            'Therefore, set this option to *Yes* to remove duplicates and keep only '
-                           'one copy of the item. (the first occurrence)')
+                           'one copy of the item (the first occurrence).')
         form.addParam('renumber', pwprot.params.BooleanParam, default=False,
                       expertLevel=pwprot.LEVEL_ADVANCED,
                       label="Force new ids",
-                      help='Make an automatic renumbering of the ids, so all '
-                           'new objects will not be associated to the old ones.')
+                      help='Perform an automatic renumbering of ids to ensure all objects have unique ids. '
+                           'This will mean new objects will not be associated to the old ones.')
 
         # TODO: See what kind of restrictions we add,
         # like "All sets should have the same sampling rate."
@@ -150,7 +169,7 @@ class ProtUnionSet(ProtSets):
                 outputSetFunction = self._createSetOfVolumes
             outputSet = outputSetFunction()
         except Exception:
-            outputSet = set1.create(self._getPath())
+            outputSet = set1.createCopy(self._getPath())
 
         # Copy info from input sets (sampling rate, etc).
         if str(set1.getClassName()) is not Volume.__name__:
@@ -174,7 +193,7 @@ class ProtUnionSet(ProtSets):
                 if "." not in attr:
                     copyAttrs.append(attr)
 
-        idsList = []
+        idsList = {}
         setNum = 0
         for itemSet in self.inputSets:
             setNum += 1
@@ -184,7 +203,7 @@ class ProtUnionSet(ProtSets):
                     if self.ignoreDuplicates.get():
                         if objId in idsList:
                             continue
-                        idsList.append(objId)
+                        idsList[objId] =objId
 
                     if self.ignoreExtraAttributes:
                         newObj = itemSet.get().ITEM_TYPE()
@@ -199,7 +218,7 @@ class ProtUnionSet(ProtSets):
                     if (cleanIds and setNum > 1) or self.renumber.get():
                         newObj.cleanObjId()
 
-                    outputSet.append(newObj)
+                    self._append(outputSet, newObj, sourceItem=obj)
 
             else:
                 obj = itemSet.get()
@@ -207,7 +226,7 @@ class ProtUnionSet(ProtSets):
                 if self.ignoreDuplicates.get():
                     if objId in idsList:
                         continue
-                    idsList.append(objId)
+                    idsList[objId] = objId
                 newObj = obj
                 if (cleanIds and setNum > 1) or self.renumber.get():
                     newObj.cleanObjId()
@@ -231,14 +250,15 @@ class ProtUnionSet(ProtSets):
 
             if prefixedAttribute not in verifyAttrs:
                 value._objDoStore = False
-                print("INFO: %s will be lost." % attr)
+                self.info("%s will be lost." % attr)
 
             else:
                 self.cleanExtraAttributes(value, verifyAttrs,
                                           prefixedAttribute + ".")
 
-    def getObjDict(self, includeClass=False):
-        return super(ProtUnionSet, self).getObjDict(includeClass)
+    def getObjDict(self, includeClass=False, includeBasic=False):
+        return super(ProtUnionSet, self).getObjDict(
+            includeClass=includeClass, includeBasic=includeBasic)
 
     def duplicatedIds(self):
         """ Check if there are duplicated ids to renumber from
@@ -417,8 +437,8 @@ class ProtSplitSet(ProtSets):
             outputSetFunction = getattr(self, "_create%s" % inputClassName)
             subsets = [outputSetFunction(suffix=str(i)) for i in range(1, n + 1)]
         except Exception:
-            subsets = [inputSet.create(self._getPath(), suffix=str(i)) for i in
-                       range(1, n + 1)]
+            subsets = [inputSet.createCopy(self._getPath(), suffix=str(i))
+                       for i in range(1, n + 1)]
 
         # Iterate over the elements in the input set and assign
         # to different subsets.
@@ -433,7 +453,7 @@ class ProtSplitSet(ProtSets):
             if i >= ns[pos]:
                 pos += 1
                 i = 0
-            subsets[pos].append(elem)
+            self._append(subsets[pos], elem)
             i += 1
 
         key = 'output' + inputClassName.replace('SetOf', '') + '%02d'
@@ -496,9 +516,22 @@ class ProtSubSet(ProtSets):
             condition='chooseAtRandom',
             label="Number of elements",
             help='How many elements will be taken from the full set.')
+        add('selectIds', pwprot.params.BooleanParam, default=False,
+            condition='not chooseAtRandom',
+            label="Make a subset from specific IDs",
+            help="Choose specific elements form the full set.")
+        add('range', pwprot.params.NumericRangeParam,
+            label="IDs range or list",
+            condition='selectIds and not chooseAtRandom',
+            allowsNull=True,
+            help='Select the IDs that will be the subset.\n'
+                 'You have several ways to specify the IDs.\n'
+                 'Example: \n'
+                 '"1,3,5-8,17-20" -> [1,3, 5, 6, 7, 8, 17, 18, 19, 20]\n')
         add('inputSubSet', pwprot.params.PointerParam,
-            pointerClass='EMSet', condition='not chooseAtRandom',
+            pointerClass='EMSet', condition='not (chooseAtRandom or selectIds)',
             label="Other set",
+            allowsNull=True,
             help='The elements present in this set will be used to pick \n'
                  'elements from the input full set.     \n'
                  'This means that the output set will contain elements with \n'
@@ -508,7 +541,7 @@ class ProtSubSet(ProtSets):
                  'will be included. If _difference_, elements that\n'
                  'are in input but not in other will picked.')
         add('setOperation', pwprot.params.EnumParam,
-            condition='not chooseAtRandom',
+            condition='not (chooseAtRandom or selectIds)',
             default=self.SET_INTERSECTION,
             choices=['intersection', 'difference'],
             display=pwprot.params.EnumParam.DISPLAY_HLIST,
@@ -532,42 +565,92 @@ class ProtSubSet(ProtSets):
             outputSetFunction = getattr(self, "_create%s" % inputClassName)
             outputSet = outputSetFunction()
         except Exception:
-            outputSet = inputFullSet.create(self._getPath())
+            outputSet = inputFullSet.createCopy(self._getPath())
 
         outputSet.copyInfo(inputFullSet)
 
-        if self.chooseAtRandom:
-            chosen = random.sample(range(len(inputFullSet)),
-                                   self.nElements.get())
-            for i, elem in enumerate(inputFullSet):
-                if i in chosen:
-                    outputSet.append(elem)
+        if self.chooseAtRandom or self.selectIds:
+            nElementsFull = len(inputFullSet)
+
+            if self.chooseAtRandom:
+                nElements = self.nElements.get()
+
+                # Get all ids form iput set
+                ids = list(inputFullSet.getIdSet())
+
+                # Values here releate to ids index above. This is the only way to
+                # do it rendomly since id are not warrantied to be continuous from 1 (subsets, joins,..)
+                chosen = random.sample(range(nElementsFull),
+                                   nElements)
+
+                self.info("Subseting by random positions")
+
+            else:
+                chosen = getListFromRangeString(self.range.get())
+                nElements = len(chosen)
+                ids = None
+                self.info("Subseting by ids: %s" % self.range.get())
+
+            self.debug("Chosen ids: %s" % chosen)
+
+            doProgressBar = False
+            if nElementsFull > 10000:  # show progressBar for large sets
+                progress = ProgressBar(total=len(chosen), fmt=ProgressBar.NOBAR)
+                progress.start()
+                sys.stdout.flush()
+                step = max(100, len(chosen) // 100)
+                doProgressBar = True
+            j = 0  # index for chosen list
+
+            for i,value in enumerate(chosen):
+
+                if doProgressBar and ((i+1) % step == 0):
+                     progress.update(i+1)
+
+                # if coming from random id, random values are positions in ids
+                if self.chooseAtRandom:
+                    # get the id at index
+                    value = ids[value]
+
+                # Get the actual element by id
+                elem = inputFullSet[value]
+
+                if elem is None:
+                    self.warning("Item with id %s not found in set. Skipping it." % value)
+                else:
+                    self._append(outputSet, elem)
+
+            if doProgressBar:
+                progress.finish(printNewLine=True)
+
         else:
-            # Iterate over the elements in the smaller set
-            # and take the info from the full set
-            inputSubSet = self.inputSubSet.get()
+            # Store the second set
+            inputSet = self.inputSubSet.get()
+
+            # Get the ids from both sets
+            fullSetIds = inputFullSet.getIdSet()
+            smallSetIds=inputSet.getIdSet()
+
             # The function to include an element or not
             # depends on the set operation
             # if it is 'intersection' we want that item is not None (found)
             # if it is 'difference' we want that item is None
             # (not found, different)
             if self.setOperation == self.SET_INTERSECTION:
-                checkElem = lambda e: e
+                finalIds = fullSetIds.intersection(smallSetIds)
             else:
-                checkElem = lambda e: not e
+                finalIds = fullSetIds.difference(smallSetIds)
 
-            for origElem in inputFullSet:
-                # TODO: this can be improved if we perform
-                # intersection directly in sqlite
-                exists = origElem.getObjId() in inputSubSet
-                if checkElem(exists):
-                    outputSet.append(origElem)
+            for finalId in finalIds:
+
+                item = inputFullSet[finalId]
+                self._append(outputSet, item)
 
         if outputSet.getSize():
             key = 'output' + inputClassName.replace('SetOf', '')
             self._defineOutputs(**{key: outputSet})
             self._defineTransformRelation(inputFullSet, outputSet)
-            if not self.chooseAtRandom.get():
+            if not (self.chooseAtRandom.get() or self.selectIds.get()):
                 self._defineSourceRelation(self.inputSubSet, outputSet)
         else:
             self.summaryVar.set('Output was not generated. Resulting set '

@@ -69,13 +69,34 @@ class ProtUserSubSet(BatchProtocol):
         self._insertFunctionStep('createSetStep')
 
     def createSetStep(self):
-        setObj = self.createSetObject()
-        inputObj = self.inputObject.get()
+
+        sourceSet = self.inputObject.get()
+        markedSet = self.createSetObject()  # Set equal to sourceSet but marked with disabled
         other = self.other.get()
+
+        self.info("Source: %s" % sourceSet)
+        self.info("Output type: %s" % self.outputClassName)
+        self.info("Subset (sqlite) file: %s" % self.sqliteFile)
+        if other:
+            self.info("Other: %s" % other)
+
+
+        # New recommended way to create subsets: making the set responsible for his own subset process
+        # Once all Sets implement appendFromSet and the if below is gone we can remove this "if"
+        if getattr(markedSet, "USE_CREATE_COPY_FOR_SUBSET", False):
+            markedSet.loadAllProperties()
+            newSet = markedSet.createCopy(self._getPath(),
+                                          copyInfo=True, copyItems=True)
+
+            # Define outputs, may be use something more specific than "subset"
+            self._defineOutputs(subset=newSet)
+            self._defineSourceRelation(sourceSet, newSet)
+            return
+
         if other and ',Volume' in other:
             volId = int(other.split(',')[0])
 
-            if isinstance(setObj, emobj.SetOfVolumes):
+            if isinstance(markedSet, emobj.SetOfVolumes):
                 volSet = emobj.SetOfVolumes(filename=self._dbName)
                 output = volSet[volId]
             else:
@@ -83,43 +104,43 @@ class ProtUserSubSet(BatchProtocol):
                 output = classSet[volId].getRepresentative()
             self._defineOutputs(outputVolume=output)
 
-        elif isinstance(inputObj, emobj.SetOfImages):
-            self._createSubSetFromImages(inputObj)
+        elif isinstance(sourceSet, emobj.SetOfImages):
+            self._createSubSetFromImages(sourceSet)
 
-        elif isinstance(inputObj, emobj.SetOfClasses):
-            self._createSubSetFromClasses(inputObj)
+        elif isinstance(sourceSet, emobj.SetOfClasses):
+            self._createSubSetFromClasses(sourceSet)
 
-        elif isinstance(inputObj, emobj.SetOfCTF):
+        elif isinstance(sourceSet, emobj.SetOfCTF):
             outputClassName = self.outputClassName.get()
             if outputClassName.startswith('SetOfMicrographs'):
-                self._createMicsSubSetFromCTF(inputObj)
+                self._createMicsSubSetFromCTF(sourceSet)
 
-        elif isinstance(inputObj, emobj.SetOfAtomStructs):
-            self._createSubSetFromAtomStructs(inputObj)
+        elif isinstance(sourceSet, emobj.SetOfAtomStructs):
+            self._createSubSetFromAtomStructs(sourceSet)
 
-        elif isinstance(inputObj, MicrographsTiltPair):
-            self._createSubSetFromMicrographsTiltPair(inputObj)
+        elif isinstance(sourceSet, MicrographsTiltPair):
+            self._createSubSetFromMicrographsTiltPair(sourceSet)
 
-        elif isinstance(inputObj, ParticlesTiltPair):
-            self._createSubSetFromParticlesTiltPair(inputObj)
+        elif isinstance(sourceSet, ParticlesTiltPair):
+            self._createSubSetFromParticlesTiltPair(sourceSet)
 
-        elif isinstance(inputObj, EMProtocol):
+        elif isinstance(sourceSet, EMProtocol):
             if self.other.hasValue():
                 otherid = self.other.get()
                 otherObj = self.getProject().mapper.selectById(int(otherid))
 
-                if isinstance(setObj, emobj.SetOfClasses):
-                    setObj.setImages(otherObj)
-                    self._createSubSetFromClasses(setObj)
+                if isinstance(markedSet, emobj.SetOfClasses):
+                    markedSet.setImages(otherObj)
+                    self._createSubSetFromClasses(markedSet)
 
-                elif isinstance(setObj, emobj.SetOfImages):
-                    setObj.copyInfo(otherObj)  # copy info from original images
-                    self._createSubSetFromImages(setObj)
+                elif isinstance(markedSet, emobj.SetOfImages):
+                    markedSet.copyInfo(otherObj)  # copy info from original images
+                    self._createSubSetFromImages(markedSet)
 
-                elif isinstance(setObj, emobj.SetOfNormalModes):
+                elif isinstance(markedSet, emobj.SetOfNormalModes):
                     self._createSimpleSubset(otherObj)
             else:
-                if isinstance(setObj, emobj.SetOfVolumes):
+                if isinstance(markedSet, emobj.SetOfVolumes):
                     volSet = emobj.SetOfVolumes(filename=self._dbName)
                     volSet.loadAllProperties()
                     self._createSimpleSubset(volSet)
@@ -128,11 +149,11 @@ class ProtUserSubSet(BatchProtocol):
                 # input set is not registered (typically from viewers)
                 else:
                     # We might want to do this before, inside the createSetObject
-                    setObj.loadAllProperties()
-                    self._createSimpleSubset(setObj)
+                    markedSet.loadAllProperties()
+                    self._createSimpleSubset(markedSet)
 
         else:
-            self._createSimpleSubset(inputObj)
+            self._createSimpleSubset(sourceSet)
 
     def _createSimpleSubset(self, inputObj):
         className = inputObj.getClassName()
@@ -142,7 +163,7 @@ class ProtUserSubSet(BatchProtocol):
             createFunc = getattr(self, '_create' + className)
             output = createFunc()
         except Exception:
-            output = inputObj.create(self._getPath())
+            output = inputObj.createCopy(self._getPath())
 
         for item in modifiedSet:
             if item.isEnabled():
@@ -169,11 +190,11 @@ class ProtUserSubSet(BatchProtocol):
             createFunc = getattr(self, '_create' + className)
             output = createFunc()
         except Exception:
-            output = inputImages.create(self._getPath())
+            output = inputImages.createCopy(self._getPath())
 
         if copyInfoCallback is None:
-            modifiedSet.loadAllProperties()
-            output.copyInfo(modifiedSet)
+            # modifiedSet.loadAllProperties()
+            output.copyInfo(inputImages)
         else:
             copyInfoCallback(output)
 
@@ -328,7 +349,7 @@ class ProtUserSubSet(BatchProtocol):
             createFunc = getattr(self, '_create' + className)
             output = createFunc()
         except Exception as e:
-            output = inputImages.create(self._getPath())
+            output = inputImages.createCopy(self._getPath())
 
         modifiedSet = inputClasses.getClass()(filename=self._dbName, prefix=self._dbPrefix)
         self.info("Creating subset of images from classes, sqlite file: %s" % self._dbName)
@@ -456,6 +477,8 @@ class ProtUserSubSet(BatchProtocol):
 
     # noinspection PyAttributeOutsideInit
     def createSetObject(self):
+        """ Moves the sqlite with the enable/disable status to its own
+        path to keep it and names it subset.sqlite"""
         _dbName, self._dbPrefix = self.sqliteFile.get().split(',')
         self._dbName = self._getPath('subset.sqlite')
         os.rename(_dbName, self._dbName)

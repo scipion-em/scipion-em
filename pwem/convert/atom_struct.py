@@ -53,6 +53,8 @@ import numpy
 import pyworkflow.utils as pwutils
 import shutil
 
+SECTION = '_scipion_attributes'
+NAME, RECIP, SPEC, VALUE = SECTION + '.name', SECTION + '.recipient', SECTION + '.specifier', SECTION + '.value'
 
 class OutOfChainsError(Exception):
     pass
@@ -398,6 +400,37 @@ class AtomicStructHandler:
             label = label + "_%s" % str(chain_id)
         return label
 
+    def getStructureBFactorValues(self):
+        """Using an atomic structure as input, this method returns two list:
+        * List 1: B-factor field values for each atom of the structure.
+        * List 2 is a list of lists. For each residue of the structure a list with
+        the model, chain, order number of residue, name of residue and average of
+        B-factor field values (atoms) is returned. An example
+        of each list item is:
+        [0, 'A', 103, 'PHE', 96.01]"""
+        self.checkRead()
+        listOfBFactors = []
+        listOfResiduesBFactors = []
+        for model in self.structure:
+            for chain in model:
+                for residue in chain:
+                    residue_list = []
+                    residue_list.append(model.id)
+                    residue_list.append(chain.id)
+                    residue_list.append(residue.id[1])
+                    residue_list.append(residue.get_resname())
+                    sum_list = 0.00
+                    residue_atom_b_factor_list = []
+                    for atom in residue:
+                        listOfBFactors.append(atom.get_bfactor())
+                        residue_atom_b_factor_list.append(atom.get_bfactor())
+                    for item in residue_atom_b_factor_list:
+                        sum_list += item
+                    avg = sum_list / len(residue_atom_b_factor_list)
+                    residue_list.append(round(avg, 2))
+                    listOfResiduesBFactors.append(residue_list)
+        return listOfBFactors, listOfResiduesBFactors
+
     def readLowLevel(self, fileName):
         """ Return a dictionary with all mmcif fields. you should parse them
             Example: get the list of the y coordinates of all atoms
@@ -568,7 +601,7 @@ class AtomicStructHandler:
                 [xmax + expand, ymax + expand, zmax + expand]]
 
 
-    def getTransformMatrix(self, atomStructFn, startId=-1, endId=-1):
+    def getTransformMatrix(self, atomStructFn, startId=-1, endId=-1, outFn=None):
         """find matrix that Superimposes two atom structures.
         this matrix moves atomStructFn to self """
         if endId == -1:
@@ -604,8 +637,9 @@ class AtomicStructHandler:
 
             # Iiterate through all residues in each chain a store CA atoms
             for id in ref_list_id:
-                ref_atoms.append(ref_chain[id]['CA'])
-                sample_atoms.append(sample_chain[id]['CA'])
+                if id in ref_chain and id in sample_chain:
+                    ref_atoms.append(ref_chain[id]['CA'])
+                    sample_atoms.append(sample_chain[id]['CA'])
         # Now we initiate the superimposer:
         super_imposer = Superimposer()
         super_imposer.set_atoms(ref_atoms, sample_atoms)
@@ -613,8 +647,9 @@ class AtomicStructHandler:
         (rot, trans) = super_imposer.rotran
         # DEBUG, uncomment next two lines to see
         # transformation applied to atomStructFn
-        # aSH.getStructure().transform(rot, trans)
-        # aSH.write("/tmp/pp.cif")
+        if outFn:
+            aSH.getStructure().transform(rot, trans)
+            aSH.write(outFn)
 
         # convert 3x3 rotation matrix to homogeneous matrix
         rot = numpy.transpose(rot)  # scipion and biopython use
@@ -989,3 +1024,18 @@ def partiallyCleaningFolder(program, cwd):
                     os.remove(path1)
                 elif os.path.isdir(path1):
                     shutil.rmtree(path1)
+
+def addScipionAttribute(cifDic, attributeScoresDic, attrName, recipient='residues'):
+    '''Add a scipion attribute in a section of the CIF dictionary
+    "cifDic": must be a cif dictionary parsed by Biopython
+    "attributeScoresDic" a dictionary of the form {spec: value}"'''
+    if not NAME in cifDic:
+        cifDic[NAME], cifDic[RECIP] = [], []
+        cifDic[SPEC], cifDic[VALUE] = [], []
+    for spec in attributeScoresDic:
+        value = attributeScoresDic[spec]
+        cifDic[NAME].append(attrName)
+        cifDic[RECIP].append(recipient)
+        cifDic[SPEC].append(spec)
+        cifDic[VALUE].append(str(value))
+    return cifDic

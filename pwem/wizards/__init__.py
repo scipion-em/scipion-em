@@ -27,3 +27,4 @@
 
 from .wizard import *
 from .wizards import *
+from .wizards_3d import *

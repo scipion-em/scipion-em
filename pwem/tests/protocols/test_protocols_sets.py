@@ -27,8 +27,13 @@
 # **************************************************************************
 
 
+import logging
+logger = logging.getLogger(__name__)
 import random
 import unittest
+
+from pwem.protocols import ProtUserSubSet
+from pyworkflow.tests import DataSet
 
 try:
     from itertools import izip
@@ -39,6 +44,7 @@ import pyworkflow.tests as pwtests
 import pyworkflow.utils as pwutils
 
 import pwem.protocols as emprot
+import pwem.objects as emobj
 
 # Used by Roberto's test, where he creates the particles "by hand"
 from pwem.objects.data import Particle, SetOfParticles, Acquisition, CTFModel
@@ -53,7 +59,7 @@ class TestSets(pwtests.BaseTest):
     def setUpClass(cls):
         """Prepare the data that we will use later on."""
 
-        print("\n", pwutils.greenStr(" Set Up - Collect data ".center(75, '-')))
+        logger.info(pwutils.greenStr(" Set Up - Collect data ".center(75, '-')))
 
         pwtests.setupTestProject(cls)  # defined in BaseTest, creates cls.proj
 
@@ -70,7 +76,7 @@ class TestSets(pwtests.BaseTest):
         # Micrographs
         # NOTE: This dataset has 3 mic with heterogeneous dimensions!! But so
         # far is not failing, should it?
-        print(pwutils.magentaStr("\n==> Importing data - micrographs"))
+        logger.info(pwutils.magentaStr("==> Importing data - micrographs"))
         p_imp_micros = new(emprot.ProtImportMicrographs,
                            filesPath=cls.dataset_xmipp.getFile('allMics'),
                            samplingRate=1.237, voltage=300)
@@ -78,7 +84,7 @@ class TestSets(pwtests.BaseTest):
         cls.micros = p_imp_micros.outputMicrographs
 
         # Micrographs SMALL - This is a mic with different dimensions
-        print(pwutils.magentaStr("\n==> Importing data - micrographs SMALL"))
+        logger.info(pwutils.magentaStr("==> Importing data - micrographs SMALL"))
         p_imp_micros = new(emprot.ProtImportMicrographs,
                            filesPath=cls.dataset_xmipp.getFile('mic3'),
                            samplingRate=1.237, voltage=300)
@@ -86,7 +92,7 @@ class TestSets(pwtests.BaseTest):
         cls.microsSmall = p_imp_micros.outputMicrographs
 
         # Volumes
-        print(pwutils.magentaStr("\n==> Importing data - volumes"))
+        logger.info(pwutils.magentaStr("==> Importing data - volumes"))
         p_imp_volumes = new(emprot.ProtImportVolumes,
                             filesPath=cls.dataset_xmipp.getFile('volumes'),
                             samplingRate=9.896)
@@ -94,7 +100,7 @@ class TestSets(pwtests.BaseTest):
         cls.vols = p_imp_volumes.outputVolumes
 
         # Movies
-        print(pwutils.magentaStr("\n==> Importing data - movies"))
+        logger.info(pwutils.magentaStr("==> Importing data - movies"))
         p_imp_movies = new(emprot.ProtImportMovies,
                            filesPath=cls.dataset_ribo.getFile('movies'),
                            samplingRate=2.37, magnification=59000,
@@ -105,7 +111,7 @@ class TestSets(pwtests.BaseTest):
         cls.movies = p_imp_movies.outputMovies
 
         # Particles
-        print(pwutils.magentaStr("\n==> Importing data - particles"))
+        logger.info(pwutils.magentaStr("==> Importing data - particles"))
         p_imp_particles = new(emprot.ProtImportParticles,
                               filesPath=cls.dataset_mda.getFile('particles'),
                               samplingRate=3.5)
@@ -113,7 +119,7 @@ class TestSets(pwtests.BaseTest):
         cls.particles = p_imp_particles.outputParticles
 
         # Particles with micId
-        print(pwutils.magentaStr("\n==> Importing data - particles with micId"))
+        logger.info(pwutils.magentaStr("==> Importing data - particles with micId"))
         relionFile = 'import/case2/relion_it015_data.star'
         pImpPartMicId = new(emprot.ProtImportParticles,
                             objLabel='from relion (auto-refine 3d)',
@@ -152,11 +158,11 @@ class TestSets(pwtests.BaseTest):
     def testSplit(self):
         """Test that the split operation works as expected."""
 
-        print("\n", pwutils.greenStr(" Test Split ".center(75, '-')))
+        logger.info(pwutils.greenStr(" Test Split ".center(75, '-')))
 
         def check(set0, n=2, randomize=False):
             # Simple checks on split sets from set0.
-            print(pwutils.magentaStr("\n==> Check split of %s" % type(set0).__name__))
+            logger.info(pwutils.magentaStr("==> Check split of %s" % type(set0).__name__))
             unsplit_set = [x.strId() for x in set0]
             p_split = self.split(set0, n=n, randomize=randomize)
             # Are all output elements of the protocol in the original set?
@@ -174,14 +180,41 @@ class TestSets(pwtests.BaseTest):
         check(self.particles)
         check(self.particles, n=4)
 
-    def testSubset(self):
+    def testSubsetByParams(self):
+        """Test that the subset operation using parameters works as expected."""
+
+        logger.info(pwutils.greenStr(" Test Subset by params".center(75, '-')))
+
+        # Launch random subset
+        p_subset = self.newProtocol(emprot.ProtSubSet)
+        p_subset.setObjLabel('Random subset')
+        p_subset.inputFullSet.set(self.particles)
+        p_subset.chooseAtRandom.set(True)
+        p_subset.nElements.set(10)
+        self.launchProtocol(p_subset)
+
+        self.assertSetSize(p_subset.outputParticles, 10)
+
+        # Launch subset by ids
+        p_subset = self.newProtocol(emprot.ProtSubSet)
+        p_subset.setObjLabel('Subset by ids')
+        p_subset.inputFullSet.set(self.particles)
+        p_subset.selectIds.set(True)
+        p_subset.range.set("1-4, 8, 1000") # Last one 1000 should be skipped as is missing in the set.
+        self.launchProtocol(p_subset)
+
+        self.assertSetSize(p_subset.outputParticles, 5)
+        self.assertIsNotNone(p_subset.outputParticles[8], "Subset by id did not picked item 8.")
+
+
+    def testSubsetIntersection(self):
         """Test that the subset operation works as expected."""
 
-        print("\n", pwutils.greenStr(" Test Subset ".center(75, '-')))
+        logger.info(pwutils.greenStr(" Test Subset ".center(75, '-')))
 
         def check(set0, n1=2, n2=2):
             """Simple checks on subsets, coming from split sets of set0."""
-            print(pwutils.magentaStr("\n==> Check subset of %s" % type(set0).__name__))
+            logger.info(pwutils.magentaStr("==> Check subset of %s" % type(set0).__name__))
             p_split1 = self.split(set0, n=n1, randomize=True)
             p_split2 = self.split(set0, n=n2, randomize=True)
 
@@ -245,18 +278,15 @@ class TestSets(pwtests.BaseTest):
             self.assertTrue(n >= n2)
             self.assertEqual(n, n1 + n2)
 
-        # We won't do these first two, there are too few elements.
-        #   check(self.micros)
-        #   check(self.vols)
         check(self.movies)
         check(self.particles)
         check(self.particles, n1=3, n2=5)
 
     def testSubsetByMic(self):
         """Test that the subset by Mic operation works as expected."""
-        print("\n", pwutils.greenStr(" Test Subset by Mic".center(75, '-')))
+        logger.info( pwutils.greenStr(" Test Subset by Mic".center(75, '-')))
         "Simple checks on subsets, coming from split sets of setMics."
-        print(pwutils.magentaStr("\n==> Check subset of %s by %s"
+        logger.info(pwutils.magentaStr("==> Check subset of %s by %s"
                                  % (type(self.partMicId).__name__,
                                     type(self.micsMicId).__name__)))
 
@@ -301,7 +331,7 @@ class TestSets(pwtests.BaseTest):
 
     def testSubsetByCoord(self):
         """Test that the subset by Coord operation works as expected."""
-        print("\n", pwutils.greenStr(" Test Subset by Coord".center(75, '-')))
+        logger.info(pwutils.greenStr(" Test Subset by Coord".center(75, '-')))
 
         p_extract_coordinates = self.newProtocol(emprot.ProtExtractCoords)
         p_extract_coordinates.inputParticles.set(self.partMicId)
@@ -319,11 +349,11 @@ class TestSets(pwtests.BaseTest):
     def testMerge(self):
         """Test that the union operation works as expected."""
 
-        print("\n", pwutils.greenStr(" Test Merge ".center(75, '-')))
+        logger.info(pwutils.greenStr(" Test Merge ".center(75, '-')))
 
         def check(set0):
             # Simple checks on merge, coming from many split sets of set0.
-            print(pwutils.magentaStr("\n==> Check merge of %s" % type(set0).__name__))
+            logger.info(pwutils.magentaStr("==> Check merge of %s" % type(set0).__name__))
             p_union = self.proj.newProtocol(emprot.ProtUnionSet)
 
             setsIds = []
@@ -581,7 +611,7 @@ class TestSets(pwtests.BaseTest):
 
         for item1, item2 in izip(imgSet, outputSet):
             if not item1.equalAttributes(item2):
-                print("Items differ:")
+                logger.info("Items differ:")
                 prettyDict(item1.getObjDict())
                 prettyDict(item2.getObjDict())
             self.assertTrue(item1.equalAttributes(item2), )
@@ -602,6 +632,30 @@ class TestSets(pwtests.BaseTest):
 
         with self.assertRaises(Exception):
             self.launchProtocol(p_union)
+
+
+class TestUserSubSet(pwtests.BaseTest):
+    @classmethod
+    def setUpClass(cls):
+        cls.dataset = DataSet.getDataSet('model')
+        cls.selectionFn = cls.dataset.getFile('classesSelection')
+        pwtests.setupTestProject(cls)
+
+    def test_2DClasses(self):
+        """ Load an existing SetOfClasses and test basic properties
+        such us: _mapperPath, iteration and others.
+        """
+        emProt = self.newProtocol(emprot.ProtImportParticles)
+        classes2DSet = emobj.SetOfClasses2D(filename=self.selectionFn)
+        emProt._defineOutputs(outputClasses=classes2DSet)
+        emProt.setFinished()
+        emProt._store()
+
+        batchProt = self.newProtocol(ProtUserSubSet,
+                                     inputObject=classes2DSet,
+                                     sqliteFile=self.selectionFn + ',',
+                                     outputClassName='SetOfClasses2D')
+        self.launchProtocol(batchProt)
 
 
 if __name__ == '__main__':

@@ -28,17 +28,20 @@
 This modules contains basic hierarchy
 for EM data objects like: Image, SetOfImage and others
 """
+import logging
+logger = logging.getLogger(__name__)
 
 import os
 import json
 import numpy as np
 
+import pyworkflow.utils as pwutils
 from pyworkflow.object import (Object, Float, Integer, String,
                                OrderedDict, CsvList, Boolean, Set, Pointer,
                                Scalar)
-
 from pwem.constants import (NO_INDEX, ALIGN_NONE, ALIGN_2D, ALIGN_3D,
                             ALIGN_PROJ, ALIGNMENTS)
+
 
 class EMObject(Object):
     """Base object for all EM classes"""
@@ -119,6 +122,9 @@ class Acquisition(EMObject):
 class CTFModel(EMObject):
     """ Represents a generic CTF model. """
 
+    DEFOCUS_V_MINIMUM_VALUE = 0.1
+    DEFOCUS_RATIO_ERROR_VALUE = -1
+
     def __init__(self, **kwargs):
         EMObject.__init__(self, **kwargs)
         self._defocusU = Float(kwargs.get('defocusU', None))
@@ -126,7 +132,6 @@ class CTFModel(EMObject):
         self._defocusAngle = Float(kwargs.get('defocusAngle', None))
         self._defocusRatio = Float()
         self._phaseShift = Float(kwargs['phaseShift']) if 'phaseShift' in kwargs else None
-        self._defocusRatio = Float()
         self._psdFile = String()
         self._micObj = None
         self._resolution = Float()
@@ -141,7 +146,7 @@ class CTFModel(EMObject):
                  "psh={}, res={}, fit={}".format(
             strEx(self._defocusU.get()),
             strEx(self._defocusV.get()),
-            strEx(self._defocusAngle.get()),
+            strEx(self._defocusU.get(0)-self._defocusV.get(0)),
             strEx(self.getPhaseShift()),
             strEx(self._resolution.get()),
             strEx(self._fitQuality.get())
@@ -249,7 +254,11 @@ class CTFModel(EMObject):
             self._defocusAngle.sum(180.)
         # At this point defocusU is always greater than defocusV
         # following the EMX standard
-        self._defocusRatio.set(self.getDefocusU() / self.getDefocusV())
+
+        if self.getDefocusV() > self.DEFOCUS_V_MINIMUM_VALUE:
+            self._defocusRatio.set(self.getDefocusU() / self.getDefocusV())
+        else:
+            self._defocusRatio.set(self.DEFOCUS_RATIO_ERROR_VALUE)
 
     def equalAttributes(self, other, ignore=[], verbose=False):
         """ Override default behaviour to compare two
@@ -584,9 +593,13 @@ class Image(EMObject):
         origin = self.getOrigin(force=True)
         origin.setShifts(x, y, z)
 
-    def setOrigin(self, newOrigin):
-        """shifts in A"""
-        self._origin = newOrigin
+    def setOrigin(self, newOrigin=None):
+        """If None, default origin will be set.
+        Note: shifts are in Angstroms"""
+        if newOrigin:
+            self._origin = newOrigin
+        else:
+            self._origin = self._getDefaultOrigin()
 
     def originResampled(self, originNotResampled, oldSampling):
         factor = self.getSamplingRate() / oldSampling
@@ -609,6 +622,10 @@ class Image(EMObject):
         filePaths.add(self.getFileName())
         return filePaths
 
+    def setMRCSamplingRate(self):
+        """ Sets the sampling rate to the mrc file represented by this image"""
+        from pwem.convert.headers import setMRCSamplingRate
+        setMRCSamplingRate(self.getFileName(), self.getSamplingRate())
 
 class Micrograph(Image):
     """ Represents an EM Micrograph object """
@@ -721,7 +738,7 @@ class Volume(Image):
         return self._classId.hasValue()
 
     def hasHalfMaps(self):
-        return self._halfMapFilenames.hasValue()
+        return not self._halfMapFilenames.isEmpty()
 
     def getHalfMaps(self):
         return self._halfMapFilenames.get()
@@ -729,6 +746,19 @@ class Volume(Image):
     def setHalfMaps(self, listFileNames):
         return self._halfMapFilenames.set(listFileNames)
 
+    def fixMRCVolume(self):
+        """ Fixes the header of the mrc file pointed by this object """
+        from pwem.convert.headers import fixVolume
+        fixVolume(self.getFileName())
+
+    def __str__(self):
+        """ returns string representation adding halves info to base image.__str__"""
+        imgStr = super().__str__()
+
+        if self.hasHalfMaps():
+            imgStr += " - w/halves"
+
+        return imgStr
 
 class VolumeMask(Volume):
     """ A 3D mask to be used with volumes. """
@@ -809,6 +839,44 @@ class Sequence(EMObject):
     def getIsAminoacids(self):
         return self._isAminoacids
 
+    def importFromFile(self, seqFileName, isAmino=True):
+        '''Fills the sequence attributes from the FIRST sequence found in the specified file'''
+        import pwem.convert as emconv
+        seqHandler = emconv.SequenceHandler()
+        seqDic = seqHandler.readSequenceFromFile(seqFileName, type=None, isAmino=isAmino)
+        self.setSequence(seqDic['sequence']), self.setId(seqDic['seqID'])
+        self.setName(seqDic['name']), self.setDescription(seqDic['description'])
+        self._alphabet.set(Integer(seqDic['alphabet']))
+        self._isAminoacids.set(Boolean(seqDic['isAminoacids']))
+
+    def exportToFile(self, seqFileName):
+        '''Exports the sequence to the specified file'''
+        import pwem.convert as emconv
+        seqHandler = emconv.SequenceHandler(self.getSequence(),
+                                            isAminoacid=self.getIsAminoacids())
+        # retrieving  args from scipion object
+        seqID = self.getId() if self.getId() is not None else 'seqID'
+        seqName = self.getSeqName() if self.getSeqName() is not None else 'seqName'
+        seqDescription = self.getDescription() if self.getDescription() is not None else ''
+        seqHandler.saveFile(seqFileName, seqID,
+                            name=seqName, seqDescription=seqDescription,
+                            type=None)
+
+    def appendToFile(self, seqFileName):
+        '''Exports the sequence to the specified file. If it already exists,
+        the sequence is appended to the ones in the file'''
+        import pwem.convert as emconv
+        seqHandler = emconv.SequenceHandler(self.getSequence(),
+                                            isAminoacid=self.getIsAminoacids())
+        # retrieving  args from scipion object
+        seqID = self.getId() if self.getId() is not None else 'seqID'
+        seqName = self.getSeqName() if self.getSeqName() is not None else 'seqName'
+        seqDescription = self.getDescription() if self.getDescription() is not None else ''
+        seqHandler.appendFile(seqFileName, seqID,
+                            name=seqName, seqDescription=seqDescription,
+                            type=None)
+
+
     def __str__(self):
         return "Sequence (name = {})\n".format(self.getSeqName())
 
@@ -823,7 +891,7 @@ class AtomStruct(EMFile):
         # origin stores a matrix that using as input the point (0,0,0)
         # provides  the position of the actual origin in the system of
         # coordinates of the default origin.
-        # _origin is an object of the class Transformor shifts
+        # _origin is an object of the class Transform shifts
         # units are Angstroms (in Image units are A)
         self._origin = None
 
@@ -939,6 +1007,61 @@ class EMSet(Set, EMObject):
             else:
                 if itemDataIter is not None:
                     next(itemDataIter)  # just skip disabled data row
+
+    @classmethod
+    def create(cls, outputPath,
+               prefix=None, suffix=None, ext=None,
+               **kwargs):
+        """ Create an empty set from the current Set class.
+         Params:
+            outputPath: where the output file will be written.
+            prefix: prefix of the created file, if None, it will be deduced
+                from the ClassName.
+            suffix: additional suffix that will be added to the prefix with a
+                "_" in between.
+            ext: extension of the output file, be default will use .sqlite
+        """
+        fn = prefix or cls.__name__.lower().replace('setof', '')
+
+        if suffix:
+            fn += '_%s' % suffix
+
+        if ext and ext[0] == '.':
+            ext = ext[1:]
+        fn += '.%s' % (ext or 'sqlite')
+
+        setPath = os.path.join(outputPath, fn)
+        pwutils.cleanPath(setPath)
+
+        return cls(filename=setPath, **kwargs)
+
+    def createCopy(self, outputPath,
+                   prefix=None, suffix=None, ext=None,
+                   copyInfo=False, copyItems=False):
+        """ Make a copy of the current set to another location (e.g file).
+        Params:
+            outputPath: where the output file will be written.
+            prefix: prefix of the created file, if None, it will be deduced
+                from the ClassName.
+            suffix: additional suffix that will be added to the prefix with a
+                "_" in between.
+            ext: extension of the output file, be default will use the same
+                extension of this set filename.
+            copyInfo: if True the copyInfo will be called after set creation.
+            copyItems: if True the copyItems function will be called.
+        """
+        setObj = self.create(outputPath,
+                             prefix=prefix,
+                             suffix=suffix,
+                             ext=ext or pwutils.getExt(self.getFileName()))
+
+        if copyInfo:
+            setObj.copyInfo(self)
+
+        if copyItems:
+            setObj.copyItems(self)
+
+        return setObj
 
     def getFiles(self):
         return Set.getFiles(self)
@@ -1124,7 +1247,7 @@ class SetOfImages(EMSet):
         sampling = self.getSamplingRate()
 
         if not sampling:
-            print("FATAL ERROR: Object %s has no sampling rate!!!"
+            logger.error("FATAL ERROR: Object %s has no sampling rate!!!"
                   % self.getName())
             sampling = -999.0
 
@@ -1236,13 +1359,25 @@ class SetOfParticles(SetOfImages):
         """ Set the SetOfCoordinates associates with
         this set of particles.
          """
-        self._coordsPointer.set(coordinates)
+        if coordinates.isPointer():
+            self._coordsPointer.copy(coordinates)
+        else:
+            self._coordsPointer.set(coordinates)
+
+        if not self._coordsPointer.hasExtended():
+            logger.warning("FOR DEVELOPERS: Direct pointers to objects should be avoided. "
+                           "They are problematic in complex streaming scenarios. "
+                           "Pass a pointer to a protocol with extended "
+                           "(e.g.: input param are this kind of pointers. Without get()!)")
+
 
     def copyInfo(self, other):
         """ Copy basic information (voltage, spherical aberration and
         sampling rate) from other set of micrographs to current one.
         """
         SetOfImages.copyInfo(self, other)
+        if hasattr(other, '_coordsPointer'):
+            self.copyAttributes(other, "_coordsPointer")
         self.setHasCTF(other.hasCTF())
 
 
@@ -1333,13 +1468,29 @@ class SetOfPDBs(SetOfAtomStructs):
 
     def __init__(self):
         SetOfAtomStructs.__init__(self)
-        print("SetOfPDBs class has been renamed to SetOfAtomStructs. "
+        logger.warning("FOR DEVELOPERS: SetOfPDBs class has been renamed to SetOfAtomStructs. "
               "Please update your code.")
 
 
 class SetOfSequences(EMSet):
     """Set containing Sequence items."""
     ITEM_TYPE = Sequence
+
+    def exportToFile(self, seqFileName):
+        '''Writes the sequences in the set in the specified file'''
+        for sequence in self:
+            sequence.appendToFile(seqFileName)
+
+    def importFromFile(self, seqFileName, isAmino=True):
+        '''Appends elements to the set from sequences found in the specified file'''
+        import pwem.convert as emconv
+        seqHandler = emconv.SequenceHandler()
+        seqsDic = seqHandler.readSequencesFromFile(seqFileName, type=None, isAmino=isAmino)
+        for seqDic in seqsDic:
+            newSeq = Sequence(sequence=seqDic['sequence'], id=seqDic['seqID'],
+                              name=seqDic['name'], description=seqDic['description'],
+                              alphabet=seqDic['alphabet'], isAminoacids=seqDic['isAminoacids'])
+            self.append(newSeq)
 
 
 class Coordinate(EMObject):
@@ -1495,6 +1646,12 @@ class SetOfCoordinates(EMSet):
         else:
             self._micrographsPointer.set(micrographs)
 
+        if not self._micrographsPointer.hasExtended():
+            logger.warning("FOR DEVELOPERS: Direct pointers to objects should be avoided. "
+                         "They are problematic in complex streaming scenarios. "
+                         "Pass a pointer to a protocol with extended "
+                         "(e.g.: input param are this kind of pointers. Without get()!)")
+
     def getFiles(self):
         filePaths = set()
         filePaths.add(self.getFileName())
@@ -1566,6 +1723,14 @@ class Transform(EMObject):
     Shifts are stored in pixels as treated in extract coordinates, or assign angles,...
     """
 
+    # Basic Transformation factory
+    ROT_X_90_CLOCKWISE = 'rotX90c'
+    ROT_Y_90_CLOCKWISE = 'rotY90c'
+    ROT_Z_90_CLOCKWISE = 'rotZ90c'
+    ROT_X_90_COUNTERCLOCKWISE = 'rotX90cc'
+    ROT_Y_90_COUNTERCLOCKWISE = 'rotY90cc'
+    ROT_Z_90_COUNTERCLOCKWISE = 'rotZ90cc'
+
     def __init__(self, matrix=None, **kwargs):
         EMObject.__init__(self, **kwargs)
         self._matrix = Matrix()
@@ -1574,6 +1739,14 @@ class Transform(EMObject):
 
     def getMatrix(self):
         return self._matrix.getMatrix()
+
+    def getRotationMatrix(self):
+        M = self.getMatrix()
+        return M[:3, :3]
+
+    def getShifts(self):
+        M = self.getMatrix()
+        return M[1, 4], M[2, 4], M[3, 4]
 
     def getMatrixAsList(self):
         """ Return the values of the Matrix as a list. """
@@ -1620,8 +1793,59 @@ class Transform(EMObject):
 
     def composeTransform(self, matrix):
         """Apply a transformation matrix to the current matrix """
-        new_matrix = matrix * self.getMatrix()
+        new_matrix = np.matmul(matrix, self.getMatrix())
+        # new_matrix = matrix * self.getMatrix()
         self._matrix.setMatrix(new_matrix)
+
+    @classmethod
+    def create(cls, type):
+        if type == cls.ROT_X_90_CLOCKWISE:
+            return Transform(matrix=np.array([
+                [1, 0, 0, 0],
+                [0, 0, 1, 0],
+                [0, -1, 0, 0],
+                [0, 0, 0, 1]]))
+        elif type == cls.ROT_X_90_COUNTERCLOCKWISE:
+            return Transform(matrix=np.array([
+                [1, 0, 0, 0],
+                [0, 0, -1, 0],
+                [0, 1, 0, 0],
+                [0, 0, 0, 1]]))
+        elif type == cls.ROT_Y_90_CLOCKWISE:
+            return Transform(matrix=np.array([
+                [1, 0, -1, 0],
+                [0, 1, 0, 0],
+                [1, 0, 0, 0],
+                [0, 0, 0, 1]]))
+        elif type == cls.ROT_Y_90_COUNTERCLOCKWISE:
+            return Transform(matrix=np.array([
+                [1, 0, 1, 0],
+                [0, 1, 0, 0],
+                [-1, 0, 0, 0],
+                [0, 0, 0, 1]]))
+        elif type == cls.ROT_Z_90_CLOCKWISE:
+            return Transform(matrix=np.array([
+                [0, 1, 0, 0],
+                [-1, 0, 0, 0],
+                [0, 0, 1, 0],
+                [0, 0, 0, 1]]))
+        elif type == cls.ROT_Z_90_COUNTERCLOCKWISE:
+            return Transform(matrix=np.array([
+                [0, -1, 0, 0],
+                [1, 0, 0, 0],
+                [0, 0, 1, 0],
+                [0, 0, 0, 1]]))
+        else:
+            TRANSFORMATION_FACTORY_TYPES = [
+                cls.ROT_X_90_CLOCKWISE,
+                cls.ROT_Y_90_CLOCKWISE,
+                cls.ROT_Z_90_CLOCKWISE,
+                cls.ROT_X_90_COUNTERCLOCKWISE,
+                cls.ROT_Y_90_COUNTERCLOCKWISE,
+                cls.ROT_Z_90_COUNTERCLOCKWISE
+            ]
+            raise Exception('Introduced Transformation type is not recognized.\nAdmitted values are\n'
+                            '%s' % ' '.join(TRANSFORMATION_FACTORY_TYPES))
 
 
 class Class2D(SetOfParticles):
@@ -1712,8 +1936,25 @@ class SetOfClasses(EMSet):
         """ Return the SetOFImages used to create the SetOfClasses. """
         return self._imagesPointer.get()
 
+    def getImagesPointer(self):
+        """" Return the pointer to the SetOFImages used to create the SetOfClasses. """
+        return self._imagesPointer
+
     def setImages(self, images):
-        self._imagesPointer.set(images)
+        """ Set the images (particles 2d associated with this set of classes.
+        Params:
+            images: An indirect pointer (with extended) to a set of images.
+        """
+        if images.isPointer():
+            self._imagesPointer.copy(images)
+        else:
+            self._imagesPointer.set(images)
+
+        if not self._imagesPointer.hasExtended():
+            logger.warning("FOR DEVELOPERS: Direct pointers to objects should be avoided. "
+                         "They are problematic in complex streaming scenarios. "
+                         "Pass a pointer to a protocol with extended "
+                         "(e.g.: input param are this kind of pointers. Without get()!)")
 
     def getDimensions(self):
         """Return first image dimensions as a tuple: (xdim, ydim, zdim)"""
@@ -1936,6 +2177,11 @@ class SetOfNormalModes(EMSet):
 
     def copyInfo(self, other):
         self._pdbPointer.copy(other._pdbPointer, copyId=False)
+
+
+class SetOfPrincipalComponents(SetOfNormalModes):
+    "Set of Principal Components is a SetOfNormalModes with a new name"
+    pass
 
 
 class FramesRange(CsvList):
@@ -2202,6 +2448,21 @@ class FSC(EMObject):
     def setData(self, xData, yData):
         self._x.set(xData)
         self._y.set(yData)
+
+    def calculateResolution(self, threshold=0.143):
+        """
+        Calculate the FSC resolution value
+        """
+        dataLength = len(self._x)
+        for i in range(dataLength):
+            if float(self._y[i]) < threshold or i == dataLength-1:
+                above_res = float(self._x[i-1])
+                above_fsc = float(self._y[i-1])
+                below_res = float(self._x[i])
+                below_fsc = float(self._y[i])
+                break
+        resolution = below_res - ((threshold-below_fsc)/(above_fsc-below_fsc) * (below_res-above_res))
+        return "{0:.1f}".format(1/resolution)
 
 
 class SetOfFSCs(EMSet):

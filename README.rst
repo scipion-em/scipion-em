@@ -1,42 +1,42 @@
-====
+.. image:: https://img.shields.io/badge/Contributor%20Covenant-v2.0%20adopted-ff69b4.svg
+  :width: 200
+  :alt: Contributor Covenant
+  :target: https://www.contributor-covenant.org/version/2/0/code_of_conduct/
+
+
 pwem
 ====
 
 **pwem** is a Python module of Scipion framework for image processing in Electron Microscopy
 
-
 The entire collection is licensed under the terms of the GNU Public License,
 version 3 (GPLv3).
 
--------------
 Development
--------------
+-----------
 
 To install **pwem** for development purposes, one can do:
 
-::
+.. code-block:: bash
 
     # Create a clean virtual environment
-    python -m venv ~/myenv
-    source ~/myenv/bin/activate
-    git clone git@github.com:scipion-em/scipion-em.git
+    conda create -n scipion python=3.8
+    conda activate
+    git clone https://github.com/scipion-em/scipion-em.git
     cd scipion-em
-    python -m pip install -e .  # Install in the environment as development
+    pip install -e .
 
--------------
 Running tests
 -------------
 
-First make sure that **pwem** is available as a Python module in your
-current Python environment. During development, I tend to set the PYTHONPATH:
+.. code-block:: bash
 
-::
-
+    conda activate scipion
     cd scipion-em
-    # Either you have installed as mentioned above, or modify the PYTHONPATH
-    export PYTHONPATH=$PYTHONPATH:$PWD
-    # After pyworkflow is accessible as a module, then:
-    cd pwem/tests
-
+    export SCIPION_DOMAIN="pwem"
     python -m unittest discover
 
+API documentation
+-----------------
+
+https://scipion-em.github.io/docs/release-3.0.0/api/pwem/pwem.html

@@ -326,7 +326,7 @@ class Ccp4Header:
         elif ext == '.mrc:mrcs':  # Movie --> dims = [X, Y, Z = 1, N]
             self.isMovie = True
             fileName = fileName.replace(':mrcs', '')
-        elif ext == '.mrc:mrc':  # Volume --> dims = [X, Y, Z, N = 1]
+        elif ext in ['.mrc:mrc', '.map:mrc']:  # Volume --> dims = [X, Y, Z, N = 1]
             fileName = fileName.replace(':mrc', '')
 
         return fileName
@@ -348,12 +348,43 @@ class Ccp4Header:
 
         ccp4header.writeHeader()
 
+    @classmethod
+    def isCompatible(cls, file):
+        return getFileFormat(file) == MRC
+
 
 def getFileFormat(fileName):
     ext = getExt(fileName)
-    if ext in ['.mrc', '.map', '.mrcs', '.mrc:mrc', '.mrc:mrcs', '.st', '.rec']:
+    if ext in ['.mrc', '.map', '.mrcs', '.mrc:mrc', '.mrc:mrcs', '.st', '.rec', '.ali']:
         return MRC
     elif ext == '.spi' or ext == '.vol':
         return SPIDER
     else:
         return UNKNOWNFORMAT
+
+def fixVolume(paths):
+    """
+    Fixes mrc (any extension) files that are defined as stacks but are meant to be volumes as defined in the mrc 2014
+    specs. Setting ISPG to 1.
+    :param paths: accept a string or a list of strings
+    :return: nothing, but mrc files header end up being updated.
+    """
+    if isinstance(paths, str):
+        paths = [paths]
+    for path in paths:
+        ccp4header = Ccp4Header(path, readHeader=True)
+        ccp4header.setISPG(1)
+        ccp4header.writeHeader()
+
+def setMRCSamplingRate(paths, samplingRate):
+    """
+    Sets the mrc file sampling rate value
+    :param paths: accept a string or a list of strings
+    :return: nothing, but mrc files header end up being updated with the right sampling rate
+    """
+    if isinstance(paths, str):
+        paths = [paths]
+    for path in paths:
+        ccp4header = Ccp4Header(path, readHeader=True)
+        ccp4header.setSampling(samplingRate)
+        ccp4header.writeHeader()
