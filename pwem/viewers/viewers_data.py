@@ -57,6 +57,7 @@ class DataViewer(pwviewer.Viewer):
         emobj.SetOfNormalModes,
         emobj.SetOfPrincipalComponents,
         emobj.SetOfPDBs,
+        emobj.SetOfAtomStructs,
         emprot.ProtParticlePicking,
         emprot.ProtImportMovies,
         # TiltPairs related data
