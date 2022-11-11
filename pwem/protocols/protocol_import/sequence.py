@@ -30,7 +30,7 @@ from os.path import exists
 import os
 import pyworkflow.protocol.params as params
 
-from pwem.objects.data import Sequence
+from pwem.objects.data import Sequence, Alphabet
 import pwem.convert as emconv
 from pwem.convert import AtomicStructHandler
 
@@ -66,6 +66,7 @@ class ProtImportSequence(ProtImportFiles):
         form.addSection(label='Input')
         form.addParam('inputSequenceID', params.StringParam,
                       label="Sequence ID", allowsNull=True,
+                      expertLevel=params.LEVEL_ADVANCED,
                       help="Write a sequence ID. Otherwise, if the "
                            "sequence derives from GeneBank/UniProt/PDB "
                            "databases, the respective database ID will be "
@@ -84,6 +85,7 @@ class ProtImportSequence(ProtImportFiles):
         form.addParam('inputSequenceDescription', params.StringParam,
                       label="Sequence description",
                       allowsNull=True,
+                      expertLevel=params.LEVEL_ADVANCED,
                       help="Write a description for your sequence. Otherwise, "
                            "if the "
                            "sequence derives from GeneBank/UniProt/PDB "
@@ -94,16 +96,16 @@ class ProtImportSequence(ProtImportFiles):
                            "be added.")
         form.addParam('inputSequence', params.EnumParam,
                       pointerClass='Sequence',
-                      choices=emconv.SEQ_TYPE,
+                      choices=Alphabet.SEQ_TYPE,
                       display=params.EnumParam.DISPLAY_HLIST,
                       label="Import sequence of ",
-                      default=emconv.SEQ_TYPE_AMINOACIDS,
+                      default=Alphabet.AMINOACIDS,
                       help='Select the type of sequence to import.')
         form.addParam('inputProteinSequence', params.EnumParam,
                       choices=['plain text', 'atomic structure', 'file',
                                'UniProt ID', 'NCBI/GENBANK ID'],
                       display=params.EnumParam.DISPLAY_HLIST,
-                      condition='inputSequence == %d' % emconv.SEQ_TYPE_AMINOACIDS,
+                      condition='inputSequence == %d' % Alphabet.AMINOACIDS,
                       label="From ",
                       default=self.IMPORT_FROM_PLAIN_TEXT,
                       help='Select one of the four options: write the '
@@ -111,14 +113,14 @@ class ProtImportSequence(ProtImportFiles):
                            'from a previously loaded atomic structure, a local '
                            'file or an online server.')
         form.addParam('proteinIUPACalphabet', params.EnumParam,
-                      choices=emconv.IUPAC_PROTEIN_ALPHABET,
+                      choices=list(Alphabet.alphabetsLabels)[:Alphabet.AMBIGOUS_DNA_ALPHABET],
                       display=params.EnumParam.DISPLAY_HLIST,
                       condition='inputSequence == %d and '
                                 'inputProteinSequence == %d' %
-                                (emconv.SEQ_TYPE_AMINOACIDS,
+                                ( Alphabet.AMINOACIDS,
                                  self.IMPORT_FROM_PLAIN_TEXT),
                       label="IUPAC Protein alphabet: ",
-                      default=emconv.EXTENDED_PROTEIN_ALPHABET,
+                      default=Alphabet.EXTENDED_PROTEIN_ALPHABET,
                       help='Your raw sequence will be cleaned according '
                            'a certain alphabet, i.e., only the letters '
                            'contained in the alphabet will be maintained in '
@@ -144,7 +146,7 @@ class ProtImportSequence(ProtImportFiles):
         form.addParam('uniProtSequence', params.StringParam,
                       condition='inputSequence == %d and '
                                 'inputProteinSequence == %d' %
-                                (emconv.SEQ_TYPE_AMINOACIDS,
+                                (Alphabet.AMINOACIDS,
                                  self.IMPORT_FROM_UNIPROT),
                       label="UniProt name/ID ", allowsNull=True,
                       help='Write a UniProt ID (six or ten alphanumeric '
@@ -157,21 +159,23 @@ class ProtImportSequence(ProtImportFiles):
                       choices=['plain text', 'atomic structure', 'file',
                                'GeneBank'],
                       display=params.EnumParam.DISPLAY_HLIST,
-                      condition='inputSequence == %d' % emconv.SEQ_TYPE_NUCLEOTIDES,
+                      condition='inputSequence == %d' %  Alphabet.NUCLEOTIDES,
                       label="From ",
                       default=self.IMPORT_FROM_NUCLEOTIDE_PLAIN_TEXT,
                       help='Select one of the four options: write the '
                            'nucleic acid sequence or import it '
                            'from a local file or an online server.')
         form.addParam('nucleotideIUPACalphabet', params.EnumParam,
-                      choices=emconv.IUPAC_NUCLEOTIDE_ALPHABET,
+                      # move to first element in label list that is nucleotide 
+                      choices=list(Alphabet.alphabetsLabels)[Alphabet.AMBIGOUS_DNA_ALPHABET:],
                       display=params.EnumParam.DISPLAY_HLIST,
                       condition='inputSequence == %d and '
                                 'inputNucleotideSequence == %d' %
-                                (emconv.SEQ_TYPE_NUCLEOTIDES,
+                                (Alphabet.NUCLEOTIDES,
                                  self.IMPORT_FROM_NUCLEOTIDE_PLAIN_TEXT),
                       label="IUPAC Nucleic acid alphabet: ",
-                      default=emconv.EXTENDED_DNA_ALPHABET,
+                      # subtract first element of type nucleotide
+                      default=Alphabet.EXTENDED_DNA_ALPHABET - Alphabet.EXTENDED_DNA_ALPHABET,
                       help='Your raw sequence will be cleaned according '
                            'a certain alphabet, i.e., only the letters '
                            'contained in the alphabet will be maintained in '
@@ -193,9 +197,9 @@ class ProtImportSequence(ProtImportFiles):
                                 'inputProteinSequence == %d) or '
                                 '(inputSequence == %d and '
                                 'inputNucleotideSequence == %d) ' %
-                                (emconv.SEQ_TYPE_AMINOACIDS,
+                                (Alphabet.AMINOACIDS,
                                  self.IMPORT_FROM_PLAIN_TEXT,
-                                 emconv.SEQ_TYPE_NUCLEOTIDES,
+                                 Alphabet.NUCLEOTIDES,
                                  self.IMPORT_FROM_NUCLEOTIDE_PLAIN_TEXT),
                       label="Write your sequence here:", important=True,
                       help="Write the aminoacid or nucleotide raw sequence.\n")
@@ -255,9 +259,9 @@ class ProtImportSequence(ProtImportFiles):
                                 'inputNucleotideSequence == %d) or '
                                 '(inputSequence == %d and '
                                 'inputProteinSequence == %d)' %
-                                (emconv.SEQ_TYPE_NUCLEOTIDES,
+                                (Alphabet.NUCLEOTIDES,
                                  self.IMPORT_FROM_NUCLEOTIDE_GENEBANK,
-                                 emconv.SEQ_TYPE_AMINOACIDS,
+                                 Alphabet.AMINOACIDS,
                                  self.IMPORT_FROM_PROTEIN_GENEBANK),
                       label="GeneBank accession ", allowsNull=True,
                       help='Write a GeneBank accession.\n')
@@ -265,8 +269,7 @@ class ProtImportSequence(ProtImportFiles):
 
     def _insertAllSteps(self):
         self.name = self.inputSequenceName.get()
-
-        if self.inputSequence == emconv.SEQ_TYPE_AMINOACIDS:
+        if self.inputSequence == Alphabet.AMINOACIDS:
             if self.inputProteinSequence == self.IMPORT_FROM_PLAIN_TEXT:
                 rawSequence = self.inputRawSequence.get()
                 self._insertFunctionStep('getRawSequenceStep', rawSequence)
@@ -312,9 +315,13 @@ class ProtImportSequence(ProtImportFiles):
             self.id = self.inputSequenceID.get()
         else:
             self.id = self.name
-        self.alphabet = self._getAlphabet()  # index number
-        self.sequence = emconv.cleanSequenceScipion(self.inputSequence ==
-                                                    emconv.SEQ_TYPE_AMINOACIDS,
+        isAmino = self.inputSequence == Alphabet.AMINOACIDS
+        if isAmino:
+            self.alphabet =  self.proteinIUPACalphabet.get()
+        else:
+            self.alphabet =  self.nucleotideIUPACalphabet.get()
+
+        self.sequence = emconv.cleanSequenceScipion(isAmino, 
                                                     self.alphabet, rawSequence)
 
     def getSequenceOfChainStep(self, chainId):
@@ -341,12 +348,12 @@ class ProtImportSequence(ProtImportFiles):
             # PDB from file
             self.structureHandler.read(self.pdbFile.get())
 
-        _sequence = self.structureHandler.getSequenceFromChain(
-            selectedModel, selectedChain)
+        _sequence, alphabet = self.structureHandler.getSequenceFromChain(
+            selectedModel, selectedChain, returnAlphabet =True)
         self.sequence = str(_sequence)
-        self.alphabet = emconv.alphabetToIndex(self.inputSequence ==
-                                               emconv.SEQ_TYPE_AMINOACIDS,
-                                               _sequence.alphabet)
+        self.alphabet = alphabet #emconv.alphabetToIndex(self.inputSequence ==
+                                           #    Alphabet.AMINOACIDS,
+                                           #    _sequence.alphabet)
 
         # Assignation of sequence ID: if the user has provided a specific
         #  ID, this will be adopted by default; otherwise, a sequence ID
@@ -364,13 +371,16 @@ class ProtImportSequence(ProtImportFiles):
         """Download UniProt/GeneBank sequence from its respective database
         """
         # sequenceDB = str(sequenceDB)
-        isAminoacid=(self.inputSequence == emconv.SEQ_TYPE_AMINOACIDS)
+        isAminoacid=(self.inputSequence == Alphabet.AMINOACIDS)
         if self.uniProtSequence.get() is not None:
-            seqHandler = emconv.SequenceHandler(isAminoacid=isAminoacid)
+            seqHandler = emconv.SequenceHandler(iUPACAlphabet=Alphabet.EXTENDED_PROTEIN_ALPHABET)
             dataBase = 'UnitProt'
 
         elif self._getGeneBankID() is not None:
-            seqHandler = emconv.SequenceHandler(isAminoacid=isAminoacid)
+            if isAminoacid:
+                seqHandler = emconv.SequenceHandler(iUPACAlphabet=Alphabet.EXTENDED_PROTEIN_ALPHABET)
+            else:
+                seqHandler = emconv.SequenceHandler(iUPACAlphabet=Alphabet.NUCLEOTIDES_ALPHABET)
             dataBase = 'GeneBank'
         seqDic, error = seqHandler.downloadSeqFromDatabase(seqID = sequenceDB, dataBase=dataBase)
         if seqDic is None:
@@ -388,15 +398,15 @@ class ProtImportSequence(ProtImportFiles):
             self.description = seqDic['description']
 
         self.sequence = seqDic['sequence']
-        self.alphabet = emconv.alphabetToIndex(self.inputSequence ==
-                                               emconv.SEQ_TYPE_AMINOACIDS, seqDic['alphabet'])
+        self.alphabet = seqDic['alphabet'] 
 
     def fileDownloadStep(self, sequenceFile):
         # If sequencePath contains more than one sequence, only
         # the first one will be considered
         seqHandler = emconv.SequenceHandler()
         seqDic = seqHandler.readSequenceFromFile(sequenceFile,
-                                                 type="fasta")
+                                                 type="fasta",
+                                                 isAmino= self.inputSequence.get()==Alphabet.AMINOACIDS)
         if self.inputSequenceID.get() is not None:
             self.id = self.inputSequenceID.get()
         elif seqDic['seqID'] != '':
@@ -407,8 +417,7 @@ class ProtImportSequence(ProtImportFiles):
             self.description = seqDic['description']
 
         self.sequence = seqDic['sequence']
-        self.alphabet = emconv.alphabetToIndex(self.inputSequence ==
-                                               emconv.SEQ_TYPE_AMINOACIDS, seqDic['alphabet'])
+        self.alphabet = seqDic['alphabet']
 
     def createOutputStep(self):
         """ Register the output object. """
@@ -419,12 +428,11 @@ class ProtImportSequence(ProtImportFiles):
             pass
         else:
             self.description = ''
-
         seq = Sequence(name=self.name,
                        sequence=self.sequence,
                        alphabet=self.alphabet,
                        isAminoacids=(self.inputSequence ==
-                                     emconv.SEQ_TYPE_AMINOACIDS),
+                                     Alphabet.AMINOACIDS),
                        id=self.id, description=self.description)
         outputs = {'outputSequence': seq}
         self._defineOutputs(**outputs)
@@ -434,7 +442,7 @@ class ProtImportSequence(ProtImportFiles):
         self.name = self.inputSequenceName.get()
         uniProtId = self._getUniProtID()
         geneBankID = self._getGeneBankID()
-        if self.inputSequence == emconv.SEQ_TYPE_AMINOACIDS:
+        if self.inputSequence == Alphabet.AMINOACIDS:
             summary.append('Sequence of aminoacids:\n')
             if self.inputProteinSequence == self.IMPORT_FROM_PLAIN_TEXT:
                 summary.append("Sequence *%s* imported from plain text\n"
@@ -499,7 +507,7 @@ class ProtImportSequence(ProtImportFiles):
         return self.geneBankSequence
 
     def _getAlphabet(self):
-        if self.inputSequence == emconv.SEQ_TYPE_AMINOACIDS:
+        if self.inputSequence == Alphabet.AMINOACIDS:
             return self.proteinIUPACalphabet.get()
         else:
-            return self.nucleotideIUPACalphabet.get()
+            return self.nucleotideIUPACalphabet.get() + Alphabet.AMBIGOUS_DNA_ALPHABET 

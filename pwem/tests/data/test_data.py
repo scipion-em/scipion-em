@@ -20,6 +20,7 @@ from pwem.emlib import metadata as md
 import pwem.protocols as emprot
 import pyworkflow.tests as pwtests
 from pwem.convert import SequenceHandler
+from pwem.objects.data import Alphabet
 
 # set to true if you want to check how fast is the access to
 # the database
