@@ -35,7 +35,6 @@ import pwem.convert as emconv
 from pwem.convert import AtomicStructHandler
 
 from .base import ProtImportFiles
-from time import sleep
 
 class ProtImportSequence(ProtImportFiles):
     """ Protocol to import an aminoacid/nucleotide sequence file to the
@@ -343,8 +342,6 @@ class ProtImportSequence(ProtImportFiles):
             if not exists(tmpFilePath):
                 # wizard has not used and the file has not been downloaded yet
                 self.structureHandler.readFromPDBDatabase(pdbID, dir="/tmp")
-                # wait for the file to be fully downloaded and written
-                sleep(2)
             self.structureHandler.read(tmpFilePath)
         else:
             # PDB from file
