@@ -375,16 +375,17 @@ class SelectResidueWizard(SelectChainWizard):
     def getSequence(self, finalResiduesList, idxs):
         roiStr, inSeq = '', False
         for residue in finalResiduesList:
-            if json.loads(residue.get())['residue'] in RESIDUES3TO1:
-                if json.loads(residue.get())['index'] == idxs[0]:
+            resDic = json.loads(residue.get())
+            if resDic['residue'] in RESIDUES3TO1:
+                if resDic['index'] == idxs[0]:
                   inSeq = True
-                if json.loads(residue.get())['index'] == idxs[-1]:
+                if resDic['index'] == idxs[-1]:
                   inSeq = False
-                  roiStr += RESIDUES3TO1[json.loads(residue.get())['residue']]
+                  roiStr += RESIDUES3TO1[resDic['residue']]
                   break
 
                 if inSeq:
-                    roiStr += RESIDUES3TO1[json.loads(residue.get())['residue']]
+                    roiStr += RESIDUES3TO1[resDic['residue']]
         return roiStr
 
     def show(self, form, *params):
