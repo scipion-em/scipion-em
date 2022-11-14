@@ -112,7 +112,7 @@ class ProtImportSequence(ProtImportFiles):
                            'from a previously loaded atomic structure, a local '
                            'file or an online server.')
         form.addParam('proteinIUPACalphabet', params.EnumParam,
-                      choices=list(Alphabet.alphabetsLabels)[:Alphabet.AMBIGOUS_DNA_ALPHABET],
+                      choices=list(Alphabet.alphabetsLabels.values())[:Alphabet.AMBIGOUS_DNA_ALPHABET],
                       display=params.EnumParam.DISPLAY_HLIST,
                       condition='inputSequence == %d and '
                                 'inputProteinSequence == %d' %
@@ -166,7 +166,7 @@ class ProtImportSequence(ProtImportFiles):
                            'from a local file or an online server.')
         form.addParam('nucleotideIUPACalphabet', params.EnumParam,
                       # move to first element in label list that is nucleotide 
-                      choices=list(Alphabet.alphabetsLabels)[Alphabet.AMBIGOUS_DNA_ALPHABET:],
+                      choices=list(Alphabet.alphabetsLabels.values())[Alphabet.AMBIGOUS_DNA_ALPHABET:],
                       display=params.EnumParam.DISPLAY_HLIST,
                       condition='inputSequence == %d and '
                                 'inputNucleotideSequence == %d' %
