@@ -2463,10 +2463,10 @@ class FSC(EMObject):
             if float(self._y[i]) < threshold or i == dataLength-1:
                 above_res = float(self._x[i-1])
                 above_fsc = float(self._y[i-1])
-                bellow_res = float(self._x[i])
-                bellow_fsc = float(self._y[i])
+                below_res = float(self._x[i])
+                below_fsc = float(self._y[i])
                 break
-        resolution = bellow_res - ((threshold-bellow_fsc)/(above_fsc-bellow_fsc) * (bellow_res-above_res))
+        resolution = below_res - ((threshold-below_fsc)/(above_fsc-below_fsc) * (below_res-above_res))
         return "{0:.1f}".format(1/resolution)
 
 

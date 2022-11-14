@@ -32,6 +32,7 @@ from pkg_resources import parse_version
 
 import pyworkflow as pw
 from pyworkflow.protocol import Protocol
+from pyworkflow.utils import weakImport
 from pyworkflow.viewer import Viewer
 from pyworkflow.wizard import Wizard
 import pyworkflow.plugin
@@ -41,7 +42,7 @@ from .objects import EMObject
 from .tests import defineDatasets
 from .utils import *
 
-__version__ = '3.0.22'
+__version__ = '3.0.23'
 NO_VERSION_FOUND_STR = "0.0"
 CUDA_LIB_VAR = 'CUDA_LIB'
 
@@ -187,7 +188,7 @@ class Plugin(pyworkflow.plugin.Plugin):
         if pattern is not None:
             path = findFolderWithPattern(path, pattern)
             if path is None:
-                return parse_version(NO_VERSION_FOUND_STR)
+                return parse_version(default)
 
         parts = path.split(separator)
         if len(parts)>=2:
@@ -195,11 +196,8 @@ class Plugin(pyworkflow.plugin.Plugin):
             # Version should be the last bit
             versionStr = parts[-1]
             return parse_version(versionStr)
-
         else:
-
             return parse_version(default)
-
 
 
 
@@ -223,3 +221,22 @@ def findFolderWithPattern(path, pattern):
         return last
     else:
         return findFolderWithPattern(previous, pattern)
+
+# NOTE: This should not happen in production since tifffile is in the requirements and end up in the package metadata
+# The case for this is the "devel installation", that is not using requirements.txt (maybe it should) but directly
+# running pip install -e path/to/scipion-em
+# This triggers the import of tifffile not yet installed, but about to do so.
+with weakImport("tifffile"):
+    # register file handlers to preview info in the Filebrowser....
+    from pyworkflow.gui.browser import FileTreeProvider, STANDARD_IMAGE_EXTENSIONS
+    from .viewers.filehandlers import *
+
+    register = FileTreeProvider.registerFileHandler
+    register(MdFileHandler(), '.xmd', '.star', '.pos', '.ctfparam', '.doc')
+    register(ParticleFileHandler(),
+             '.xmp', '.tif', '.tiff', '.spi', '.mrc', '.map', '.raw',
+             '.inf', '.dm3', '.em', '.pif', '.psd', '.spe', '.ser', '.img',
+             '.hed', *STANDARD_IMAGE_EXTENSIONS)
+    register(VolFileHandler(), '.vol', '.hdf')
+    register(StackHandler(), '.stk', '.mrcs', '.st', '.pif', '.dm4')
+    register(ChimeraHandler(), '.bild', '.mrc', '.pdb', '.vol', '.hdf', '.cif', '.mmcif')

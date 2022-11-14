@@ -391,7 +391,11 @@ class SelectResidueWizard(SelectChainWizard):
       inputParams, outputParam = self.getInputOutput(form)
       protocol = form.protocol
       inputObj = getattr(protocol, inputParams[0]).get()
-      chainStr = getattr(protocol, inputParams[1]).get()
+      if len(inputParams) < 2:
+          # For sequence objects, with no chain
+          chainStr = None
+      else:
+          chainStr = getattr(protocol, inputParams[1]).get()
       finalResiduesList = self.getResidues(form, inputObj, chainStr)
 
       provider = ListTreeProviderString(finalResiduesList)

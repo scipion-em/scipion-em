@@ -57,6 +57,7 @@ class DataViewer(pwviewer.Viewer):
         emobj.SetOfNormalModes,
         emobj.SetOfPrincipalComponents,
         emobj.SetOfPDBs,
+        emobj.SetOfAtomStructs,
         emprot.ProtParticlePicking,
         emprot.ProtImportMovies,
         # TiltPairs related data
@@ -233,6 +234,9 @@ class DataViewer(pwviewer.Viewer):
                     self._views.append(DataView(gainFn))
 
         elif issubclass(cls, emobj.SetOfNormalModes):
+            self._views.append(DataView(obj.getFileName()))
+
+        elif issubclass(cls, emobj.EMSet):
             self._views.append(DataView(obj.getFileName()))
 
         return self._views
