@@ -193,7 +193,7 @@ class ProtUnionSet(ProtSets):
                 if "." not in attr:
                     copyAttrs.append(attr)
 
-        idsList = []
+        idsList = {}
         setNum = 0
         for itemSet in self.inputSets:
             setNum += 1
@@ -203,7 +203,7 @@ class ProtUnionSet(ProtSets):
                     if self.ignoreDuplicates.get():
                         if objId in idsList:
                             continue
-                        idsList.append(objId)
+                        idsList[objId] =objId
 
                     if self.ignoreExtraAttributes:
                         newObj = itemSet.get().ITEM_TYPE()
@@ -226,7 +226,7 @@ class ProtUnionSet(ProtSets):
                 if self.ignoreDuplicates.get():
                     if objId in idsList:
                         continue
-                    idsList.append(objId)
+                    idsList[objId] = objId
                 newObj = obj
                 if (cleanIds and setNum > 1) or self.renumber.get():
                     newObj.cleanObjId()
@@ -250,14 +250,15 @@ class ProtUnionSet(ProtSets):
 
             if prefixedAttribute not in verifyAttrs:
                 value._objDoStore = False
-                print("INFO: %s will be lost." % attr)
+                self.info("%s will be lost." % attr)
 
             else:
                 self.cleanExtraAttributes(value, verifyAttrs,
                                           prefixedAttribute + ".")
 
-    def getObjDict(self, includeClass=False):
-        return super(ProtUnionSet, self).getObjDict(includeClass)
+    def getObjDict(self, includeClass=False, includeBasic=False):
+        return super(ProtUnionSet, self).getObjDict(
+            includeClass=includeClass, includeBasic=includeBasic)
 
     def duplicatedIds(self):
         """ Check if there are duplicated ids to renumber from
@@ -570,54 +571,80 @@ class ProtSubSet(ProtSets):
 
         if self.chooseAtRandom or self.selectIds:
             nElementsFull = len(inputFullSet)
+
             if self.chooseAtRandom:
                 nElements = self.nElements.get()
+
+                # Get all ids form iput set
+                ids = list(inputFullSet.getIdSet())
+
+                # Values here releate to ids index above. This is the only way to
+                # do it rendomly since id are not warrantied to be continuous from 1 (subsets, joins,..)
                 chosen = random.sample(range(nElementsFull),
                                    nElements)
+
+                self.info("Subseting by random positions")
+
             else:
-                chosen = [i-1 for i in getListFromRangeString(self.range.get())]
+                chosen = getListFromRangeString(self.range.get())
                 nElements = len(chosen)
+                ids = None
+                self.info("Subseting by ids: %s" % self.range.get())
+
+            self.debug("Chosen ids: %s" % chosen)
 
             doProgressBar = False
-            if nElementsFull > 100000:  # show progressBar for large sets
-                progress = ProgressBar(total=len(inputFullSet), fmt=ProgressBar.NOBAR)
+            if nElementsFull > 10000:  # show progressBar for large sets
+                progress = ProgressBar(total=len(chosen), fmt=ProgressBar.NOBAR)
                 progress.start()
                 sys.stdout.flush()
-                step = max(100, len(inputFullSet) // 100)
+                step = max(100, len(chosen) // 100)
                 doProgressBar = True
             j = 0  # index for chosen list
-            chosen.sort()  # sort list of numbers
-            for i, elem in enumerate(inputFullSet):
-                if doProgressBar and (i % step == 0):
+
+            for i,value in enumerate(chosen):
+
+                if doProgressBar and ((i+1) % step == 0):
                      progress.update(i+1)
-                if i == chosen[j]:
-                     j += 1
-                     self._append(outputSet, elem)
-                     if j >= nElements:
-                          break # all needed elements have been appended
+
+                # if coming from random id, random values are positions in ids
+                if self.chooseAtRandom:
+                    # get the id at index
+                    value = ids[value]
+
+                # Get the actual element by id
+                elem = inputFullSet[value]
+
+                if elem is None:
+                    self.warning("Item with id %s not found in set. Skipping it." % value)
+                else:
+                    self._append(outputSet, elem)
+
             if doProgressBar:
-                progress.finish()
+                progress.finish(printNewLine=True)
 
         else:
-            # Iterate over the elements in the smaller set
-            # and take the info from the full set
-            inputSubSet = self.inputSubSet.get()
+            # Store the second set
+            inputSet = self.inputSubSet.get()
+
+            # Get the ids from both sets
+            fullSetIds = inputFullSet.getIdSet()
+            smallSetIds=inputSet.getIdSet()
+
             # The function to include an element or not
             # depends on the set operation
             # if it is 'intersection' we want that item is not None (found)
             # if it is 'difference' we want that item is None
             # (not found, different)
             if self.setOperation == self.SET_INTERSECTION:
-                checkElem = lambda e: e
+                finalIds = fullSetIds.intersection(smallSetIds)
             else:
-                checkElem = lambda e: not e
+                finalIds = fullSetIds.difference(smallSetIds)
 
-            for origElem in inputFullSet:
-                # TODO: this can be improved if we perform
-                # intersection directly in sqlite
-                exists = origElem.getObjId() in inputSubSet
-                if checkElem(exists):
-                    self._append(outputSet, origElem)
+            for finalId in finalIds:
+
+                item = inputFullSet[finalId]
+                self._append(outputSet, item)
 
         if outputSet.getSize():
             key = 'output' + inputClassName.replace('SetOf', '')

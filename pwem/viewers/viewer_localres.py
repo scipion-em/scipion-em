@@ -152,6 +152,15 @@ class ChimeraAttributeViewer(pwviewer.ProtocolViewer):
                           'the lowest and higher values in the date are used.'
                      )
 
+      group = form.addGroup('Visualization over sequence')
+      group.addParam('chain_name', params.StringParam, default='A',
+                     allowsNull=True, label='Chain of interest:',
+                     help='Specify the chain of interest (e.g: A)')
+      group.addParam('displaySequence', params.LabelParam,
+                     label='Display attribute over sequence: ',
+                     help='Display a graph witht the values of the selected attribute over the sequence.'
+                     )
+
       group = form.addGroup('Visualization in Chimera')
       group.addParam('displayStruct', params.LabelParam,
                      label='Display structure and color by attribute in Chimera: ',
@@ -202,8 +211,39 @@ class ChimeraAttributeViewer(pwviewer.ProtocolViewer):
       return {
         'displayStruct': self._showChimera,
         'displayHistogram': self._showHistogram,
+        'displaySequence': self._showSequence,
       }
+    
+    def _showSequence(self, paramName=None):
+        prot = self.protocol
+        _inputStruct = self.getAtomStructObject()
+        cifFile = _inputStruct.getFileName()
+        attrName = self.getEnumText('attrName')
+        cifDic = AtomicStructHandler().readLowLevel(cifFile)
 
+        names, values, specs = np.array(cifDic[NAME]), np.array(cifDic[VALUE]), np.array(cifDic[SPEC])
+        recipient = getStructureRecipient(cifDic, attrName)
+        attrValues, attrSpecs = values[names == attrName], specs[names == attrName]
+        if recipient == 'atoms':
+            attrValues, attrSpecs = getResidueAverage(attrValues, attrSpecs)
+
+        attrPositions, attrChainValues = getResiduePositions(attrSpecs, attrValues, self.chain_name.get())
+
+        attrValues = list(map(float, attrChainValues))
+        xs = np.arange(len(attrValues))
+
+        fig = plt.figure()
+        ax = fig.add_subplot(1, 1, 1)
+        ax.bar(xs, attrValues)
+        yloc = plt.MaxNLocator(10)
+        ax.yaxis.set_major_locator(yloc)
+
+        plt.xlabel("Sequence position")
+        plt.ylabel("{} value".format(attrName))
+        plt.title('{} along sequence'.format(attrName))
+
+        plt.show()
+    
     def _showChimera(self, paramName=None):
       if chimeraInstalled():
           prot = self.protocol
@@ -292,7 +332,7 @@ class ChimeraAttributeViewer(pwviewer.ProtocolViewer):
       low, high = self.getValuesRange()
       a.set_xlim([low, high])
 
-      n = 2
+      n = 5
       mult = 10 ** n
       stepSize = int(round((high-low) / self.intervals.get(), n) * mult)
       bins = [i / mult for i in range(int(low * mult), int(high * mult), stepSize)]
@@ -387,6 +427,29 @@ def replaceOcuppancyWithAttribute(cifFile, attrName, outFile=None):
 
         AtomicStructHandler()._writeLowLevel(outFile, cifDic)
     return outFile
+
+def getResidueAverage(atomValues, atomSpec):
+    resDic = {}
+    for atVal, atSpe in zip(atomValues, atomSpec):
+        resSpe = atSpe.split('@')[0]
+        if resSpe in resDic:
+            resDic[resSpe].append(atVal)
+        else:
+            resDic[resSpe] = [atVal]
+
+    resValues = []
+    for resSpe in resDic:
+        resValues.append(np.mean(list(map(float, resDic[resSpe]))))
+    return resValues, list(resDic.keys())
+
+def getResiduePositions(attrSpecs, attrValues, chainName):
+    attrPositions, attrChainValues = [], []
+    for spe, val in zip(attrSpecs, attrValues):
+        chain, position = spe.split(':')
+        if chain == chainName:
+            attrPositions.append(position)
+            attrChainValues.append(val)
+    return attrPositions, attrChainValues
 
 def getStructureRecipient(cifDic, attrName):
     '''Returns a list with the names of the attributes of the output object'''

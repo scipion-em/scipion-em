@@ -30,6 +30,7 @@ import os
 
 import pwem
 import pyworkflow.utils as pwutils
+from pwem.convert import Ccp4Header
 from pyworkflow import gui
 from pyworkflow.gui.browser import FileHandler, isStandardImage
 
@@ -56,6 +57,12 @@ class ImageFileHandler(FileHandler):
             dimMsg += " x %(n)d"
             expMsg += " x Objects"
             objType = 'Stack'
+
+        if Ccp4Header.isCompatible(filename):
+            ccp4Reader= Ccp4Header(filename, readHeader=True)
+            expMsg += "\nHeader info: \nSampling rate: %1.2f, %1.2f, %1.2f" % ccp4Reader.getSampling()
+
+
         return (dimMsg + "\n" + expMsg) % locals()
 
     def _getImagePreview(self, filename):

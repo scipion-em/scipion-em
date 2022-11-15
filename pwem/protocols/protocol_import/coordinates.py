@@ -108,16 +108,17 @@ class ProtImportCoordinates(ProtImportFiles, ProtParticlePicking):
 
     # ------------------ STEPS functions --------------------------------------
     def createOutputStep(self, importFrom, *args):
-        inputMics = self.inputMicrographs.get()
+
         # scipion imports have a predefined format (see dataimport)
         if importFrom == self.IMPORT_FROM_SCIPION:
             from .dataimport import ScipionImport
             self.importFilePath = self.filesPath.get('').strip()
             sImport = ScipionImport(self, self.importFilePath)
             # this function defines outputs and relations
-            sImport.importCoordinates(inputMics)  
+            sImport.importCoordinates(self.inputMicrographs)
         else:
-            coordsSet = self._createSetOfCoordinates(inputMics)
+            # Pass the pointer with extended.
+            coordsSet = self._createSetOfCoordinates(self.inputMicrographs)
             coordsSet.setBoxSize(self.boxSize.get())
             ci = self.getImportClass()
             for coordFile, fileId in self.iterFiles():

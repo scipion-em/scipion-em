@@ -74,15 +74,15 @@ class ProtUserSubSet(BatchProtocol):
         markedSet = self.createSetObject()  # Set equal to sourceSet but marked with disabled
         other = self.other.get()
 
-        print("Source: %s" % sourceSet)
-        print("Output type: %s" % self.outputClassName)
-        print("Subset (sqlite) file: %s" % self.sqliteFile)
+        self.info("Source: %s" % sourceSet)
+        self.info("Output type: %s" % self.outputClassName)
+        self.info("Subset (sqlite) file: %s" % self.sqliteFile)
         if other:
-            print("Other: %s" % other)
+            self.info("Other: %s" % other)
 
 
         # New recommended way to create subsets: making the set responsible for his own subset process
-        # Once all Sets implement appendFromSet and the if bellow is gone we can remove this "if"
+        # Once all Sets implement appendFromSet and the if below is gone we can remove this "if"
         if getattr(markedSet, "USE_CREATE_COPY_FOR_SUBSET", False):
             markedSet.loadAllProperties()
             newSet = markedSet.createCopy(self._getPath(),
