@@ -64,6 +64,24 @@ class DataViewer(pwviewer.Viewer):
         emobj.MicrographsTiltPair,
         emobj.ParticlesTiltPair
     ]
+    _configRegistry = dict() # Extra configuration for specific types not in this plugin (e.g.: Tomo objects)
+
+    @classmethod
+    def registerConfig(cls, type, config=None):
+        """
+        Allow registration of other objects
+        :param type: Class to register --> SetOfXXX
+        :param config: Optional, dictionary with the fields configuration, otherwise all fields will be shown.
+
+        :return: Nothing
+
+        """
+        cls._targets.append(type)
+
+        if config is None:
+            config = {MODE: MODE_MD}
+
+        cls._configRegistry[type]=config
 
     def __init__(self, **kwargs):
         pwviewer.Viewer.__init__(self, **kwargs)
@@ -77,6 +95,14 @@ class DataViewer(pwviewer.Viewer):
 
     def _visualize(self, obj, **kwargs):
         cls = type(obj)
+
+        # Try registry first
+        config = self._configRegistry.get(cls, None)
+
+        if config is not None:
+            fn = obj.getFileName()
+            self._addObjView(obj, fn, config)
+            return self._views
 
         if issubclass(cls, emobj.Volume):
             fn = emlib.image.ImageHandler.locationToXmipp(obj)
