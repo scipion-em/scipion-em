@@ -29,6 +29,7 @@ import logging
 logger = logging.getLogger(__name__)
 import pyworkflow.utils as pwutils
 import pwem
+from pwem.objects import Micrograph
 
 
 def loadSetFromDb(dbName, dbPrefix=''):
@@ -107,6 +108,7 @@ def splitRange(minValue, maxValue, splitNum=10, roundTo=2):
 
 PROBLEMATIC_SHELL_CHARS = ";<>?\"()|*\\'&"
 
+
 def cleanFileName(fn, warn=True):
     """ Cleans any character that later on might cause shell parsing errors like "(", ")", " "
     and warns about it if warn is true.
@@ -125,3 +127,48 @@ def cleanFileName(fn, warn=True):
             cleaned = True
 
     return fn, cleaned
+
+
+def fnMatching(objFile,  setDict):
+    """
+    Check if in an object(micrograph, etc...) its files are matched
+    """
+    objFile = pwutils.removeBaseExt(objFile)
+    longestItem = None
+
+    if objFile in setDict:
+        longestItem = setDict[objFile]
+        message = "Coordinate file(%s) matches exactly with the micrograph name(%s)" % (objFile, objFile)
+    else:
+        longestMatch = 0
+        matchLen = 0
+        # ItemId is not objId. Is micName or tsId
+        for itemId, item in setDict.items():
+            if objFile.startswith(itemId):
+                # BVP_1234_aligned(objFile) startswith BVP_1234(micName or baseName)
+                message = "Coordinate file name(%s) starts with the micrograph name(%s)" % (objFile, itemId)
+                matchLen = len(itemId)
+            elif itemId in objFile:
+                # BVP_1234(micName or baseName) in BVP_1234_info(objFile)
+                message = "Coordinate file(%s) contains the micrograph name(%s)" % (objFile, itemId)
+                matchLen = len(itemId)
+
+            if len(objFile) > matchLen:
+                if itemId.startswith(objFile):
+                    # BVP_1234_aligned(micName or baseName) startswith BVP_1234(objFile)
+                    # MicBase start with coordBase
+                    message = "Micrograph name(%s) starts with coordinate file name(%s)" % (itemId, objFile)
+                    matchLen = len(objFile)
+                elif objFile in itemId:
+                    # BVP_1234(objFile) in BVP_1234_aligned(micName or baseName)
+                    # micBase contains coordBase
+                    message = "Micrograph name(%s) contains the coordinate file name(%s)" % (itemId, objFile)
+                    matchLen = len(objFile)
+
+            if matchLen > longestMatch:
+                longestMatch = matchLen
+                longestItem = item
+                matchLen = 0
+
+    logger.debug(message)
+    return longestItem
