@@ -1,3 +1,7 @@
+V3.0.24
+developers:
+    - Fixing an error related with the import coordinates
+
 V3.0.23
 users:
    - Subset protocol optimized, specially for small parametric subsets (random or by ids)
