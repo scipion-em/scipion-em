@@ -140,7 +140,7 @@ class TestImportCoordinates(TestImportBase):
         prot1.setObjLabel('import coords from xmipp(mark '
                           'some digits in the filename as ID)')
         self.launchProtocol(prot1)
-        
+
         # Make sure that all 264 coordinates where correctly imported
         from pwem import Domain
         self.assertTrue(prot1.outputCoordinates.getSize() == 264)
@@ -190,14 +190,12 @@ class TestImportCoordinates(TestImportBase):
         with tempfile.TemporaryDirectory() as micTempdir:
             micsDir = self.dsXmipp.getFile('micrographs')
             micsList = sorted(os.listdir(micsDir))
-            newMic0 = os.path.join(micTempdir, 'BPV_1386.mrc')
-            newMic1 = os.path.join(micTempdir, 'BPV_1387.mrc')
-            newMic2 = os.path.join(micTempdir, 'BPV_1388.mrc')
-            micSqlite = os.path.join(micTempdir, 'micrographs.sqlite')
+            newMic0 = os.path.join(micTempdir, 'micrograph_BPV_1.mrc')
+            newMic1 = os.path.join(micTempdir, 'micrograph_BPV_10.mrc')
+            newMic2 = os.path.join(micTempdir, 'micrograph_BPV_100.mrc')
             os.link(os.path.join(micsDir, micsList[0]), newMic0)
             os.link(os.path.join(micsDir, micsList[1]), newMic1)
             os.link(os.path.join(micsDir, micsList[2]), newMic2)
-            os.link(os.path.join(micsDir, micsList[3]), micSqlite)
 
             protImport = self.newProtocol(emprot.ProtImportMicrographs,
                                           filesPath=micTempdir,
@@ -210,9 +208,9 @@ class TestImportCoordinates(TestImportBase):
                                  "There was a problem with the import")
 
             filesPath = self.dsXmipp.getFile('pickingXmipp')
-            newPos0 = os.path.join(micTempdir, 'BPV_1386_0.pos')
-            newPos1 = os.path.join(micTempdir, 'BPV_1387_1.pos')
-            newPos2 = os.path.join(micTempdir, 'BPV_1388_2.pos')
+            newPos0 = os.path.join(micTempdir, 'BPV_1.pos')
+            newPos1 = os.path.join(micTempdir, 'BPV_10.pos')
+            newPos2 = os.path.join(micTempdir, 'BPV_100.pos')
             os.link(os.path.join(filesPath, 'BPV_1386.pos'), newPos0)
             os.link(os.path.join(filesPath, 'BPV_1387.pos'), newPos1)
             os.link(os.path.join(filesPath, 'BPV_1388.pos'), newPos2)
@@ -253,11 +251,9 @@ class TestImportCoordinates(TestImportBase):
             newMic0 = os.path.join(micTempdir, 'BPV_1386_aligned.mrc')
             newMic1 = os.path.join(micTempdir, 'BPV_1387_aligned.mrc')
             newMic2 = os.path.join(micTempdir, 'BPV_1388_aligned.mrc')
-            micSqlite = os.path.join(micTempdir, 'micrographs.sqlite')
             os.link(os.path.join(micsDir, micsList[0]), newMic0)
             os.link(os.path.join(micsDir, micsList[1]), newMic1)
             os.link(os.path.join(micsDir, micsList[2]), newMic2)
-            os.link(os.path.join(micsDir, micsList[3]), micSqlite)
 
             protImport = self.newProtocol(emprot.ProtImportMicrographs,
                                           filesPath=micTempdir,
@@ -270,7 +266,7 @@ class TestImportCoordinates(TestImportBase):
                                  "There was a problem with the import")
 
             filesPath = self.dsXmipp.getFile('pickingXmipp')
-            newPos0 = os.path.join(micTempdir, 'BPV_1386.pos')
+            newPos0 = os.path.join(micTempdir, 'BPR_1386.pos')  # No matching (tolerate)
             newPos1 = os.path.join(micTempdir, 'BPV_1387.pos')
             newPos2 = os.path.join(micTempdir, 'BPV_1388.pos')
             os.link(os.path.join(filesPath, 'BPV_1386.pos'), newPos0)
@@ -291,7 +287,7 @@ class TestImportCoordinates(TestImportBase):
             self.launchProtocol(prot1)
             # Make sure that all 264 coordinates where correctly imported
             from pwem import Domain
-            self.assertTrue(prot1.outputCoordinates.getSize() == 264)
+            self.assertTrue(prot1.outputCoordinates.getSize() == 183)
             coordCount = prot1.outputCoordinates.aggregate(['count'], '_micName',
                                                            ['_micName'])
             readPosCoordinates = Domain.importFromPlugin('xmipp3.convert',
@@ -301,9 +297,8 @@ class TestImportCoordinates(TestImportBase):
                 posMd = readPosCoordinates(coordFile)
                 coordsList.append(posMd.size())
 
-            self.assertTrue(coordsList[0] == coordCount[0]['count'])
-            self.assertTrue(coordsList[1] == coordCount[1]['count'])
-            self.assertTrue(coordsList[2] == coordCount[2]['count'])
+            self.assertTrue(coordsList[1] == coordCount[0]['count'])
+            self.assertTrue(coordsList[2] == coordCount[1]['count'])
 
 
 class TestImportCoordinatesPairs(TestImportBase):
