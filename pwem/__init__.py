@@ -72,6 +72,9 @@ class Config(pw.Config):
     CUDA_BIN = _get('CUDA_BIN', '/usr/local/cuda/bin')
     MAX_PREVIEW_FILE_SIZE = float(_get("MAX_PREVIEW_FILE_SIZE", DEFAULT_MAX_PREVIEW_FILE_SIZE))
 
+    SCIPION_EM_NEW_FILE_CHECK_SEC = int(_get('SCIPION_EM_NEW_FILE_CHECK_SEC', 10))
+    "Number of seconds to wait before checking if new files are available or finished in streamified import protocols."
+
 
 class Domain(pyworkflow.plugin.Domain):
     _name = __name__

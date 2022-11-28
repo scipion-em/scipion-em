@@ -35,7 +35,7 @@ from datetime import timedelta, datetime
 
 import pyworkflow.utils as pwutils
 import pyworkflow.protocol.params as params
-from pwem import cleanFileName
+from pwem import cleanFileName, Config
 
 from pwem.emlib.image import ImageHandler
 from pwem.objects import Acquisition
@@ -94,7 +94,7 @@ class ProtImportImages(ProtImportFiles):
 
     # --------------------------- INSERT functions ----------------------------
     def _insertAllSteps(self):
-
+        self._fillFileNamesList()
         # Only the import movies has property 'inputIndividualFrames'
         # so let's query in a non-intrusive manner
         inputIndividualFrames = getattr(self, 'inputIndividualFrames', False)
@@ -236,7 +236,7 @@ class ProtImportImages(ProtImportFiles):
             fileTimeout = timedelta(seconds=5)
 
         while not finished:
-            time.sleep(3)  # wait 3 seconds before check for new files
+            time.sleep(Config.SCIPION_EM_NEW_FILE_CHECK_SEC)  # wait some seconds before check for new files(10 seconds by default)
             someNew = False
             someAdded = False
 
@@ -310,6 +310,9 @@ class ProtImportImages(ProtImportFiles):
                 # If we have detected some files, we should update
                 # the timestamp of the last event
                 lastDetectedChange = now
+
+            for fileName in self.fileNamesList:
+                self.fileNamesList[fileName] = False
 
         self._updateOutputSet(outputName, imgSet,
                               state=imgSet.STREAM_CLOSED)
@@ -497,11 +500,25 @@ class ProtImportImages(ProtImportFiles):
             img.setMicName(uniqueFn)
             
     def _getUniqueFileName(self, filename, filePaths=None):
-        if filePaths is None:
-            filePaths = [re.split(r'[$*#?]', self.getPattern())[0]]
-        
-        commPath = pwutils.commonPath(filePaths)
-        return filename.replace(commPath + "/", "").replace("/", "_")
+        fileBaseName = os.path.basename(filename)
+        isFileName = self.fileNamesList.get(fileBaseName, False)
+        if isFileName:
+            if filePaths is None:
+                filePaths = [re.split(r'[$*#?]', self.getPattern())[0]]
+
+            commPath = pwutils.commonPath(filePaths)
+            fileBaseName = filename.replace(commPath + "/", "").replace("/", "_")
+
+        self.fileNamesList[fileBaseName] = True
+        return fileBaseName
+
+    def _fillFileNamesList(self):
+        """
+        Fill a list with the file names that contains extra folder
+        """
+        self.fileNamesList = dict()
+        for file in os.listdir(self._getExtraPath()):
+            self.fileNamesList[file] = False
 
     def handleImgHed(self, copyOrLink, src, dst):
         """ Check the special case of Imagic files format
