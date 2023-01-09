@@ -197,7 +197,7 @@ class TestXmippWorkflow(TestWorkflow):
         x, y = inParticleCoord.getPosition()
         xCoor, yCoor = x - int(shifts[0]), y - int(shifts[1])
         np.testing.assert_allclose(protExtractCoordsShifts.outputCoordinates.getFirstItem().getPosition(),
-                                   (int(x * scale), int(y * scale)), rtol=0.5)
+                                   (int(xCoor * scale), int(yCoor * scale)), rtol=0.5)
 
         print("Run kerdensom")
         ProtKerdensom = self.newProtocol(xmippProtcols.XmippProtKerdensom,
