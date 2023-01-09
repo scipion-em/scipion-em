@@ -31,7 +31,7 @@ from pyworkflow.utils import findRootFrom
 
 import pwem.objects as emobj
 import pwem.constants as emcts
-
+from slugify import slugify
 
 class ScipionImport:
     """ Import 
@@ -135,7 +135,7 @@ class ScipionImport:
             # Create a link or copy files to extraPath
             # and update the Row properly
             fn = particle.getFileName()
-            imgBase = basename(fn)
+            imgBase = slugify(fn, regex_pattern = r'[^-a-z0-9._]+')
             imgDst = self.protocol._getExtraPath(imgBase)
             if not exists(imgDst):
                 self.copyOrLink(join(self._imgPath, fn), imgDst)
