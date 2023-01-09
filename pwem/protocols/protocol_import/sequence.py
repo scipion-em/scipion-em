@@ -308,7 +308,7 @@ class ProtImportSequence(ProtImportFiles):
 
     def getRawSequenceStep(self, rawSequence):
         # user types sequence
-        if self.inputSequenceID.get() is not None:
+        if len(self.inputSequenceID.get()) > 1:
             self.id = self.inputSequenceID.get()
         else:
             self.id = self.name
@@ -365,7 +365,7 @@ class ProtImportSequence(ProtImportFiles):
         """
         # sequenceDB = str(sequenceDB)
         isAminoacid=(self.inputSequence == emconv.SEQ_TYPE_AMINOACIDS)
-        if self.uniProtSequence.get() is not None:
+        if len(self.uniProtSequence.get()) > 1:
             seqHandler = emconv.SequenceHandler(isAminoacid=isAminoacid)
             dataBase = 'UnitProt'
 
