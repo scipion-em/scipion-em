@@ -46,9 +46,4 @@ class TestPluginCudaGuess(unittest.TestCase):
                 realpath_faked.return_value = "/usr/lib/x86_64-linux-gnu"
 
                 v = Plugin.guessCudaVersion(CUDA_LIB_VAR)
-                self.assertEqual(str(v), NO_VERSION_FOUND_STR, "Guess cuda version does not return NO_VERSION_FOUND_STR")
-
-
-
-
-
+                self.assertEqual(str(v), "10.1", "Guess cuda version does not return default=10.1")
