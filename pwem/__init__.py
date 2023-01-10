@@ -61,7 +61,8 @@ class Config(pw.Config):
 
     # Get java home, we might need to provide correct default value
     JAVA_HOME = _get('JAVA_HOME', '')
-    JAVA_MAX_MEMORY = _get('JAVA_MAX_MEMORY', '4')
+    #JAVA_MAX_MEMORY = _get('JAVA_MAX_MEMORY', '4')
+    JAVA_MAX_MEMORY = _get('JAVA_MAX_MEMORY', '10')
 
     # MPI
     MPI_LIBDIR = _get('MPI_LIBDIR', '/usr/lib64/mpi/gcc/openmpi/lib')
