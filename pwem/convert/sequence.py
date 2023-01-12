@@ -58,6 +58,10 @@ class SequenceHandler:
         else:
             self._sequence = None
 
+    def getSequence(self):
+        """Returns the sequence as Bio.Seq.Seq object"""
+        return Seq(self._sequence)
+
     def getTypeFromFile(self, fileName):
         '''Returns the expected BioPython file type according to the filename'''
         ext = getExt(fileName)
