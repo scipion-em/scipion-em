@@ -780,12 +780,64 @@ class EMFile(EMObject):
         """ Use the _objValue attribute to store filename. """
         self._filename.set(filename)
 
+class Alphabet():
+    """ class with a dictionary of all valid alphabets"""
+    # sequence types
+    AMINOACIDS = 0
+    NUCLEOTIDES = 1
+    
+    SEQ_TYPE = ['aminoacids', 'nucleotides']
+
+    # alphabets for proteins
+    PROTEIN_ALPHABET = 0
+    EXTENDED_PROTEIN_ALPHABET = 1
+
+    # alphabets for nucleotides
+    AMBIGOUS_DNA_ALPHABET = 2
+    UNAMBIGOUS_DNA_ALPHABET = 3
+    EXTENDED_DNA_ALPHABET = 4
+    AMBIGOUS_RNA_ALPHABET = 5
+    UNAMBIGOUS_RNA_ALPHABET = 6 
+    NUCLEOTIDES_ALPHABET = 7
+
+    # dummy alphabet
+    DUMMY_ALPHABET = 8
+
+    # dictionary with all alphabets
+    alphabets = {}; alphabetsLabels = {}
+
+    alphabets[PROTEIN_ALPHABET] = 'ACDEFGHIKLMNPQRSTVWY'
+    alphabets[EXTENDED_PROTEIN_ALPHABET] = 'ACDEFGHIKLMNPQRSTVWYBJOUXZ'
+    alphabets[AMBIGOUS_DNA_ALPHABET] = 'GATCRYWSMKHBVDN'
+    alphabets[UNAMBIGOUS_DNA_ALPHABET] = 'GATC'
+    alphabets[EXTENDED_DNA_ALPHABET] = 'GATCBDSW'
+    alphabets[AMBIGOUS_RNA_ALPHABET] = 'GAUCRYWSMKHBVDN'
+    alphabets[UNAMBIGOUS_RNA_ALPHABET] = 'GAUC'
+    alphabets[NUCLEOTIDES_ALPHABET] = 'GAC'
+    alphabets[DUMMY_ALPHABET] = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+
+    # dictionary with all alphabets labels
+    alphabetsLabels[PROTEIN_ALPHABET] = 'Protein'
+    alphabetsLabels[EXTENDED_PROTEIN_ALPHABET] = 'Extended Protein'
+    alphabetsLabels[AMBIGOUS_DNA_ALPHABET] = 'Ambigous DNA'
+    alphabetsLabels[UNAMBIGOUS_DNA_ALPHABET] = 'Unambigous DNA'
+    alphabetsLabels[EXTENDED_DNA_ALPHABET] = 'Extended DNA'
+    alphabetsLabels[AMBIGOUS_RNA_ALPHABET] = 'Ambigous RNA'
+    alphabetsLabels[UNAMBIGOUS_RNA_ALPHABET] = 'Unambigous RNA'
+
+    
 
 class Sequence(EMObject):
     """Class containing a sequence of aminoacids/nucleotides
        Attribute names follow the biopython default ones
+            param: name: name of the sequence
+            param: sequence: string with the sequence
+            param: alphabet: integer with the alphabet to be used
+            param: isAminoacids: boolean indicating if the sequence is an aminoacid sequence
+            param: id: string with the sequence id
+            param: description: string with the sequence description
+           
     """
-
     def __init__(self, name=None, sequence=None,
                  alphabet=None, isAminoacids=True, id=None, description=None,
                  **kwargs):
@@ -853,7 +905,7 @@ class Sequence(EMObject):
         '''Exports the sequence to the specified file'''
         import pwem.convert as emconv
         seqHandler = emconv.SequenceHandler(self.getSequence(),
-                                            isAminoacid=self.getIsAminoacids())
+                                            self._alphabet.get())
         # retrieving  args from scipion object
         seqID = self.getId() if self.getId() is not None else 'seqID'
         seqName = self.getSeqName() if self.getSeqName() is not None else 'seqName'
@@ -861,13 +913,17 @@ class Sequence(EMObject):
         seqHandler.saveFile(seqFileName, seqID,
                             name=seqName, seqDescription=seqDescription,
                             type=None)
+                            #seqFiP12345 USER_SEQ 
+                            # Aspartate aminotransferase, mitochondrial
 
     def appendToFile(self, seqFileName):
         '''Exports the sequence to the specified file. If it already exists,
         the sequence is appended to the ones in the file'''
+        print("Appending sequence to file: %s" % seqFileName)
         import pwem.convert as emconv
         seqHandler = emconv.SequenceHandler(self.getSequence(),
-                                            isAminoacid=self.getIsAminoacids())
+                                            Alphabet.DUMMY_ALPHABET)
+        print("after seqHandler")
         # retrieving  args from scipion object
         seqID = self.getId() if self.getId() is not None else 'seqID'
         seqName = self.getSeqName() if self.getSeqName() is not None else 'seqName'

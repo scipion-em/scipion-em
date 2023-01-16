@@ -53,6 +53,10 @@ import numpy
 import pyworkflow.utils as pwutils
 import shutil
 
+from pwem.objects.data import Alphabet
+
+
+
 SECTION = '_scipion_attributes'
 NAME, RECIP, SPEC, VALUE = SECTION + '.name', SECTION + '.recipient', SECTION + '.specifier', SECTION + '.value'
 
@@ -322,7 +326,7 @@ class AtomicStructHandler:
 
         return listOfChains, listOfResidues
 
-    def getSequenceFromChain(self, modelID, chainID):
+    def getSequenceFromChain(self, modelID, chainID, returnAlphabet=False):
         self.checkRead()
         seq = list()
         for model in self.structure:
@@ -332,7 +336,7 @@ class AtomicStructHandler:
                         if len(chain.get_unpacked_list()[0].resname) == 1:
                             print("Your sequence is a nucleotide sequence ("
                                   "RNA)\n")
-                            # alphabet = IUPAC.IUPACAmbiguousRNA._upper()
+                            alphabet = Alphabet.UNAMBIGOUS_RNA_ALPHABET
                             for residue in chain:
                                 # Check if the residue belongs to the
                                 # standard RNA and add those residues to the
@@ -345,7 +349,7 @@ class AtomicStructHandler:
                         elif len(chain.get_unpacked_list()[0].resname) == 2:
                             print("Your sequence is a nucleotide sequence ("
                                   "DNA)\n")
-                            # alphabet = IUPAC.ExtendedIUPACDNA._upper()
+                            alphabet = Alphabet.UNAMBIGOUS_DNA_ALPHABET
                             for residue in chain:
                                 # Check if the residue belongs to the
                                 # standard DNA and add those residues to the
@@ -359,7 +363,7 @@ class AtomicStructHandler:
                             counter = 0
                             for residue in chain:
                                 if is_aa(residue.get_resname(), standard=True):
-                                    # alphabet = IUPAC.ExtendedIUPACProtein._upper()
+                                    alphabet = Alphabet.EXTENDED_PROTEIN_ALPHABET
                                     # The test checks if the amino acid
                                     # is one of the 20 standard amino acids
                                     # Some proteins have "UNK" or "XXX", or other symbols
@@ -379,7 +383,10 @@ class AtomicStructHandler:
                         while seq[0] == "X":
                             del seq[0]
                         # return Seq(str(''.join(seq)), alphabet=alphabet)
-                        return Seq(str(''.join(seq)))
+                        if returnAlphabet:
+                            return Seq(str(''.join(seq))), alphabet
+                        else:
+                            return Seq(str(''.join(seq)))
 
     def getFullID(self, model_id='0', chain_id=None):
         """
