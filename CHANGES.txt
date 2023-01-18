@@ -1,3 +1,15 @@
+V3.0.24
+users:
+   - Version compatible with latest released scipion-em-chimera plugin.
+developers:
+   - biopython updated to 1.79
+   - Using Alphabet from new version of biopython, related tests modified and added.
+   - DataViewer allow for registration of new sets using: DataViewer.registerConfig(type, configDict).
+     Useful for tomography sets and avoiding unnecessary inheritance.
+   - Icon is a png (compatible with future pillow versions)
+   - weakImport("tifffile") added when registering FileHandlers (bug at installation in github action)
+
+
 V3.0.23
 users:
    - Subset protocol optimized, specially for small parametric subsets (random or by ids)
@@ -10,7 +22,7 @@ developers:
    - FileHandler registration moved to main pwem.__init__.
    - Import volumes uses logging
    - Import volumes fixed when downloading an EMDB.
-   - Dataviewer allow registration of other sets. DAtaviewer: DataViewer.registerConfig(tomo.objects.SetOfTiltSeriesCoordinates)
+   - Dataviewer allow registration of other sets. Dataviewer: DataViewer.registerConfig(tomo.objects.SetOfTiltSeriesCoordinates)
 
 V3.0.22 (hotfix)
    - Plugin.guessCudaVersion returns Version("0.0") for cases like this /usr/lib/x86_64-linux-gnu

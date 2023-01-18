@@ -1052,11 +1052,10 @@ class Sequence(EMObject):
     def appendToFile(self, seqFileName):
         '''Exports the sequence to the specified file. If it already exists,
         the sequence is appended to the ones in the file'''
-        print("Appending sequence to file: %s" % seqFileName)
+        logger.info("Appending sequence to file: %s" % seqFileName)
         import pwem.convert as emconv
         seqHandler = emconv.SequenceHandler(self.getSequence(),
                                             Alphabet.DUMMY_ALPHABET)
-        print("after seqHandler")
         # retrieving  args from scipion object
         seqID = self.getId() if self.getId() is not None else 'seqID'
         seqName = self.getSeqName() if self.getSeqName() is not None else 'seqName'

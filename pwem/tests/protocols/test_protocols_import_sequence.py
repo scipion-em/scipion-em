@@ -29,7 +29,6 @@
 import pyworkflow.tests as pwtests
 
 import pwem.protocols as emprot
-import pwem.convert as emconv
 from pwem.objects.data import Alphabet
 
 class TestImportBase(pwtests.BaseTest):
