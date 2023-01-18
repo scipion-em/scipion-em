@@ -36,6 +36,10 @@ import operator
 
 import pwem.constants as cts
 
+DEBUG = True # set to True for debuging
+if DEBUG:
+    from pwem.viewers.viewer_chimera import Chimera
+    expansionFactor = 60
 
 def _applyMatrix(tf, points):
     """
@@ -134,6 +138,7 @@ def _matrixProducts(mlist1, mlist2):
 def _coordinateTransformList(tflist, ctf):
 
     ctfinv = _invertMatrix(ctf)
+    print(tflist, ctf)
     return [_multiplyMatrices(ctfinv, tf, ctf) for tf in tflist]
 
 
@@ -152,14 +157,16 @@ def _transposeMatrix(tf):
             (tf[0][2], tf[1][2], tf[2][2], tf[2][3]))
 
 
-def getSymmetryMatrices(sym=cts.SYM_CYCLIC, n=1, center=(0, 0, 0)):
+def getSymmetryMatrices(sym=cts.SYM_CYCLIC, n=1, center=(0, 0, 0), offset=None):
     """ interface between scipion and chimera code
         chimera code uses tuples of tuples as matrices
         but scipion uses np.arrays (lists of lists)
         so let us convert them here
     """
     if sym == cts.SYM_CYCLIC:
-        matrices = __cyclicSymmetrySatrices(n, center)
+        if offset is None:
+            offset = pi/n
+        matrices = __cyclicSymmetryMatrices(n, center, offset=offset)
     elif sym == cts.SYM_DIHEDRAL:
         matrices = __dihedralSymmetryMatrices(n, center)
     elif sym == cts.SYM_OCTAHEDRAL:
@@ -177,14 +184,58 @@ def getSymmetryMatrices(sym=cts.SYM_CYCLIC, n=1, center=(0, 0, 0)):
     # convert from sets to lists Scipion standard
     return np.array(matrices)
 
+def getUnitCell(sym=cts.SYM_CYCLIC, n=1, center=(0, 0, 0), offset=None):
+    """ return vectors normal to the unit cell faces
+    """
+    if sym == cts.SYM_CYCLIC:
+        vectorsEdge, vectorsPlane = __cyclicUnitCellPlanes(n, center, offset=offset)
+        if DEBUG:
+            bildFileName = f'/tmp/C{n}.bild'
+            #poligons = [vectorsEdge[2], vectorsEdge[0],] 
+    elif sym == cts.SYM_DIHEDRAL:
+        pass
+    elif sym == cts.SYM_OCTAHEDRAL:
+        pass
+    elif sym == cts.SYM_TETRAHEDRAL or sym == cts.SYM_TETRAHEDRAL_Z3:
+        pass
+    elif (sym == cts.SYM_I222 or sym == cts.SYM_I222r or
+          sym == cts.SYM_In25 or sym == cts.SYM_In25r):
+        matrices = __icosahedralSymmetryMatrices(sym, center)
+    if DEBUG:
+        Chimera.createCoordinateAxisFile(dim=expansionFactor,
+                                         bildFileName=bildFileName,
+                                         sampling=1)
+        with open(bildFileName, 'a') as f:  # Use file to refer to the file object
+            for i, vector in enumerate(vectorsEdge):
+                f.write(f'.color {i}\n')
+                x = vector[0]*expansionFactor / 2.
+                y = vector[1]*expansionFactor / 2.
+                z = vector[2]*expansionFactor / 2.
+                f.write(f'.arrow 0 0 0  {x} {y} {z} 0.200000 0.400000 0.750000\n')
+            for i, vector in enumerate(vectorsPlane):
+                f.write(f'.color {i}\n')
+                x = vector[0]*expansionFactor
+                y = vector[1]*expansionFactor
+                z = vector[2]*expansionFactor
+                f.write(f'.arrow 0 0 0  {x} {y} {z} 0.200000 0.400000 0.750000\n')
+            #for i, plane in enumerate(planes):
+            #    f.write(f'.color {i}\n')
+            #    x = plane[0]*expansionFactor
+            #    y = plane[1]*expansionFactor
+            #    z = plane[2]*expansionFactor
+            #    f.write(f'.arrow 0 0 0  {x} {y} {z} 0.200000 0.400000 0.750000\n')
+        f.close()
+    return vectors
 
-def __cyclicSymmetrySatrices(n, center=(0, 0, 0)):
-    """ Rotation about z axis.
+
+def __cyclicSymmetryMatrices(n, center=(0, 0, 0), offset=0):
+    """ get Matrices for cyclic symmetry of order n
     This is a local method. do not access directly to it
     """
     tflist = []
     for k in range(n):
-        a = 2*pi * np.float32(k) / n
+        a = 2*pi * np.float32(k) / n + offset
+        
         c = cos(a)
         s = sin(a)
         tf = ((c, -s, 0, 0),
@@ -193,6 +244,23 @@ def __cyclicSymmetrySatrices(n, center=(0, 0, 0)):
         tflist.append(tf)
     tflist = _recenterSymmetries(tflist, center)
     return tflist
+
+def __cyclicUnitCellPlanes(n, center=(0, 0, 0), offset=None):
+    """ get planes that define a unit cell for cyclic symmetry of order n
+    """
+    matrices = __cyclicSymmetryMatrices(n, center, offset)
+    # these three vectors are enges of the unit cell
+    v1 = matrices[0][1,:3] 
+    v2 = matrices[-1][1,:3]
+    eigenvector = np.array([0,0,1]) 
+    # cross product of v1/v2 with eigenvetor
+    # these two vectors are normal to the planes that define the unit cell
+    plane1 = np.cross(v1, eigenvector)
+    plane2 = np.cross(v2, eigenvector)
+
+    return [v1, v2, eigenvector], [plane1, plane2]
+
+
 
 
 def __octahedralSymmetryMatrices(center=(0, 0, 0)):
@@ -209,7 +277,7 @@ def __octahedralSymmetryMatrices(center=(0, 0, 0)):
 
 def __dihedralSymmetryMatrices(n, center=(0, 0, 0)):
     """ Rotation about z axis, reflection about x axis. """
-    clist = __cyclicSymmetrySatrices(n)
+    clist = __cyclicSymmetryMatrices(n)
     reflect = ((1, 0, 0, 0), (0, -1, 0, 0), (0, 0, -1, 0))
     tflist = _matrixProducts([_identityMatrix(), reflect], clist)
     tflist = _recenterSymmetries(tflist, center)
