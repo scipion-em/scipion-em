@@ -166,6 +166,7 @@ class TestQueueBase(BaseTest):
                                                   doRaise=True)
         prot2D = self.newProtocol(relionProtocols.ProtRelionClassify2D,
                                   doCTF=False, maskDiameterA=340,
+                                  useGradientAlg=False,
                                   numberOfMpi=MPI, numberOfThreads=threads)
         prot2D.numberOfClasses.set(4)
         prot2D.numberOfIterations.set(3)

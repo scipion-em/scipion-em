@@ -104,8 +104,8 @@ class ProtOrigSampling(EMProtocol):
     def _insertAllSteps(self):
         self._insertFunctionStep('assignStep')
 
-    # --------------------------- STEPS functions -----------------------------
-
+    # --------------------------- STEPS functions -----------------------------        
+        
     def assignStep(self):
         # Create a Volume object
         self.inVol = self.inVolume.get()
@@ -113,10 +113,13 @@ class ProtOrigSampling(EMProtocol):
         self.outVol.copy(self.inVol)
 
         # Set sampling Rate (or copy from input)
+        oldSampling = self.inVol.getSamplingRate()
+        resample = True
         if self.setSampling.get():
             samplingRate = self.samplingRate.get()
         else:
-            samplingRate = self.inVol.getSamplingRate()
+            samplingRate = oldSampling
+            resample = False
 
         self.outVol.setSamplingRate(samplingRate)
 
@@ -126,7 +129,11 @@ class ProtOrigSampling(EMProtocol):
             origin.setShifts(self.x.get(), self.y.get(), self.z.get())
         else:
             origin = self.inVol.getOrigin()
-
+            if resample:
+                x, y, z = origin.getShifts()
+                factor = samplingRate / oldSampling
+                origin.setShifts(x*factor, y*factor, z*factor)
+            
         self.outVol.setOrigin(origin)
 
         # Files system stuff
