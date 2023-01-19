@@ -1,3 +1,7 @@
+V3.0.25
+developers:
+   - SCIPION_CANCEL_XMIPP_BINDING_WARNING defined in the environment will cancel the warning about xmipp binding missing
+   - SCIPION_CANCEL_XMIPP_BINDING_WARNING defined in the github action
 V3.0.24
 users:
    - Version compatible with latest released scipion-em-chimera plugin.
