@@ -55,8 +55,7 @@ class SequenceViewer(pwviewer.Viewer):
         # object (obj.getSequence()) in a Biopython Sequence:
         # Let keep the SequenceHandler import here to avoid a default BioPython
         # import
-        seqHandler = emconv.SequenceHandler(obj.getSequence(),
-                                            isAminoacid=obj.getIsAminoacids())
+        seqHandler = emconv.SequenceHandler(obj.getSequence())
         seqBio = seqHandler._sequence  # Bio.Seq.Seq object
         # Step 2: retrieving of the other args needed in the saveFile method
         seqID = obj.getId() if obj.getId() is not None else 'seqID'
