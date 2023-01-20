@@ -48,28 +48,29 @@ def _column(matrix, i):
 
 def _applyMatrix(tf, points):
     """
-    Args:multiply point by a matrice list """
-
+    Args:multiply point by a matrice list 
+    """
     tf = np.array(tf)
     r = matrix_multiply(points, np.transpose(tf[:, :3]))
     np.add(r, tf[:, 3], r)
     return r
 
-
 def __length(v):
+    """Return the length of a vector."""
     d = sqrt(sum([e*e for e in v]))
     return d
 
-
 def _normalizeVector(v):
+    """Return a unit vector in the same direction as v."""
     d = __length(v)
     if d == 0:
         d = 1
     return tuple([e/d for e in v])
 
-
 def _rotationTransform(axis, angle, center=(0, 0, 0)):
-    """ Angle is in degrees. """
+    """ return matrix that rotates "angle" angles arround vector axis
+        angle is in degrees
+    """
     axis = _normalizeVector(axis)
 
     arad = angle*pi/180.0
@@ -88,7 +89,7 @@ def _rotationTransform(axis, angle, center=(0, 0, 0)):
 
 
 def _translationMatrix(shift):
-
+    """ return matriz that shift point by vector shift"""
     tf = np.array(((1.0, 0, 0, shift[0]),
                    (0, 1.0, 0, shift[1]),
                    (0, 0, 1.0, shift[2])))
@@ -96,12 +97,12 @@ def _translationMatrix(shift):
 
 
 def _identityMatrix():
-
+    """ return identity matrix"""
     return (1.0, 0, 0, 0), (0, 1.0, 0, 0), (0, 0, 1.0, 0)
 
 
 def _invertMatrix(tf):
-
+    """ return inverse 3x3 matrix"""
     tf = np.array(tf)
     r = tf[:, :3]
     t = tf[:, 3]
@@ -114,7 +115,7 @@ def _invertMatrix(tf):
 
 
 def _multiplyMatrices(*mlist):
-
+    """ return matrix product of matrices in mlist"""
     if len(mlist) == 2:
         m1, m2 = mlist
         p = [[0, 0, 0, 0],
@@ -132,6 +133,7 @@ def _multiplyMatrices(*mlist):
 
 
 def _matrixProducts(mlist1, mlist2):
+    """ return list of matrix products of matrices in mlist1 and mlist2"""
     plist = []
     for m1 in mlist1:
         for m2 in mlist2:
@@ -141,7 +143,7 @@ def _matrixProducts(mlist1, mlist2):
 
 
 def _coordinateTransformList(tflist, ctf):
-
+    """ return list of coordinate transforms of tflist by ctf"""
     ctfinv = _invertMatrix(ctf)
     return [_multiplyMatrices(ctfinv, tf, ctf) for tf in tflist]
 
@@ -155,64 +157,85 @@ def _recenterSymmetries(tflist, center):
 
 
 def _transposeMatrix(tf):
-
+    """ return transpose of 3x3 matrix"""
     return ((tf[0][0], tf[1][0], tf[2][0], tf[0][3]),
             (tf[0][1], tf[1][1], tf[2][1], tf[1][3]),
             (tf[0][2], tf[1][2], tf[2][2], tf[2][3]))
 
+######## End of utility functions ########
 
-def getSymmetryMatrices(sym=cts.SYM_CYCLIC, n=1, center=(0, 0, 0), offset=None):
+def getSymmetryMatrices(sym=cts.SYM_CYCLIC, n=1, circumscribed_radius=1, center=(0, 0, 0), offset=None):
     """ interface between scipion and chimera code
         chimera code uses tuples of tuples as matrices
         but scipion uses np.arrays (lists of lists)
-        so let us convert them here
+        so let us convert them here.
+        Direct use of the classes return 3x3 arrays
+        which may be OK in many cases, but not in all
     """
     if sym == cts.SYM_CYCLIC:
-        matrices = __cyclicSymmetryMatrices(n, center, offset=offset)
-    elif sym == cts.SYM_DIHEDRAL:
-        matrices = __dihedralSymmetryMatrices(n, center)
-    elif sym == cts.SYM_OCTAHEDRAL:
-        matrices = __octahedralSymmetryMatrices(center)
+        c = Cyclic(n=n, center=center, circumscribed_radius=circumscribed_radius,
+                   offset=offset)
+        matrices = c.symmetryMatrices()
+    elif sym == cts.SYM_DIHEDRAL_X or sym == cts.SYM_DIHEDRAL_Y:
+        d = Dihedral(n=n, center=center, circumscribed_radius=circumscribed_radius,
+                     offset=offset, sym=sym)
+        matrices = c.symmetryMatrices()
+#    elif sym == cts.SYM_OCTAHEDRAL:
+#        o = Octaedral(n=n, center=center, circumscribed_radius=circumscribed_radius,
+#                     offset=offset)
+#        matrices = o.symmetryMatrices()
     elif sym == cts.SYM_TETRAHEDRAL or sym == cts.SYM_TETRAHEDRAL_Z3:
-        matrices = __tetrahedralSymmetryMatrices(cts.SYM_TETRAHEDRAL_Z3, center)
-    elif (sym == cts.SYM_I222 or sym == cts.SYM_I222r or
-          sym == cts.SYM_In25 or sym == cts.SYM_In25r):
-        matrices = __icosahedralSymmetryMatrices(sym, center)
+        matrices = Tetrahedral(center=center, circumscribed_radius=circumscribed_radius,
+                     offset=offset, sym=sym)
+#    elif (sym == cts.SYM_I222 or sym == cts.SYM_I222r or
+#          sym == cts.SYM_In25 or sym == cts.SYM_In25r):
+#        matrices = __icosahedralSymmetryMatrices(sym, center)
 
-    # convert from 4x 3 to 4x4 matrix, Scipion standard
+    # convert from 4x3 to 4x4 matrix, Scipion standard
     extraRow = (0., 0., 0., 1.)
     for i in range(len(matrices)):
         matrices[i] += (extraRow,)
     # convert from sets to lists Scipion standard
     return np.array(matrices)
 
-def getUnitCell(sym=cts.SYM_CYCLIC, n=1, center=(0, 0, 0), offset=None):
+def getUnitCell(sym=cts.SYM_CYCLIC, n=1, circumscribed_radius=1, center=(0, 0, 0), offset=None):
     """ return vectors normal to the unit cell faces
     """
+    print("sym", sym)
 
     if sym == cts.SYM_CYCLIC:
-        vectorsEdge, vectorsPlane = __cyclicUnitCellPlanes(n, center, offset=offset)
+        print("cyclic", sym)
+        c = Cyclic(n=n, center=center, circumscribed_radius=circumscribed_radius, offset=offset)
+        vectorsEdge, vectorsPlane = c.unitCellPlanes()
         if DEBUG:
             bildFileName = f'/tmp/C{n}.bild'
-            vLabels=['v1', 'v2', 'eigenvector']
+            vLabels=['v1', 'v2', 'v3']
             pLabels=['p1', 'p2']
-    elif sym == cts.SYM_DIHEDRAL:
-        vectorsEdge, vectorsPlane = __dihedralDXUnitCellPlanes(n, center, offset=offset)
+    elif sym == cts.SYM_DIHEDRAL_X or sym == cts.SYM_DIHEDRAL_Y:
+        print("dihedral", sym)
+        d = Dihedral(n=n, center=center, 
+                     circumscribed_radius=circumscribed_radius,
+                     offset=offset, sym = sym)
+        vectorsEdge, vectorsPlane = d.unitCellPlanes()
         if DEBUG:
             bildFileName = f'/tmp/D{n}.bild'
             vLabels=['v1', 'v2', 'eigenvector']
             pLabels=['p1', 'p2', 'p3']
-    elif sym == cts.SYM_OCTAHEDRAL:
-        pass
+    # elif sym == cts.SYM_OCTAHEDRAL:
+    #     pass
     elif sym == cts.SYM_TETRAHEDRAL_Z3 or sym == cts.SYM_TETRAHEDRAL:
-        vectorsEdge, vectorsPlane = __tetrahedralUnitCellPlanes(sym, center, offset=offset)
+        print("tetrahedral", sym)
+        t = Tetrahedral(n=n, center=center, 
+                     circumscribed_radius=circumscribed_radius,
+                     offset=offset, sym = sym)
+        vectorsEdge, vectorsPlane = t.unitCellPlanes()
         if DEBUG:
             bildFileName = f'/tmp/T.bild'
             vLabels=['v1', 'v2', 'v3']
             pLabels=['p1', 'p2', 'p3']
-    elif (sym == cts.SYM_I222 or sym == cts.SYM_I222r or
-          sym == cts.SYM_In25 or sym == cts.SYM_In25r):
-        matrices = __icosahedralSymmetryMatrices(sym, center)
+    # elif (sym == cts.SYM_I222 or sym == cts.SYM_I222r or
+    #       sym == cts.SYM_In25 or sym == cts.SYM_In25r):
+    #     matrices = __icosahedralSymmetryMatrices(sym, center)
     if DEBUG:
         Chimera.createCoordinateAxisFile(dim=expansionFactor,
                                          bildFileName=bildFileName,
@@ -226,6 +249,8 @@ def getUnitCell(sym=cts.SYM_CYCLIC, n=1, center=(0, 0, 0), offset=None):
                 y = vector[1]*expansionFactor 
                 z = vector[2]*expansionFactor 
                 f.write(f'.arrow 0 0 0  {x} {y} {z} 0.200000 0.400000 0.750000\n')
+                #if i==1:
+                #    break
 
             for i, vector in enumerate(vectorsPlane):
                 f.write(f'.comment {pLabels[i]}\n')
@@ -240,164 +265,247 @@ def getUnitCell(sym=cts.SYM_CYCLIC, n=1, center=(0, 0, 0), offset=None):
     return vectorsEdge, vectorsPlane
 
 
-def __cyclicSymmetryMatrices(n, center=(0, 0, 0), offset=0):
-    """ get Matrices for cyclic symmetry of order n
-    This is a local method. do not access directly to it
+
+# def __octahedralSymmetryMatrices(center=(0, 0, 0)):
+#     """ 4-folds along x, y, z axes. """
+#     c4 = (((0, 0, 1), 0), ((0, 0, 1), 90), ((0, 0, 1), 180), ((0, 0, 1), 270))
+#     cube = (((1, 0, 0), 0), ((1, 0, 0), 90), ((1, 0, 0), 180), ((1, 0, 0), 270),
+#             ((0, 1, 0), 90), ((0, 1, 0), 270))
+#     c4syms = [_rotationTransform(axis, angle) for axis, angle in c4]
+#     cubesyms = [_rotationTransform(axis, angle) for axis, angle in cube]
+#     syms = _matrixProducts(cubesyms, c4syms)
+#     syms = _recenterSymmetries(syms, center)
+#     return syms
+
+
+
+
+# def __icosahedralSymmetryMatrices(orientation=cts.SYM_I222, center=(0, 0, 0)):
+#     if orientation == cts.SYM_I222:
+#         sym = '222'
+#     elif orientation == cts.SYM_I222r:
+#         sym = '222r'
+#     elif orientation == cts.SYM_In25:
+#         sym = 'n25'
+#     elif orientation == cts.SYM_In25r:
+#         sym = 'n25r'
+
+#     i = Icosahedron(orientation=sym, center=center)
+#     return list(i.icosahedralSymmetryMatrices())
+
+class Cyclic(object):
+    """cyclic class.
+        Allow to compute symmetry matrices, vertices, 
+        symmetry axis and unit cell planes
     """
-    if offset is None:
-        offset = pi/(n)
-    tflist = []
-    for k in range(n):
-        a = (2*pi * np.float32(k) / n) + offset
-        
-        c = cos(a)
-        s = sin(a)
-        tf = ((c, -s, 0, 0),
-              (s, c, 0, 0),
-              (0, 0, 1, 0))
-        tflist.append(tf)
-    tflist = _recenterSymmetries(tflist, center)
-    return tflist
 
-def __cyclicUnitCellPlanes(n, center=(0, 0, 0), offset=None):
-    """ get planes that define a unit cell for cyclic symmetry of order n
+    def __init__(self, n, circumscribed_radius=1, center=(
+            0, 0, 0), offset=None):
+        """
+        :Parameters:
+            n: int order of symmetry
+            circumscribed_radius: float radius of the circumscribed sphere
+            center: tuple of 3 floats, center of the circumscribed sphere
+            offset: float, angle in degrees to rotate the symmetry axis
+                    it modifies the unit cell but not the symmetry matrices
+            """
+        self.n = n
+        self.circumscribed_radius = circumscribed_radius
+        self.center = center
+        self.matrices = None
+        self.offset = offset
+
+    def symmetryMatrices(self):
+        """ get Matrices for cyclic symmetry of order n
+        """
+        if self.matrices is not None:
+            return self.matrices
+        self.matrices = []
+        for k in range(self.n):
+            a = 2*pi * np.float32(k) / self.n
+            
+            c = cos(a)
+            s = sin(a)
+            tf = ((c, -s, 0, 0),
+                  (s, c, 0, 0),
+                  (0, 0, 1, 0))
+            self.matrices.append(tf)
+        self.matrices = _recenterSymmetries(self.matrices, self.center)
+        return self.matrices
+
+    def unitCellPlanes(self):
+        """ get planes that define a unit cell for cyclic symmetry of order n
+        """
+        if self.offset is None:
+            self.offset = pi/(self.n)
+        matrices = self.symmetryMatrices()
+        # these three vectors are enges of the unit cell
+        angle = -2*pi/self.n 
+        a1 = self.offset
+        a2 = angle + self.offset
+        c1 = cos(a1) * self.circumscribed_radius
+        s1 = sin(a1) * self.circumscribed_radius
+        c2 = cos(a2) * self.circumscribed_radius
+        s2 = sin(a2) * self.circumscribed_radius
+        v1 = np.array([c1, s1, 0, 1.])
+        v2 = np.array([c2, s2, 0, 1.]) 
+        v3 = np.array([0,0,1*self.circumscribed_radius]) # keep this dim 3 instead of dim 4
+        if self.offset != 0.: # rotate vectors
+            rotMat = _rotationTransform(v3, self.offset, self.center)
+            print("rotMat", rotMat)
+            print("v1", v1)
+            v1 = np.dot(rotMat, v1)
+            v2 = np.dot(rotMat, v2)
+        # cross product of v1/v2 with eigenvetor
+        # these two vectors are normal to the planes that define the unit cell
+        plane1 = np.cross(v1, v3)
+        plane2 = np.cross(v3, v2)
+        if DEBUG:
+            print("v1", v1)
+            print("v2", v2)
+            print("v3", v3)
+            print("plane1", plane1)
+            print("plane2", plane2)
+
+        return [v1, v2, v3], [plane1, plane2]
+
+
+class Dihedral(Cyclic):
+    """dihedral class.
+        Allow to compute symmetry matrices,  vertices, 
+        symmetry axis and unit cell planes
     """
-    matrices = __cyclicSymmetryMatrices(n, center, offset)
-    # these three vectors are enges of the unit cell
-    v1 = _column(matrices[0],0) 
-    v2 = _column(matrices[-1],0)
-    eigenvector = np.array([0,0,1])
-    # cross product of v1/v2 with eigenvetor
-    # these two vectors are normal to the planes that define the unit cell
-    plane1 = np.cross(v1, eigenvector)
-    plane2 = np.cross(eigenvector, v2)
-    if DEBUG:
-        print("v1", v1)
-        print("v2", v2)
-        print("eigenvector", eigenvector)
-        print("plane1", plane1)
-        print("plane2", plane2)
+    def __init__(self, n, circumscribed_radius=1, center=(
+            0, 0, 0), offset=None, sym=cts.SYM_DIHEDRAL_X):
+        """
+        :Parameters:
+            n: int order of symmetry
+            circumscribed_radius: float radius of the circumscribed sphere
+            center: tuple of 3 floats, center of the circumscribed sphere
+            offset: float, angle in degrees to rotate the symmetry axis
+                    it modifies the unit cell but not the symmetry matrices
+            """
+        super().__init__(n=n, circumscribed_radius=circumscribed_radius, center=center, offset=offset)
+        self.sym = sym
 
-    return [v1, v2, eigenvector], [plane1, plane2]
+    def symmetryMatrices(self):
+        clist = super().symmetryMatrices()
+        if self.sym == cts.SYM_DIHEDRAL_X:
+            # matrix thta reflect in the x axis
+            reflect = ((1, 0, 0, 0), (0, -1, 0, 0), (0, 0, -1, 0))
+        else:
+            print("Be carefull untested code")
+            # matrix thta reflect in the y axis
+            reflect = ((-1, 0, 0, 0), (0, 1, 0, 0), (0, 0, -1, 0))
 
-def __octahedralSymmetryMatrices(center=(0, 0, 0)):
-    """ 4-folds along x, y, z axes. """
-    c4 = (((0, 0, 1), 0), ((0, 0, 1), 90), ((0, 0, 1), 180), ((0, 0, 1), 270))
-    cube = (((1, 0, 0), 0), ((1, 0, 0), 90), ((1, 0, 0), 180), ((1, 0, 0), 270),
-            ((0, 1, 0), 90), ((0, 1, 0), 270))
-    c4syms = [_rotationTransform(axis, angle) for axis, angle in c4]
-    cubesyms = [_rotationTransform(axis, angle) for axis, angle in cube]
-    syms = _matrixProducts(cubesyms, c4syms)
-    syms = _recenterSymmetries(syms, center)
-    return syms
+        tflist = _matrixProducts([_identityMatrix(), reflect], clist)
+        tflist = _recenterSymmetries(tflist, self.center)
+        return tflist
+
+    def unitCellPlanes(self):
+        """ get planes that define a unit cell for dihedral symmetry of order n
+        """
+        if self.offset is None:
+            self.offset = pi/(self.n) + pi/2
+        vectorsEdge, vectorsPlane = super().unitCellPlanes()
+        vectorsPlane.append(np.array([0,0,1*self.circumscribed_radius]))
+        if DEBUG:
+            print("v1", vectorsEdge[0])
+            print("v2", vectorsEdge[1])
+            print("eigenvector", vectorsEdge[2])
+            print("plane1", vectorsPlane[0])
+            print("plane2", vectorsPlane[1])
+            print("plane3", vectorsPlane[2])
+
+        return vectorsEdge, vectorsPlane
 
 
-def __dihedralDXSymmetryMatrices(n, center=(0, 0, 0), offset=None):
-    """ Rotation about z axis, reflection about x axis. """
-    if offset is None:
-        offset = pi/(n) + pi/2
-    clist = __cyclicSymmetryMatrices(n, center=center, offset=offset)
-    reflect = ((1, 0, 0, 0), (0, -1, 0, 0), (0, 0, -1, 0))
-    tflist = _matrixProducts([_identityMatrix(), reflect], clist)
-    tflist = _recenterSymmetries(tflist, center)
-    return tflist
-
-def __dihedralDXUnitCellPlanes(n, center=(0, 0, 0), offset=None):
-    """ get planes that define a unit cell for dihedral symmetry of order n
+class Tetrahedral(object):
+    """Tetrahedral class.
+        Allow to compute symmetry matrices,  vertices, 
+        symmetry axis and unit cell planes
     """
-    if offset is None:
-        offset = pi/(n) + pi/2
-    vectorsEdge, vectorsPlane = __cyclicUnitCellPlanes(n, center, offset=offset)
-    print("vectorsPlane", vectorsPlane)
-    vectorsPlane.append(np.array([0,0,1]))
-    print("vectorsPlane2", vectorsPlane)
 
-    if DEBUG:
-        print("v1", vectorsEdge[0])
-        print("v2", vectorsEdge[1])
-        print("eigenvector", vectorsEdge[2])
-        print("plane1", vectorsPlane[0])
-        print("plane2", vectorsPlane[1])
-        print("plane3", vectorsPlane[2])
+    def __init__(self, n, circumscribed_radius=1, center=(
+            0, 0, 0), offset=None, sym = cts.SYM_TETRAHEDRAL_Z3):
+        """
+        :Parameters:
+            n: int order of symmetry
+            circumscribed_radius: float radius of the circumscribed sphere
+            center: tuple of 3 floats, center of the circumscribed sphere
+            offset: float, angle in degrees to rotate the symmetry axis
+                    it modifies the unit cell but not the symmetry matrices
+            """
+        self.n = n
+        self.circumscribed_radius = circumscribed_radius
+        self.center = center
+        self.matrices = None
+        self.offset = offset
+        self.sym = sym
 
-    return vectorsEdge, vectorsPlane
+    def symmetryMatrices(self):
+        """
+        identity
+        4 * rotation by 120 clockwise (seen from a vertex):
+                            (234), (143), (412), (321)
+        4 * rotation by 120 counterclockwise (ditto)
+        3 * rotation by 180
+         """
+        # simmetries are rotations around theses axis by these angles
+        aa = (((0, 0, 1), 0), ((1, 0, 0), 180), ((0, 1, 0), 180), ((0, 0, 1), 180),
+              ((1, 1, 1), 120), ((1, 1, 1), 240), ((-1, -1, 1), 120), ((-1, -1, 1), 240),
+              ((-1, 1, -1), 120), ((-1, 1, -1), 240), ((1, -1, -1), 120),
+              ((1, -1, -1), 240))
+        syms = [_rotationTransform(axis, angle) for axis, angle in aa]
+        for i, sym in  enumerate(syms):
+            print(i, sym)
 
+        if self.sym == cts.SYM_TETRAHEDRAL_Z3:
+            #convention, 3-fold on z, 3-fold in yz plane along neg y.
+            tf = _multiplyMatrices(
+                     _rotationTransform((0, 0, 1), -45.0),
+                     _rotationTransform((1, 0, 0), -acos(1 / sqrt(3)) * 180 / pi))
+            syms = _coordinateTransformList(syms, tf)
 
+        syms = _recenterSymmetries(syms, self.center)
+        for i, sym in  enumerate(syms):
+            print(i, sym)
+        return syms
 
-def __tetrahedralSymmetryMatrices(orientation=cts.SYM_TETRAHEDRAL,
-                                  center=(0, 0, 0), offset=None):
-    """
-    identity
-    4 * rotation by 120 clockwise (seen from a vertex):
-                           (234), (143), (412), (321)
-    4 * rotation by 120 counterclockwise (ditto)
-    3 * rotation by 180
-    """
-#    aa = (((0, 0, 1), 0), ((1, 0, 0), 180), ((0, 1, 0), 180), ((0, 0, 1), 180),
-#          ((1, 1, 1), 120), ((1, 1, 1), 240), ((-1, -1, 1), 120), ((-1, -1, 1), 240),
-#          ((-1, 1, -1), 120), ((-1, 1, -1), 240), ((1, -1, -1), 120),
-#          ((1, -1, -1), 240))
-    aa = (((0, 0, 1), 0), ((0, 1, 0), 180), ((-1, 0, 0), 180), ((0, 0, 1), 180),
-          ((-1, 1, 1), 120), ((-1, 1, 1), 240), ((1, -1, 1), 120), ((1, -1, 1), 240),
-          ((-1, -1, -1), 120), ((-1, -1, -1), 240), ((1, 1, -1), 120),
-          ((1, 1, -1), 240))
-    syms = [_rotationTransform(axis, angle) for axis, angle in aa]
+    def unitCellPlanes(self):
+        """ get planes that define a unit cell for cyclic symmetry of order n
+        """
+        matrices = self.symmetryMatrices()
+        # these three vectors are enges of the unit cell
+        # 
+        v1 = np.array([0, sqrt(8./9.), -1./3.])
+        v2 = np.array([0,0,1]) 
+        v0 = np.array([-sqrt(2/3),-sqrt(2./9.),-1.3])
+        v3 = v0 + v1 + v2
+        plane1 = np.cross(v1, v3)
+        plane2 = np.cross(v3, v2)
+        plane3 = np.cross(v1, v2)
+        if DEBUG:
+            print("v1", v1)
+            print("v2", v2)
+            print("v3", v3)
+            print("plane1", plane1)
+            print("plane2", plane2)
+            print("plane3", plane3)
 
-    if orientation == cts.SYM_TETRAHEDRAL_Z3:
-        # EMAN convention, 3-fold on z, 3-fold in yz plane along neg y.
-        tf = _multiplyMatrices(
-            _rotationTransform((0, 0, 1), -45.0),
-            _rotationTransform((1, 0, 0), -acos(1 / sqrt(3)) * 180 / pi))
-        syms = _coordinateTransformList(syms, tf)
-
-    syms = _recenterSymmetries(syms, center)
-    return syms
-
-def __tetrahedralUnitCellPlanes(orientation=cts.SYM_TETRAHEDRAL,
-                                center=(0, 0, 0), offset=None):
-    """ get planes that define a unit cell for cyclic symmetry of order n
-    """
-    matrices = __tetrahedralSymmetryMatrices(orientation, center, offset)
-    print("matrices", matrices)
-    # these three vectors are enges of the unit cell
-    v1 = _column(matrices[0],0) 
-    v2 = _column(matrices[-1],0)
-    v3 = np.array([0,0,1]) # generalize since this is only true for z3
-    # cross product of v1/v2 with eigenvetor
-    # these two vectors are normal to the planes that define the unit cell
-    plane1 = np.cross(v1, v3)
-    plane2 = np.cross(v3, v2)
-    plane3 = np.cross(v1, v2)
-    if DEBUG:
-        print("v1", v1)
-        print("v2", v2)
-        print("v3", v3)
-        print("plane1", plane1)
-        print("plane2", plane2)
-        print("plane3", plane3)
-
-    return [v1, v2, v3], [plane1, plane2, plane3]
+        return [v1, v2, v3], [plane1, plane2, plane3]
 
 
-def __icosahedralSymmetryMatrices(orientation=cts.SYM_I222, center=(0, 0, 0)):
-    if orientation == cts.SYM_I222:
-        sym = '222'
-    elif orientation == cts.SYM_I222r:
-        sym = '222r'
-    elif orientation == cts.SYM_In25:
-        sym = 'n25'
-    elif orientation == cts.SYM_In25r:
-        sym = 'n25r'
-
-    i = Icosahedron(orientation=sym, center=center)
-    return list(i.icosahedralSymmetryMatrices())
-
-
+# TODO: Why is this a global variable instead of
+# a class variable? 
 icos_matrices = {}  # Maps orientation name to 60 matrices.
 
 
 class Icosahedron(object):
-
+    """Icosahedron class.
+        Allow to compute symmetry matrices, icosahedron vertices,
+         symmetry axis and unit cell planes
+    """
     def __init__(self, circumscribed_radius=1, orientation='222', center=(
             0, 0, 0)):
         """point = np.array([0, 1, PHI]"""
