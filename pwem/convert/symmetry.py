@@ -184,7 +184,8 @@ def getSymmetryMatrices(sym=cts.SYM_CYCLIC, n=1, circumscribed_radius=1, center=
 #        o = Octaedral(n=n, center=center, circumscribed_radius=circumscribed_radius,
 #                     offset=offset)
 #        matrices = o.symmetryMatrices()
-    elif sym == cts.SYM_TETRAHEDRAL or sym == cts.SYM_TETRAHEDRAL_Z3:
+    elif sym == cts.SYM_TETRAHEDRAL_222 or sym == cts.SYM_TETRAHEDRAL_Z3 or \
+         sym == cts.SYM_TETRAHEDRAL_222r or sym == cts.SYM_TETRAHEDRAL_Z3r:
         matrices = Tetrahedral(center=center, circumscribed_radius=circumscribed_radius,
                      offset=offset, sym=sym)
 #    elif (sym == cts.SYM_I222 or sym == cts.SYM_I222r or
@@ -452,15 +453,27 @@ class Tetrahedral(object):
         3 * rotation by 180
          """
         # simmetries are rotations around theses axis by these angles
-        aa = (((0, 0, 1), 0), ((1, 0, 0), 180), ((0, 1, 0), 180), ((0, 0, 1), 180),
-              ((1, 1, 1), 120), ((1, 1, 1), 240), ((-1, -1, 1), 120), ((-1, -1, 1), 240),
-              ((-1, 1, -1), 120), ((-1, 1, -1), 240), ((1, -1, -1), 120),
-              ((1, -1, -1), 240))
-        syms = [_rotationTransform(axis, angle) for axis, angle in aa]
-        for i, sym in  enumerate(syms):
-            print(i, sym)
+        if self.sym == cts.SYM_TETRAHEDRAL_Z3 or self.sym == cts.SYM_TETRAHEDRAL222:
+            self.aa = (((0, 0, 1), 0), ((1, 0, 0), 180), # 0 1
+                ((0, 1, 0), 180), ((0, 0, 1), 180), # 2 3
+                ((1, 1, 1), 120), ((1, 1, 1), 240), # 4 5
+                ((-1, -1, 1), 120), ((-1, -1, 1), 240), # 6 7
+                ((-1, 1, -1), 120), ((-1, 1, -1), 240), # 8 9
+                ((1, -1, -1), 120),  ((1, -1, -1), 240)) # 10 11
+        else: # TODO: this else has not been checked
+            self.aa = (((0, 0, 1), 0), ((1, 0, 0), 180), # 0 1
+                ((0, 1, 0), 180), ((0, 0, 1), 180), # 2 3
+                ((1, 1, 1), 120), ((1, 1, 1), 240), # 4 5
+                ((-1, -1, 1), 120), ((-1, -1, 1), 240), # 6 7
+                ((+1, -1, -1), 120), ((1, -1, -1), 240), # 8 9
+                ((-1,  1, -1), 120),  ((-1, 1, -1), 240)) # 10 11
 
-        if self.sym == cts.SYM_TETRAHEDRAL_Z3:
+        syms = [_rotationTransform(axis, angle) for axis, angle in self.aa]
+#        for i, sym in  enumerate(syms):
+#            print(i, sym)
+
+        if self.sym == cts.SYM_TETRAHEDRAL_Z3 or cts.SYM_TETRAHEDRAL_Z3R:
+            # TODO: not sure about  cts.SYM_TETRAHEDRAL_Z3R
             #convention, 3-fold on z, 3-fold in yz plane along neg y.
             tf = _multiplyMatrices(
                      _rotationTransform((0, 0, 1), -45.0),
@@ -468,8 +481,8 @@ class Tetrahedral(object):
             syms = _coordinateTransformList(syms, tf)
 
         syms = _recenterSymmetries(syms, self.center)
-        for i, sym in  enumerate(syms):
-            print(i, sym)
+        #for i, sym in  enumerate(syms):
+        #    print(i, sym)
         return syms
 
     def unitCellPlanes(self):
@@ -477,22 +490,46 @@ class Tetrahedral(object):
         """
         matrices = self.symmetryMatrices()
         # these three vectors are enges of the unit cell
-        # 
-        v1 = np.array([0, sqrt(8./9.), -1./3.])
-        v2 = np.array([0,0,1]) 
-        v0 = np.array([-sqrt(2/3),-sqrt(2./9.),-1.3])
-        v3 = v0 + v1 + v2
-        plane1 = np.cross(v1, v3)
-        plane2 = np.cross(v3, v2)
-        plane3 = np.cross(v1, v2)
+        # tetahdron vertexes  for t222, for tz3 are the ones commented
+        #if self.sym == cts.SYM_TETRAHEDRAL_Z3 or sym == cts.SYM_TETRAHEDRAL222:
+            #v0 = _normalizeVector(np.array([1,1,1])) # np.array([0, sqrt(8./9.), -1./3.])
+            #v1 = _normalizeVector(np.array([-1,-1,1])) # np.array([0,0,1.]) 
+            #v2 = _normalizeVector(np.array([-1.,1.,-1])) # np.array([-sqrt(2./3.),-sqrt(2./9.),-1./3])
+            #v3 = _normalizeVector(np.array([1,-1,-1])) # _normalizeVector(v0 + v1 + v2)
+        #else:
+            #v0 = _normalizeVector(np.array([+1,+1,+1])) # np.array([0, sqrt(8./9.), -1./3.])
+            #v1 = _normalizeVector(np.array([-1,-1,+1])) # np.array([0,0,1.]) 
+            #v2 = _normalizeVector(np.array([+1.,-1.,-1])) # np.array([-sqrt(2./3.),-sqrt(2./9.),-1./3])
+            #v3 = _normalizeVector(np.array([-1,+1,-1])) # _normalizeVector(v0 + v1 + v2)
+        v0 = _normalizeVector(np.array(self.aa[4][0])) * self.circumscribed_radius
+        v1 = _normalizeVector(np.array(self.aa[6][0])) * self.circumscribed_radius
+        v2 = _normalizeVector(np.array(self.aa[8][0])) * self.circumscribed_radius
+        v3 = _normalizeVector(np.array(self.aa[10][0])) * self.circumscribed_radius
+
+        if self.sym == cts.SYM_TETRAHEDRAL_Z3 or self.sym == cts.SYM_TETRAHEDRAL_Z3R:
+            #TODO: not sure about cts.SYM_TETRAHEDRAL_Z3R
+            #convention, 3-fold on z, 3-fold in yz plane along neg y.
+            tf = _multiplyMatrices(
+                     _rotationTransform((0, 0, 1), -45.0),
+                     _rotationTransform((1, 0, 0), -acos(1 / sqrt(3)) * 180 / pi))
+            tf = _invertMatrix(tf)
+            v0 = np.dot(tf, np.append(v0,[1]))[:3]
+            v1 = np.dot(tf, np.append(v1,[1]))[:3]
+            v2 = np.dot(tf, np.append(v2,[1]))[:3]
+            v3 = np.dot(tf, np.append(v3,[1]))[:3]
+        vp = _normalizeVector(v1 + v2 + v3)
+        plane1 = np.cross(v1, v2)
+        plane2 = np.cross(vp, v2)
+        plane3 = np.cross(vp, v1)
         if DEBUG:
+            print("v0", v0)
             print("v1", v1)
             print("v2", v2)
             print("v3", v3)
+
             print("plane1", plane1)
             print("plane2", plane2)
             print("plane3", plane3)
-
         return [v1, v2, v3], [plane1, plane2, plane3]
 
 
