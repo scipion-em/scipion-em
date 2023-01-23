@@ -38,74 +38,100 @@ except ImportError:
 
 class TestSymmetry(pwtests.unittest.TestCase):
 
-    def assertArrayAlmostEqual(self, a1, a2):
+    def assertArrayAlmostEqual(self, a1, a2, decimal=3):
         try:
-            np.testing.assert_array_almost_equal(a1, a2, decimal=3)
+            np.testing.assert_array_almost_equal(a1, a2, decimal=decimal)
             res = True
         except AssertionError as err:
             res = False
             print(err)
         self.assertTrue(res)
 
-    def testSymmetryCyclic(self):
-        matrices = emconv.getSymmetryMatrices(emcts.SYM_CYCLIC, n=3)
-        m1 = matrices[0]
-        m2 = matrices[1]
-        m3 = matrices[2]
+    def test_01_SymmetryCyclicSymmetryMatrices(self):
+        n = 7
+        matrices = emconv.getSymmetryMatrices(emcts.SYM_CYCLIC, n=n)
+        refMatrices = []
+        angle = 2 * np.pi / n
+        for i in range(n):
+            c = np.cos(angle * i)
+            s = np.sin(angle * i)
+            refMatrices.append([[c, -s, 0, 0],
+                                [s, c, 0, 0],
+                                [0, 0, 1.0, 0],
+                                [0, 0, 0.0, 1.0]])
+        for i, (m, r) in enumerate(izip(matrices, refMatrices)):
+            print(f"Symmetry matrix {i}:\n ", m)
+            self.assertArrayAlmostEqual(r, m)
 
-        # m1 is identity
-        r = emconv.identity_matrix()
-        self.assertArrayAlmostEqual(r, m1)
+    def test_02_SymmetryCyclicUnitCell(self):
+        n = 7
+        angle = 2 * np.pi / n
+        vectorsEdge, vectorsPlane = emconv.getUnitCell(sym=emcts.SYM_CYCLIC,
+                                                       n=n, 
+                                                       circumscribed_radius=1, 
+                                                       center=(0, 0, 0), 
+                                                       offset=None)
+        v = []
+        v.append([np.cos(angle / 2.), np.sin(angle / 2.), 0])
+        v.append([np.cos(-angle / 2.), np.sin(-angle / 2.), 0])
+        for v, w in zip(v, vectorsEdge):
+            self.assertArrayAlmostEqual(v, w, decimal=3)
 
-        # m2 rotated 120 degrees
-        c = -0.5
-        s = 0.86602540378
-        r = [[c, -s, 0, 0],
-             [s, c, 0, 0],
-             [0, 0, 1.0, 0],
-             [0, 0, 0.0, 1.0]]
 
-        self.assertArrayAlmostEqual(r, m2)
-        # m3 rotated -120 degrees
-        c = -0.5
-        s = -0.86602540378
-        r = [[c, -s, 0, 0],
-             [s, c, 0, 0],
-             [0, 0, 1.0, 0],
-             [0, 0, 0.0, 1.0]]
+    def test_10_SymmetryDihedralXSymmetryMatrices(self):
+        n = 7
+        angle = 2 * np.pi / n
+        matrices = emconv.getSymmetryMatrices(emcts.SYM_DIHEDRAL_X, n=7)
+        refMatrices = []
+        # this are the matrices for the 7-fold dihedral symmetry
+        for i in range(n):
+            c = np.cos(angle * i)
+            s = np.sin(angle * i)
+            refMatrices.append([[c, -s, 0, 0],
+                                [s, c, 0, 0],
+                                [0, 0, 1.0, 0],
+                                [0, 0, 0.0, 1.0]])
 
-        self.assertArrayAlmostEqual(r, m3)
+        # reflection x axis
+        for i in range(n):
+            mat = np.copy(refMatrices[i])
+            
+            mat[1][1] *= -1
+            mat[1][0] *= -1
+            mat[2][2] *= -1
+            refMatrices.append(mat)
 
-    def testSymmetryDihedral(self):
-        matrices = emconv.getSymmetryMatrices(emcts.SYM_DIHEDRAL, n=3)
-        # skip m1, m2 and m3 since there are identical to CYCLIC
-        m4 = matrices[3]
-        m5 = matrices[4]
-        m6 = matrices[5]
+        for i, (m, r) in enumerate(izip(matrices, refMatrices)):
+            print(f"Symmetry matrix {i}:\n ", m)
+            self.assertArrayAlmostEqual(r, m)
 
-        # m4 mirrored
-        r = emconv.identity_matrix()
-        r[1][1] *= -1.
-        r[2][2] *= -1.
-        self.assertArrayAlmostEqual(r, m4)
+    def test_11_SymmetryDihedralYSymmetryMatrices(self):
+        n = 7
+        angle = 2 * np.pi / n
+        matrices = emconv.getSymmetryMatrices(emcts.SYM_DIHEDRAL_Y, n=7)
+        refMatrices = []
+        # this are the matrices for the 7-fold dihedral symmetry
+        for i in range(n):
+            c = np.cos(angle * i)
+            s = np.sin(angle * i)
+            refMatrices.append([[c, -s, 0, 0],
+                                [s, c, 0, 0],
+                                [0, 0, 1.0, 0],
+                                [0, 0, 0.0, 1.0]])
 
-        # m5 rotated 120 degrees and mirrored
-        c = -0.5
-        s = 0.86602540378
-        r = [[c, -s, 0, 0],
-             [-s, -c, 0, 0],
-             [0, 0, -1.0, 0],
-             [0, 0, 0.0, 1.0]]
-        self.assertArrayAlmostEqual(r, m5)
+        # reflection y axis
+        for i in range(n):
+            mat = np.copy(refMatrices[i])
+            
+            mat[0][0] *= -1
+            mat[0][1] *= -1
+            mat[2][2] *= -1
+            refMatrices.append(mat)
 
-        # m6 rotated -120 degrees and mirrored
-        c = -0.5
-        s = -0.86602540378
-        r = [[c, -s, 0, 0],
-             [-s, -c, 0, 0],
-             [0, 0, -1.0, 0],
-             [0, 0, 0.0, 1.0]]
-        self.assertArrayAlmostEqual(r, m6)
+        for i, (m, r) in enumerate(izip(matrices, refMatrices)):
+            print(f"Symmetry matrix {i}:\n ", m)
+            self.assertArrayAlmostEqual(r, m)
+
 
     def testSymmetryOctahedral(self):
         matrices = emconv.getSymmetryMatrices(emcts.SYM_OCTAHEDRAL)

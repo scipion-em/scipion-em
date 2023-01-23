@@ -76,11 +76,20 @@ def _rotationTransform(axis, angle, center=(0, 0, 0)):
     arad = angle*pi/180.0
     sa = sin(arad)
     ca = cos(arad)
+    if axis==(0, 0, 1) and center == (0, 0, 0):
+        return ((ca, -sa, 0, 0),
+                (sa, ca, 0, 0),
+                (0, 0, 1, 0))
+
     k = 1 - ca
     ax, ay, az = axis
     tf = ((1 + k*(ax*ax-1), -az*sa+k*ax*ay, ay*sa+k*ax*az, 0),
           (az*sa+k*ax*ay, 1 + k*(ay*ay-1), -ax*sa+k*ay*az, 0),
           (-ay*sa+k*ax*az, ax*sa+k*ay*az, 1 + k*(az*az-1), 0))
+    
+    if center == (0, 0, 0):
+        return tf
+    
     cx, cy, cz = center
     c_tf = ((1, 0, 0, cx), (0, 1, 0, cy), (0, 0, 1, cz))
     inv_c_tf = ((1, 0, 0, -cx), (0, 1, 0, -cy), (0, 0, 1, -cz))
@@ -179,7 +188,7 @@ def getSymmetryMatrices(sym=cts.SYM_CYCLIC, n=1, circumscribed_radius=1, center=
     elif sym == cts.SYM_DIHEDRAL_X or sym == cts.SYM_DIHEDRAL_Y:
         d = Dihedral(n=n, center=center, circumscribed_radius=circumscribed_radius,
                      offset=offset, sym=sym)
-        matrices = c.symmetryMatrices()
+        matrices = d.symmetryMatrices()
 #    elif sym == cts.SYM_OCTAHEDRAL:
 #        o = Octaedral(n=n, center=center, circumscribed_radius=circumscribed_radius,
 #                     offset=offset)
@@ -202,10 +211,8 @@ def getSymmetryMatrices(sym=cts.SYM_CYCLIC, n=1, circumscribed_radius=1, center=
 def getUnitCell(sym=cts.SYM_CYCLIC, n=1, circumscribed_radius=1, center=(0, 0, 0), offset=None):
     """ return vectors normal to the unit cell faces
     """
-    print("sym", sym)
 
     if sym == cts.SYM_CYCLIC:
-        print("cyclic", sym)
         c = Cyclic(n=n, center=center, circumscribed_radius=circumscribed_radius, offset=offset)
         vectorsEdge, vectorsPlane = c.unitCellPlanes()
         if DEBUG:
@@ -344,19 +351,14 @@ class Cyclic(object):
         angle = -2*pi/self.n 
         a1 = self.offset
         a2 = angle + self.offset
-        c1 = cos(a1) * self.circumscribed_radius
-        s1 = sin(a1) * self.circumscribed_radius
-        c2 = cos(a2) * self.circumscribed_radius
-        s2 = sin(a2) * self.circumscribed_radius
-        v1 = np.array([c1, s1, 0, 1.])
-        v2 = np.array([c2, s2, 0, 1.]) 
-        v3 = np.array([0,0,1*self.circumscribed_radius]) # keep this dim 3 instead of dim 4
-        if self.offset != 0.: # rotate vectors
-            rotMat = _rotationTransform(v3, self.offset, self.center)
-            print("rotMat", rotMat)
-            print("v1", v1)
-            v1 = np.dot(rotMat, v1)
-            v2 = np.dot(rotMat, v2)
+        c1 = cos(a1)
+        s1 = sin(a1)
+        c2 = cos(a2)
+        s2 = sin(a2)
+        v1 = np.array([c1, s1, 0.])
+        v2 = np.array([c2, s2, 0.]) 
+        v3 = np.array([0,0,1]) # keep this dim 3 instead of dim 4
+
         # cross product of v1/v2 with eigenvetor
         # these two vectors are normal to the planes that define the unit cell
         plane1 = np.cross(v1, v3)
@@ -367,8 +369,8 @@ class Cyclic(object):
             print("v3", v3)
             print("plane1", plane1)
             print("plane2", plane2)
-
-        return [v1, v2, v3], [plane1, plane2]
+        c = self.circumscribed_radius
+        return [v1*c, v2*c, v3*c], [plane1*c, plane2*c]
 
 
 class Dihedral(Cyclic):
@@ -392,7 +394,7 @@ class Dihedral(Cyclic):
     def symmetryMatrices(self):
         clist = super().symmetryMatrices()
         if self.sym == cts.SYM_DIHEDRAL_X:
-            # matrix thta reflect in the x axis
+            # matrix that reflect in the x axis
             reflect = ((1, 0, 0, 0), (0, -1, 0, 0), (0, 0, -1, 0))
         else:
             print("Be carefull untested code")
