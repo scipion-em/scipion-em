@@ -162,13 +162,13 @@ class SequenceHandler:
         error = ""
         if dataBase is None:
             if self.isAminoacid:
-                dataBase = 'UnitProt'
+                dataBase = 'UniProt'
             else:
                 dataBase = 'GeneBank'
 
         while counter <= retries:  # retry up to 5 times if server busy
             try:
-                if dataBase == 'UnitProt':
+                if dataBase == 'UniProt':
                     url = "http://www.uniprot.org/uniprot/%s.xml"
                     format = "uniprot-xml"
 
