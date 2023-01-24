@@ -193,10 +193,11 @@ def getSymmetryMatrices(sym=cts.SYM_CYCLIC, n=1, circumscribed_radius=1, center=
 #        o = Octaedral(n=n, center=center, circumscribed_radius=circumscribed_radius,
 #                     offset=offset)
 #        matrices = o.symmetryMatrices()
-    elif sym == cts.SYM_TETRAHEDRAL_222 or sym == cts.SYM_TETRAHEDRAL_Z3 or \
-         sym == cts.SYM_TETRAHEDRAL_222r or sym == cts.SYM_TETRAHEDRAL_Z3r:
-        matrices = Tetrahedral(center=center, circumscribed_radius=circumscribed_radius,
+    elif sym == cts.SYM_TETRAHEDRAL222 or sym == cts.SYM_TETRAHEDRAL_Z3: # or \
+         #sym == cts.SYM_TETRAHEDRAL_222r or sym == cts.SYM_TETRAHEDRAL_Z3r:
+        t = Tetrahedral(center=center, circumscribed_radius=circumscribed_radius,
                      offset=offset, sym=sym)
+        matrices = t.symmetryMatrices()
 #    elif (sym == cts.SYM_I222 or sym == cts.SYM_I222r or
 #          sym == cts.SYM_In25 or sym == cts.SYM_In25r):
 #        matrices = __icosahedralSymmetryMatrices(sym, center)
@@ -398,7 +399,7 @@ class Dihedral(Cyclic):
             reflect = ((1, 0, 0, 0), (0, -1, 0, 0), (0, 0, -1, 0))
         else:
             print("Be carefull untested code")
-            # matrix thta reflect in the y axis
+            # matrix that reflect in the y axis
             reflect = ((-1, 0, 0, 0), (0, 1, 0, 0), (0, 0, -1, 0))
 
         tflist = _matrixProducts([_identityMatrix(), reflect], clist)
@@ -429,7 +430,7 @@ class Tetrahedral(object):
         symmetry axis and unit cell planes
     """
 
-    def __init__(self, n, circumscribed_radius=1, center=(
+    def __init__(self, circumscribed_radius=1, center=(
             0, 0, 0), offset=None, sym = cts.SYM_TETRAHEDRAL_Z3):
         """
         :Parameters:
@@ -439,7 +440,6 @@ class Tetrahedral(object):
             offset: float, angle in degrees to rotate the symmetry axis
                     it modifies the unit cell but not the symmetry matrices
             """
-        self.n = n
         self.circumscribed_radius = circumscribed_radius
         self.center = center
         self.matrices = None
@@ -455,26 +455,26 @@ class Tetrahedral(object):
         3 * rotation by 180
          """
         # simmetries are rotations around theses axis by these angles
-        if self.sym == cts.SYM_TETRAHEDRAL_Z3 or self.sym == cts.SYM_TETRAHEDRAL222:
-            self.aa = (((0, 0, 1), 0), ((1, 0, 0), 180), # 0 1
+#        if self.sym == cts.SYM_TETRAHEDRAL_Z3 or self.sym == cts.SYM_TETRAHEDRAL222:
+        self.aa = (((0, 0, 1), 0), ((1, 0, 0), 180), # 0 1
                 ((0, 1, 0), 180), ((0, 0, 1), 180), # 2 3
                 ((1, 1, 1), 120), ((1, 1, 1), 240), # 4 5
                 ((-1, -1, 1), 120), ((-1, -1, 1), 240), # 6 7
                 ((-1, 1, -1), 120), ((-1, 1, -1), 240), # 8 9
                 ((1, -1, -1), 120),  ((1, -1, -1), 240)) # 10 11
-        else: # TODO: this else has not been checked
-            self.aa = (((0, 0, 1), 0), ((1, 0, 0), 180), # 0 1
-                ((0, 1, 0), 180), ((0, 0, 1), 180), # 2 3
-                ((1, 1, 1), 120), ((1, 1, 1), 240), # 4 5
-                ((-1, -1, 1), 120), ((-1, -1, 1), 240), # 6 7
-                ((+1, -1, -1), 120), ((1, -1, -1), 240), # 8 9
-                ((-1,  1, -1), 120),  ((-1, 1, -1), 240)) # 10 11
+        # else: # TODO: this else has not been checked
+        #     self.aa = (((0, 0, 1), 0), ((1, 0, 0), 180), # 0 1
+        #         ((0, 1, 0), 180), ((0, 0, 1), 180), # 2 3
+        #         ((-1, -1, -1), 120), ((-1, -1, -1), 240), # 4 5
+        #         ((+1, +1, -1), 120), ((+1, +1, -1), 240), # 6 7
+        #         ((+1, -1, +1), 120), ((+1, -1, +1), 240), # 8 9
+        #         ((-1, +1, +1), 120),  ((-1,+1, +1), 240)) # 10 11
 
         syms = [_rotationTransform(axis, angle) for axis, angle in self.aa]
-#        for i, sym in  enumerate(syms):
-#            print(i, sym)
+        for i, sym in  enumerate(syms):
+            print(i, sym)
 
-        if self.sym == cts.SYM_TETRAHEDRAL_Z3 or cts.SYM_TETRAHEDRAL_Z3R:
+        if self.sym == cts.SYM_TETRAHEDRAL_Z3: # or cts.SYM_TETRAHEDRAL_Z3R:
             # TODO: not sure about  cts.SYM_TETRAHEDRAL_Z3R
             #convention, 3-fold on z, 3-fold in yz plane along neg y.
             tf = _multiplyMatrices(
@@ -508,7 +508,7 @@ class Tetrahedral(object):
         v2 = _normalizeVector(np.array(self.aa[8][0])) * self.circumscribed_radius
         v3 = _normalizeVector(np.array(self.aa[10][0])) * self.circumscribed_radius
 
-        if self.sym == cts.SYM_TETRAHEDRAL_Z3 or self.sym == cts.SYM_TETRAHEDRAL_Z3R:
+        if self.sym == cts.SYM_TETRAHEDRAL_Z3: # or self.sym == cts.SYM_TETRAHEDRAL_Z3R:
             #TODO: not sure about cts.SYM_TETRAHEDRAL_Z3R
             #convention, 3-fold on z, 3-fold in yz plane along neg y.
             tf = _multiplyMatrices(

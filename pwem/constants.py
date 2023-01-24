@@ -124,9 +124,9 @@ SYM_I2n3r = 11  # Idem but rotated 180 degree about Y
 SYM_I2n5 = 12  # Two-fold symmetry along Y and 5-fold along Z
 SYM_I2n5r = 13  # Idem but rotated 180 degree about X
 
-SYM_TETRAHEDRAL222R = 14
+##SYM_TETRAHEDRAL222R = 14
 # and Z axes, a three-fold along axis (1,1,1)
-SYM_TETRAHEDRAL_Z3R = 15  
+##SYM_TETRAHEDRAL_Z3R = 15  
 
 
 # Symmetry dictionary

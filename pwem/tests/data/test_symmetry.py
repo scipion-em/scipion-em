@@ -132,6 +132,95 @@ class TestSymmetry(pwtests.unittest.TestCase):
             print(f"Symmetry matrix {i}:\n ", m)
             self.assertArrayAlmostEqual(r, m)
 
+    def test_13_SymmetrydihedralXUnitCell(self):
+        n = 7
+        angle = np.pi / n  + np.pi/2.
+        vectorsEdge, vectorsPlane = emconv.getUnitCell(sym=emcts.SYM_DIHEDRAL_X,
+                                                       n=n, 
+                                                       circumscribed_radius=1, 
+                                                       center=(0, 0, 0), 
+                                                       offset=None)
+        v = []
+        v.append([np.cos(angle), np.sin(angle), 0])
+        v.append([-np.cos(angle), np.sin(angle), 0])
+        v.append([0, 0, 1])
+        for v, w in zip(v, vectorsEdge):
+            self.assertArrayAlmostEqual(v, w, decimal=3)
+
+    def test_14_SymmetrydihedralYUnitCell(self):
+        n = 7
+        angle = np.pi / n  + np.pi/2.
+        vectorsEdge, vectorsPlane = emconv.getUnitCell(sym=emcts.SYM_DIHEDRAL_Y,
+                                                       n=n, 
+                                                       circumscribed_radius=1, 
+                                                       center=(0, 0, 0), 
+                                                       offset=None)
+        v = []
+        v.append([np.cos(angle), np.sin(angle), 0])
+        v.append([-np.cos(angle), np.sin(angle), 0])
+        v.append([0, 0, 1])
+        for v, w in zip(v, vectorsEdge):
+            self.assertArrayAlmostEqual(v, w, decimal=3)
+
+    def test_21_SymmetryTetrahedral222SymmetryMatrices(self):
+        n = 7
+        matrices = emconv.getSymmetryMatrices(emcts.SYM_TETRAHEDRAL222, n=n)
+        refMatrices = [
+                       [[1.0, 0.0, 0,   0],  #0
+                        [0.0, 1.0, 0,   0], 
+                        [0,   0,   1.,  0],
+                        [0,   0,   0,   1.]],
+                       [[1.0, 0.0, 0,   0], #1
+                        [0.0, -1.0, 0,  0],
+                        [0,   0,   -1,  0],
+                        [0,   0,   0,   1]],
+                        [[-1.0, 0.0, 0,  0], #2
+                            [0.0, 1.0, 0,   0],
+                            [0,   0,   -1,  0],
+                            [0,   0,   0,   1]],
+                        [[-1.0, 0.0, 0,  0], #3
+                            [0.0, -1.0, 0,  0],
+                            [0,   0,   1,   0],
+                            [0,   0,   0,   1]],
+                        [[0.0, 0.0, 1.0,   0], #4
+                            [1.0, 0.0, 0,   0],
+                            [0,   1.0,   0,  0],
+                            [0,   0,   0,   1]],
+                            [[0.0, 1.0, 0.0,  0], #5
+                            [0,   0,   1.0, 0],
+                            [1.0, 0.0, 0,  0],
+                            [0,   0,   0,   1]],
+                        [[0.0, 0.0, -1.0,  0], #6
+                            [1.0, 0.0, 0,   0],
+                            [0,   -1.0,   0,  0],
+                            [0,   0,   0,   1]],
+                        [[0.0, 1.0, 0.0,   0], #7
+                            [ 0,   0.0, -1,  0],
+                            [-1.0, 0.0, 0,  0],
+                            [0,   0,   0,   1]],
+                        [[0.0, 0.0, 1.0,  0], #8
+                            [ -1,   0.0, 0,  0],
+                            [0,   -1.0, 0,  0],
+                            [0,   0,   0,   1]],
+                        [[0.0, -1.0, 0.0,   0], #9
+                            [0.0, 0.0, -1.0,  0],
+                            [1.0, 0.0, 0,   0],
+                            [0,   0,   0,   1]],
+                        [[0.0, 0.0, -1.0,   0], #10
+                            [-1.0, 0.0, 0,  0],
+                            [0,   1.0, 0.0,  0],
+                            [0,   0,   0,   1]],
+                        [[0.0, -1.0, 0.0,   0], #11
+                            [0.0, 0.0, 1.0,  0],
+                            [-1.0, 0.0, 0,  0],
+                            [0,   0,   0,   1]],
+        ]
+        for i, (m, r) in enumerate(izip(matrices, refMatrices)):
+             print(f"Symmetry matrix {i}:\n ", m)
+             self.assertArrayAlmostEqual(r, m)
+
+
+
 
     def testSymmetryOctahedral(self):
         matrices = emconv.getSymmetryMatrices(emcts.SYM_OCTAHEDRAL)
