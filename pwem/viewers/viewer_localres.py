@@ -332,7 +332,7 @@ class ChimeraAttributeViewer(pwviewer.ProtocolViewer):
       low, high = self.getValuesRange()
       a.set_xlim([low, high])
 
-      n = 2
+      n = 5
       mult = 10 ** n
       stepSize = int(round((high-low) / self.intervals.get(), n) * mult)
       bins = [i / mult for i in range(int(low * mult), int(high * mult), stepSize)]

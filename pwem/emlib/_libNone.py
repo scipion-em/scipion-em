@@ -61,7 +61,8 @@ def linkXmippBinding():
                 pw.Config.getLibFolder()))
 
 
-print(ghostStr)
+if os.environ.get("SCIPION_CANCEL_XMIPP_BINDING_WARNING", None) is None:
+    print(ghostStr)
 
 linkXmippBinding()
 
