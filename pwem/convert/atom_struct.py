@@ -940,11 +940,25 @@ def fromCIFToPDB(inFileName, outFileName, log):
 def fromCIFTommCIF(inFileName, outFileName, log):
     _frombase(inFileName, outFileName, log, 8)
 
+def testLog(log, messages= None, sdterrLog = None):
+    # Method to capture exceptions like error messages from Phenix when map and model are far apart
+    if sdterrLog is None or messages is None:
+        return
 
-def retry(runEnvirom, program, args, cwd, listAtomStruct=[], log=None, clean_dir=None):
+    # read all content of a file
+    for line in sdterrLog(logFile=1):
+        # check if string present in a file
+        for message in messages:
+            if message in line:
+                print(pwutils.redStr("Error:  Protocol aborted, %s" % line))
+                raise Exception(pwutils.redStr("Error: %s" % line))
+
+def retry(runEnvirom, program, args, cwd, listAtomStruct=[], log=None, clean_dir=None, messages=["Sorry:"], sdterrLog=None):
     try:
         runEnvirom(program, args, cwd=cwd)
     except:
+        testLog(log, messages,sdterrLog)
+
         # first remove every files or directories in the extra folder,
         # except maps
         partiallyCleaningFolder(program, cwd)
@@ -956,8 +970,10 @@ def retry(runEnvirom, program, args, cwd, listAtomStruct=[], log=None, clean_dir
                 aSH = AtomicStructHandler()
                 aSH.read(atomStructName)
                 aSH.write(atomStructName)
-
-                runEnvirom(program, args, cwd=cwd)
+                try:
+                    runEnvirom(program, args, cwd=cwd)
+                except:
+                    testLog(log, messages,sdterrLog)
             else:
                 try:
                     if atomStructName.endswith(".pdb"):
@@ -968,6 +984,7 @@ def retry(runEnvirom, program, args, cwd, listAtomStruct=[], log=None, clean_dir
                         try:
                             runEnvirom(program, _args, cwd=cwd)
                         except:
+                            testLog(log, messages,sdterrLog)
                             fromCIFTommCIF(newAtomStructName, newAtomStructName, log)
                             runEnvirom(program, _args, cwd=cwd)
                     elif atomStructName.endswith(".cif"):
@@ -978,12 +995,15 @@ def retry(runEnvirom, program, args, cwd, listAtomStruct=[], log=None, clean_dir
                         try:
                             runEnvirom(program, _args, cwd=cwd)
                         except:
+                            testLog(log, messages,sdterrLog)
                             newAtomStructName = os.path.abspath(
                                 os.path.join(cwd, "retrycif%d.pdb" % i))
                             fromCIFToPDB(atomStructName, newAtomStructName, log)
                             _args = args.replace(atomStructName, newAtomStructName)
                             runEnvirom(program, _args, cwd=cwd)
+                            testLog(log, messages,sdterrLog)
                 except:
+                    testLog(log, messages,sdterrLog)
                     # first remove files or directories in the extra folder,
                     # except maps
                     partiallyCleaningFolder(program, cwd)
@@ -999,9 +1019,11 @@ def retry(runEnvirom, program, args, cwd, listAtomStruct=[], log=None, clean_dir
                         aSH.write(newAtomStructName)
                         _args = args.replace(atomStructName, newAtomStructName)
                         runEnvirom(program, _args, cwd=cwd)
+                        testLog(log, messages,sdterrLog)
                     except:
                         print("CIF file standardisation failed.")
                         # atomStructName = newAtomStructName
+
 
 
 # TODO this should no be here, ROB
