@@ -91,12 +91,10 @@ SYM_CYCLIC = 0  # CN cyclic symmetry Cn around z axis
 SYM_DIHEDRAL = 1  # DN cyclic symmetry plus and extra 2fold symmetry axis around X
 SYM_DIHEDRAL_X = SYM_DIHEDRAL
 SYM_DIHEDRAL_Y = 2  # DN cyclic symmetry plus and extra 2fold symmetry axis around Y (cryoSparc)
-SYM_TETRAHEDRAL = 3  # T 222 Tetrahedral symmetry with two-fold symmetry axes along the X, Y,
-SYM_TETRAHEDRAL222 = SYM_TETRAHEDRAL
-# and Z axes, a three-fold along axis (1,1,1)
+SYM_TETRAHEDRAL = 3  # T 222 Tetrahedral symmetry with two-fold symmetry axis along the X, Y and Z
+SYM_TETRAHEDRAL_222 = SYM_TETRAHEDRAL
 SYM_TETRAHEDRAL_Z3 = 4  # T  three-fold symmetry axis along Z, another three-fold axis 
-# in the YZ plane such that rotation about the X axis by ~110°
-# is a symmetry operation (EMAN convention)
+                        # in the YZ plane such that the y,z coordinates are negative
 
 SYM_OCTAHEDRAL = 5  # O
 
@@ -124,9 +122,16 @@ SYM_I2n3r = 11  # Idem but rotated 180 degree about Y
 SYM_I2n5 = 12  # Two-fold symmetry along Y and 5-fold along Z
 SYM_I2n5r = 13  # Idem but rotated 180 degree about X
 
+# SYM_TETRAHEDRAL222R  is a degenerated symmetry, that is
+# for each symmetry axis (x,y,z)  defined in T222, there is a
+# symmetry axis (-x,-y,-z) in T222R, therefore the produced
+# symmetry matrices are equivalent
 ##SYM_TETRAHEDRAL222R = 14
-# and Z axes, a three-fold along axis (1,1,1)
-##SYM_TETRAHEDRAL_Z3R = 15  
+SYM_TETRAHEDRAL_Z3R = 14  # T  three-fold symmetry axis along Z, another three-fold axis 
+                          # in the YZ plane such that the y,z coordinates 
+                          # are positive (y) and negative (z)
+                          # a molecule in this symmetry is the same as in Z3
+                          # but (x,y,z) --> (-x,-y,z)
 
 
 # Symmetry dictionary
@@ -136,6 +141,7 @@ SCIPION_SYM_NAME[SYM_DIHEDRAL_X] = 'Dxn'
 SCIPION_SYM_NAME[SYM_DIHEDRAL_Y] = 'Dyn'
 SCIPION_SYM_NAME[SYM_TETRAHEDRAL] = 'T222'
 SCIPION_SYM_NAME[SYM_TETRAHEDRAL_Z3] = 'Tz3'
+SCIPION_SYM_NAME[SYM_TETRAHEDRAL_Z3R] = 'Tz3r'
 SCIPION_SYM_NAME[SYM_OCTAHEDRAL] = 'O'
 SCIPION_SYM_NAME[SYM_I222] = 'I222'
 SCIPION_SYM_NAME[SYM_I222r] = 'I222r'
