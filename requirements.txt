@@ -1,5 +1,5 @@
 scipion-pyworkflow>=3.0.15
-biopython==1.79
-tifffile<=2021.11.2
+biopython==1.80
+tifffile<=2023.1.23.1
 emtable
-scipy<=1.8.1 # Fix for dependency conflict with PyWavelets --> scipy 1.9 --> numpy > pyworkflow numpy
+scipy<=1.10.0
