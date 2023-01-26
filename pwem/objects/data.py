@@ -1037,9 +1037,8 @@ class Sequence(EMObject):
     def exportToFile(self, seqFileName):
         '''Exports the sequence to the specified file'''
         import pwem.convert as emconv
-        seqAlphabet = self._alphabet.get() if self._alphabet.get() != None else Alphabet.DUMMY_ALPHABET
         seqHandler = emconv.SequenceHandler(self.getSequence(),
-                                            seqAlphabet)
+                                            self._alphabet.get())
         # retrieving  args from scipion object
         seqID = self.getId() if self.getId() is not None else 'seqID'
         seqName = self.getSeqName() if self.getSeqName() is not None else 'seqName'
