@@ -949,11 +949,13 @@ def testLog(log, messages= None, sdterrLog = None):
     for line in sdterrLog(logFile=1):
         # check if string present in a file
         for message in messages:
+            if "Sorry:" in line:
+                print(pwutils.redStr("WARNING, %s" % line))
             if message in line:
-                print(pwutils.redStr("Error:  Protocol aborted, %s" % line))
+                print(pwutils.redStr("Error:  Protocol aborted "))
                 raise Exception(pwutils.redStr("Error: %s" % line))
 
-def retry(runEnvirom, program, args, cwd, listAtomStruct=[], log=None, clean_dir=None, messages=["Sorry:"], sdterrLog=None):
+def retry(runEnvirom, program, args, cwd, listAtomStruct=[], log=None, clean_dir=None, messages=["Sorry: Input map is all zero after boxing"], sdterrLog=None):
     try:
         runEnvirom(program, args, cwd=cwd)
     except:
