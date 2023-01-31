@@ -226,7 +226,14 @@ class AtomicStructHandler:
         if dir is None:
             dir = os.getcwd()
         pdbl = PDBList(pdb=dir)
-        fileName = pdbl.retrieve_pdb_file(pdbID, pdir=dir, file_format=type)
+        for counter in range(5):
+            try:
+                fileName = pdbl.retrieve_pdb_file(pdbID, pdir=dir, file_format=type)
+            except Exception as error:
+                print("Error: ", error)
+                print("Retry connection", counter)
+                if counter == 4:
+                    raise
         return os.path.abspath(fileName)
 
     def checkLabelInFile(self, fileName, label):
@@ -949,13 +956,16 @@ def testLog(log, messages= None, sdterrLog = None):
     for line in sdterrLog(logFile=1):
         # check if string present in a file
         for message in messages:
-            if "Sorry:" in line:
-                print(pwutils.redStr("WARNING, %s" % line))
-            if message in line:
-                print(pwutils.redStr("Error:  Protocol aborted "))
-                raise Exception(pwutils.redStr("Error: %s" % line))
+            if message[0] in line:
+                log.info(pwutils.redStr("Error:  Protocol aborted "))
+                log.info(pwutils.redStr(f"Error: {message[1]}"))
+                raise Exception(pwutils.redStr("Error: %s" % message[1]))
+        if "Sorry" in line:
+            log.info(pwutils.redStr("WARNING, %s" % line))
 
-def retry(runEnvirom, program, args, cwd, listAtomStruct=[], log=None, clean_dir=None, messages=["Sorry: Input map is all zero after boxing"], sdterrLog=None):
+def retry(runEnvirom, program, args, cwd, listAtomStruct=[], log=None, clean_dir=None, messages=[], sdterrLog=None):
+    messages.append(("Sorry: Input map is all zero after boxing", "Sorry: Input map is all zero after boxing"))
+
     try:
         runEnvirom(program, args, cwd=cwd)
     except:
