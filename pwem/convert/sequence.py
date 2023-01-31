@@ -46,7 +46,7 @@ from pwem.objects.data import Alphabet
 class SequenceHandler:
     def __init__(self, sequence=None,
                  iUPACAlphabet=Alphabet.DUMMY_ALPHABET, doClean=True):
-        iUPACAlphabet = Alphabet.DUMMY_ALPHABET if iUPACAlphabet is None else iUPACAlphabet
+        iUPACAlphabet = Alphabet.DUMMY_ALPHABET if iUPACAlphabet not in Alphabet.alphabets else iUPACAlphabet
 
         if iUPACAlphabet == Alphabet.DUMMY_ALPHABET:
             self.isAminoacid = None
