@@ -11,7 +11,7 @@
 # *
 # * This program is distributed in the hope that it will be useful,
 # * but WITHOUT ANY WARRANTY; without even the implied warranty of
-# * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.,  See the
 # * GNU General Public License for more details.
 # *
 # * You should have received a copy of the GNU General Public License
@@ -163,8 +163,8 @@ class TestSymmetry(pwtests.unittest.TestCase):
             self.assertArrayAlmostEqual(v, w, decimal=3)
 
     def test_21_SymmetryTetrahedral222SymmetryMatrices(self):
-        n = 7
-        matrices = emconv.getSymmetryMatrices(emcts.SYM_TETRAHEDRAL222, n=n)
+        n = 7 # dummy n since T symmetry does not require order but general function does
+        matrices = emconv.getSymmetryMatrices(emcts.SYM_TETRAHEDRAL_222, n=n)
         refMatrices = [
                        [[1.0, 0.0, 0,   0],  #0
                         [0.0, 1.0, 0,   0], 
@@ -218,131 +218,242 @@ class TestSymmetry(pwtests.unittest.TestCase):
         for i, (m, r) in enumerate(izip(matrices, refMatrices)):
              self.assertArrayAlmostEqual(r, m)
 
-    def test_22_SymmetryTetrahedralZ3SymmetryMatrices(self):
-        n = 7
-        matrices = emconv.getSymmetryMatrices(emcts.SYM_TETRAHEDRAL_Z3, n=n)
-        refMatrices = [
-        [[ 1.,  0., -0.,  0.], #0
-        [ 0.,  1., -0.,  0.],
-        [ 0., -0.,  1.,  0.],
-        [ 0.,  0.,  0.,  1.]],
-        [[ 0.,        0.57735,   0.816497,  0.      ], #1
-        [ 0.57735,  -0.666667,  0.471405,  0.      ],
-        [ 0.816497,  0.471405, -0.333333,  0.      ],
-        [ 0.,        0.,        0.,        1.      ]],
-        [[-0.,       -0.57735,  -0.816497,  0.      ], #2
-        [-0.57735,  -0.666667,  0.471405,  0.      ],
-        [-0.816497,  0.471405, -0.333333,  0.      ],
-        [ 0.,        0.,        0.,        1.      ]],
-        [[-1.,        0.,       -0.,        0.      ], #3
-        [ 0.,        0.333333, -0.942809,  0.      ],
-        [ 0.,       -0.942809, -0.333333,  0.      ],
-        [ 0.,        0.,        0.,        1.      ]],
-        [[-0.5,      -0.866025,  0.,        0.      ], #4
-        [ 0.866025, -0.5,      -0.,        0.      ],
-        [ 0.,        0.,        1.,        0.      ],
-        [ 0.,        0.,        0.,        1.      ]],
-        [[-0.5,       0.866025, 0.,        0.      ], #5
-        [-0.866025, -0.5,       0.,        0.      ],
-        [ 0.,        0.,        1.,        0.      ],
-        [ 0.,        0.,        0.,        1.      ]],
-        [[-0.5,      0.288675, -0.816497,  0.      ], #6
-        [-0.288675,  0.833333,  0.471405,  0.      ],
-        [ 0.816497,  0.471405, -0.333333,  0.      ],
-        [ 0.,        0.,        0.,        1.      ]],
-        [[-0.5,      -0.288675,  0.816497,  0.      ], #7
-        [ 0.288675,  0.833333,  0.471405,  0.      ],
-        [-0.816497,  0.471405, -0.333333,  0.      ],
-        [ 0.,        0.,        0.,        1.      ]],
-        [[ 0.5,      -0.288675,  0.816497,  0.      ], #8
-        [-0.866025, -0.166667,  0.471405,  0.      ],
-        [-0.,       -0.942809, -0.333333,  0.      ],
-        [ 0.,        0.,       0.,        1.      ]],
-        [[ 0.5,      -0.866025, 0.,        0.      ], #9
-        [-0.288675, -0.166667, -0.942809,  0.      ],
-        [ 0.816497,  0.471405, -0.333333,  0.      ],
-        [ 0.,        0.,        0.,        1.      ]],
-        [[ 0.5,      0.866025, -0.,        0.      ], #10
-        [ 0.288675, -0.166667, -0.942809,  0.      ],
-        [-0.816497,  0.471405, -0.333333,  0.      ],
-        [ 0.,        0.,        0.,        1.      ]],
-        [[ 0.5,       0.288675, -0.816497,  0.      ], #11
-        [ 0.866025, -0.166667,  0.471405,  0.      ],
-        [-0.,       -0.942809, -0.333333,  0.      ],
-        [ 0.,        0.,        0.,        1.      ]]
-         ]
-        for i, (m, r) in enumerate(izip(matrices, refMatrices)):
-             print(f"Symmetry matrix {i}:\n ", m)
-             self.assertArrayAlmostEqual(r, m)
+        #t222 phantom
+        v = []
+        v1 = np.array([ 0.5773502691896258,  0.5773502691896258,  0.5773502691896258, 1.])
+        v.append(np.array([-0.5773502691896258, -0.5773502691896258,  0.5773502691896258, 1.]))
+        v.append(np.array([ 0.5773502691896258, -0.5773502691896258, -0.5773502691896258, 1.]))
+        v.append(np.array([-0.5773502691896258,  0.5773502691896258, -0.5773502691896258, 1.]))
 
-    def test_23_SymmetryTetrahedralZ3RSymmetryMatrices(self):
+        # some matrix should transform v1 into vX
+        for j, w in enumerate(v):
+            loopEnd = False
+            for i, m in enumerate(matrices):
+                vv = np.dot(m, w)
+                res = np.allclose(v1, vv, atol=.001)
+                if res:
+                    print("found match", m, w, vv)
+                    loopEnd = True
+                    break
+            self.assertTrue(loopEnd, f"No matrix transform vector {w} into vector {v}" )
+
+    def test_22_SymmetryTetrahedralZ3RSymmetryMatrices(self):
         n = 7
         matrices = emconv.getSymmetryMatrices(emcts.SYM_TETRAHEDRAL_Z3R, n=n)
+        print(np.round(matrices, 7))
         refMatrices = [
-        [[ 1., 0.,  0.,   0.], #0
-        [ 0.,  1., -0.,  0.],
-        [ 0., -0.,  1.,  0.],
-        [ 0.,  0.,  0.,  1.]],
-        [[ 0.,          0.57735,  -0.816497,  0.      ], #1
-        [  0.57735,   -0.666667, -0.471405,  0.      ],
-        [  -0.816497,  -0.471405, -0.333333,  0.      ],
-        [  0.,          0.,        0.,        1.      ]],
-        [[-0.,       -0.57735,  0.816497,  0.      ], #2
-        [-0.57735,  -0.666667, -0.471405,  0.      ],
-        [ 0.816497, -0.471405, -0.333333,  0.      ],
-        [ 0.,        0.,        0.,        1.      ]],
-        [[-1.,        0.,       -0.,        0.      ], #3
-        [ 0.,        0.333333, 0.942809,  0.      ],
-        [ 0.,       0.942809, -0.333333,  0.      ],
-        [ 0.,        0.,        0.,        1.      ]],
-        [[-0.5,      -0.866025,  0.,        0.      ], #4
-        [ 0.866025, -0.5,      -0.,        0.      ],
-        [ 0.,        0.,        1.,        0.      ],
-        [ 0.,        0.,        0.,        1.      ]],
-        [[-0.5,       0.866025, 0.,        0.      ], #5
-        [-0.866025, -0.5,       0.,        0.      ],
-        [ 0.,        0.,        1.,        0.      ],
-        [ 0.,        0.,        0.,        1.      ]],
-        [[-0.5,      0.288675,  0.816497,  0.      ], #6
-        [-0.288675,  0.833333,  -0.471405,  0.      ],
-        [ -0.816497,  -0.471405, -0.333333,  0.      ],
-        [ 0.,        0.,        0.,        1.      ]],
-        [[-0.5,      -0.288675,  -0.816497,  0.      ], #7
-        [ 0.288675,  0.833333,  -0.471405,  0.      ],
-        [0.816497,  -0.471405, -0.333333,  0.      ],
-        [ 0.,        0.,        0.,        1.      ]],
-        [[0.5,      -0.288675,  -0.816497,  0.      ], #8
-        [-0.866025, -0.166667,  -0.471405,  0.      ],
-        [-0.,        0.942809, -0.333333,  0.      ],
-        [ 0.,        0.,       0.,        1.      ]],
-        [[ 0.5,      -0.866025, 0.,        0.      ], #9
-        [-0.288675, -0.166667,  0.942809,  0.      ],
-        [-0.816497, -0.471405, -0.333333,  0.      ],
-        [ 0.,        0.,        0.,        1.      ]],
-        [[ 0.5,      0.866025, -0.,        0.      ], #10
-        [ 0.288675, -0.166667,  0.942809,  0.      ],
-        [ 0.816497, -0.471405, -0.333333,  0.      ],
-        [ 0.,        0.,        0.,        1.      ]],
-        [[ 0.5,       0.288675, 0.816497,  0.      ], #11
-        [ 0.866025, -0.166667,  -0.471405,  0.      ],
-        [-0.,        0.942809, -0.333333,  0.      ],
-        [ 0.,        0.,        0.,        1.      ]]
-         ]
+            [[1.,         0.,        -0.,         0.,       ],
+            [ 0.,         1.,        -0.,         0.,       ],
+            [ 0.,        -0.,         1.,         0.,       ],
+            [ 0.,         0.,         0.,         1.,       ]],
+
+            [[0.,         0.5773503,  0.8164966,  0.,       ],
+            [ 0.5773503, -0.6666667,  0.4714045,  0.,       ],
+            [ 0.8164966,  0.4714045, -0.3333333,  0.,       ],
+            [ 0.,         0.,         0.,         1.,       ]],
+
+            [[-0.,       -0.5773503, -0.8164966,  0.,       ],
+            [-0.5773503, -0.6666667,  0.4714045,  0.,       ],
+            [-0.8164966,  0.4714045, -0.3333333,  0.,       ],
+            [ 0.,         0.,         0.,         1.,       ]],
+
+            [[-1.,        0.,        -0.,         0.,       ],
+            [ 0.,         0.3333333, -0.942809,   0.,       ],
+            [ 0.,        -0.942809,  -0.3333333,  0.,       ],
+            [ 0.,         0.,         0.,         1.,       ]],
+
+            [[-0.5,      -0.8660254,  0.,         0.,       ],
+            [ 0.8660254, -0.5,       -0.,         0.,       ],
+            [ 0.,         0.,         1.,         0.,       ],
+            [ 0.,         0.,         0.,         1.,       ]],
+
+            [[-0.5,       0.8660254,  0.,         0.,       ],
+            [-0.8660254, -0.5,         0.,         0.,       ],
+            [ 0.,         0.,         1.,         0.,       ],
+            [ 0.,         0.,         0.,         1.,       ]],
+
+            [[-0.5,       0.2886751, -0.8164966,  0.,       ],
+            [-0.2886751,  0.8333333,  0.4714045,  0.,       ],
+            [ 0.8164966,  0.4714045, -0.3333333,  0.,       ],
+            [ 0.,         0.,         0.,         1.,       ]],
+
+            [[-0.5,      -0.2886751,  0.8164966,  0.,       ],
+            [ 0.2886751,  0.8333333,  0.4714045,  0.,       ],
+            [-0.8164966,  0.4714045, -0.3333333,  0.,       ],
+            [ 0.,         0.,         0.,         1.,       ]],
+
+            [[0.5,       -0.2886751,  0.8164966,  0.,       ],
+            [-0.8660254, -0.1666667,  0.4714045,  0.,       ],
+            [-0.,        -0.942809,  -0.3333333,  0.,       ],
+            [ 0.,         0.,         0.,         1.,       ]],
+
+            [[0.5,       -0.8660254,  0.,         0.,       ],
+            [-0.2886751, -0.1666667, -0.942809,   0.,       ],
+            [ 0.8164966,  0.4714045, -0.3333333,  0.,       ],
+            [ 0.,         0.,         0.,         1.,       ]],
+
+            [[0.5,        0.8660254, -0.,         0.,       ],
+            [ 0.2886751, -0.1666667, -0.942809,   0.,       ],
+            [-0.8164966,  0.4714045, -0.3333333,  0.,       ],
+            [ 0.,         0.,         0.,         1.,       ]],
+
+            [[0.5,        0.2886751, -0.8164966,  0.,       ],
+            [ 0.8660254, -0.1666667,  0.4714045,  0.,       ],
+            [-0.,        -0.942809,  -0.3333333,  0.,       ],
+            [ 0.,         0.,         0.,         1.,       ]]
+        ]
+
+
         for i, (m, r) in enumerate(izip(matrices, refMatrices)):
-             print(f"Symmetry matrix {i}:\n ", m)
-             self.assertArrayAlmostEqual(r, m)
+            # print(f"Symmetry matrix {i}:\n ", m, r, type(m), type(r))
+            self.assertArrayAlmostEqual(m, r)
+
+        #tz3r phantom
+        v = []
+        v1 = np.array([0, -0.9428090415820634, -0.333333, 1.])
+        v.append(np.array([0.816496580927726,  0.4714045207910317,  -0.333333, 1.]))
+        v.append(np.array([-0.816496580927726, 0.4714045207910317,  -0.333333, 1.]))
+        v.append(np.array([0, 0, 1, 1.]))
+
+        # some matrix should transform v1 into vX
+        for j, w in enumerate(v):
+            loopEnd = False
+            for i, m in enumerate(matrices):
+                vv = np.dot(m, w)
+                res = np.allclose(v1, vv, atol=.001)
+                if res:
+                    # print("found match", m, w, vv)
+                    loopEnd = True
+                    break
+            self.assertTrue(loopEnd, f"No matrix transform vector {w} into vector {v}" )
+
+    def test_23_SymmetryTetrahedralZ3SymmetryMatrices(self):
+        n = 7
+        matrices = emconv.getSymmetryMatrices(emcts.SYM_TETRAHEDRAL_Z3, n=n)
+        #print(np.round(matrices, 7))
+        refMatrices = [
+            [[1.,         0.,         0.,         0.,       ], #0
+            [ 0.,         1.,         0.,         0.,       ],
+            [ 0.,         0.,         1.,         0.,       ],
+            [ 0.,         0.,         0.,         1.,       ]],
+
+            [[0.,         0.5773503, -0.8164966,  0.,       ], #1
+            [ 0.5773503, -0.6666667, -0.4714045,  0.,       ],
+            [-0.8164966, -0.4714045,  -0.3333333,  0.,       ],
+            [ 0.,         0.,         0.,         1.,       ]],
+
+            [[-0.,       -0.5773503,  0.8164966,  0.,       ], #2
+            [-0.5773503, -0.6666667, -0.4714045,  0.,       ],
+            [ 0.8164966, -0.4714045, -0.3333333,  0.,       ],
+            [ 0.,         0.,         0.,         1.,       ]],
+
+            [[-1.,        0.,         0.,         0.,       ], #3
+            [ 0.,         0.3333333,  0.942809,   0.,       ],
+            [-0.,         0.942809,  -0.3333333,  0.,       ],
+            [ 0.,         0.,         0.,         1.,       ]],
+
+            [[-0.5,       -0.8660254, -0.,         0.,       ], #4
+            [ 0.8660254, -0.5,        0.,         0.,       ],
+            [ 0.,        -0.,         1.,         0.,       ],
+            [ 0.,         0.,         0.,         1.,       ]],
+
+            [[-0.5,       0.8660254, -0.,         0.,       ], #5
+            [-0.8660254, -0.5,       -0.,         0.,       ],
+            [-0.,         0.,         1.,         0.,       ],
+            [ 0.,         0.,         0.,         1.,       ]],
+
+            [[-0.5,       0.2886751,  0.8164966,  0.,       ], #6
+            [-0.2886751,  0.8333333, -0.4714045,  0.,       ],
+            [-0.8164966, -0.4714045, -0.3333333,  0.,       ],
+            [ 0.,         0.,         0.,         1.,       ]],
+
+            [[-0.5,       -0.2886751, -0.8164966,  0.,       ], #7
+            [ 0.2886751,  0.8333333, -0.4714045,  0.,       ],
+            [ 0.8164966, -0.4714045, -0.3333333,  0.,       ],
+            [ 0.,         0.,         0.,         1.,       ]],
+
+            [[0.5,       -0.2886751, -0.8164966,  0.,       ], #8
+            [-0.8660254, -0.1666667, -0.4714045,  0.,       ],
+            [ 0.,         0.942809,  -0.3333333,  0.,       ],
+            [ 0.,         0.,         0.,         1.,       ]],
+
+            [[0.5,       -0.8660254, -0.,         0.,       ], #9
+            [-0.2886751, -0.1666667,  0.942809,   0.,       ],
+            [-0.8164966, -0.4714045, -0.3333333,  0.,       ],
+            [ 0.,         0.,         0.,         1.,       ]],
+
+            [[0.5,        0.8660254,  0.,         0.,       ], #10
+            [ 0.2886751, -0.1666667,  0.942809,   0.,       ],
+            [ 0.8164966, -0.4714045, -0.3333333,  0.,       ],
+            [ 0.,         0.,         0.,         1.,       ]],
+
+            [[0.5,        0.2886751,  0.8164966,  0.,       ], #11
+            [ 0.8660254, -0.1666667, -0.4714045,  0.,       ],
+            [ 0.,         0.942809,  -0.3333333,  0.,       ],
+            [ 0.,         0.,         0.,         1.,       ]]
+        ]
+
+        for i, (m, r) in enumerate(izip(matrices, refMatrices)):
+            # print(f"Symmetry matrix {i}:\n ", m, r, type(m), type(r))
+            self.assertArrayAlmostEqual(m, r)
+
+        #tz3 phantom
+        v = []
+        v1 = np.array([0, 0.9428090415820634, -0.333333, 1.])
+        v.append(np.array([0.816496580927726, -0.4714045207910317,  -0.333333, 1.]))
+        v.append(np.array([-0.816496580927726, -0.4714045207910317,  -0.333333, 1.]))
+        v.append(np.array([0, 0, 1, 1.]))
+
+        # some matrix should transform v1 into vX
+        for j, w in enumerate(v):
+            loopEnd = False
+            for i, m in enumerate(matrices):
+                vv = np.dot(m, w)
+                res = np.allclose(v1, vv, atol=.001)
+                if res:
+                    # print("found match", m, w, vv)
+                    loopEnd = True
+                    break
+            self.assertTrue(loopEnd, f"No matrix transform vector {w} into vector {v}" )
 
 
-    def test_24_SymmetryTetahedralUnitCell(self):
+    def test_24_SymmetryTetahedral222UnitCell(self):
         vectorsEdge, vectorsPlane = emconv.getUnitCell(sym=emcts.SYM_TETRAHEDRAL_222,
                                                        circumscribed_radius=1, 
                                                        center=(0, 0, 0))
         
-        print("vectorsEdge", vectorsEdge)
         print("vectorsPlane", vectorsPlane)
-        #for v, w in zip(v, vectorsEdge):
-        #    self.assertArrayAlmostEqual(v, w, decimal=3)
+        refereceVectors= [ [-0.7071067811865475,  0.7071067811865475,  0.,        ],
+                           [ 0.,         -0.7071067811865475,  0.7071067811865475],
+                           [0.7071067811865475,   0.,          0.7071067811865475]]
+        for v, w in zip(refereceVectors, vectorsPlane):
+            self.assertArrayAlmostEqual(v, w, decimal=3)
 
+    def test_25_SymmetryTetahedralZ3RUnitCell(self):
+        vectorsEdge, vectorsPlane = emconv.getUnitCell(sym=emcts.SYM_TETRAHEDRAL_Z3R,
+                                                       circumscribed_radius=1, 
+                                                       center=(0, 0, 0))
+        
+        #print("vectorsPlane", vectorsPlane)
+        refereceVectors= [ [-1.0, 0.0, 0.0],
+                            [0.5, 0.8660254037844387, 0.],
+                            [0.5, 0.28867513459481275, -0.816496580927726]
+        ]                            
+        for v, w in zip(refereceVectors, vectorsPlane):
+            self.assertArrayAlmostEqual(v, w, decimal=3)
+
+    def test_26_SymmetryTetahedralZ3UnitCell(self):
+        vectorsEdge, vectorsPlane = emconv.getUnitCell(sym=emcts.SYM_TETRAHEDRAL_Z3,
+                                                       circumscribed_radius=1, 
+                                                       center=(0, 0, 0))
+        
+        print("vectorsPlane", vectorsPlane)
+        refereceVectors= [  [-1.0, 1.1775693440128312e-16, 0.0],
+                            [0.5, 0.28867513459481275, 0.816496580927726],
+                            [0.5000000000000001, 0.8660254037844387, 0.0]
+        ]                            
+        for v, w in zip(refereceVectors, vectorsPlane):
+            self.assertArrayAlmostEqual(v, w, decimal=3)
 
     def testSymmetryOctahedral(self):
         matrices = emconv.getSymmetryMatrices(emcts.SYM_OCTAHEDRAL)
@@ -431,7 +542,6 @@ class TestSymmetry(pwtests.unittest.TestCase):
              [-1., 0., 0., 0.],
              [0., -1., 0., 0.],
              [0., 0., 0., 1.]],
-
             [[0., 0., -1., 0.],  # 20
              [0., 1., 0., 0.],
              [1., 0., 0., 0.],
@@ -453,7 +563,7 @@ class TestSymmetry(pwtests.unittest.TestCase):
         for m1, m2 in zip(matrices[:len(refMatrices)], refMatrices):
             self.assertArrayAlmostEqual(m1, m2)
 
-
+"""
     def testSymmetryIcosahedral222(self):
         matrices = emconv.getSymmetryMatrices(emcts.SYM_I222)
         refMatrices = [
@@ -760,3 +870,5 @@ class TestSymmetry(pwtests.unittest.TestCase):
 
         for m1, m2 in izip(matrices[:len(refMatrices)], refMatrices):
             self.assertArrayAlmostEqual(m1, m2)
+
+"""

@@ -94,7 +94,7 @@ SYM_DIHEDRAL_Y = 2  # DN cyclic symmetry plus and extra 2fold symmetry axis arou
 SYM_TETRAHEDRAL = 3  # T 222 Tetrahedral symmetry with two-fold symmetry axis along the X, Y and Z
 SYM_TETRAHEDRAL_222 = SYM_TETRAHEDRAL
 SYM_TETRAHEDRAL_Z3 = 4  # T  three-fold symmetry axis along Z, another three-fold axis 
-                        # in the YZ plane such that the y,z coordinates are negative
+                        # in the YZ plane such that the sign(y) != sign(z)
 
 SYM_OCTAHEDRAL = 5  # O
 
@@ -128,10 +128,7 @@ SYM_I2n5r = 13  # Idem but rotated 180 degree about X
 # symmetry matrices are equivalent
 ##SYM_TETRAHEDRAL222R = 14
 SYM_TETRAHEDRAL_Z3R = 14  # T  three-fold symmetry axis along Z, another three-fold axis 
-                          # in the YZ plane such that the y,z coordinates 
-                          # are positive (y) and negative (z)
-                          # a molecule in this symmetry is the same as in Z3
-                          # but (x,y,z) --> (-x,-y,z)
+                          # in the YZ plane such that  sign(y) = sign(z) 
 
 
 # Symmetry dictionary

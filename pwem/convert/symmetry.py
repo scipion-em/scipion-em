@@ -467,23 +467,23 @@ class Tetrahedral(object):
 
         syms = [_rotationTransform(axis, angle) for axis, angle in self.aa]
 
-        if self.sym == cts.SYM_TETRAHEDRAL_Z3:
-            #convention, 3-fold on z, 3-fold in yz plane along neg y,z.
-            tf = _multiplyMatrices(
+        if self.sym == cts.SYM_TETRAHEDRAL_Z3R:
+            #convention, 3-fold on z, 3-fold in yz plane sign(y) = sign(z)
+            self.tf = _multiplyMatrices(
                      _rotationTransform((0, 0, 1), -45.0),
                      _rotationTransform((1, 0, 0), -acos(1 / sqrt(3)) * 180 / pi))
-            syms = _coordinateTransformList(syms, tf)
-        elif self.sym == cts.SYM_TETRAHEDRAL_Z3R:
-            #convention, 3-fold on z, 3-fold in yz plane along pos y and neg z.
+            syms = _coordinateTransformList(syms, self.tf)
+        elif self.sym == cts.SYM_TETRAHEDRAL_Z3:
+            #convention, 3-fold on z, 3-fold in yz plane sign(y) != sign(z)
             tfaux = _multiplyMatrices(
                      _rotationTransform((0, 0, 1),  -45.0),
                      _rotationTransform((1, 0, 0), -acos(1 / sqrt(3)) * 180 / pi)
             )
-            tf = _multiplyMatrices(
+            self.tf = _multiplyMatrices(
                      tfaux,
                      _reflectMatrix((0, 0, 1))
             )
-            syms = _coordinateTransformList(syms, tf)
+            syms = _coordinateTransformList(syms, self.tf)
 
         syms = _recenterSymmetries(syms, self.center)
         #for i, sym in  enumerate(syms):
@@ -493,36 +493,24 @@ class Tetrahedral(object):
     def unitCellPlanes(self):
         """ get planes that define a unit cell for cyclic symmetry of order n
         """
+        print("Unit cell sym", self.sym)
         matrices = self.symmetryMatrices()
+        # four corners tetahedron
         v0 = _normalizeVector(np.array(self.aa[4][0])) * self.circumscribed_radius
         v1 = _normalizeVector(np.array(self.aa[6][0])) * self.circumscribed_radius
         v2 = _normalizeVector(np.array(self.aa[8][0])) * self.circumscribed_radius
         v3 = _normalizeVector(np.array(self.aa[10][0])) * self.circumscribed_radius
 
-        if self.sym == cts.SYM_TETRAHEDRAL_Z3 or self.sym == cts.SYM_TETRAHEDRAL_Z3R: 
-            if self.sym == cts.SYM_TETRAHEDRAL_Z3R:
-                tfaux = _multiplyMatrices(
-                        _rotationTransform((0, 0, 1),  -45.0),
-                        _rotationTransform((1, 0, 0), -acos(1 / sqrt(3)) * 180 / pi)
-                )
-                tf = _multiplyMatrices(
-                         tfaux,
-                         _reflectMatrix((0, 0, 1))
-                )
-                tf = _invertMatrix(tf)
-                _3fold_1 = np.dot(tf, np.append(v0, 1)) 
-                _3fold_2 = np.dot(tf, np.append(v1, 1))
-                #v2 = np.dot(tf, np.append(v2, 1))
-                _3fold_3 = np.dot(tf, np.append(v3, 1))
+        if self.sym == cts.SYM_TETRAHEDRAL_Z3 or self.sym == cts.SYM_TETRAHEDRAL_Z3R:
+            self.tf = _invertMatrix(self.tf)
+            if self.sym == cts.SYM_TETRAHEDRAL_Z3:
+                _3fold_1 = np.dot(self.tf, np.append(v0, 1)) 
+                _3fold_2 = np.dot(self.tf, np.append(v1, 1))
+                _3fold_3 = np.dot(self.tf, np.append(v3, 1))
             else:
-                tf = _multiplyMatrices(
-                        _rotationTransform((0, 0, 1), -45.0),
-                        _rotationTransform((1, 0, 0), -acos(1 / sqrt(3)) * 180 / pi))
-                tf = _invertMatrix(tf)
-                _3fold_1 = np.dot(tf, np.append(v1, 1)) 
-                _3fold_2 = np.dot(tf, np.append(v0, 1))
-                #v2 = np.dot(tf, np.append(v2, 1))
-                _3fold_3 = np.dot(tf, np.append(v3, 1))
+                _3fold_1 = np.dot(self.tf, np.append(v1, 1)) 
+                _3fold_2 = np.dot(self.tf, np.append(v0, 1))
+                _3fold_3 = np.dot(self.tf, np.append(v3, 1))
         else:
             _3fold_1 = v1
             _3fold_2 = v0
@@ -533,9 +521,9 @@ class Tetrahedral(object):
         vp = np.add(_3fold_1, _3fold_2)
         vp = _normalizeVector(np.add(vp, _3fold_3))
         
-        plane1 = np.cross(_3fold_1, _3fold_2) # cyan
-        plane2 = np.cross(_3fold_2, vp) # green
-        plane3 = np.cross(vp, _3fold_1) # magenta
+        plane1 = _normalizeVector(np.cross(_3fold_1, _3fold_2)) # cyan
+        plane2 = _normalizeVector(np.cross(_3fold_2, vp)) # green
+        plane3 = _normalizeVector(np.cross(vp, _3fold_1)) # magenta
         if DEBUG:
             print("v0", _3fold_1)
             print("v1", _3fold_2)
