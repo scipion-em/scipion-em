@@ -198,17 +198,28 @@ def getSymmetryMatrices(sym=cts.SYM_CYCLIC, n=1, circumscribed_radius=1, center=
         d = Dihedral(n=n, center=center, circumscribed_radius=circumscribed_radius,
                      offset=offset, sym=sym)
         matrices = d.symmetryMatrices()
-#    elif sym == cts.SYM_OCTAHEDRAL:
-#        o = Octaedral(n=n, center=center, circumscribed_radius=circumscribed_radius,
-#                     offset=offset)
-#        matrices = o.symmetryMatrices()
+    elif sym == cts.SYM_OCTAHEDRAL:
+        o = Octahedral(center=center, circumscribed_radius=circumscribed_radius,
+                     offset=offset)
+        matrices = o.symmetryMatrices()
     elif sym == cts.SYM_TETRAHEDRAL_222 or sym == cts.SYM_TETRAHEDRAL_Z3 or \
          sym == cts.SYM_TETRAHEDRAL_Z3R:
         t = Tetrahedral(center=center, circumscribed_radius=circumscribed_radius, sym=sym)
         matrices = t.symmetryMatrices()
-#    elif (sym == cts.SYM_I222 or sym == cts.SYM_I222r or
-#          sym == cts.SYM_In25 or sym == cts.SYM_In25r):
-#        matrices = __icosahedralSymmetryMatrices(sym, center)
+    elif  sym == cts.SYM_I222 or sym == cts.SYM_I222r or \
+          sym == cts.SYM_In25 or sym == cts.SYM_In25r or \
+          sym == cts.SYM_I2n3 or sym == cts.SYM_I2n3r or \
+          sym == cts.SYM_I2n5 or sym == cts.SYM_I2n5r:
+        matrices = __icosahedralSymmetryMatrices(sym, center)
+
+        # '222'         2-fold symmetry along x, y, and z axes.
+        # '222r'        '222' with 90 degree rotation around z.
+        # '2n5'         2-fold symmetry along x and 5-fold along z.
+        # '2n5r'        '2n5' with 180 degree rotation about y.
+        # 'n25'         2-fold symmetry along y and 5-fold along z.
+        # 'n25r'        'n25' with 180 degree rotation about x.
+        # '2n3'         2-fold symmetry along x and 3-fold along z.
+        # '2n3r'        '2n3' with 180 degree rotation about y.
 
     # convert from 4x3 to 4x4 matrix, Scipion standard
     extraRow = (0., 0., 0., 1.)
@@ -237,8 +248,13 @@ def getUnitCell(sym=cts.SYM_CYCLIC, n=1, circumscribed_radius=1, center=(0, 0, 0
         if DEBUG:
             vLabels=['v1', 'v2', 'eigenvector']
             pLabels=['p1', 'p2', 'p3']
-    # elif sym == cts.SYM_OCTAHEDRAL:
-    #     pass
+    elif sym == cts.SYM_OCTAHEDRAL:
+        o = Octahedral(center=center, 
+                       circumscribed_radius=circumscribed_radius)
+        vectorsEdge, vectorsPlane = o.unitCellPlanes()
+        if DEBUG:
+            vLabels=['v1', 'v2', 'v3']
+            pLabels=['p1', 'p2', 'p3']
     elif sym == cts.SYM_TETRAHEDRAL_Z3 or sym == cts.SYM_TETRAHEDRAL or sym==cts.SYM_TETRAHEDRAL_Z3R:
         t = Tetrahedral(center=center, 
                      circumscribed_radius=circumscribed_radius,
@@ -247,9 +263,16 @@ def getUnitCell(sym=cts.SYM_CYCLIC, n=1, circumscribed_radius=1, center=(0, 0, 0
         if DEBUG:
             vLabels=['v1', 'v2', 'v3']
             pLabels=['p1', 'p2', 'p3']
-    # elif (sym == cts.SYM_I222 or sym == cts.SYM_I222r or
-    #       sym == cts.SYM_In25 or sym == cts.SYM_In25r):
-    #     matrices = __icosahedralSymmetryMatrices(sym, center)
+    elif  sym == cts.SYM_I222 or sym == cts.SYM_I222r or \
+          sym == cts.SYM_In25 or sym == cts.SYM_In25r or \
+          sym == cts.SYM_I2n3 or sym == cts.SYM_I2n3r or \
+          sym == cts.SYM_I2n5 or sym == cts.SYM_I2n5r:
+        matrices = __icosahedralUnitCellPlanes(sym, center)
+        vectorsEdge, vectorsPlane = t.unitCellPlanes()
+        if DEBUG:
+            vLabels=['v1', 'v2', 'v3']
+            pLabels=['p1', 'p2', 'p3']
+
     if DEBUG:
         bildFileName = cts.SCIPION_SYM_NAME[sym] + '.bild'
         Chimera.createCoordinateAxisFile(dim=expansionFactor,
@@ -279,34 +302,47 @@ def getUnitCell(sym=cts.SYM_CYCLIC, n=1, circumscribed_radius=1, center=(0, 0, 0
         f.close()
     return vectorsEdge, vectorsPlane
 
+def __icosahedralSymmetryMatrices(orientation=cts.SYM_I222, center=(0, 0, 0)):
+    if orientation == cts.SYM_I222:
+        sym = '222'
+    elif orientation == cts.SYM_I222r:
+        sym = '222r'
+    elif orientation == cts.SYM_In25:
+        sym = 'n25'
+    elif orientation == cts.SYM_In25r:
+        sym = 'n25r'
+    elif orientation == cts.SYM_I2n5:
+        sym = '2n5'
+    elif orientation == cts.SYM_I2n5r:
+        sym = '2n5r'
+    elif orientation == cts.SYM_I2n3:
+        sym = '2n3'
+    elif orientation == cts.SYM_I2n3r:
+        sym = '2n3r'
 
+    i = Icosahedron(orientation=sym, center=center)
+    return list(i.icosahedralSymmetryMatrices())
 
-# def __octahedralSymmetryMatrices(center=(0, 0, 0)):
-#     """ 4-folds along x, y, z axes. """
-#     c4 = (((0, 0, 1), 0), ((0, 0, 1), 90), ((0, 0, 1), 180), ((0, 0, 1), 270))
-#     cube = (((1, 0, 0), 0), ((1, 0, 0), 90), ((1, 0, 0), 180), ((1, 0, 0), 270),
-#             ((0, 1, 0), 90), ((0, 1, 0), 270))
-#     c4syms = [_rotationTransform(axis, angle) for axis, angle in c4]
-#     cubesyms = [_rotationTransform(axis, angle) for axis, angle in cube]
-#     syms = _matrixProducts(cubesyms, c4syms)
-#     syms = _recenterSymmetries(syms, center)
-#     return syms
+def __icosahedralUnitCellPlanes(orientation=cts.SYM_I222, center=(0, 0, 0)):
+    if orientation == cts.SYM_I222:
+        sym = '222'
+    elif orientation == cts.SYM_I222r:
+        sym = '222r'
+    elif orientation == cts.SYM_In25:
+        sym = 'n25'
+    elif orientation == cts.SYM_In25r:
+        sym = 'n25r'
+    elif orientation == cts.SYM_I2n5:
+        sym = '2n5'
+    elif orientation == cts.SYM_I2n5r:
+        sym = '2n5r'
+    elif orientation == cts.SYM_I2n3:
+        sym = '2n3'
+    elif orientation == cts.SYM_I2n3r:
+        sym = '2n3r'
 
-
-
-
-# def __icosahedralSymmetryMatrices(orientation=cts.SYM_I222, center=(0, 0, 0)):
-#     if orientation == cts.SYM_I222:
-#         sym = '222'
-#     elif orientation == cts.SYM_I222r:
-#         sym = '222r'
-#     elif orientation == cts.SYM_In25:
-#         sym = 'n25'
-#     elif orientation == cts.SYM_In25r:
-#         sym = 'n25r'
-
-#     i = Icosahedron(orientation=sym, center=center)
-#     return list(i.icosahedralSymmetryMatrices())
+    i = Icosahedron(orientation=sym, center=center)
+    return list(i.unitCellPlanes())
 
 class Cyclic(object):
     """cyclic class.
@@ -491,7 +527,7 @@ class Tetrahedral(object):
         return syms
 
     def unitCellPlanes(self):
-        """ get planes that define a unit cell for cyclic symmetry of order n
+        """ get planes that define a unit cell for tetrahedral symmetry of order n
         """
         print("Unit cell sym", self.sym)
         matrices = self.symmetryMatrices()
@@ -533,6 +569,63 @@ class Tetrahedral(object):
             print("plane2", plane2)
             print("plane3", plane3)
         return [_3fold_1, vp, _3fold_2], [plane1, plane2, plane3]
+
+
+class Octahedral(object):
+    """Octahedral class.
+        Allow to compute symmetry matrices, 
+        symmetry axis and unit cell planes of an octahedral symmetry.
+        4-folds along x, y, z axes.
+    """
+    def __init__(self, circumscribed_radius=1, center=(
+            0, 0, 0), offset=None):
+        """
+        :Parameters:
+            circumscribed_radius: float radius of the circumscribed sphere
+            center: tuple of 3 floats, center of the circumscribed sphere
+            offset: float, angle in degrees to rotate the symmetry axis
+                    it modifies the unit cell but not the symmetry matrices
+            """
+        self.circumscribed_radius = circumscribed_radius
+        self.center = center
+        self.matrices = None
+        self.offset = offset
+
+    def symmetryMatrices(self):
+        """ get Matrices for cyclic symmetry of order n
+        """
+        self.c4 = (((0, 0, 1), 0), ((0, 0, 1), 90), ((0, 0, 1), 180), ((0, 0, 1), 270))
+        self.cube = (((1, 0, 0), 0), ((1, 0, 0), 90), ((1, 0, 0), 180), ((1, 0, 0), 270),
+                ((0, 1, 0), 90), ((0, 1, 0), 270))
+        c4syms = [_rotationTransform(axis, angle) for axis, angle in self.c4]
+        cubesyms = [_rotationTransform(axis, angle) for axis, angle in self.cube]
+        syms = _matrixProducts(cubesyms, c4syms)
+        self.matrices = _recenterSymmetries(syms, self.center)
+        return self.matrices
+
+    def unitCellPlanes(self):
+        """ get planes that define a unit cell for an octahedral symmetry
+        """
+        matrices = self.symmetryMatrices()
+        # four corners tetahedron
+        _4fold_1 = _normalizeVector(np.array([ 0., 0., 1.])) * self.circumscribed_radius
+        _3fold_1 = _normalizeVector(np.array([ 1., 1., 1.])) * self.circumscribed_radius    
+        _3fold_2 = _normalizeVector(np.array([-1., 1., 1.])) * self.circumscribed_radius
+        
+        #colors = ['cyan', 'green', 'magenta', 'navy blue']
+        
+        plane1 = _normalizeVector(np.cross(_3fold_2, _4fold_1)) # cyan
+        plane2 = _normalizeVector(np.cross(_3fold_1, _3fold_2)) # green
+        plane3 = _normalizeVector(np.cross(_4fold_1, _3fold_1)) # magenta
+        if DEBUG:
+            print("v0", _4fold_1)
+            print("v1", _3fold_2)
+            print("v2", _3fold_1)
+
+            print("plane1", plane1)
+            print("plane2", plane2)
+            print("plane3", plane3)
+        return [_4fold_1, _3fold_2, _3fold_1], [plane1, plane2, plane3]
 
 
 # TODO: Why is this a global variable instead of
@@ -1019,3 +1112,27 @@ class Icosahedron(object):
 
     def get2foldAxis(self):
         return self._2foldAxis
+
+    def unitCellPlanes(self):
+        """ get planes that define a unit cell for an octahedral symmetry
+        """
+        matrices = self.symmetryMatrices()
+        # four corners tetahedron
+        _3fold_1 = _normalizeVector(np.array([ 0., 0., 1.])) * self.circumscribed_radius
+        _5fold_1 = _normalizeVector(np.array([ 1., 1., 1.])) * self.circumscribed_radius    
+        _5fold_2 = _normalizeVector(np.array([-1., 1., 1.])) * self.circumscribed_radius
+        
+        #colors = ['cyan', 'green', 'magenta', 'navy blue']
+        
+        plane1 = _normalizeVector(np.cross(_3fold_1, _5fold_1)) # cyan
+        plane2 = _normalizeVector(np.cross(_5fold_1, _5fold_2)) # green
+        plane3 = _normalizeVector(np.cross(_5fold_2, _3fold_1)) # magenta
+        if DEBUG:
+            print("v0", _3fold_1)
+            print("v1", _5fold_1)
+            print("v2", _5fold_2)
+
+            print("plane1", plane1)
+            print("plane2", plane2)
+            print("plane3", plane3)
+        return [_4fold_1, _3fold_2, _3fold_1], [plane1, plane2, plane3]

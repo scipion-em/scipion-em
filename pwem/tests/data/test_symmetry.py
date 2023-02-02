@@ -455,7 +455,7 @@ class TestSymmetry(pwtests.unittest.TestCase):
         for v, w in zip(refereceVectors, vectorsPlane):
             self.assertArrayAlmostEqual(v, w, decimal=3)
 
-    def testSymmetryOctahedral(self):
+    def test_31_SymmetryOctahedral(self):
         matrices = emconv.getSymmetryMatrices(emcts.SYM_OCTAHEDRAL)
         refMatrices = [
             [[1., 0., 0., 0.],  # 0
@@ -563,8 +563,21 @@ class TestSymmetry(pwtests.unittest.TestCase):
         for m1, m2 in zip(matrices[:len(refMatrices)], refMatrices):
             self.assertArrayAlmostEqual(m1, m2)
 
-"""
-    def testSymmetryIcosahedral222(self):
+    def test_32_SymmetryOctahedralUnitCell(self):
+        vectorsEdge, vectorsPlane = emconv.getUnitCell(sym=emcts.SYM_OCTAHEDRAL,
+                                                       circumscribed_radius=1, 
+                                                       center=(0, 0, 0))
+        print("vectorsPlane", vectorsPlane)
+        refereceVectors= [ [0.7071067811865476, 0.7071067811865476, -0.0],
+                           [0.0, -0.7071067811865475, 0.7071067811865475],
+                           [-0.7071067811865476, 0.7071067811865476, 0.0]
+
+        ]                            
+        for v, w in zip(refereceVectors, vectorsPlane):
+            self.assertArrayAlmostEqual(v, w, decimal=3)
+
+
+    def test_41_SymmetryIcosahedral222(self):
         matrices = emconv.getSymmetryMatrices(emcts.SYM_I222)
         refMatrices = [
             [[1., 0., 0., 0.],  # 1
@@ -871,4 +884,3 @@ class TestSymmetry(pwtests.unittest.TestCase):
         for m1, m2 in izip(matrices[:len(refMatrices)], refMatrices):
             self.assertArrayAlmostEqual(m1, m2)
 
-"""
