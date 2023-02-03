@@ -1034,11 +1034,11 @@ class Sequence(EMObject):
         self._alphabet.set(Integer(seqDic['alphabet']))
         self._isAminoacids.set(Boolean(seqDic['isAminoacids']))
 
-    def exportToFile(self, seqFileName):
+    def exportToFile(self, seqFileName, doClean=True):
         '''Exports the sequence to the specified file'''
         import pwem.convert as emconv
         seqHandler = emconv.SequenceHandler(self.getSequence(),
-                                            self._alphabet.get())
+                                            self._alphabet.get(), doClean)
         # retrieving  args from scipion object
         seqID = self.getId() if self.getId() is not None else 'seqID'
         seqName = self.getSeqName() if self.getSeqName() is not None else 'seqName'
@@ -1049,13 +1049,13 @@ class Sequence(EMObject):
                             #seqFiP12345 USER_SEQ 
                             # Aspartate aminotransferase, mitochondrial
 
-    def appendToFile(self, seqFileName):
+    def appendToFile(self, seqFileName, doClean=True):
         '''Exports the sequence to the specified file. If it already exists,
         the sequence is appended to the ones in the file'''
         logger.info("Appending sequence to file: %s" % seqFileName)
         import pwem.convert as emconv
         seqHandler = emconv.SequenceHandler(self.getSequence(),
-                                            Alphabet.DUMMY_ALPHABET)
+                                            Alphabet.DUMMY_ALPHABET, doClean)
         # retrieving  args from scipion object
         seqID = self.getId() if self.getId() is not None else 'seqID'
         seqName = self.getSeqName() if self.getSeqName() is not None else 'seqName'
