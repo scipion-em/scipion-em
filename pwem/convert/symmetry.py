@@ -1116,7 +1116,7 @@ class Icosahedron(object):
     def unitCellPlanes(self):
         """ get planes that define a unit cell for an octahedral symmetry
         """
-        matrices = self.symmetryMatrices()
+        matrices = self.icosahedralSymmetryMatrices()
         # four corners tetahedron
         _3fold_1 = _normalizeVector(np.array([ 0., 0., 1.])) * self.circumscribed_radius
         _5fold_1 = _normalizeVector(np.array([ 1., 1., 1.])) * self.circumscribed_radius    
@@ -1135,4 +1135,4 @@ class Icosahedron(object):
             print("plane1", plane1)
             print("plane2", plane2)
             print("plane3", plane3)
-        return [_4fold_1, _3fold_2, _3fold_1], [plane1, plane2, plane3]
+        return [_3fold_1, _5fold_1, _5fold_2], [plane1, plane2, plane3]
