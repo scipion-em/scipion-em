@@ -267,8 +267,11 @@ def getUnitCell(sym=cts.SYM_CYCLIC, n=1, circumscribed_radius=1, center=(0, 0, 0
           sym == cts.SYM_In25 or sym == cts.SYM_In25r or \
           sym == cts.SYM_I2n3 or sym == cts.SYM_I2n3r or \
           sym == cts.SYM_I2n5 or sym == cts.SYM_I2n5r:
-        matrices = __icosahedralUnitCellPlanes(sym, center)
-        vectorsEdge, vectorsPlane = t.unitCellPlanes()
+        i_sym = cts.SCIPION_SYM_NAME[sym][1:]  
+        i = Icosahedron(center=center, 
+                        circumscribed_radius=circumscribed_radius,
+                        orientation = i_sym)
+        vectorsEdge, vectorsPlane = i.unitCellPlanes()
         if DEBUG:
             vLabels=['v1', 'v2', 'v3']
             pLabels=['p1', 'p2', 'p3']
@@ -1116,23 +1119,35 @@ class Icosahedron(object):
     def unitCellPlanes(self):
         """ get planes that define a unit cell for an octahedral symmetry
         """
-        matrices = self.icosahedralSymmetryMatrices()
-        # four corners tetahedron
-        _3fold_1 = _normalizeVector(np.array([ 0., 0., 1.])) * self.circumscribed_radius
-        _5fold_1 = _normalizeVector(np.array([ 1., 1., 1.])) * self.circumscribed_radius    
-        _5fold_2 = _normalizeVector(np.array([-1., 1., 1.])) * self.circumscribed_radius
-        
+        if self.orientation == '222':
+            # Unit cell in triangle 11 -> (2,8,9)
+            _3f = 11 ; _5f1 =2 ; _5f2 = 8
+        elif self.orientation == '222r':
+            # Unit cell in triangle 0 -> (0,1,2)
+            _3f = 0 ; _5f1 =0 ; _5f2 = 1
+        elif self.orientation == 'n25':
+            # Unit cell in triangle 9 -> (6,11,7)
+            _3f = 9 ; _5f1 =6 ; _5f2 = 7
+        elif self.orientation == 'n25r':
+            # Unit cell in triangle 14 -> (3,7,4)
+            _3f = 14 ; _5f1 =3 ; _5f2 = 4
+        else: # Untested
+            _3f = 11 ; _5f1 =2 ; _5f2 = 8
+        _3fold = self._3foldAxis[_3f]
+        _5fold_1 = self.getVertices()[_5f1]
+        _5fold_2 = self.getVertices()[_5f2]
+        # Do some magic here if you are not 222
         #colors = ['cyan', 'green', 'magenta', 'navy blue']
         
-        plane1 = _normalizeVector(np.cross(_3fold_1, _5fold_1)) # cyan
-        plane2 = _normalizeVector(np.cross(_5fold_1, _5fold_2)) # green
-        plane3 = _normalizeVector(np.cross(_5fold_2, _3fold_1)) # magenta
+        plane1 = _normalizeVector(np.cross(_5fold_1, _3fold )) # cyan
+        plane2 = _normalizeVector(np.cross(_3fold, _5fold_2)) # magenta
+        plane3 = _normalizeVector(np.cross(_5fold_2, _5fold_1)) # green
         if DEBUG:
-            print("v0", _3fold_1)
+            print("v0", _3fold)
             print("v1", _5fold_1)
             print("v2", _5fold_2)
 
             print("plane1", plane1)
             print("plane2", plane2)
             print("plane3", plane3)
-        return [_3fold_1, _5fold_1, _5fold_2], [plane1, plane2, plane3]
+        return [_3fold, _5fold_1, _5fold_2], [plane1, plane2, plane3]
