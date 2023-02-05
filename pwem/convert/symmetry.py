@@ -1124,7 +1124,7 @@ class Icosahedron(object):
             _3f = 11 ; _5f1 =2 ; _5f2 = 8
         elif self.orientation == '222r':
             # Unit cell in triangle 0 -> (0,1,2)
-            _3f = 0 ; _5f1 =0 ; _5f2 = 1
+            _3f = 0 ; _5f1 =1 ; _5f2 = 0
         elif self.orientation == 'n25':
             # Unit cell in triangle 9 -> (6,11,7)
             _3f = 9 ; _5f1 =6 ; _5f2 = 7

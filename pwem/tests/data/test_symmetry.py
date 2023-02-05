@@ -889,11 +889,10 @@ class TestSymmetry(pwtests.unittest.TestCase):
                                                        circumscribed_radius=1, 
                                                        center=(0, 0, 0))
         print("vectorsPlane", vectorsPlane)
-        refereceVectors= [[0.30901699437494745, 0.8090169943749475, 0.5],
-                          [0.3090169943749475, 0.8090169943749475, -0.5]
-                          [0.0, -1.0, -1.0558848421106697e-16],
+        refereceVectors= [[-0.30901699437494745, -0.8090169943749475, -0.5],
+                          [-0.3090169943749475, -0.8090169943749475, 0.5],
+                          [0.0, 1.0, 1.0558848421106697e-16],
                           ]
-                         
         for v, w in zip(refereceVectors, vectorsPlane):
             self.assertArrayAlmostEqual(v, w, decimal=3)
 
@@ -902,9 +901,9 @@ class TestSymmetry(pwtests.unittest.TestCase):
                                                        circumscribed_radius=1, 
                                                        center=(0, 0, 0))
         print("vectorsPlane", vectorsPlane)
-        refereceVectors= [ [-0.5, 0.8090169943749475, -0.3090169943749474],
-                           [0.5, 0.8090169943749476, -0.30901699437494734],
-                           [0.0, -1.0, 0.0]
+        refereceVectors= [ [-0.5, -0.8090169943749476, 0.30901699437494734],
+                           [0.5, -0.8090169943749475, 0.3090169943749474],
+                           [0.0, 1.0, -0.0]
                           ]
                          
         for v, w in zip(refereceVectors, vectorsPlane):
