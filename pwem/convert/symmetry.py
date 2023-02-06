@@ -192,7 +192,6 @@ def moveParticlesInsideUnitCell(setIN, setOUT, sym=cts.SYM_CYCLIC, n=1):
     totalNumberOfParticles = len(setIN)
     totalNumberOFMatrices = len(matrixSet)
     for par in setIN:
-        par.setSamplingRate(10000)
         counter += 1
         if counter % 1000 == 0: 
             print(f"{counter}/{totalNumberOfParticles}")
