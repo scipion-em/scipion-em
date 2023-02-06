@@ -182,6 +182,46 @@ def _transposeMatrix(tf):
 
 ######## End of utility functions ########
 
+def moveParticlesInsideUnitCell(setIN, setOUT, sym=cts.SYM_CYCLIC, n=1):
+    """ Move particles proejction direction inside the unit cell associated to symmetry sym
+    """
+    import pwem.objects as emobj
+    matrixSet = getSymmetryMatrices(sym=sym, n=n)
+    _, (u, v, w) = getUnitCell(sym=sym, n=n, generalize=False) # get unit cell vectors
+    counter = 0 # counter for the number of particles
+    totalNumberOfParticles = len(setIN)
+    totalNumberOFMatrices = len(matrixSet)
+    for par in setIN:
+        par.setSamplingRate(10000)
+        counter += 1
+        if counter % 1000 == 0: 
+            print(f"{counter}/{totalNumberOfParticles}")
+        # get projection direction
+        colunm = par.getTransform().getMatrix()[0:3, 2]
+        if (np.dot(colunm, u)>1) and \
+           (np.dot(colunm, v)>1) and \
+           (np.dot(colunm, w)>1):
+           pass # particle is inside unit cell so nothing needs to be done
+        else:
+            # loop over symmetry matrices
+            for i, matrix in enumerate(matrixSet):
+                matrix3 = np.array(matrix)
+                matrix3 = np.delete(matrix3, -1, 1)
+                columPrime = matrix3.dot(colunm)[:3]
+                if (np.dot(columPrime, u)>0) and \
+                   (np.dot(columPrime, v)>0) and \
+                   (np.dot(columPrime, w)>0):
+                      matrix = np.dot(matrix, par.getTransform().getMatrix())
+                      t = par.getTransform()
+                      t.setMatrix(matrix)
+                      par.setTransform(t)
+                      setOUT.append(par)
+                      break
+                if i == totalNumberOFMatrices-1:
+                    print("Error: something went wrong in moveParticlesInsideUnitCell")
+                    print("       no matrix move particle direction inside the unit cell")
+                    print("       particle id: ", par.getObjId())
+
 def getSymmetryMatrices(sym=cts.SYM_CYCLIC, n=1, circumscribed_radius=1, center=(0, 0, 0), offset=None):
     """ interface between scipion and chimera code
         chimera code uses tuples of tuples as matrices
@@ -228,7 +268,12 @@ def getSymmetryMatrices(sym=cts.SYM_CYCLIC, n=1, circumscribed_radius=1, center=
     # convert from sets to lists Scipion standard
     return np.array(matrices)
 
-def getUnitCell(sym=cts.SYM_CYCLIC, n=1, circumscribed_radius=1, center=(0, 0, 0), offset=None):
+def getUnitCell(sym=cts.SYM_CYCLIC,
+                n=1,
+                circumscribed_radius=1,
+                center=(0, 0, 0),
+                offset=None,
+                generalize=False):
     """ return vectors normal to the unit cell faces
     """
 
@@ -303,6 +348,11 @@ def getUnitCell(sym=cts.SYM_CYCLIC, n=1, circumscribed_radius=1, center=(0, 0, 0
                 f.write(f'.cone 0 0 0  {x/(expansionFactor*100)} {y/(expansionFactor*100)} {z/(expansionFactor*100)} {r}\n')
                 f.write(f'.arrow 0 0 0  {x*expansionFactor} {y*expansionFactor} {z*expansionFactor} 0.200000 0.400000 0.750000\n')
         f.close()
+    if generalize:
+        for i, v in enumerate(vectorsEdge):
+            vectorsEdge[i] = np.append(v, 1.)
+        for i, v in enumerate(vectorsPlane):
+            vectorsPlane[i] = np.append(v, 1.)
     return vectorsEdge, vectorsPlane
 
 def __icosahedralSymmetryMatrices(orientation=cts.SYM_I222, center=(0, 0, 0)):
