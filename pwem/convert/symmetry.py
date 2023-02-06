@@ -1131,13 +1131,17 @@ class Icosahedron(object):
         elif self.orientation == 'n25r':
             # Unit cell in triangle 14 -> (3,7,4)
             _3f = 14 ; _5f1 =3 ; _5f2 = 4
-        else: # Untested
+        elif self.orientation == '2n3': # TODO: Untested
+            _3f = 11 ; _5f1 =8 ; _5f2 = 2
+        elif self.orientation == '2n3r': # TODO: Untested
+            _3f = 11 ; _5f1 =2 ; _5f2 = 8
+        elif self.orientation == '2n5': # TODO: Untested
+            _3f = 11 ; _5f1 =8 ; _5f2 = 2
+        elif self.orientation == '2n5r': # TODO: Untested
             _3f = 11 ; _5f1 =2 ; _5f2 = 8
         _3fold = self._3foldAxis[_3f]
         _5fold_1 = self.getVertices()[_5f1]
         _5fold_2 = self.getVertices()[_5f2]
-        # Do some magic here if you are not 222
-        #colors = ['cyan', 'green', 'magenta', 'navy blue']
         
         plane1 = _normalizeVector(np.cross(_5fold_1, _3fold )) # cyan
         plane2 = _normalizeVector(np.cross(_3fold, _5fold_2)) # magenta

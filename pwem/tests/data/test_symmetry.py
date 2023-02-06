@@ -937,3 +937,58 @@ class TestSymmetry(pwtests.unittest.TestCase):
         for v, w in zip(refereceVectors, vectorsPlane):
             self.assertArrayAlmostEqual(v, w, decimal=3)
     
+    def test_46_SymmetryIcosahedral2n3UnitCell(self):
+        vectorsEdge, vectorsPlane = emconv.getUnitCell(sym=emcts.SYM_I2n3,
+                                                       circumscribed_radius=1, 
+                                                       center=(0, 0, 0))
+        print("vectorsPlane", vectorsPlane)
+        refereceVectors= [ 
+                           [0.3090169943749475, -0.17841104488654505, -0.9341723589627157],
+                           [0.3090169943749475, 0.7557613140761706, -0.577350269189626],
+                           [0.0, -0.3568220897730899, 0.9341723589627158]
+                          ]
+                         
+        for v, w in zip(refereceVectors, vectorsPlane):
+            self.assertArrayAlmostEqual(v, w, decimal=3)
+
+    def test_47_SymmetryIcosahedral2n3rUnitCell(self):
+        vectorsEdge, vectorsPlane = emconv.getUnitCell(sym=emcts.SYM_I2n3r,
+                                                       circumscribed_radius=1, 
+                                                       center=(0, 0, 0))
+        print("vectorsPlane", vectorsPlane)
+        refereceVectors= [ 
+                           [0.3090169943749475, -0.7557613140761706, -0.577350269189626],
+                           [0.3090169943749475, 0.17841104488654505, -0.9341723589627157],
+                           [0.0, 0.3568220897730899, 0.9341723589627158]    
+                          ]
+                         
+        for v, w in zip(refereceVectors, vectorsPlane):
+            self.assertArrayAlmostEqual(v, w, decimal=3)
+
+    def test_48_SymmetryIcosahedral2n5UnitCell(self):
+        vectorsEdge, vectorsPlane = emconv.getUnitCell(sym=emcts.SYM_I2n5,
+                                                       circumscribed_radius=1, 
+                                                       center=(0, 0, 0))
+        print("vectorsPlane", vectorsPlane)
+        refereceVectors= [ 
+                           [0.3090169943749475, 0.42532540417602, -0.8506508083520399],
+                           [0.3090169943749475, 0.9510565162951535, 0.],
+                           [0.0, -0.8506508083520401, 0.5257311121191336]
+                          ]
+                         
+        for v, w in zip(refereceVectors, vectorsPlane):
+            self.assertArrayAlmostEqual(v, w, decimal=3)
+
+    def test_49_SymmetryIcosahedral2n5rUnitCell(self):
+        vectorsEdge, vectorsPlane = emconv.getUnitCell(sym=emcts.SYM_I2n5r,
+                                                       circumscribed_radius=1, 
+                                                       center=(0, 0, 0))
+        print("vectorsPlane", vectorsPlane)
+        refereceVectors= [ 
+                           [0.3090169943749475, -0.9510565162951535, 0.],
+                           [0.3090169943749475, -0.42532540417602, -0.8506508083520399],
+                           [0.0, 0.8506508083520401, 0.5257311121191336]
+                          ]
+                         
+        for v, w in zip(refereceVectors, vectorsPlane):
+            self.assertArrayAlmostEqual(v, w, decimal=3)
