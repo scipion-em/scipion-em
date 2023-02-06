@@ -43,7 +43,7 @@ if DEBUG:
 
 
 def _column(matrix, i):
-    """Return column i of matrix as a list."""
+    """Returns column i of matrix as a list."""
     return [row[i] for row in matrix]
 
 def _applyMatrix(tf, points):
@@ -56,19 +56,19 @@ def _applyMatrix(tf, points):
     return r
 
 def __length(v):
-    """Return the length of a vector."""
+    """Returns the length of a vector."""
     d = sqrt(sum([e*e for e in v]))
     return d
 
 def _normalizeVector(v):
-    """Return a unit vector in the same direction as v."""
+    """Returns a unit vector in the same direction as v."""
     d = __length(v)
     if d == 0:
         d = 1
     return tuple([e/d for e in v])
 
 def _reflectMatrix(axis):
-    """Return a matrix that reflects points in the plane
+    """Returns a matrix that reflects points in the plane
     perpendicular to axis."""
     axis = _normalizeVector(axis)
     return ((1 - 2*axis[0]*axis[0], -2*axis[0]*axis[1], -2*axis[0]*axis[2], 0),
@@ -77,7 +77,7 @@ def _reflectMatrix(axis):
 
 
 def _rotationTransform(axis, angle, center=(0, 0, 0)):
-    """ return matrix that rotates "angle" angles arround vector axis
+    """ returns matrix that rotates "angle" angles arround vector axis
         angle is in degrees
     """
     axis = _normalizeVector(axis)
@@ -107,7 +107,7 @@ def _rotationTransform(axis, angle, center=(0, 0, 0)):
 
 
 def _translationMatrix(shift):
-    """ return matriz that shift point by vector shift"""
+    """ returns matriz that shift point by vector shift"""
     tf = np.array(((1.0, 0, 0, shift[0]),
                    (0, 1.0, 0, shift[1]),
                    (0, 0, 1.0, shift[2])))
@@ -115,12 +115,12 @@ def _translationMatrix(shift):
 
 
 def _identityMatrix():
-    """ return identity matrix"""
+    """ returns identity matrix"""
     return (1.0, 0, 0, 0), (0, 1.0, 0, 0), (0, 0, 1.0, 0)
 
 
 def _invertMatrix(tf):
-    """ return inverse 3x3 matrix"""
+    """ returns inverse 3x3 matrix"""
     tf = np.array(tf)
     r = tf[:, :3]
     t = tf[:, 3]
@@ -133,7 +133,7 @@ def _invertMatrix(tf):
 
 
 def _multiplyMatrices(*mlist):
-    """ return matrix product of matrices in mlist"""
+    """ returns matrix product of matrices in mlist"""
     if len(mlist) == 2:
         m1, m2 = mlist
         p = [[0, 0, 0, 0],
@@ -151,7 +151,7 @@ def _multiplyMatrices(*mlist):
 
 
 def _matrixProducts(mlist1, mlist2):
-    """ return list of matrix products of matrices in mlist1 and mlist2"""
+    """ returns list of matrix products of matrices in mlist1 and mlist2"""
     plist = []
     for m1 in mlist1:
         for m2 in mlist2:
@@ -161,7 +161,7 @@ def _matrixProducts(mlist1, mlist2):
 
 
 def _coordinateTransformList(tflist, ctf):
-    """ return list of coordinate transforms of tflist by ctf"""
+    """ returns list of coordinate transforms of tflist by ctf"""
     ctfinv = _invertMatrix(ctf)
     return [_multiplyMatrices(ctfinv, tf, ctf) for tf in tflist]
 
@@ -175,7 +175,7 @@ def _recenterSymmetries(tflist, center):
 
 
 def _transposeMatrix(tf):
-    """ return transpose of 3x3 matrix"""
+    """ returns transpose of 3x3 matrix"""
     return ((tf[0][0], tf[1][0], tf[2][0], tf[0][3]),
             (tf[0][1], tf[1][1], tf[2][1], tf[1][3]),
             (tf[0][2], tf[1][2], tf[2][2], tf[2][3]))
