@@ -15,7 +15,7 @@ developers:
      Useful for tomography sets and avoiding unnecessary inheritance.
    - Icon is a png (compatible with future pillow versions)
    - weakImport("tifffile") added when registering FileHandlers (bug at installation in github action)
-
+   - Fixing an error related with the import coordinates
 
 V3.0.23
 users:
