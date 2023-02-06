@@ -36,7 +36,7 @@ import operator
 
 import pwem.constants as cts
 
-DEBUG = True # set to True for debuging
+DEBUG = False # set to True for debuging
 if DEBUG:
     from pwem.viewers.viewer_chimera import Chimera
     expansionFactor = 100
