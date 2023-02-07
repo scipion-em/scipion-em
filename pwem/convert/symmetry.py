@@ -197,9 +197,9 @@ def moveParticlesInsideUnitCell(setIN, setOUT, sym=cts.SYM_CYCLIC, n=1):
             print(f"{counter}/{totalNumberOfParticles}")
         # get projection direction
         colunm = par.getTransform().getMatrix()[0:3, 2]
-        if (np.dot(colunm, u)>1) and \
-           (np.dot(colunm, v)>1) and \
-           (np.dot(colunm, w)>1):
+        if (np.dot(colunm, u)>0) and \
+           (np.dot(colunm, v)>0) and \
+           (np.dot(colunm, w)>0):
            pass # particle is inside unit cell so nothing needs to be done
         else:
             # loop over symmetry matrices
