@@ -35,6 +35,8 @@ import numpy as np
 
 from pwem.constants import (SYM_I222, SYM_I222r, SYM_In25, SYM_In25r,
                                      SYM_I2n3, SYM_I2n3r, SYM_I2n5, SYM_I2n5r,
+                                     SYM_DIHEDRAL_X, SYM_DIHEDRAL_Y,
+                                     SYM_TETRAHEDRAL_222, SYM_TETRAHEDRAL_Z3, SYM_TETRAHEDRAL_Z3R,
                                      SCIPION_SYM_NAME)
 
 class ProtSetEditor(EMProtocol):
@@ -48,19 +50,37 @@ class ProtSetEditor(EMProtocol):
     """
     _label = 'edit set'
     CHOICE_FORMULA = 0
-    CHOICE_ROTATE_VECTOR = 1
-    CHOICE_ROTATE_ICOSAHEDRAL = 2
-    CHOICE_LABEL = {CHOICE_FORMULA: 'formula',
-                    CHOICE_ROTATE_VECTOR: 'rotate to vector',
-                    CHOICE_ROTATE_ICOSAHEDRAL: 'rotate icosahedral'}
-    LOCAL_SYM_NAME = {SYM_I222: 'I1',
-                      SYM_I222r: 'I2',
-                      SYM_In25: 'I3',
-                      SYM_In25r: 'I4',
-                      SYM_I2n3: 'I5',
-                      SYM_I2n3r: 'I6',
-                      SYM_I2n5: 'I7',
-                      SYM_I2n5r: 'I8'}
+    CHOICE_MOVE_VECTOR = 1
+    CHOICE_ROTATE_VECTOR = 2
+    CHOICE_ICOSAHEDRAL = 3
+    CHOICE_DIHEDRAL = 4
+    CHOICE_TETRAHEDRAL = 5
+    CHOICE_LABEL = {
+                    CHOICE_FORMULA: 'formula',
+                    CHOICE_MOVE_VECTOR: 'move source vector to target vector',
+                    CHOICE_ROTATE_VECTOR: 'rotate around vector',
+                    CHOICE_ICOSAHEDRAL: 'convert between icosahedral symmetries',
+                    CHOICE_DIHEDRAL: 'convert between dihedral symmetries',
+                    CHOICE_TETRAHEDRAL: 'convert between tetrahedral symmetries',
+                    }
+    ICOSAHEDRAL_SYM_NAME = {SYM_I222: SCIPION_SYM_NAME[SYM_I222],
+                    SYM_I222r: SCIPION_SYM_NAME[SYM_I222r],
+                    SYM_In25: SCIPION_SYM_NAME[SYM_In25],
+                    SYM_In25r: SCIPION_SYM_NAME[SYM_In25r],
+                    SYM_I2n3: SCIPION_SYM_NAME[SYM_I2n3],
+                    SYM_I2n3r: SCIPION_SYM_NAME[SYM_I2n3r],
+                    SYM_I2n5: SCIPION_SYM_NAME[SYM_I2n5],
+                    SYM_I2n5r: SCIPION_SYM_NAME[SYM_I2n5r]
+                    }
+
+    DIHEDRAL_SYM_NAME = {SYM_DIHEDRAL_X: SCIPION_SYM_NAME[SYM_DIHEDRAL_X],
+                         SYM_DIHEDRAL_Y: SCIPION_SYM_NAME[SYM_DIHEDRAL_Y]
+                        }
+
+    TETRAHEDRAL_SYM_NAME = {SYM_TETRAHEDRAL_222: SCIPION_SYM_NAME[SYM_TETRAHEDRAL_222],
+                            SYM_TETRAHEDRAL_Z3: SCIPION_SYM_NAME[SYM_TETRAHEDRAL_Z3],
+                            SYM_TETRAHEDRAL_Z3R: SCIPION_SYM_NAME[SYM_TETRAHEDRAL_Z3R]
+                           }
 
     def _defineParams(self, form):
         """
@@ -74,8 +94,11 @@ class ProtSetEditor(EMProtocol):
                       help='Set which items will be modified.')
         form.addParam('operation', params.EnumParam,
                       choices=[self.CHOICE_LABEL[self.CHOICE_FORMULA],
+                               self.CHOICE_LABEL[self.CHOICE_MOVE_VECTOR],
                                self.CHOICE_LABEL[self.CHOICE_ROTATE_VECTOR],
-                               self.CHOICE_LABEL[self.CHOICE_ROTATE_ICOSAHEDRAL]
+                               self.CHOICE_LABEL[self.CHOICE_ICOSAHEDRAL],
+                               self.CHOICE_LABEL[self.CHOICE_DIHEDRAL],
+                               self.CHOICE_LABEL[self.CHOICE_TETRAHEDRAL],
                                ],
                       default = self.CHOICE_FORMULA,
                       label="Select operation",
@@ -97,99 +120,104 @@ class ProtSetEditor(EMProtocol):
                            'You could also use modules like "import numpy;  item._resolution .... "')
 
         line = form.addLine('source vector',
-                            condition="operation==%d" % self.CHOICE_ROTATE_VECTOR,
+                            condition="operation==%d" % self.CHOICE_MOVE_VECTOR,
                             help='Vector will be rotated until overlaps target vector')
         line.addParam('xs', params.FloatParam, default=0,
-                      condition="operation==%d" % self.CHOICE_ROTATE_VECTOR,
+                      condition="operation==%d" % self.CHOICE_MOVE_VECTOR,
                       label="x",
                       help="X Coordinate ")
         line.addParam('ys', params.FloatParam, default=0,
-                      condition="operation==%d" % self.CHOICE_ROTATE_VECTOR,
+                      condition="operation==%d" % self.CHOICE_MOVE_VECTOR,
                       label="y",
                       help="Y dim ")
         line.addParam('zs', params.FloatParam, default=1,
-                      condition="operation==%d" % self.CHOICE_ROTATE_VECTOR,
+                      condition="operation==%d" % self.CHOICE_MOVE_VECTOR,
                       label="z",
                       help="Z dim ")
 
         line = form.addLine('target vector',
-                            condition="operation==%d" % self.CHOICE_ROTATE_VECTOR,
+                            condition="operation==%d" % self.CHOICE_MOVE_VECTOR,
                             help='source vector will be rotated until '
                                  'overlaps target vector')
         line.addParam('xt', params.FloatParam, default=1,
-                      condition="operation==%d" % self.CHOICE_ROTATE_VECTOR,
+                      condition="operation==%d" % self.CHOICE_MOVE_VECTOR,
                       label="x",
                       help="X Coordinate ")
         line.addParam('yt', params.FloatParam, default=0,
                       condition=
-                      "operation==%d" % self.CHOICE_ROTATE_VECTOR,
+                      "operation==%d" % self.CHOICE_MOVE_VECTOR,
                       label="y",
                       help="Y dim ")
         line.addParam('zt', params.FloatParam, default=0,
-                      condition="operation==%d" % self.CHOICE_ROTATE_VECTOR,
+                      condition="operation==%d" % self.CHOICE_MOVE_VECTOR,
                       label="z",
                       help="Z dim ")
-
+        ## Icosahedral symmetry
         line = form.addLine('Icosahedral symmetry',
                             condition=
-                            "operation==%d" % self.CHOICE_ROTATE_ICOSAHEDRAL,
+                            "operation==%d" % self.CHOICE_ICOSAHEDRAL,
                             help='convert between icosahedral symmetries')
         line.addParam("originSymmetryGroup", params.EnumParam,
-                      condition="operation==%d" % self.CHOICE_ROTATE_ICOSAHEDRAL,
+                      condition="operation==%d" % self.CHOICE_ICOSAHEDRAL,
                       label="origin",
-                      help = "Source symmetry. "
-                             "Only implemented for icosahedral symmetry",
-                      choices=[self.LOCAL_SYM_NAME[SYM_I222] +
-                               " (" + SCIPION_SYM_NAME[SYM_I222] + ")",
-                               self.LOCAL_SYM_NAME[SYM_I222r] +
-                               " (" + SCIPION_SYM_NAME[SYM_I222r] + ")",
-                               self.LOCAL_SYM_NAME[SYM_In25] +
-                               " (" + SCIPION_SYM_NAME[SYM_In25] + ")",
-                               self.LOCAL_SYM_NAME[SYM_In25r] +
-                               " (" + SCIPION_SYM_NAME[SYM_In25r] + ")",
-                               self.LOCAL_SYM_NAME[SYM_I2n3] +
-                               " (" + SCIPION_SYM_NAME[SYM_I2n3] + ")",
-                               self.LOCAL_SYM_NAME[SYM_I2n3r] +
-                               " (" + SCIPION_SYM_NAME[SYM_I2n3r] + ")",
-                               self.LOCAL_SYM_NAME[SYM_I2n5] +
-                               " (" + SCIPION_SYM_NAME[SYM_I2n5] + ")",
-                               self.LOCAL_SYM_NAME[SYM_I2n5r] +
-                               " (" + SCIPION_SYM_NAME[SYM_I2n5r] + ")"
-                               ],
+                      help = "Source symmetry. ",
+                      choices=list(self.ICOSAHEDRAL_SYM_NAME.values()),
                       default=SYM_I222r - SYM_I222,
                       )
         line.addParam("targetSymmetryGroup", params.EnumParam,
-                      condition="operation==%d" % self.CHOICE_ROTATE_ICOSAHEDRAL,
+                      condition="operation==%d" % self.CHOICE_ICOSAHEDRAL,
                       label="target",
-                      help = "Target symmetry. "
-                             "Only implemented for icosahedral symmetry",
-                      choices=[self.LOCAL_SYM_NAME[SYM_I222] +
-                               " (" + SCIPION_SYM_NAME[SYM_I222] + ")",
-                               self.LOCAL_SYM_NAME[SYM_I222r] +
-                               " (" + SCIPION_SYM_NAME[SYM_I222r] + ")",
-                               self.LOCAL_SYM_NAME[SYM_In25] +
-                               " (" + SCIPION_SYM_NAME[SYM_In25] + ")",
-                               self.LOCAL_SYM_NAME[SYM_In25r] +
-                               " (" + SCIPION_SYM_NAME[SYM_In25r] + ")",
-                               self.LOCAL_SYM_NAME[SYM_I2n3] +
-                               " (" + SCIPION_SYM_NAME[SYM_I2n3] + ")",
-                               self.LOCAL_SYM_NAME[SYM_I2n3r] +
-                               " (" + SCIPION_SYM_NAME[SYM_I2n3r] + ")",
-                               self.LOCAL_SYM_NAME[SYM_I2n5] +
-                               " (" + SCIPION_SYM_NAME[SYM_I2n5] + ")",
-                               self.LOCAL_SYM_NAME[SYM_I2n5r] +
-                               " (" + SCIPION_SYM_NAME[SYM_I2n5r] + ")"
-                               ],
-                      default=SYM_I222r - SYM_I222,
+                      help = "Target symmetry. ",
+                      choices=list(self.ICOSAHEDRAL_SYM_NAME.values()),
+                      default=SYM_I222 - SYM_I222
+                      )
+        ## Dihedral symmetry
+        line = form.addLine('Dihedral symmetry',
+                            condition=
+                            "operation==%d" % self.CHOICE_DIHEDRAL,
+                            help='convert between dihedral symmetries')
+        line.addParam("originSymmetryGroup", params.EnumParam,
+                      condition="operation==%d" % self.CHOICE_DIHEDRAL,
+                      label="origin",
+                      help = "Source symmetry. ",
+                      choices=list(self.DIHEDRAL_SYM_NAME.values()),
+                      default=SYM_DIHEDRAL_X - SYM_DIHEDRAL_X,
+                      )
+        line.addParam("targetSymmetryGroup", params.EnumParam,
+                      condition="operation==%d" % self.CHOICE_DIHEDRAL,
+                      label="target",
+                      help = "Target symmetry. ",
+                      choices=list(self.DIHEDRAL_SYM_NAME.values()),
+                      default=SYM_DIHEDRAL_Y - SYM_DIHEDRAL_X,
+                      )
+
+        ## Tetrahedral symmetry
+        line = form.addLine('Tetrahedral symmetry',
+                            condition=
+                            "operation==%d" % self.CHOICE_TETRAHEDRAL,
+                            help='convert between dihedral symmetries')
+        line.addParam("originSymmetryGroup", params.EnumParam,
+                      condition="operation==%d" % self.CHOICE_TETRAHEDRAL,
+                      label="origin",
+                      help = "Source symmetry. ",
+                      choices=list(self.TETRAHEDRAL_SYM_NAME.values()),
+                      default=SYM_TETRAHEDRAL_Z3 - SYM_TETRAHEDRAL_222,
+                      )
+        line.addParam("targetSymmetryGroup", params.EnumParam,
+                      condition="operation==%d" % self.CHOICE_TETRAHEDRAL,
+                      label="target",
+                      help = "Target symmetry. ",
+                      choices=list(self.TETRAHEDRAL_SYM_NAME.values()),
+                      default=SYM_TETRAHEDRAL_222 - SYM_TETRAHEDRAL_222,
                       )
 
     def _insertAllSteps(self):
         operation =  self.operation.get()
         if (operation == self.CHOICE_FORMULA):
             self._insertFunctionStep('formulaStep')
-        elif (operation == self.CHOICE_ROTATE_VECTOR):
+        elif (operation == self.CHOICE_MOVE_VECTOR):
             self._insertFunctionStep('rotateStep')
-        elif (operation == self.CHOICE_ROTATE_ICOSAHEDRAL):
+        elif (operation == self.CHOICE_ICOSAHEDRAL):
             self._insertFunctionStep('rotateIcoStep')
 
 
@@ -275,3 +303,5 @@ class ProtSetEditor(EMProtocol):
             elif not inputSet.hasAlignmentProj():
                 errors.append("The input data set does not have alignment 3D")
         return errors
+
+

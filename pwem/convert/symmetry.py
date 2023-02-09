@@ -569,7 +569,8 @@ class Tetrahedral(object):
             )
             self.tf = _multiplyMatrices(
                      tfaux,
-                     _reflectMatrix((0, 0, 1))
+                     _reflectMatrix((0, 0, 1)) #TODO: I think this is wrong,
+                        # it should be rotate 180 around z axis
             )
             syms = _coordinateTransformList(syms, self.tf)
 
