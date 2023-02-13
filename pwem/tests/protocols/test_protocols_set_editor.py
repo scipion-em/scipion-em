@@ -33,7 +33,6 @@ import pwem.objects as emobj
 from pwem.protocols import ProtImportParticles, ProtSetEditor
 from pwem.objects.data import Particle, SetOfParticles, Acquisition, CTFModel
 from pwem.constants import ALIGN_PROJ
-from pwem.constants import (SYM_I222, SYM_I222r)
 
 # projection matrices
 mList = [
@@ -155,69 +154,12 @@ class TestSets(pwtests.BaseTest):
                                          objLabel="operate")
         protSetEditor.inputSet.set(protImportProj)
         protSetEditor.inputSet.setExtended("outputParticles")
-        protSetEditor.operation.set(ProtSetEditor.CHOICE_FORMULA)
         protSetEditor.formula.set('item._ctfModel._defocusU.set(item._ctfModel._defocusU.get() + 1. )')
         self.launchProtocol(protSetEditor)
         for item1, item2 in zip(protSetEditor.outputParticles, protImportProj.outputParticles):
             self.assertAlmostEqual(item1._ctfModel._defocusU.get() ,
                                    item2._ctfModel._defocusU.get() + 1)
 
-    def testRotation(self):
-        """Rotate projections alignments so in the reconstruction
-        vecor (0,0,1) y rotated to (1,0,0)"""
-        setPartSqliteName = self.proj.getTmpPath("particles_rot_vec.sqlite")
-        setPartName = self.proj.getTmpPath('particles.stk')
-
-        self._createSetOfParticles(setPartSqliteName, setPartName,
-                                   doCtf=True)
-        protImportProj   = self.importData(setPartSqliteName,
-                                           "import projection\n rot vector",
-                                           ProtImportParticles,
-                                           ProtImportParticles.IMPORT_FROM_SCIPION)
-
-        #launch operate set protocol
-        protSetEditor = self.newProtocol(ProtSetEditor, objLabel="rotate")
-        protSetEditor.inputSet.set(protImportProj)
-        protSetEditor.inputSet.setExtended("outputParticles")
-        protSetEditor.operation.set(ProtSetEditor.CHOICE_ROTATE_VECTOR)
-        protSetEditor.xs.set(0.)
-        protSetEditor.ys.set(0.)
-        protSetEditor.zs.set(1.)
-        protSetEditor.xt.set(1.)
-        protSetEditor.yt.set(0.)
-        protSetEditor.zt.set(0.)
-        self.launchProtocol(protSetEditor)
-        for controlPartSet, outPartSet in zip(  tOut,
-                                protSetEditor.outputParticles, ):
-            self.assertTrue(np.allclose(controlPartSet ,
-                                   outPartSet.getTransform().getMatrix()))
-
-    def testRotationIco(self):
-        """Rotate projections alignments between icosahedral
-        symmetries"""
-        setPartSqliteName = self.proj.getTmpPath("particles_rot_ico.sqlite")
-        setPartName = self.proj.getTmpPath('particles.stk')
-
-        self._createSetOfParticles(setPartSqliteName, setPartName,
-                                   doCtf=True)
-        protImportProj   = self.importData(setPartSqliteName,
-                                           "import projection\n ico sym",
-                                           ProtImportParticles,
-                                           ProtImportParticles.IMPORT_FROM_SCIPION)
-
-        #launch operate set protocol
-        protSetEditor = self.newProtocol(ProtSetEditor, objLabel="rotate")
-        protSetEditor.inputSet.set(protImportProj)
-        protSetEditor.inputSet.setExtended("outputParticles")
-        protSetEditor.operation.set(ProtSetEditor.CHOICE_ROTATE_ICOSAHEDRAL)
-        protSetEditor.originSymmetryGroup.set(SYM_I222 - SYM_I222)
-        protSetEditor.targetSymmetryGroup.set(SYM_I222r - SYM_I222)
-
-        self.launchProtocol(protSetEditor)
-        for controlPartSet, outPartSet in zip(tIcoOut,
-                                protSetEditor.outputParticles, ):
-            self.assertTrue(np.allclose(controlPartSet ,
-                                   outPartSet.getTransform().getMatrix()))
 
 if __name__ == '__main__':
     unittest.main()
