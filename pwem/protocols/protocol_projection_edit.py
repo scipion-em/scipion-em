@@ -242,6 +242,30 @@ class ProtProjectionEditor(EMProtocol):
         elif (operation == self.CHOICE_TETRAHEDRAL):
             self._insertFunctionStep('rotateTetraStep')
 
+    def rotateTetraStep(self):
+        """ Compute rotation matrix between tetrahedral symmetries
+            and apply it to the projection directions
+        """
+        from pwem.convert.symmetry import Tetrahedral
+        origSym = self.originSymmetryGroupT.get() + SYM_TETRAHEDRAL_222
+        targetSym = self.targetSymmetryGroupT.get() + SYM_TETRAHEDRAL_222
+        tetrahedral = Tetrahedral(sym = origSym )
+        matrix = tetrahedral.coordinateSystemTransform(origSym, targetSym)
+
+        # convert to numpy array
+        # and add extra row
+        matrix = np.array(matrix)
+        matrix = np.append(matrix, [[0, 0, 0, 1]], axis=0)
+
+        inputSet = self.inputSet.get()
+        modifiedSet = inputSet.createCopy(self._getExtraPath(), copyInfo=True)
+        for sourceItem in inputSet.iterItems():
+            item = sourceItem.clone()
+            transformation = item.getTransform()
+            transformation.composeTransform(matrix)
+            modifiedSet.append(item)
+        self.createOutput(self.inputSet, modifiedSet)
+
     def rotateDiStep(self):
         """ Compute rotation matrix from one dihedral
         symmetry to another and apply it to the projection directions
@@ -249,7 +273,23 @@ class ProtProjectionEditor(EMProtocol):
         from pwem.convert.symmetry import Dihedral
         origSym = self.originSymmetryGroupD.get() + SYM_DIHEDRAL_X
         targetSym = self.targetSymmetryGroupD.get() + SYM_DIHEDRAL_X
-        dihedral = Dihedral(sym = origSym)
+        dihedral = Dihedral(sym = origSym, n=1) # n is irrelevant for this function
+                                                # but is a required parameter
+        matrix = dihedral.coordinateSystemTransform(origSym, targetSym)
+
+        # convert to numpy array
+        # and add extra row
+        matrix = np.array(matrix)
+        matrix = np.append(matrix, [[0, 0, 0, 1]], axis=0)
+
+        inputSet = self.inputSet.get()
+        modifiedSet = inputSet.createCopy(self._getExtraPath(), copyInfo=True)
+        for sourceItem in inputSet.iterItems():
+            item = sourceItem.clone()
+            transformation = item.getTransform()
+            transformation.composeTransform(matrix)
+            modifiedSet.append(item)
+        self.createOutput(self.inputSet, modifiedSet)
 
     def rotateIcosaStep(self):
         """

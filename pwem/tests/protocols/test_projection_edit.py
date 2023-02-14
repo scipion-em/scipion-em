@@ -84,6 +84,25 @@ tRotOut = [
      [ 0.00000000e+00,  0.00000000e+00,  0.00000000e+00,  1.00000000e+00]]
 ]
 
+# operate dihedral symmetry Y
+tDiOutY = [
+    [[-0.90145576, -0.15372423,  0.40465588,  0.        ],
+     [-0.43275576,  0.29845287, -0.85067522,  0.        ],
+     [ 0.00999868, -0.94196324, -0.33556711,  0.        ],
+     [ 0.,          0.,          0.,          1.        ]],
+
+    [[ 0.94052283,  0.2364644,  -0.24392908,  0.        ],
+     [ 0.30988911, -0.89139634,  0.33072844,  0.        ],
+     [-0.13923199, -0.38664861, -0.91165635,  0.        ],
+     [ 0.,          0.,          0.,          1.        ]],
+
+   [[ 0.11616951,  0.95112703,  0.2861154,   0.        ],
+    [-0.25960861, -0.24897451,  0.93306755,  0.        ],
+    [ 0.95870121, -0.18267202,  0.21799752,  0.        ],
+    [ 0.,          0.,          0.,          1.        ]]
+
+]
+
 # operate ico symmetry
 tIcoOut = [
     [[0.,  1.,  0.,  0.],
@@ -290,7 +309,8 @@ class TestProjectionEdit(pwtests.BaseTest):
                                 protSetEditor.outputParticles, ):
             self.assertTrue(np.allclose(controlPartSet ,
                                    outPartSet.getTransform().getMatrix()))
-    def test_11_Dihedral(self):
+
+    def test_11_DihedralY(self):
         if not downloadFileFromGithub:
             self.assertTrue(True)
             return
@@ -313,7 +333,7 @@ class TestProjectionEdit(pwtests.BaseTest):
                                            ProtImportParticles.IMPORT_FROM_XMIPP3)
         protImportVol    = self._importVolume(f'/tmp/{symFile}.mrc',
                                               f"import vol\n {symFile}")
-        # reconstruct using d7x
+        # reconstruct using d7y (since d7 is dx this should provide the wrong result)
         from xmipp3.protocols import XmippProtReconstructFourier
         recProt1 = self.newProtocol(XmippProtReconstructFourier,
                                         symmetryGroup='D7',
@@ -322,21 +342,92 @@ class TestProjectionEdit(pwtests.BaseTest):
 
         reconstruction1 = self.launchProtocol(recProt1)
 
-        # edit proejction direction
+        # edit projection direction
         protSetEditor = self.newProtocol(ProtProjectionEditor, objLabel="D7y -> D7x")
         protSetEditor.inputSet.set(protImportProj)
         protSetEditor.inputSet.setExtended("outputParticles")
         protSetEditor.operation.set(ProtProjectionEditor.CHOICE_DIHEDRAL)
-        protSetEditor.originSymmetryGroupI.set(SYM_DIHEDRAL_Y - SYM_DIHEDRAL_X)
-        protSetEditor.targetSymmetryGroupI.set(SYM_DIHEDRAL_X - SYM_DIHEDRAL_X)
+        protSetEditor.originSymmetryGroupD.set(SYM_DIHEDRAL_Y - SYM_DIHEDRAL_X)
+        protSetEditor.targetSymmetryGroupD.set(SYM_DIHEDRAL_X - SYM_DIHEDRAL_X)
 
         editProt = self.launchProtocol(protSetEditor)
         
+        for controlPartSet, outPartSet in zip(tDiOutY,
+                                protSetEditor.outputParticles, ):
+            print(controlPartSet, outPartSet.getTransform().getMatrix())
+            self.assertTrue(np.allclose(controlPartSet ,
+                                   outPartSet.getTransform().getMatrix()))
+
         # reconstruct again
         recProt2 = self.newProtocol(XmippProtReconstructFourier,
                                         symmetryGroup='D7',
                                         objLabel='Fourier reconstruction',
                                         inputParticles=editProt.outputParticles)
+
+        reconstruction2 = self.launchProtocol(recProt2)
+
+    def test_12_DihedralX(self):
+        if not downloadFileFromGithub:
+            self.assertTrue(True)
+            return
+        symDir = 'D/dx'
+        symFile = 'dx'
+        self._downloadFileFromGithub(host = 'https://raw.githubusercontent.com',
+                                    dir = f'/I2PC/testDataSym/main/{symDir}',
+                                    baseName=f'{symFile}.xmd')
+        self._downloadFileFromGithub(host = 'https://raw.githubusercontent.com',
+                                    dir = f'/I2PC/testDataSym/main/{symDir}',
+                                    baseName=f'{symFile}.mrcs')
+        self._downloadFileFromGithub(host = 'https://raw.githubusercontent.com',
+                                    dir = f'/I2PC/testDataSym/main/{symDir}',
+                                    baseName=f'{symFile}.mrc')
+
+        # import files
+        protImportProj   = self.importData(f'/tmp/{symFile}.xmd',
+                                           f"import projection\n {symFile}",
+                                           ProtImportParticles,
+                                           ProtImportParticles.IMPORT_FROM_XMIPP3)
+        protImportVol    = self._importVolume(f'/tmp/{symFile}.mrc',
+                                              f"import vol\n {symFile}")
+        # reconstruct using d7x (since d7 is dx this should provide the right result)
+        from xmipp3.protocols import XmippProtReconstructFourier
+        recProt1 = self.newProtocol(XmippProtReconstructFourier,
+                                        symmetryGroup='D7',
+                                        objLabel='Fourier reconstruction',
+                                        inputParticles=protImportProj.outputParticles)
+
+        reconstruction1 = self.launchProtocol(recProt1)
+
+        # edit projection direction
+        protSetEditor = self.newProtocol(ProtProjectionEditor, objLabel="D7x -> D7y")
+        protSetEditor.inputSet.set(protImportProj)
+        protSetEditor.inputSet.setExtended("outputParticles")
+        protSetEditor.operation.set(ProtProjectionEditor.CHOICE_DIHEDRAL)
+        protSetEditor.originSymmetryGroupD.set(SYM_DIHEDRAL_X - SYM_DIHEDRAL_X)
+        protSetEditor.targetSymmetryGroupD.set(SYM_DIHEDRAL_Y - SYM_DIHEDRAL_X)
+
+        editProt = self.launchProtocol(protSetEditor)
+        # edit projection direction, put back to original
+        protSetEditor2 = self.newProtocol(ProtProjectionEditor, objLabel="D7y -> D7x")
+        protSetEditor2.inputSet.set(editProt)
+        protSetEditor2.inputSet.setExtended("outputParticles")
+        protSetEditor2.operation.set(ProtProjectionEditor.CHOICE_DIHEDRAL)
+        protSetEditor2.originSymmetryGroupD.set(SYM_DIHEDRAL_Y - SYM_DIHEDRAL_X)
+        protSetEditor2.targetSymmetryGroupD.set(SYM_DIHEDRAL_X - SYM_DIHEDRAL_X)
+
+        editProt2 = self.launchProtocol(protSetEditor2)
+        for controlPartSet, outPartSet in zip(protImportProj.outputParticles,
+                                              protSetEditor2.outputParticles, ):
+            print(controlPartSet.getTransform().getMatrix(), 
+                  outPartSet.getTransform().getMatrix())
+            self.assertTrue(np.allclose(controlPartSet.getTransform().getMatrix() ,
+                                   outPartSet.getTransform().getMatrix()))
+        
+        # reconstruct again
+        recProt2 = self.newProtocol(XmippProtReconstructFourier,
+                                        symmetryGroup='D7',
+                                        objLabel='Fourier reconstruction',
+                                        inputParticles=editProt2.outputParticles)
 
         reconstruction2 = self.launchProtocol(recProt2)
 

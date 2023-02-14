@@ -517,6 +517,20 @@ class Dihedral(Cyclic):
 
         return vectorsEdge, vectorsPlane
 
+    def coordinateSystemTransform(self, origSym, targetSym):
+        if origSym == targetSym:
+            return np.identity(4)
+        elif origSym == cts.SYM_DIHEDRAL_X and targetSym == cts.SYM_DIHEDRAL_Y:
+            print("========================X -> Y")
+            return ((0., -1., 0., 0.), ( 1, 0., 0., 0.), (0., 0., 1., 0.))
+        elif origSym == cts.SYM_DIHEDRAL_Y and targetSym == cts.SYM_DIHEDRAL_X:
+            print("========================Y -> X")
+            return ((0., 1., 0., 0.), ( -1, 0., 0., 0.), (0., 0., 1., 0.))
+        else:
+            raise Exception("unknown symmetry pair: %s %s" % (
+                cts.SCIPION_SYM_NAME[origSym], 
+                cts.SCIPION_SYM_NAME[targetSym]))
+
 
 class Tetrahedral(object):
     """Tetrahedral class.
