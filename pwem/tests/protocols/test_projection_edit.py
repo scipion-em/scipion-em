@@ -102,6 +102,23 @@ tDiOutY = [
     [ 0.,          0.,          0.,          1.        ]]
 
 ]
+# operate dihedral symmetry no files downloaded
+tDiOut = [
+    [[ 0., -1.,  0.,      0.],
+     [ 1.,  0.,  0.,  0.],
+     [ 0.,  0.,  1.,  0.],
+     [ 0.,  0.,  0.,  1.]],
+
+    [[-0.90961589, -0.26325835, -0.3213938,  20.82490128],
+     [ 0.04341204, -0.82959837,  0.5566704,   7.42774284],
+     [-0.41317591,  0.49240388,  0.76604444,  3.33947946],
+     [ 0.,          0.,          0.,          1.        ]],
+
+   [[ -0.90961589,   0.26325835,  -0.3213938,  -20.82490128],
+    [  0.04341204,   0.82959837,   0.5566704,   -7.42774284],
+    [  0.41317591,   0.49240388,  -0.76604444,   3.33947946],
+    [  0.,           0.,           0.,           1.        ]]
+]
 
 # operate ico symmetry
 tIcoOut = [
@@ -127,6 +144,11 @@ samplingRate = 1.5
 # enable FULLTEST to perform a detailed comparison
 # very like does not make sense for automatic testing
 downloadFileFromGithub = True
+# recosntruct volume, this is useful if there is a human
+# to check the results and relion is isntalled
+# xmipp is not OK because the tetrahedral symmetry recosntruction
+# is not implemented properlly
+reconstructVolume = True
 
 class TestProjectionEdit(pwtests.BaseTest):
     """Run different tests related to the editor set protocol."""
@@ -238,7 +260,7 @@ class TestProjectionEdit(pwtests.BaseTest):
                                            ProtImportParticles.IMPORT_FROM_SCIPION)
 
         #launch operate set protocol
-        protSetEditor = self.newProtocol(ProtProjectionEditor, objLabel="move 0,0,1 -> 0,0,1")
+        protSetEditor = self.newProtocol(ProtProjectionEditor, objLabel="move 1,0,0 -> 0,0,1")
         protSetEditor.inputSet.set(protImportProj)
         protSetEditor.inputSet.setExtended("outputParticles")
         protSetEditor.operation.set(ProtProjectionEditor.CHOICE_MOVE_VECTOR)
@@ -254,7 +276,7 @@ class TestProjectionEdit(pwtests.BaseTest):
             self.assertTrue(np.allclose(controlPartSet ,
                                    outPartSet.getTransform().getMatrix()))
 
-    def test_05_rotateAroundVector(self):
+    def test_05_rotateAroundVector(self):   ####### TODO: fix this test
         """Rotate projections alignments around
         vecor (0,0,1)by 60 degrees"""
         setPartSqliteName = self.proj.getTmpPath("particles_rot_vec.sqlite")
@@ -292,7 +314,7 @@ class TestProjectionEdit(pwtests.BaseTest):
         self._createSetOfParticles(setPartSqliteName, setPartName,
                                    doCtf=True)
         protImportProj   = self.importData(setPartSqliteName,
-                                           "import projection\n ico sym",
+                                           "import projection\n d7x",
                                            ProtImportParticles,
                                            ProtImportParticles.IMPORT_FROM_SCIPION)
 
@@ -305,8 +327,9 @@ class TestProjectionEdit(pwtests.BaseTest):
         protSetEditor.targetSymmetryGroupI.set(SYM_DIHEDRAL_Y - SYM_DIHEDRAL_X)
 
         self.launchProtocol(protSetEditor)
-        for controlPartSet, outPartSet in zip(tIcoOut,  #### change to tDihOut
+        for controlPartSet, outPartSet in zip(tDiOut,  #### change to tDiOut
                                 protSetEditor.outputParticles, ):
+            print(controlPartSet, outPartSet.getTransform().getMatrix())    
             self.assertTrue(np.allclose(controlPartSet ,
                                    outPartSet.getTransform().getMatrix()))
 
@@ -334,13 +357,14 @@ class TestProjectionEdit(pwtests.BaseTest):
         protImportVol    = self._importVolume(f'/tmp/{symFile}.mrc',
                                               f"import vol\n {symFile}")
         # reconstruct using d7y (since d7 is dx this should provide the wrong result)
-        from xmipp3.protocols import XmippProtReconstructFourier
-        recProt1 = self.newProtocol(XmippProtReconstructFourier,
-                                        symmetryGroup='D7',
-                                        objLabel='Fourier reconstruction',
-                                        inputParticles=protImportProj.outputParticles)
+        if reconstructVolume:
+            from relion.protocols import ProtRelionReconstruct
+            recProt1 = self.newProtocol(ProtRelionReconstruct,
+                                            symmetryGroup='D7',
+                                            objLabel='Fourier reconstruction',
+                                            inputParticles=protImportProj.outputParticles)
 
-        reconstruction1 = self.launchProtocol(recProt1)
+            reconstruction1 = self.launchProtocol(recProt1)
 
         # edit projection direction
         protSetEditor = self.newProtocol(ProtProjectionEditor, objLabel="D7y -> D7x")
@@ -359,12 +383,13 @@ class TestProjectionEdit(pwtests.BaseTest):
                                    outPartSet.getTransform().getMatrix()))
 
         # reconstruct again
-        recProt2 = self.newProtocol(XmippProtReconstructFourier,
-                                        symmetryGroup='D7',
-                                        objLabel='Fourier reconstruction',
-                                        inputParticles=editProt.outputParticles)
+        if reconstructVolume:
+            recProt2 = self.newProtocol(ProtRelionReconstruct,
+                                            symmetryGroup='D7',
+                                            objLabel='Fourier reconstruction',
+                                            inputParticles=editProt.outputParticles)
 
-        reconstruction2 = self.launchProtocol(recProt2)
+            reconstruction2 = self.launchProtocol(recProt2)
 
     def test_12_DihedralX(self):
         if not downloadFileFromGithub:
@@ -390,13 +415,14 @@ class TestProjectionEdit(pwtests.BaseTest):
         protImportVol    = self._importVolume(f'/tmp/{symFile}.mrc',
                                               f"import vol\n {symFile}")
         # reconstruct using d7x (since d7 is dx this should provide the right result)
-        from xmipp3.protocols import XmippProtReconstructFourier
-        recProt1 = self.newProtocol(XmippProtReconstructFourier,
-                                        symmetryGroup='D7',
-                                        objLabel='Fourier reconstruction',
-                                        inputParticles=protImportProj.outputParticles)
+        if reconstructVolume:
+            from relion.protocols import ProtRelionReconstruct
+            recProt1 = self.newProtocol(ProtRelionReconstruct,
+                                            symmetryGroup='D7',
+                                            objLabel='Fourier reconstruction',
+                                            inputParticles=protImportProj.outputParticles)
 
-        reconstruction1 = self.launchProtocol(recProt1)
+            reconstruction1 = self.launchProtocol(recProt1)
 
         # edit projection direction
         protSetEditor = self.newProtocol(ProtProjectionEditor, objLabel="D7x -> D7y")
@@ -424,67 +450,204 @@ class TestProjectionEdit(pwtests.BaseTest):
                                    outPartSet.getTransform().getMatrix()))
         
         # reconstruct again
-        recProt2 = self.newProtocol(XmippProtReconstructFourier,
-                                        symmetryGroup='D7',
-                                        objLabel='Fourier reconstruction',
-                                        inputParticles=editProt2.outputParticles)
+        if reconstructVolume:
+            recProt2 = self.newProtocol(ProtRelionReconstruct,
+                                            symmetryGroup='D7',
+                                            objLabel='Fourier reconstruction',
+                                            inputParticles=editProt2.outputParticles)
 
-        reconstruction2 = self.launchProtocol(recProt2)
+            reconstruction2 = self.launchProtocol(recProt2)
 
 
-    def test_15_Tetrahedral(self):
-        """Rotate projections alignments between icosahedral
-        symmetries"""
-        setPartSqliteName = self.proj.getTmpPath("particles_rot_ico.sqlite")
-        setPartName = self.proj.getTmpPath('particles.stk')
+    def test_15_Tetrahedral222_z3(self):
+        if not downloadFileFromGithub:
+            self.assertTrue(True)
+            return
+        symDir = 'T/t222'
+        symFile = 't222'
+        self._downloadFileFromGithub(host = 'https://raw.githubusercontent.com',
+                                    dir = f'/I2PC/testDataSym/main/{symDir}',
+                                    baseName=f'{symFile}.xmd')
+        self._downloadFileFromGithub(host = 'https://raw.githubusercontent.com',
+                                    dir = f'/I2PC/testDataSym/main/{symDir}',
+                                    baseName=f'{symFile}.mrcs')
+        self._downloadFileFromGithub(host = 'https://raw.githubusercontent.com',
+                                    dir = f'/I2PC/testDataSym/main/{symDir}',
+                                    baseName=f'{symFile}.mrc')
 
-        self._createSetOfParticles(setPartSqliteName, setPartName,
-                                   doCtf=True)
-        protImportProj   = self.importData(setPartSqliteName,
-                                           "import projection\n ico sym",
+        # import files
+        protImportProj   = self.importData(f'/tmp/{symFile}.xmd',
+                                           f"import projection\n {symFile}",
                                            ProtImportParticles,
-                                           ProtImportParticles.IMPORT_FROM_SCIPION)
+                                           ProtImportParticles.IMPORT_FROM_XMIPP3)
+        protImportVol    = self._importVolume(f'/tmp/{symFile}.mrc',
+                                              f"import vol\n {symFile}")
+        # reconstruct using d7y (since d7 is dx this should provide the wrong result)
+        if reconstructVolume:
+            from relion.protocols import ProtRelionReconstruct
+            recProt1 = self.newProtocol(ProtRelionReconstruct,
+                                            symmetryGroup='T',
+                                            objLabel='Fourier reconstruction',
+                                            inputParticles=protImportProj.outputParticles,
+                                            doCTF=False)
 
-        #launch operate set protocol
+            reconstruction1 = self.launchProtocol(recProt1)
+
+        # edit projection direction
         protSetEditor = self.newProtocol(ProtProjectionEditor, objLabel="T222 -> TZ3")
         protSetEditor.inputSet.set(protImportProj)
         protSetEditor.inputSet.setExtended("outputParticles")
-        protSetEditor.operation.set(ProtProjectionEditor.CHOICE_ICOSAHEDRAL)
-        protSetEditor.originSymmetryGroupI.set(SYM_TETRAHEDRAL_222 - SYM_TETRAHEDRAL_222)
-        protSetEditor.targetSymmetryGroupI.set(SYM_TETRAHEDRAL_Z3R - SYM_TETRAHEDRAL_222)
+        protSetEditor.operation.set(ProtProjectionEditor.CHOICE_TETRAHEDRAL)
+        protSetEditor.originSymmetryGroupT.set(SYM_TETRAHEDRAL_222 - SYM_TETRAHEDRAL_222)
+        protSetEditor.targetSymmetryGroupT.set(SYM_TETRAHEDRAL_Z3 - SYM_TETRAHEDRAL_222)
 
-        self.launchProtocol(protSetEditor)
-        for controlPartSet, outPartSet in zip(tIcoOut,#### change to tTetraOut
+        editProt = self.launchProtocol(protSetEditor)
+        
+        # reconstruct again
+        if reconstructVolume:
+            recProt2 = self.newProtocol(ProtRelionReconstruct,
+                                            symmetryGroup='T',
+                                            objLabel='Fourier reconstruction',
+                                            inputParticles=editProt.outputParticles,
+                                            doCTF=False)
+
+            reconstruction2 = self.launchProtocol(recProt2)
+
+        for controlPartSet, outPartSet in zip(tDiOutY,
                                 protSetEditor.outputParticles, ):
+            print(controlPartSet, outPartSet.getTransform().getMatrix())
             self.assertTrue(np.allclose(controlPartSet ,
                                    outPartSet.getTransform().getMatrix()))
 
-    def test_20_IcosaHedral(self):
-        """Rotate projections alignments between icosahedral
-        symmetries"""
-        setPartSqliteName = self.proj.getTmpPath("particles_rot_ico.sqlite")
-        setPartName = self.proj.getTmpPath('particles.stk')
+    def test_16_Tetrahedralz3r_z3(self):
+        if not downloadFileFromGithub:
+            self.assertTrue(True)
+            return
+        symDir = 'T/tz3r'
+        symFile = 'tz3r'
+        self._downloadFileFromGithub(host = 'https://raw.githubusercontent.com',
+                                    dir = f'/I2PC/testDataSym/main/{symDir}',
+                                    baseName=f'{symFile}.xmd')
+        self._downloadFileFromGithub(host = 'https://raw.githubusercontent.com',
+                                    dir = f'/I2PC/testDataSym/main/{symDir}',
+                                    baseName=f'{symFile}.mrcs')
+        self._downloadFileFromGithub(host = 'https://raw.githubusercontent.com',
+                                    dir = f'/I2PC/testDataSym/main/{symDir}',
+                                    baseName=f'{symFile}.mrc')
 
-        self._createSetOfParticles(setPartSqliteName, setPartName,
-                                   doCtf=True)
-        protImportProj   = self.importData(setPartSqliteName,
-                                           "import projection\n ico sym",
+        # import files
+        protImportProj   = self.importData(f'/tmp/{symFile}.xmd',
+                                           f"import projection\n {symFile}",
                                            ProtImportParticles,
-                                           ProtImportParticles.IMPORT_FROM_SCIPION)
+                                           ProtImportParticles.IMPORT_FROM_XMIPP3)
+        protImportVol    = self._importVolume(f'/tmp/{symFile}.mrc',
+                                              f"import vol\n {symFile}")
+        # reconstruct using T (since only z3 is implemented this result should be wrong)
+        if reconstructVolume:
+            from relion.protocols import ProtRelionReconstruct
+            recProt1 = self.newProtocol(ProtRelionReconstruct,
+                                            symmetryGroup='T',
+                                            objLabel='Fourier reconstruction',
+                                            inputParticles=protImportProj.outputParticles,
+                                            doCTF=False)
 
-        #launch operate set protocol
-        protSetEditor = self.newProtocol(ProtProjectionEditor, objLabel="I222 -> I222r")
+            reconstruction1 = self.launchProtocol(recProt1)
+
+        # edit projection direction
+        protSetEditor = self.newProtocol(ProtProjectionEditor, objLabel="Tz3r -> TZ3")
         protSetEditor.inputSet.set(protImportProj)
         protSetEditor.inputSet.setExtended("outputParticles")
-        protSetEditor.operation.set(ProtProjectionEditor.CHOICE_ICOSAHEDRAL)
-        protSetEditor.originSymmetryGroupI.set(SYM_I222 - SYM_I222)
-        protSetEditor.targetSymmetryGroupI.set(SYM_I222r - SYM_I222)
+        protSetEditor.operation.set(ProtProjectionEditor.CHOICE_TETRAHEDRAL)
+        protSetEditor.originSymmetryGroupT.set(SYM_TETRAHEDRAL_Z3R - SYM_TETRAHEDRAL_222)
+        protSetEditor.targetSymmetryGroupT.set(SYM_TETRAHEDRAL_Z3 - SYM_TETRAHEDRAL_222)
 
-        self.launchProtocol(protSetEditor)
-        for controlPartSet, outPartSet in zip(tIcoOut,
+        editProt = self.launchProtocol(protSetEditor)
+        
+        # reconstruct again
+        if reconstructVolume:
+            recProt2 = self.newProtocol(ProtRelionReconstruct,
+                                            symmetryGroup='T',
+                                            objLabel='Fourier reconstruction',
+                                            inputParticles=editProt.outputParticles,
+                                            doCTF=False)
+
+            reconstruction2 = self.launchProtocol(recProt2)
+
+        for controlPartSet, outPartSet in zip(tDiOutY,
                                 protSetEditor.outputParticles, ):
+            print(controlPartSet, outPartSet.getTransform().getMatrix())
             self.assertTrue(np.allclose(controlPartSet ,
                                    outPartSet.getTransform().getMatrix()))
 
+
+    def test_17_Tetrahedralz3_z3r(self):
+        if not downloadFileFromGithub:
+            self.assertTrue(True)
+            return
+        symDir = 'T/tz3'
+        symFile = 'tz3'
+        self._downloadFileFromGithub(host = 'https://raw.githubusercontent.com',
+                                    dir = f'/I2PC/testDataSym/main/{symDir}',
+                                    baseName=f'{symFile}.xmd')
+        self._downloadFileFromGithub(host = 'https://raw.githubusercontent.com',
+                                    dir = f'/I2PC/testDataSym/main/{symDir}',
+                                    baseName=f'{symFile}.mrcs')
+        self._downloadFileFromGithub(host = 'https://raw.githubusercontent.com',
+                                    dir = f'/I2PC/testDataSym/main/{symDir}',
+                                    baseName=f'{symFile}.mrc')
+
+        # import files
+        protImportProj   = self.importData(f'/tmp/{symFile}.xmd',
+                                           f"import projection\n {symFile}",
+                                           ProtImportParticles,
+                                           ProtImportParticles.IMPORT_FROM_XMIPP3)
+        protImportVol    = self._importVolume(f'/tmp/{symFile}.mrc',
+                                              f"import vol\n {symFile}")
+        # reconstruct using T (since only z3 is implemented this result should be OK)
+        if reconstructVolume:
+            from relion.protocols import ProtRelionReconstruct
+            recProt1 = self.newProtocol(ProtRelionReconstruct,
+                                            symmetryGroup='T',
+                                            objLabel='Fourier reconstruction',
+                                            inputParticles=protImportProj.outputParticles,
+                                            doCTF=False)
+
+            reconstruction1 = self.launchProtocol(recProt1)
+
+        # edit projection direction
+        protSetEditor = self.newProtocol(ProtProjectionEditor, objLabel="Tz3 -> TZ3r")
+        protSetEditor.inputSet.set(protImportProj)
+        protSetEditor.inputSet.setExtended("outputParticles")
+        protSetEditor.operation.set(ProtProjectionEditor.CHOICE_TETRAHEDRAL)
+        protSetEditor.originSymmetryGroupT.set(SYM_TETRAHEDRAL_Z3 - SYM_TETRAHEDRAL_222)
+        protSetEditor.targetSymmetryGroupT.set(SYM_TETRAHEDRAL_Z3R - SYM_TETRAHEDRAL_222)
+
+        editProt = self.launchProtocol(protSetEditor)
+        # undo edit
+        protSetEditor2 = self.newProtocol(ProtProjectionEditor, objLabel="Tz3r -> TZ3")
+        protSetEditor2.inputSet.set(protSetEditor)
+        protSetEditor2.inputSet.setExtended("outputParticles")
+        protSetEditor2.operation.set(ProtProjectionEditor.CHOICE_TETRAHEDRAL)
+        protSetEditor2.originSymmetryGroupT.set(SYM_TETRAHEDRAL_Z3R - SYM_TETRAHEDRAL_222)
+        protSetEditor2.targetSymmetryGroupT.set(SYM_TETRAHEDRAL_Z3 - SYM_TETRAHEDRAL_222)
+
+        editProt2 = self.launchProtocol(protSetEditor2)
+
+        # reconstruct again
+        if reconstructVolume:
+            recProt2 = self.newProtocol(ProtRelionReconstruct,
+                                            symmetryGroup='T',
+                                            objLabel='Fourier reconstruction',
+                                            inputParticles=editProt2.outputParticles,
+                                            doCTF=False)
+
+            reconstruction2 = self.launchProtocol(recProt2)
+
+        for controlPartSet, outPartSet in zip(protImportProj.outputParticles,
+                                              protSetEditor2.outputParticles, ):
+            print(controlPartSet.getTransform().getMatrix(), 
+                  outPartSet.getTransform().getMatrix())
+            self.assertTrue(np.allclose(controlPartSet.getTransform().getMatrix() ,
+                                   outPartSet.getTransform().getMatrix()))
 if __name__ == '__main__':
     unittest.main()

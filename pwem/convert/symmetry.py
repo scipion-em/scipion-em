@@ -527,7 +527,7 @@ class Dihedral(Cyclic):
             print("========================Y -> X")
             return ((0., 1., 0., 0.), ( -1, 0., 0., 0.), (0., 0., 1., 0.))
         else:
-            raise Exception("unknown symmetry pair: %s %s" % (
+            raise Exception("unknown dihedral symmetry pair: %s %s" % (
                 cts.SCIPION_SYM_NAME[origSym], 
                 cts.SCIPION_SYM_NAME[targetSym]))
 
@@ -636,6 +636,31 @@ class Tetrahedral(object):
             print("plane2", plane2)
             print("plane3", plane3)
         return [_3fold_1, vp, _3fold_2], [plane1, plane2, plane3]
+
+    def coordinateSystemTransform(self, origSym, targetSym):
+        if origSym == targetSym:
+            return np.identity(4)
+        elif origSym == cts.SYM_TETRAHEDRAL_222 and targetSym == cts.SYM_TETRAHEDRAL_Z3:
+            print("========================222 -> Z3")
+            matrix = _multiplyMatrices(
+                     _rotationTransform((0, 0, 1),  45.0),
+                     _rotationTransform((1, 0, 0), -acos(1 / sqrt(3)) * 180 / pi)
+            )
+            matrix = _multiplyMatrices(
+                     matrix,
+                     _reflectMatrix((0, 0, 1)) 
+            )
+            matrix = _invertMatrix(matrix)
+            return matrix
+
+        elif (origSym == cts.SYM_TETRAHEDRAL_Z3R and targetSym == cts.SYM_TETRAHEDRAL_Z3) or\
+             (origSym == cts.SYM_TETRAHEDRAL_Z3 and targetSym == cts.SYM_TETRAHEDRAL_Z3R):
+            matrix = _reflectMatrix((1, 0, 0))
+            return matrix
+        else:
+            raise Exception("unknown Tetrahedral symmetry pair: %s %s" % (
+                cts.SCIPION_SYM_NAME[origSym], 
+                cts.SCIPION_SYM_NAME[targetSym]))
 
 
 class Octahedral(object):

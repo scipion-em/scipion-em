@@ -249,6 +249,8 @@ class ProtProjectionEditor(EMProtocol):
         from pwem.convert.symmetry import Tetrahedral
         origSym = self.originSymmetryGroupT.get() + SYM_TETRAHEDRAL_222
         targetSym = self.targetSymmetryGroupT.get() + SYM_TETRAHEDRAL_222
+        print("origSym", origSym)
+        print("targetSym", targetSym)
         tetrahedral = Tetrahedral(sym = origSym )
         matrix = tetrahedral.coordinateSystemTransform(origSym, targetSym)
 
