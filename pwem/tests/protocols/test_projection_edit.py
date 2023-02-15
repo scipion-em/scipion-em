@@ -159,7 +159,8 @@ class TestProjectionEdit(pwtests.BaseTest):
     def _downloadFileFromGithub(self, host, dir, baseName):
         """ Download a file from github."""
         import os
-        if os.path.exists(f"/tmp/{baseName}"):
+        if os.path.exists(  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<move /tmp
+            f"/tmp/{baseName}"):
             os.remove(f"/tmp/{baseName}")
         import shutil
         import requests
@@ -254,12 +255,13 @@ class TestProjectionEdit(pwtests.BaseTest):
 
         self._createSetOfParticles(setPartSqliteName, setPartName,
                                    doCtf=True)
-        protImportProj   = self.importData(setPartSqliteName,
-                                           "import projection\n rot vector",
-                                           ProtImportParticles,
-                                           ProtImportParticles.IMPORT_FROM_SCIPION)
+        protImportProj = self.importData(
+            setPartSqliteName,
+            "import projection\n rot vector",
+            ProtImportParticles,
+            ProtImportParticles.IMPORT_FROM_SCIPION)
 
-        #launch operate set protocol
+        # launch operate set protocol
         protSetEditor = self.newProtocol(ProtProjectionEditor, objLabel="move 1,0,0 -> 0,0,1")
         protSetEditor.inputSet.set(protImportProj)
         protSetEditor.inputSet.setExtended("outputParticles")
@@ -276,7 +278,7 @@ class TestProjectionEdit(pwtests.BaseTest):
             self.assertTrue(np.allclose(controlPartSet ,
                                    outPartSet.getTransform().getMatrix()))
 
-    def test_05_rotateAroundVector(self):   ####### TODO: fix this test
+    def test_05_rotateAroundVector(self):  # TODO: fix this test
         """Rotate projections alignments around
         vecor (0,0,1)by 60 degrees"""
         setPartSqliteName = self.proj.getTmpPath("particles_rot_vec.sqlite")
@@ -284,13 +286,16 @@ class TestProjectionEdit(pwtests.BaseTest):
 
         self._createSetOfParticles(setPartSqliteName, setPartName,
                                    doCtf=True)
-        protImportProj   = self.importData(setPartSqliteName,
-                                           "import projection\n rot vector",
-                                           ProtImportParticles,
-                                           ProtImportParticles.IMPORT_FROM_SCIPION)
+        protImportProj = self.importData(
+            setPartSqliteName,
+            "import projection\n rot vector",
+            ProtImportParticles,
+            ProtImportParticles.IMPORT_FROM_SCIPION)
 
-        #launch operate set protocol
-        protSetEditor = self.newProtocol(ProtProjectionEditor, objLabel="rotate 60 degrees\n around 0,0,1")
+        # launch operate set protocol
+        protSetEditor = self.newProtocol(
+            ProtProjectionEditor,
+            objLabel="rotate 60 degrees\n around 0,0,1")
         protSetEditor.inputSet.set(protImportProj)
         protSetEditor.inputSet.setExtended("outputParticles")
         protSetEditor.operation.set(ProtProjectionEditor.CHOICE_ROTATE_VECTOR)
@@ -299,11 +304,12 @@ class TestProjectionEdit(pwtests.BaseTest):
         protSetEditor.z.set(1.)
         protSetEditor.angle.set(60.)
         self.launchProtocol(protSetEditor)
-        for controlPartSet, outPartSet in zip(  tRotOut,
-                                protSetEditor.outputParticles, ):
+        for controlPartSet, outPartSet in zip(tRotOut,
+                                              protSetEditor.outputParticles):
             print(outPartSet.getTransform().getMatrix())
-            self.assertTrue(np.allclose(controlPartSet ,
-                                   outPartSet.getTransform().getMatrix()))
+            self.assertTrue(
+                np.allclose(controlPartSet,
+                            outPartSet.getTransform().getMatrix()))
 
     def test_10_Dihedral(self):
         """Rotate projections alignments between dihedral x/y
@@ -313,13 +319,15 @@ class TestProjectionEdit(pwtests.BaseTest):
 
         self._createSetOfParticles(setPartSqliteName, setPartName,
                                    doCtf=True)
-        protImportProj   = self.importData(setPartSqliteName,
-                                           "import projection\n d7x",
-                                           ProtImportParticles,
-                                           ProtImportParticles.IMPORT_FROM_SCIPION)
+        protImportProj = self.importData(
+            setPartSqliteName,
+            "import projection\n d7x",
+            ProtImportParticles,
+            ProtImportParticles.IMPORT_FROM_SCIPION)
 
-        #launch operate set protocol
-        protSetEditor = self.newProtocol(ProtProjectionEditor, objLabel="D7x -> D7y")
+        # launch operate set protocol
+        protSetEditor = self.newProtocol(
+            ProtProjectionEditor, objLabel="D7x -> D7y")
         protSetEditor.inputSet.set(protImportProj)
         protSetEditor.inputSet.setExtended("outputParticles")
         protSetEditor.operation.set(ProtProjectionEditor.CHOICE_DIHEDRAL)
@@ -327,11 +335,12 @@ class TestProjectionEdit(pwtests.BaseTest):
         protSetEditor.targetSymmetryGroupI.set(SYM_DIHEDRAL_Y - SYM_DIHEDRAL_X)
 
         self.launchProtocol(protSetEditor)
-        for controlPartSet, outPartSet in zip(tDiOut,  #### change to tDiOut
-                                protSetEditor.outputParticles, ):
-            print(controlPartSet, outPartSet.getTransform().getMatrix())    
-            self.assertTrue(np.allclose(controlPartSet ,
-                                   outPartSet.getTransform().getMatrix()))
+        for controlPartSet, outPartSet in zip(tDiOut,
+                                              protSetEditor.outputParticles):
+            print(controlPartSet, outPartSet.getTransform().getMatrix())
+            self.assertTrue(
+                np.allclose(controlPartSet,
+                            outPartSet.getTransform().getMatrix()))
 
     def test_11_DihedralY(self):
         if not downloadFileFromGithub:
@@ -339,57 +348,65 @@ class TestProjectionEdit(pwtests.BaseTest):
             return
         symDir = 'D/dy'
         symFile = 'dy'
-        self._downloadFileFromGithub(host = 'https://raw.githubusercontent.com',
-                                    dir = f'/I2PC/testDataSym/main/{symDir}',
-                                    baseName=f'{symFile}.xmd')
-        self._downloadFileFromGithub(host = 'https://raw.githubusercontent.com',
-                                    dir = f'/I2PC/testDataSym/main/{symDir}',
-                                    baseName=f'{symFile}.mrcs')
-        self._downloadFileFromGithub(host = 'https://raw.githubusercontent.com',
-                                    dir = f'/I2PC/testDataSym/main/{symDir}',
-                                    baseName=f'{symFile}.mrc')
+        self._downloadFileFromGithub(host='https://raw.githubusercontent.com',
+                                     dir=f'/I2PC/testDataSym/main/{symDir}',
+                                     baseName=f'{symFile}.xmd')
+        self._downloadFileFromGithub(host='https://raw.githubusercontent.com',
+                                     dir=f'/I2PC/testDataSym/main/{symDir}',
+                                     baseName=f'{symFile}.mrcs')
+        self._downloadFileFromGithub(host='https://raw.githubusercontent.com',
+                                     dir=f'/I2PC/testDataSym/main/{symDir}',
+                                     baseName=f'{symFile}.mrc')
 
         # import files
-        protImportProj   = self.importData(f'/tmp/{symFile}.xmd',
-                                           f"import projection\n {symFile}",
-                                           ProtImportParticles,
-                                           ProtImportParticles.IMPORT_FROM_XMIPP3)
-        protImportVol    = self._importVolume(f'/tmp/{symFile}.mrc',
-                                              f"import vol\n {symFile}")
-        # reconstruct using d7y (since d7 is dx this should provide the wrong result)
+        protImportProj = self.importData(
+            self.proj.getTmpPath(f'{symFile}.xmd'),
+            f"import projection\n {symFile}",
+            ProtImportParticles,
+            ProtImportParticles.IMPORT_FROM_XMIPP3)
+        _ = self._importVolume( self.proj.getTmpPath(f'{symFile}.mrc'),
+                               f"import vol\n {symFile}")
+        # reconstruct using d7y (since d7 is dx
+        # this should provide a wrong result)
         if reconstructVolume:
             from relion.protocols import ProtRelionReconstruct
-            recProt1 = self.newProtocol(ProtRelionReconstruct,
-                                            symmetryGroup='D7',
-                                            objLabel='Fourier reconstruction',
-                                            inputParticles=protImportProj.outputParticles)
+            recProt1 = self.newProtocol(
+                ProtRelionReconstruct,
+                symmetryGroup='D7',
+                objLabel='Fourier reconstruction',
+                inputParticles=protImportProj.outputParticles)
 
-            reconstruction1 = self.launchProtocol(recProt1)
+            _ = self.launchProtocol(recProt1)
 
         # edit projection direction
-        protSetEditor = self.newProtocol(ProtProjectionEditor, objLabel="D7y -> D7x")
+        protSetEditor = self.newProtocol(
+            ProtProjectionEditor, objLabel="D7y -> D7x")
         protSetEditor.inputSet.set(protImportProj)
         protSetEditor.inputSet.setExtended("outputParticles")
         protSetEditor.operation.set(ProtProjectionEditor.CHOICE_DIHEDRAL)
-        protSetEditor.originSymmetryGroupD.set(SYM_DIHEDRAL_Y - SYM_DIHEDRAL_X)
-        protSetEditor.targetSymmetryGroupD.set(SYM_DIHEDRAL_X - SYM_DIHEDRAL_X)
+        protSetEditor.originSymmetryGroupD.set(
+            SYM_DIHEDRAL_Y - SYM_DIHEDRAL_X)
+        protSetEditor.targetSymmetryGroupD.set(
+            SYM_DIHEDRAL_X - SYM_DIHEDRAL_X)
 
         editProt = self.launchProtocol(protSetEditor)
-        
+
         for controlPartSet, outPartSet in zip(tDiOutY,
-                                protSetEditor.outputParticles, ):
+                                              protSetEditor.outputParticles):
             print(controlPartSet, outPartSet.getTransform().getMatrix())
-            self.assertTrue(np.allclose(controlPartSet ,
-                                   outPartSet.getTransform().getMatrix()))
+            self.assertTrue(
+                np.allclose(controlPartSet,
+                            outPartSet.getTransform().getMatrix()))
 
         # reconstruct again
         if reconstructVolume:
-            recProt2 = self.newProtocol(ProtRelionReconstruct,
-                                            symmetryGroup='D7',
-                                            objLabel='Fourier reconstruction',
-                                            inputParticles=editProt.outputParticles)
+            recProt2 = self.newProtocol(
+                ProtRelionReconstruct,
+                symmetryGroup='D7',
+                objLabel='Fourier reconstruction',
+                inputParticles=editProt.outputParticles)
 
-            reconstruction2 = self.launchProtocol(recProt2)
+            _ = self.launchProtocol(recProt2)
 
     def test_12_DihedralX(self):
         if not downloadFileFromGithub:
@@ -397,67 +414,78 @@ class TestProjectionEdit(pwtests.BaseTest):
             return
         symDir = 'D/dx'
         symFile = 'dx'
-        self._downloadFileFromGithub(host = 'https://raw.githubusercontent.com',
-                                    dir = f'/I2PC/testDataSym/main/{symDir}',
-                                    baseName=f'{symFile}.xmd')
-        self._downloadFileFromGithub(host = 'https://raw.githubusercontent.com',
-                                    dir = f'/I2PC/testDataSym/main/{symDir}',
-                                    baseName=f'{symFile}.mrcs')
-        self._downloadFileFromGithub(host = 'https://raw.githubusercontent.com',
-                                    dir = f'/I2PC/testDataSym/main/{symDir}',
-                                    baseName=f'{symFile}.mrc')
+        self._downloadFileFromGithub(host='https://raw.githubusercontent.com',
+                                     dir=f'/I2PC/testDataSym/main/{symDir}',
+                                     baseName=f'{symFile}.xmd')
+        self._downloadFileFromGithub(host='https://raw.githubusercontent.com',
+                                     dir=f'/I2PC/testDataSym/main/{symDir}',
+                                     baseName=f'{symFile}.mrcs')
+        self._downloadFileFromGithub(host='https://raw.githubusercontent.com',
+                                     dir=f'/I2PC/testDataSym/main/{symDir}',
+                                     baseName=f'{symFile}.mrc')
 
         # import files
-        protImportProj   = self.importData(f'/tmp/{symFile}.xmd',
-                                           f"import projection\n {symFile}",
-                                           ProtImportParticles,
-                                           ProtImportParticles.IMPORT_FROM_XMIPP3)
-        protImportVol    = self._importVolume(f'/tmp/{symFile}.mrc',
-                                              f"import vol\n {symFile}")
-        # reconstruct using d7x (since d7 is dx this should provide the right result)
+        protImportProj = self.importData(
+            f'/tmp/{symFile}.xmd',
+            f"import projection\n {symFile}",
+            ProtImportParticles,
+            ProtImportParticles.IMPORT_FROM_XMIPP3)
+        _ = self._importVolume(
+            self.proj.getTmpPath(f'{symFile}.mrc'),
+            f"import vol\n {symFile}")
+        # reconstruct using d7x (since d7 is dx
+        #  this should provide a good result)
         if reconstructVolume:
             from relion.protocols import ProtRelionReconstruct
-            recProt1 = self.newProtocol(ProtRelionReconstruct,
-                                            symmetryGroup='D7',
-                                            objLabel='Fourier reconstruction',
-                                            inputParticles=protImportProj.outputParticles)
+            recProt1 = self.newProtocol(
+                ProtRelionReconstruct,
+                symmetryGroup='D7',
+                objLabel='Fourier reconstruction',
+                inputParticles=protImportProj.outputParticles)
 
-            reconstruction1 = self.launchProtocol(recProt1)
+            _ = self.launchProtocol(recProt1)
 
         # edit projection direction
-        protSetEditor = self.newProtocol(ProtProjectionEditor, objLabel="D7x -> D7y")
+        protSetEditor = self.newProtocol(
+            ProtProjectionEditor, objLabel="D7x -> D7y")
         protSetEditor.inputSet.set(protImportProj)
         protSetEditor.inputSet.setExtended("outputParticles")
         protSetEditor.operation.set(ProtProjectionEditor.CHOICE_DIHEDRAL)
-        protSetEditor.originSymmetryGroupD.set(SYM_DIHEDRAL_X - SYM_DIHEDRAL_X)
-        protSetEditor.targetSymmetryGroupD.set(SYM_DIHEDRAL_Y - SYM_DIHEDRAL_X)
+        protSetEditor.originSymmetryGroupD.set(
+            SYM_DIHEDRAL_X - SYM_DIHEDRAL_X)
+        protSetEditor.targetSymmetryGroupD.set(
+            SYM_DIHEDRAL_Y - SYM_DIHEDRAL_X)
 
         editProt = self.launchProtocol(protSetEditor)
         # edit projection direction, put back to original
-        protSetEditor2 = self.newProtocol(ProtProjectionEditor, objLabel="D7y -> D7x")
+        protSetEditor2 = self.newProtocol(
+            ProtProjectionEditor, objLabel="D7y -> D7x")
         protSetEditor2.inputSet.set(editProt)
         protSetEditor2.inputSet.setExtended("outputParticles")
         protSetEditor2.operation.set(ProtProjectionEditor.CHOICE_DIHEDRAL)
-        protSetEditor2.originSymmetryGroupD.set(SYM_DIHEDRAL_Y - SYM_DIHEDRAL_X)
-        protSetEditor2.targetSymmetryGroupD.set(SYM_DIHEDRAL_X - SYM_DIHEDRAL_X)
+        protSetEditor2.originSymmetryGroupD.set(
+            SYM_DIHEDRAL_Y - SYM_DIHEDRAL_X)
+        protSetEditor2.targetSymmetryGroupD.set(
+            SYM_DIHEDRAL_X - SYM_DIHEDRAL_X)
 
         editProt2 = self.launchProtocol(protSetEditor2)
         for controlPartSet, outPartSet in zip(protImportProj.outputParticles,
-                                              protSetEditor2.outputParticles, ):
-            print(controlPartSet.getTransform().getMatrix(), 
+                                              protSetEditor2.outputParticles):
+            print(controlPartSet.getTransform().getMatrix(),
                   outPartSet.getTransform().getMatrix())
-            self.assertTrue(np.allclose(controlPartSet.getTransform().getMatrix() ,
-                                   outPartSet.getTransform().getMatrix()))
-        
+            self.assertTrue(
+                np.allclose(controlPartSet.getTransform().getMatrix(),
+                            outPartSet.getTransform().getMatrix()))
+
         # reconstruct again
         if reconstructVolume:
-            recProt2 = self.newProtocol(ProtRelionReconstruct,
-                                            symmetryGroup='D7',
-                                            objLabel='Fourier reconstruction',
-                                            inputParticles=editProt2.outputParticles)
+            recProt2 = self.newProtocol(
+                ProtRelionReconstruct,
+                symmetryGroup='D7',
+                objLabel='Fourier reconstruction',
+                inputParticles=editProt2.outputParticles)
 
-            reconstruction2 = self.launchProtocol(recProt2)
-
+            _ = self.launchProtocol(recProt2)
 
     def test_15_Tetrahedral222_z3(self):
         if not downloadFileFromGithub:
@@ -465,189 +493,308 @@ class TestProjectionEdit(pwtests.BaseTest):
             return
         symDir = 'T/t222'
         symFile = 't222'
-        self._downloadFileFromGithub(host = 'https://raw.githubusercontent.com',
-                                    dir = f'/I2PC/testDataSym/main/{symDir}',
-                                    baseName=f'{symFile}.xmd')
-        self._downloadFileFromGithub(host = 'https://raw.githubusercontent.com',
-                                    dir = f'/I2PC/testDataSym/main/{symDir}',
-                                    baseName=f'{symFile}.mrcs')
-        self._downloadFileFromGithub(host = 'https://raw.githubusercontent.com',
-                                    dir = f'/I2PC/testDataSym/main/{symDir}',
-                                    baseName=f'{symFile}.mrc')
+        self._downloadFileFromGithub(host='https://raw.githubusercontent.com',
+                                     dir=f'/I2PC/testDataSym/main/{symDir}',
+                                     baseName=f'{symFile}.xmd')
+        self._downloadFileFromGithub(host='https://raw.githubusercontent.com',
+                                     dir=f'/I2PC/testDataSym/main/{symDir}',
+                                     baseName=f'{symFile}.mrcs')
+        self._downloadFileFromGithub(host='https://raw.githubusercontent.com',
+                                     dir=f'/I2PC/testDataSym/main/{symDir}',
+                                     baseName=f'{symFile}.mrc')
 
         # import files
-        protImportProj   = self.importData(f'/tmp/{symFile}.xmd',
-                                           f"import projection\n {symFile}",
-                                           ProtImportParticles,
-                                           ProtImportParticles.IMPORT_FROM_XMIPP3)
-        protImportVol    = self._importVolume(f'/tmp/{symFile}.mrc',
-                                              f"import vol\n {symFile}")
-        # reconstruct using d7y (since d7 is dx this should provide the wrong result)
+        protImportProj = self.importData(
+            self.proj.getTmpPath(f'{symFile}.xmd'),
+            f"import projection\n {symFile}",
+            ProtImportParticles,
+            ProtImportParticles.IMPORT_FROM_XMIPP3)
+
+        _ = self._importVolume(
+            self.proj.getTmpPath(f'{symFile}.mrc'),
+            f"import vol\n {symFile}")
+        # reconstruct using d7y (since d7 is dx
+        #  this should provide a wrong result)
         if reconstructVolume:
             from relion.protocols import ProtRelionReconstruct
-            recProt1 = self.newProtocol(ProtRelionReconstruct,
-                                            symmetryGroup='T',
-                                            objLabel='Fourier reconstruction',
-                                            inputParticles=protImportProj.outputParticles,
-                                            doCTF=False)
+            recProt1 = self.newProtocol(
+                ProtRelionReconstruct,
+                symmetryGroup='T',
+                objLabel='Fourier reconstruction',
+                inputParticles=protImportProj.outputParticles,
+                doCTF=False)
 
-            reconstruction1 = self.launchProtocol(recProt1)
+            _ = self.launchProtocol(recProt1)
 
         # edit projection direction
-        protSetEditor = self.newProtocol(ProtProjectionEditor, objLabel="T222 -> TZ3")
+        protSetEditor = self.newProtocol(
+            ProtProjectionEditor, objLabel="T222 -> TZ3")
         protSetEditor.inputSet.set(protImportProj)
         protSetEditor.inputSet.setExtended("outputParticles")
         protSetEditor.operation.set(ProtProjectionEditor.CHOICE_TETRAHEDRAL)
-        protSetEditor.originSymmetryGroupT.set(SYM_TETRAHEDRAL_222 - SYM_TETRAHEDRAL_222)
-        protSetEditor.targetSymmetryGroupT.set(SYM_TETRAHEDRAL_Z3 - SYM_TETRAHEDRAL_222)
+        protSetEditor.originSymmetryGroupT.set(
+            SYM_TETRAHEDRAL_222 - SYM_TETRAHEDRAL_222)
+        protSetEditor.targetSymmetryGroupT.set(
+            SYM_TETRAHEDRAL_Z3 - SYM_TETRAHEDRAL_222)
 
         editProt = self.launchProtocol(protSetEditor)
-        
+
         # reconstruct again
         if reconstructVolume:
-            recProt2 = self.newProtocol(ProtRelionReconstruct,
-                                            symmetryGroup='T',
-                                            objLabel='Fourier reconstruction',
-                                            inputParticles=editProt.outputParticles,
-                                            doCTF=False)
+            recProt2 = self.newProtocol(
+                ProtRelionReconstruct,
+                symmetryGroup='T',
+                objLabel='Fourier reconstruction',
+                inputParticles=editProt.outputParticles,
+                doCTF=False)
 
-            reconstruction2 = self.launchProtocol(recProt2)
+            _ = self.launchProtocol(recProt2)
 
         for controlPartSet, outPartSet in zip(tDiOutY,
-                                protSetEditor.outputParticles, ):
+                                              protSetEditor.outputParticles):
             print(controlPartSet, outPartSet.getTransform().getMatrix())
-            self.assertTrue(np.allclose(controlPartSet ,
-                                   outPartSet.getTransform().getMatrix()))
+            self.assertTrue(
+                np.allclose(controlPartSet,
+                            outPartSet.getTransform().getMatrix()))
 
-    def test_16_Tetrahedralz3r_z3(self):
+    def test_16_Tetrahedral222_z3r(self):
         if not downloadFileFromGithub:
             self.assertTrue(True)
             return
-        symDir = 'T/tz3r'
-        symFile = 'tz3r'
-        self._downloadFileFromGithub(host = 'https://raw.githubusercontent.com',
-                                    dir = f'/I2PC/testDataSym/main/{symDir}',
-                                    baseName=f'{symFile}.xmd')
-        self._downloadFileFromGithub(host = 'https://raw.githubusercontent.com',
-                                    dir = f'/I2PC/testDataSym/main/{symDir}',
-                                    baseName=f'{symFile}.mrcs')
-        self._downloadFileFromGithub(host = 'https://raw.githubusercontent.com',
-                                    dir = f'/I2PC/testDataSym/main/{symDir}',
-                                    baseName=f'{symFile}.mrc')
+        symDir = 'T/t222'
+        symFile = 't222'
+        self._downloadFileFromGithub(host='https://raw.githubusercontent.com',
+                                     dir=f'/I2PC/testDataSym/main/{symDir}',
+                                     baseName=f'{symFile}.xmd')
+        self._downloadFileFromGithub(host='https://raw.githubusercontent.com',
+                                     dir=f'/I2PC/testDataSym/main/{symDir}',
+                                     baseName=f'{symFile}.mrcs')
+        self._downloadFileFromGithub(host='https://raw.githubusercontent.com',
+                                     dir=f'/I2PC/testDataSym/main/{symDir}',
+                                     baseName=f'{symFile}.mrc')
 
         # import files
-        protImportProj   = self.importData(f'/tmp/{symFile}.xmd',
-                                           f"import projection\n {symFile}",
-                                           ProtImportParticles,
-                                           ProtImportParticles.IMPORT_FROM_XMIPP3)
-        protImportVol    = self._importVolume(f'/tmp/{symFile}.mrc',
-                                              f"import vol\n {symFile}")
-        # reconstruct using T (since only z3 is implemented this result should be wrong)
+        protImportProj = self.importData(
+            f'/tmp/{symFile}.xmd',
+            f"import projection\n {symFile}",
+            ProtImportParticles,
+            ProtImportParticles.IMPORT_FROM_XMIPP3)
+        _ = self._importVolume(
+                self.proj.getTmpPath(f'{symFile}.mrc'),
+                f"import vol\n {symFile}")
+        # reconstruct using T (since T is tz3 this
+        # should provide a wrong result)
         if reconstructVolume:
             from relion.protocols import ProtRelionReconstruct
-            recProt1 = self.newProtocol(ProtRelionReconstruct,
-                                            symmetryGroup='T',
-                                            objLabel='Fourier reconstruction',
-                                            inputParticles=protImportProj.outputParticles,
-                                            doCTF=False)
+            recProt1 = self.newProtocol(
+                ProtRelionReconstruct,
+                symmetryGroup='T',
+                objLabel='Fourier reconstruction',
+                inputParticles=protImportProj.outputParticles,
+                doCTF=False)
 
-            reconstruction1 = self.launchProtocol(recProt1)
-
-        # edit projection direction
-        protSetEditor = self.newProtocol(ProtProjectionEditor, objLabel="Tz3r -> TZ3")
-        protSetEditor.inputSet.set(protImportProj)
-        protSetEditor.inputSet.setExtended("outputParticles")
-        protSetEditor.operation.set(ProtProjectionEditor.CHOICE_TETRAHEDRAL)
-        protSetEditor.originSymmetryGroupT.set(SYM_TETRAHEDRAL_Z3R - SYM_TETRAHEDRAL_222)
-        protSetEditor.targetSymmetryGroupT.set(SYM_TETRAHEDRAL_Z3 - SYM_TETRAHEDRAL_222)
-
-        editProt = self.launchProtocol(protSetEditor)
-        
-        # reconstruct again
-        if reconstructVolume:
-            recProt2 = self.newProtocol(ProtRelionReconstruct,
-                                            symmetryGroup='T',
-                                            objLabel='Fourier reconstruction',
-                                            inputParticles=editProt.outputParticles,
-                                            doCTF=False)
-
-            reconstruction2 = self.launchProtocol(recProt2)
-
-        for controlPartSet, outPartSet in zip(tDiOutY,
-                                protSetEditor.outputParticles, ):
-            print(controlPartSet, outPartSet.getTransform().getMatrix())
-            self.assertTrue(np.allclose(controlPartSet ,
-                                   outPartSet.getTransform().getMatrix()))
-
-
-    def test_17_Tetrahedralz3_z3r(self):
-        if not downloadFileFromGithub:
-            self.assertTrue(True)
-            return
-        symDir = 'T/tz3'
-        symFile = 'tz3'
-        self._downloadFileFromGithub(host = 'https://raw.githubusercontent.com',
-                                    dir = f'/I2PC/testDataSym/main/{symDir}',
-                                    baseName=f'{symFile}.xmd')
-        self._downloadFileFromGithub(host = 'https://raw.githubusercontent.com',
-                                    dir = f'/I2PC/testDataSym/main/{symDir}',
-                                    baseName=f'{symFile}.mrcs')
-        self._downloadFileFromGithub(host = 'https://raw.githubusercontent.com',
-                                    dir = f'/I2PC/testDataSym/main/{symDir}',
-                                    baseName=f'{symFile}.mrc')
-
-        # import files
-        protImportProj   = self.importData(f'/tmp/{symFile}.xmd',
-                                           f"import projection\n {symFile}",
-                                           ProtImportParticles,
-                                           ProtImportParticles.IMPORT_FROM_XMIPP3)
-        protImportVol    = self._importVolume(f'/tmp/{symFile}.mrc',
-                                              f"import vol\n {symFile}")
-        # reconstruct using T (since only z3 is implemented this result should be OK)
-        if reconstructVolume:
-            from relion.protocols import ProtRelionReconstruct
-            recProt1 = self.newProtocol(ProtRelionReconstruct,
-                                            symmetryGroup='T',
-                                            objLabel='Fourier reconstruction',
-                                            inputParticles=protImportProj.outputParticles,
-                                            doCTF=False)
-
-            reconstruction1 = self.launchProtocol(recProt1)
+            _ = self.launchProtocol(recProt1)
 
         # edit projection direction
-        protSetEditor = self.newProtocol(ProtProjectionEditor, objLabel="Tz3 -> TZ3r")
+        protSetEditor = self.newProtocol(
+            ProtProjectionEditor, objLabel="T222 -> TZ3R")
         protSetEditor.inputSet.set(protImportProj)
         protSetEditor.inputSet.setExtended("outputParticles")
-        protSetEditor.operation.set(ProtProjectionEditor.CHOICE_TETRAHEDRAL)
-        protSetEditor.originSymmetryGroupT.set(SYM_TETRAHEDRAL_Z3 - SYM_TETRAHEDRAL_222)
-        protSetEditor.targetSymmetryGroupT.set(SYM_TETRAHEDRAL_Z3R - SYM_TETRAHEDRAL_222)
+        protSetEditor.operation.set(
+            ProtProjectionEditor.CHOICE_TETRAHEDRAL)
+        protSetEditor.originSymmetryGroupT.set(
+            SYM_TETRAHEDRAL_222 - SYM_TETRAHEDRAL_222)
+        protSetEditor.targetSymmetryGroupT.set(
+            SYM_TETRAHEDRAL_Z3R - SYM_TETRAHEDRAL_222)
 
-        editProt = self.launchProtocol(protSetEditor)
-        # undo edit
-        protSetEditor2 = self.newProtocol(ProtProjectionEditor, objLabel="Tz3r -> TZ3")
+        _ = self.launchProtocol(protSetEditor)
+        # now let us move back to something that we know how to reconstruct
+        protSetEditor2 = self.newProtocol(
+            ProtProjectionEditor, objLabel="TZ3R -> TZ3")
         protSetEditor2.inputSet.set(protSetEditor)
         protSetEditor2.inputSet.setExtended("outputParticles")
         protSetEditor2.operation.set(ProtProjectionEditor.CHOICE_TETRAHEDRAL)
-        protSetEditor2.originSymmetryGroupT.set(SYM_TETRAHEDRAL_Z3R - SYM_TETRAHEDRAL_222)
-        protSetEditor2.targetSymmetryGroupT.set(SYM_TETRAHEDRAL_Z3 - SYM_TETRAHEDRAL_222)
+        protSetEditor2.originSymmetryGroupT.set(
+            SYM_TETRAHEDRAL_Z3R - SYM_TETRAHEDRAL_222)
+        protSetEditor2.targetSymmetryGroupT.set(
+            SYM_TETRAHEDRAL_Z3 - SYM_TETRAHEDRAL_222)
 
         editProt2 = self.launchProtocol(protSetEditor2)
 
         # reconstruct again
         if reconstructVolume:
-            recProt2 = self.newProtocol(ProtRelionReconstruct,
-                                            symmetryGroup='T',
-                                            objLabel='Fourier reconstruction',
-                                            inputParticles=editProt2.outputParticles,
-                                            doCTF=False)
+            recProt2 = self.newProtocol(
+                ProtRelionReconstruct,
+                symmetryGroup='T',
+                objLabel='Fourier reconstruction',
+                inputParticles=editProt2.outputParticles,
+                doCTF=False)
 
-            reconstruction2 = self.launchProtocol(recProt2)
+            _ = self.launchProtocol(recProt2)
+
+        for controlPartSet, outPartSet in zip(tDiOutY,
+                                              protSetEditor.outputParticles):
+            print(controlPartSet, outPartSet.getTransform().getMatrix())
+            self.assertTrue(
+                np.allclose(controlPartSet,
+                            outPartSet.getTransform().getMatrix()))
+
+    def test_17_Tetrahedralz3r_z3(self):
+        if not downloadFileFromGithub:
+            self.assertTrue(True)
+            return
+        symDir = 'T/tz3r'
+        symFile = 'tz3r'
+        self._downloadFileFromGithub(
+            host='https://raw.githubusercontent.com',
+            dir=f'/I2PC/testDataSym/main/{symDir}',
+            baseName=f'{symFile}.xmd')
+        self._downloadFileFromGithub(
+            host='https://raw.githubusercontent.com',
+            dir=f'/I2PC/testDataSym/main/{symDir}',
+            baseName=f'{symFile}.mrcs')
+        self._downloadFileFromGithub(
+            host='https://raw.githubusercontent.com',
+            dir=f'/I2PC/testDataSym/main/{symDir}',
+            baseName=f'{symFile}.mrc')
+
+        # import files
+        protImportProj = self.importData(
+            self.proj.getTmpPath(f'{symFile}.xmd'),
+            f"import projection\n {symFile}",
+            ProtImportParticles,
+            ProtImportParticles.IMPORT_FROM_XMIPP3)
+        _ = self._importVolume(
+                self.proj.getTmpPath(f'{symFile}.mrc'),
+                f"import vol\n {symFile}")
+        # reconstruct using T (since only z3 is
+        # implemented this result should be wrong)
+        if reconstructVolume:
+            from relion.protocols import ProtRelionReconstruct
+            recProt1 = self.newProtocol(
+                ProtRelionReconstruct,
+                symmetryGroup='T',
+                objLabel='Fourier reconstruction',
+                inputParticles=protImportProj.outputParticles,
+                doCTF=False)
+
+            _ = self.launchProtocol(recProt1)
+
+        # edit projection direction
+        protSetEditor = self.newProtocol(
+            ProtProjectionEditor, objLabel="Tz3r -> TZ3")
+        protSetEditor.inputSet.set(protImportProj)
+        protSetEditor.inputSet.setExtended("outputParticles")
+        protSetEditor.operation.set(ProtProjectionEditor.CHOICE_TETRAHEDRAL)
+        protSetEditor.originSymmetryGroupT.set(
+            SYM_TETRAHEDRAL_Z3R - SYM_TETRAHEDRAL_222)
+        protSetEditor.targetSymmetryGroupT.set(
+            SYM_TETRAHEDRAL_Z3 - SYM_TETRAHEDRAL_222)
+
+        editProt = self.launchProtocol(protSetEditor)
+
+        # reconstruct again
+        if reconstructVolume:
+            recProt2 = self.newProtocol(
+                ProtRelionReconstruct,
+                symmetryGroup='T',
+                objLabel='Fourier reconstruction',
+                inputParticles=editProt.outputParticles,
+                doCTF=False)
+
+            _ = self.launchProtocol(recProt2)
+
+        for controlPartSet, outPartSet in zip(tDiOutY,
+                                              protSetEditor.outputParticles):
+            print(controlPartSet, outPartSet.getTransform().getMatrix())
+            self.assertTrue(
+                np.allclose(controlPartSet,
+                            outPartSet.getTransform().getMatrix()))
+
+    def test_18_Tetrahedralz3_z3r(self):
+        if not downloadFileFromGithub:
+            self.assertTrue(True)
+            return
+        symDir = 'T/tz3'
+        symFile = 'tz3'
+        self._downloadFileFromGithub(host='https://raw.githubusercontent.com',
+                                     dir=f'/I2PC/testDataSym/main/{symDir}',
+                                     baseName=f'{symFile}.xmd')
+        self._downloadFileFromGithub(host='https://raw.githubusercontent.com',
+                                     dir=f'/I2PC/testDataSym/main/{symDir}',
+                                     baseName=f'{symFile}.mrcs')
+        self._downloadFileFromGithub(
+            host='https://raw.githubusercontent.com',
+            dir=f'/I2PC/testDataSym/main/{symDir}',
+            baseName=f'{symFile}.mrc')
+
+        # import files
+        protImportProj =\
+            self.importData(
+                self.proj.getTmpPath(f'{symFile}.xmd'),
+                f"import projection\n {symFile}",
+                ProtImportParticles,
+                ProtImportParticles.IMPORT_FROM_XMIPP3)
+        _ = self._importVolume(
+                self.proj.getTmpPath(f'{symFile}.mrc'),
+                f"import vol\n {symFile}")
+        # reconstruct using T (z3 is implemented this result should be OK)
+        if reconstructVolume:
+            from relion.protocols import ProtRelionReconstruct
+            recProt1 = self.newProtocol(
+                ProtRelionReconstruct,
+                symmetryGroup='T',
+                objLabel='Fourier reconstruction',
+                inputParticles=protImportProj.outputParticles,
+                doCTF=False)
+
+            _ = self.launchProtocol(recProt1)
+
+        # edit projection direction
+        protSetEditor = self.newProtocol(
+            ProtProjectionEditor, objLabel="Tz3 -> TZ3r")
+        protSetEditor.inputSet.set(protImportProj)
+        protSetEditor.inputSet.setExtended("outputParticles")
+        protSetEditor.operation.set(ProtProjectionEditor.CHOICE_TETRAHEDRAL)
+        protSetEditor.originSymmetryGroupT.set(
+            SYM_TETRAHEDRAL_Z3 - SYM_TETRAHEDRAL_222)
+        protSetEditor.targetSymmetryGroupT.set(
+            SYM_TETRAHEDRAL_Z3R - SYM_TETRAHEDRAL_222)
+
+        _ = self.launchProtocol(protSetEditor)
+        # undo edit
+        protSetEditor2 = self.newProtocol(
+            ProtProjectionEditor, objLabel="Tz3r -> TZ3")
+        protSetEditor2.inputSet.set(protSetEditor)
+        protSetEditor2.inputSet.setExtended("outputParticles")
+        protSetEditor2.operation.set(
+            ProtProjectionEditor.CHOICE_TETRAHEDRAL)
+        protSetEditor2.originSymmetryGroupT.set(
+            SYM_TETRAHEDRAL_Z3R - SYM_TETRAHEDRAL_222)
+        protSetEditor2.targetSymmetryGroupT.set(
+            SYM_TETRAHEDRAL_Z3 - SYM_TETRAHEDRAL_222)
+
+        editProt2 = self.launchProtocol(protSetEditor2)
+
+        # reconstruct again
+        if reconstructVolume:
+            recProt2 = self.newProtocol(
+                ProtRelionReconstruct,
+                symmetryGroup='T',
+                objLabel='Fourier reconstruction',
+                inputParticles=editProt2.outputParticles,
+                doCTF=False)
+
+            _ = self.launchProtocol(recProt2)
 
         for controlPartSet, outPartSet in zip(protImportProj.outputParticles,
-                                              protSetEditor2.outputParticles, ):
-            print(controlPartSet.getTransform().getMatrix(), 
+                                              protSetEditor2.outputParticles):
+            print(controlPartSet.getTransform().getMatrix(),
                   outPartSet.getTransform().getMatrix())
-            self.assertTrue(np.allclose(controlPartSet.getTransform().getMatrix() ,
-                                   outPartSet.getTransform().getMatrix()))
+            self.assertTrue(
+                np.allclose(controlPartSet.getTransform().getMatrix(),
+                            outPartSet.getTransform().getMatrix()))
+
+
 if __name__ == '__main__':
     unittest.main()
