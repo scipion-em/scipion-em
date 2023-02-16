@@ -356,6 +356,7 @@ class ProtProjectionEditor(EMProtocol):
         v_target = v_target / np.linalg.norm(v_target)
         matrix = rotation_matrix(angle_between_vectors(v_source, v_target),
                                  vector_product(v_source, v_target))
+        print("rotateStep:matrix", matrix)
         inputSet = self.inputSet.get()
         modifiedSet = inputSet.createCopy(self._getExtraPath(), copyInfo=True)
         for sourceItem in inputSet.iterItems():
@@ -376,6 +377,7 @@ class ProtProjectionEditor(EMProtocol):
         v_source = v_source / np.linalg.norm(v_source)
         angle = np.radians(self.angle.get())
         matrix = rotation_matrix(angle, v_source)
+        print("matrix_rot_vector", matrix)
         inputSet = self.inputSet.get()
         modifiedSet = inputSet.createCopy(self._getExtraPath(), copyInfo=True)
         for sourceItem in inputSet.iterItems():
