@@ -30,7 +30,7 @@ import pwem.objects as emobj
 class EMAngularDistributionViewer(Viewer):
     """ Visualize the output of protocol reconstruct swarm """
     _label = 'Score transformation viewer'
-    _targets = [emobj.SetOfParticles, emobj.SetOfVolumes]
+    _targets = [emobj.SetOfParticles]
 
     @staticmethod
     def plotAngularDistribution(emSet:emobj.EMSet, histogram=False):
