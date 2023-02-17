@@ -295,7 +295,7 @@ class TestProjectionEdit(pwtests.BaseTest):
     def setUpClass(cls):
         pwtests.setupTestProject(cls)
 
-    def downloadFileFromGithub(self, host, dir, baseName):
+    def _downloadFileFromGithub(self, host, dir, baseName):
         """ Download a file from github."""
         import os
         if os.path.exists(self.proj.getTmpPath(f"{baseName}")):
@@ -327,7 +327,7 @@ class TestProjectionEdit(pwtests.BaseTest):
             req.raw.decode_content = True
             shutil.copyfileobj(req.raw, _fh)
 
-    def createSetOfParticles(self, setPartSqliteName, partFn,
+    def _createSetOfParticles(self, setPartSqliteName, partFn,
                               doCtf=False):
         # create a set of particles
 
@@ -374,7 +374,7 @@ class TestProjectionEdit(pwtests.BaseTest):
         self.launchProtocol(prot)
         return prot
 
-    def importVolume(self, baseFn, objLabel):
+    def _importVolume(self, baseFn, objLabel):
         args = {'filesPath': baseFn,
                 'objLabel': objLabel,
                 'samplingRate': 1,
