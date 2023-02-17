@@ -1141,8 +1141,8 @@ class TestProjectionEdit(pwtests.BaseTest):
         protSetEditor.inputSet.setExtended("outputParticles")
         protSetEditor.operation.set(
             ProtProjectionEditor.CHOICE_ICOSAHEDRAL)
-        protSetEditor.originSymmetryGroup.set(SYM_I222 - SYM_I222)
-        protSetEditor.targetSymmetryGroup.set(SYM_I222r - SYM_I222)
+        protSetEditor.originSymmetryGroupI.set(SYM_I222 - SYM_I222)
+        protSetEditor.targetSymmetryGroupI.set(SYM_I222r - SYM_I222)
 
         self.launchProtocol(protSetEditor)
         for controlPartSet, outPartSet in zip(tIco222_222r_Out,
