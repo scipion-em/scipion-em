@@ -723,7 +723,7 @@ class Tetrahedral(object):
               targetSym == cts.SYM_TETRAHEDRAL_222) or\
              (origSym == cts.SYM_TETRAHEDRAL_Z3R and
               targetSym == cts.SYM_TETRAHEDRAL_222):
-            matrix = self.coordinateSystemTransform(self, targetSym, origSym)
+            matrix = self.coordinateSystemTransform(targetSym, origSym)
             return _invertMatrix(matrix)
 
         else:
