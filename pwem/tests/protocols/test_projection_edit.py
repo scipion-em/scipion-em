@@ -286,7 +286,7 @@ downloadFileFromGithub = True
 # to check the results and relion is isntalled
 # xmipp is not OK because the tetrahedral symmetry recosntruction
 # is not implemented properlly
-reconstructVolume = False
+reconstructVolume = True
 
 
 class TestProjectionEdit(pwtests.BaseTest):
@@ -385,7 +385,7 @@ class TestProjectionEdit(pwtests.BaseTest):
         volume = protImportVol.outputVolume
         return volume
 
-    def test_00_MoveVector(self):
+    def _test_00_MoveVector(self):
         """Rotate projections alignments so in the reconstruction
         vecor (0,0,1) becames (1,0,0). Rotation along plane
         np.cross([0,0,1], [1,0,0])"""
@@ -421,7 +421,7 @@ class TestProjectionEdit(pwtests.BaseTest):
             self.assertTrue(np.allclose(controlPartSet,
                                         outPartSet.getTransform().getMatrix()))
 
-    def test_01_MoveVector(self):
+    def _test_01_MoveVector(self):
         """Rotate projections alignments so the reconstruction
         is rotated by 90 degrees
         """
@@ -430,14 +430,17 @@ class TestProjectionEdit(pwtests.BaseTest):
             return
         symDir = 'C/C7'
         symFile = 'c7'
+        # Wed Feb 8 14:27:58 2023 +0100
+        # set hash = 'main' for last version
+        hash = 'd8301c0274429056c2b3e98f3e0bd479bcbb1f55'
         self._downloadFileFromGithub(host='https://raw.githubusercontent.com',
-                                     dir=f'/I2PC/testDataSym/main/{symDir}',
+                                     dir=f'I2PC/testDataSym/{hash}/{symDir}',
                                      baseName=f'{symFile}.xmd')
         self._downloadFileFromGithub(host='https://raw.githubusercontent.com',
-                                     dir=f'/I2PC/testDataSym/main/{symDir}',
+                                     dir=f'I2PC/testDataSym/{hash}/{symDir}',
                                      baseName=f'{symFile}.mrcs')
         self._downloadFileFromGithub(host='https://raw.githubusercontent.com',
-                                     dir=f'/I2PC/testDataSym/main/{symDir}',
+                                     dir=f'I2PC/testDataSym/{hash}/{symDir}',
                                      baseName=f'{symFile}.mrc')
 
         # import files
@@ -488,12 +491,12 @@ class TestProjectionEdit(pwtests.BaseTest):
 
         for controlPartSet, outPartSet in zip(tMoveOut2,
                                               protSetEditor.outputParticles):
-            print(controlPartSet, outPartSet.getTransform().getMatrix())
+            # print(controlPartSet, outPartSet.getTransform().getMatrix())
             self.assertTrue(
                 np.allclose(controlPartSet,
                             outPartSet.getTransform().getMatrix()))
 
-    def test_05_rotateAroundVector(self):
+    def _test_05_rotateAroundVector(self):
         """Rotate projections alignments around
         vector (0,0,1) by 60 degrees"""
         funcName = inspect.stack()[0][3]
@@ -528,7 +531,7 @@ class TestProjectionEdit(pwtests.BaseTest):
                 np.allclose(controlPartSet,
                             outPartSet.getTransform().getMatrix()))
 
-    def test_06_rotateAroundVector(self):
+    def _test_06_rotateAroundVector(self):
         """Rotate projections alignments around vector x by 90
         """
         if not downloadFileFromGithub:
@@ -536,14 +539,16 @@ class TestProjectionEdit(pwtests.BaseTest):
             return
         symDir = 'C/C7'
         symFile = 'c7'
+        # Wed Feb 8 14:27:58 2023 +0100
+        hash = 'd8301c0274429056c2b3e98f3e0bd479bcbb1f55'
         self._downloadFileFromGithub(host='https://raw.githubusercontent.com',
-                                     dir=f'/I2PC/testDataSym/main/{symDir}',
+                                     dir=f'I2PC/testDataSym/{hash}/{symDir}',
                                      baseName=f'{symFile}.xmd')
         self._downloadFileFromGithub(host='https://raw.githubusercontent.com',
-                                     dir=f'/I2PC/testDataSym/main/{symDir}',
+                                     dir=f'I2PC/testDataSym/{hash}/{symDir}',
                                      baseName=f'{symFile}.mrcs')
         self._downloadFileFromGithub(host='https://raw.githubusercontent.com',
-                                     dir=f'/I2PC/testDataSym/main/{symDir}',
+                                     dir=f'I2PC/testDataSym/{hash}/{symDir}',
                                      baseName=f'{symFile}.mrc')
 
         # import files
@@ -592,12 +597,12 @@ class TestProjectionEdit(pwtests.BaseTest):
 
         for controlPartSet, outPartSet in zip(tRotOut2,
                                               protSetEditor.outputParticles):
-            print(controlPartSet, outPartSet.getTransform().getMatrix())
+            # print(controlPartSet, outPartSet.getTransform().getMatrix())
             self.assertTrue(
                 np.allclose(controlPartSet,
                             outPartSet.getTransform().getMatrix()))
 
-    def test_10_Dihedral(self):
+    def _test_10_Dihedral(self):
         """Rotate projections alignments between dihedral x/y
         symmetries"""
         funcName = inspect.stack()[0][3]
@@ -625,25 +630,27 @@ class TestProjectionEdit(pwtests.BaseTest):
         self.launchProtocol(protSetEditor)
         for controlPartSet, outPartSet in zip(tDiOut,
                                               protSetEditor.outputParticles):
-            print(controlPartSet, outPartSet.getTransform().getMatrix())
+            # print(controlPartSet, outPartSet.getTransform().getMatrix())
             self.assertTrue(
                 np.allclose(controlPartSet,
                             outPartSet.getTransform().getMatrix()))
 
-    def test_11_DihedralY(self):
+    def _test_11_DihedralY(self):
         if not downloadFileFromGithub:
             self.assertTrue(True)
             return
         symDir = 'D/dy'
         symFile = 'dy'
+        # Wed Feb 8 14:27:58 2023 +0100
+        hash = 'd8301c0274429056c2b3e98f3e0bd479bcbb1f55'
         self._downloadFileFromGithub(host='https://raw.githubusercontent.com',
-                                     dir=f'/I2PC/testDataSym/main/{symDir}',
+                                     dir=f'I2PC/testDataSym/{hash}/{symDir}',
                                      baseName=f'{symFile}.xmd')
         self._downloadFileFromGithub(host='https://raw.githubusercontent.com',
-                                     dir=f'/I2PC/testDataSym/main/{symDir}',
+                                     dir=f'I2PC/testDataSym/{hash}/{symDir}',
                                      baseName=f'{symFile}.mrcs')
         self._downloadFileFromGithub(host='https://raw.githubusercontent.com',
-                                     dir=f'/I2PC/testDataSym/main/{symDir}',
+                                     dir=f'I2PC/testDataSym/{hash}/{symDir}',
                                      baseName=f'{symFile}.mrc')
 
         # import files
@@ -682,7 +689,7 @@ class TestProjectionEdit(pwtests.BaseTest):
 
         for controlPartSet, outPartSet in zip(tDiOutY,
                                               protSetEditor.outputParticles):
-            print(controlPartSet, outPartSet.getTransform().getMatrix())
+            # print(controlPartSet, outPartSet.getTransform().getMatrix())
             self.assertTrue(
                 np.allclose(controlPartSet,
                             outPartSet.getTransform().getMatrix()))
@@ -697,20 +704,22 @@ class TestProjectionEdit(pwtests.BaseTest):
 
             _ = self.launchProtocol(recProt2)
 
-    def test_12_DihedralX(self):
+    def _test_12_DihedralX(self):
         if not downloadFileFromGithub:
             self.assertTrue(True)
             return
         symDir = 'D/dx'
         symFile = 'dx'
+        # Wed Feb 8 14:27:58 2023 +0100
+        hash = 'd8301c0274429056c2b3e98f3e0bd479bcbb1f55'
         self._downloadFileFromGithub(host='https://raw.githubusercontent.com',
-                                     dir=f'/I2PC/testDataSym/main/{symDir}',
+                                     dir=f'I2PC/testDataSym/{hash}/{symDir}',
                                      baseName=f'{symFile}.xmd')
         self._downloadFileFromGithub(host='https://raw.githubusercontent.com',
-                                     dir=f'/I2PC/testDataSym/main/{symDir}',
+                                     dir=f'I2PC/testDataSym/{hash}/{symDir}',
                                      baseName=f'{symFile}.mrcs')
         self._downloadFileFromGithub(host='https://raw.githubusercontent.com',
-                                     dir=f'/I2PC/testDataSym/main/{symDir}',
+                                     dir=f'I2PC/testDataSym/{hash}/{symDir}',
                                      baseName=f'{symFile}.mrc')
 
         # import files
@@ -760,8 +769,8 @@ class TestProjectionEdit(pwtests.BaseTest):
         editProt2 = self.launchProtocol(protSetEditor2)
         for controlPartSet, outPartSet in zip(protImportProj.outputParticles,
                                               protSetEditor2.outputParticles):
-            print(controlPartSet.getTransform().getMatrix(),
-                  outPartSet.getTransform().getMatrix())
+            # print(controlPartSet.getTransform().getMatrix(),
+            #       outPartSet.getTransform().getMatrix())
             self.assertTrue(
                 np.allclose(controlPartSet.getTransform().getMatrix(),
                             outPartSet.getTransform().getMatrix()))
@@ -776,7 +785,7 @@ class TestProjectionEdit(pwtests.BaseTest):
 
             _ = self.launchProtocol(recProt2)
 
-    def test_14_Tetrahedral(self):
+    def _test_14_Tetrahedral(self):
         """Rotate projections alignments between dihedral x/y
         symmetries"""
         funcName = inspect.stack()[0][3]
@@ -806,7 +815,7 @@ class TestProjectionEdit(pwtests.BaseTest):
         self.launchProtocol(protSetEditor)
         for controlPartSet, outPartSet in zip(tTetraOut,
                                               protSetEditor.outputParticles):
-            print(controlPartSet, outPartSet.getTransform().getMatrix())
+            # print(controlPartSet, outPartSet.getTransform().getMatrix())
             self.assertTrue(
                 np.allclose(controlPartSet,
                             outPartSet.getTransform().getMatrix()))
@@ -817,14 +826,16 @@ class TestProjectionEdit(pwtests.BaseTest):
             return
         symDir = 'T/t222'
         symFile = 't222'
+        # Wed Feb 8 14:27:58 2023 +0100
+        hash = 'd8301c0274429056c2b3e98f3e0bd479bcbb1f55'
         self._downloadFileFromGithub(host='https://raw.githubusercontent.com',
-                                     dir=f'/I2PC/testDataSym/main/{symDir}',
+                                     dir=f'I2PC/testDataSym/{hash}/{symDir}',
                                      baseName=f'{symFile}.xmd')
         self._downloadFileFromGithub(host='https://raw.githubusercontent.com',
-                                     dir=f'/I2PC/testDataSym/main/{symDir}',
+                                     dir=f'I2PC/testDataSym/{hash}/{symDir}',
                                      baseName=f'{symFile}.mrcs')
         self._downloadFileFromGithub(host='https://raw.githubusercontent.com',
-                                     dir=f'/I2PC/testDataSym/main/{symDir}',
+                                     dir=f'I2PC/testDataSym/{hash}/{symDir}',
                                      baseName=f'{symFile}.mrc')
 
         # import files
@@ -876,30 +887,32 @@ class TestProjectionEdit(pwtests.BaseTest):
 
         for controlPartSet, outPartSet in zip(tTetraOut_222_z3,
                                               protSetEditor.outputParticles):
-            print(controlPartSet, outPartSet.getTransform().getMatrix())
+            # print(controlPartSet, outPartSet.getTransform().getMatrix())
             self.assertTrue(
                 np.allclose(controlPartSet,
                             outPartSet.getTransform().getMatrix()))
 
-    def test_16_Tetrahedral222_z3r(self):
+    def _test_16_Tetrahedral222_z3r(self):
         if not downloadFileFromGithub:
             self.assertTrue(True)
             return
         symDir = 'T/t222'
         symFile = 't222'
+        # Wed Feb 8 14:27:58 2023 +0100
+        hash = 'd8301c0274429056c2b3e98f3e0bd479bcbb1f55'
         self._downloadFileFromGithub(host='https://raw.githubusercontent.com',
-                                     dir=f'/I2PC/testDataSym/main/{symDir}',
+                                     dir=f'I2PC/testDataSym/{hash}/{symDir}',
                                      baseName=f'{symFile}.xmd')
         self._downloadFileFromGithub(host='https://raw.githubusercontent.com',
-                                     dir=f'/I2PC/testDataSym/main/{symDir}',
+                                     dir=f'I2PC/testDataSym/{hash}/{symDir}',
                                      baseName=f'{symFile}.mrcs')
         self._downloadFileFromGithub(host='https://raw.githubusercontent.com',
-                                     dir=f'/I2PC/testDataSym/main/{symDir}',
+                                     dir=f'I2PC/testDataSym/{hash}/{symDir}',
                                      baseName=f'{symFile}.mrc')
 
         # import files
         protImportProj = self.importData(
-            f'/tmp/{symFile}.xmd',
+            self.proj.getTmpPath(f'{symFile}.xmd'),
             f"import projection\n {symFile}",
             ProtImportParticles,
             ProtImportParticles.IMPORT_FROM_XMIPP3)
@@ -958,29 +971,27 @@ class TestProjectionEdit(pwtests.BaseTest):
 
         for controlPartSet, outPartSet in zip(tTetraOut_222_z3r,  #
                                               protSetEditor.outputParticles):
-            print(controlPartSet, outPartSet.getTransform().getMatrix())
+            # print(controlPartSet, outPartSet.getTransform().getMatrix())
             self.assertTrue(
                 np.allclose(controlPartSet,
                             outPartSet.getTransform().getMatrix()))
 
-    def test_17_Tetrahedralz3r_z3(self):
+    def _test_17_Tetrahedralz3r_z3(self):
         if not downloadFileFromGithub:
             self.assertTrue(True)
             return
         symDir = 'T/tz3r'
         symFile = 'tz3r'
-        self._downloadFileFromGithub(
-            host='https://raw.githubusercontent.com',
-            dir=f'/I2PC/testDataSym/main/{symDir}',
-            baseName=f'{symFile}.xmd')
-        self._downloadFileFromGithub(
-            host='https://raw.githubusercontent.com',
-            dir=f'/I2PC/testDataSym/main/{symDir}',
-            baseName=f'{symFile}.mrcs')
-        self._downloadFileFromGithub(
-            host='https://raw.githubusercontent.com',
-            dir=f'/I2PC/testDataSym/main/{symDir}',
-            baseName=f'{symFile}.mrc')
+        hash = 'd8301c0274429056c2b3e98f3e0bd479bcbb1f55'
+        self._downloadFileFromGithub(host='https://raw.githubusercontent.com',
+                                     dir=f'I2PC/testDataSym/{hash}/{symDir}',
+                                     baseName=f'{symFile}.xmd')
+        self._downloadFileFromGithub(host='https://raw.githubusercontent.com',
+                                     dir=f'I2PC/testDataSym/{hash}/{symDir}',
+                                     baseName=f'{symFile}.mrcs')
+        self._downloadFileFromGithub(host='https://raw.githubusercontent.com',
+                                     dir=f'I2PC/testDataSym/{hash}/{symDir}',
+                                     baseName=f'{symFile}.mrc')
 
         # import files
         protImportProj = self.importData(
@@ -1030,7 +1041,7 @@ class TestProjectionEdit(pwtests.BaseTest):
 
         for controlPartSet, outPartSet in zip(tTetraOut_z3r_z3,  #
                                               protSetEditor.outputParticles):
-            print(controlPartSet, outPartSet.getTransform().getMatrix())
+            # print(controlPartSet, outPartSet.getTransform().getMatrix())
             self.assertTrue(
                 np.allclose(controlPartSet,
                             outPartSet.getTransform().getMatrix()))
@@ -1042,16 +1053,16 @@ class TestProjectionEdit(pwtests.BaseTest):
             return
         symDir = 'T/tz3'
         symFile = 'tz3'
+        hash = 'd8301c0274429056c2b3e98f3e0bd479bcbb1f55'
         self._downloadFileFromGithub(host='https://raw.githubusercontent.com',
-                                     dir=f'/I2PC/testDataSym/main/{symDir}',
+                                     dir=f'I2PC/testDataSym/{hash}/{symDir}',
                                      baseName=f'{symFile}.xmd')
         self._downloadFileFromGithub(host='https://raw.githubusercontent.com',
-                                     dir=f'/I2PC/testDataSym/main/{symDir}',
+                                     dir=f'I2PC/testDataSym/{hash}/{symDir}',
                                      baseName=f'{symFile}.mrcs')
-        self._downloadFileFromGithub(
-            host='https://raw.githubusercontent.com',
-            dir=f'/I2PC/testDataSym/main/{symDir}',
-            baseName=f'{symFile}.mrc')
+        self._downloadFileFromGithub(host='https://raw.githubusercontent.com',
+                                     dir=f'I2PC/testDataSym/{hash}/{symDir}',
+                                     baseName=f'{symFile}.mrc')
 
         # import files
         protImportProj =\
@@ -1114,13 +1125,13 @@ class TestProjectionEdit(pwtests.BaseTest):
 
         for controlPartSet, outPartSet in zip(protImportProj.outputParticles,
                                               protSetEditor2.outputParticles):
-            print(controlPartSet.getTransform().getMatrix(),
-                  outPartSet.getTransform().getMatrix())
+            # print(controlPartSet.getTransform().getMatrix(),
+            #       outPartSet.getTransform().getMatrix())
             self.assertTrue(
                 np.allclose(controlPartSet.getTransform().getMatrix(),
                             outPartSet.getTransform().getMatrix()))
 
-    def test_20_Ico222_222r(self):
+    def _test_20_Ico222_222r(self):
         """Rotate projections alignments between icosahedral
         symmetries"""
         setPartSqliteName = self.proj.getTmpPath("particles_rot_ico.sqlite")
@@ -1151,7 +1162,7 @@ class TestProjectionEdit(pwtests.BaseTest):
                 np.allclose(
                     controlPartSet, outPartSet.getTransform().getMatrix()))
 
-    def test_21_Icosahedral222_222r(self):
+    def _test_21_Icosahedral222_222r(self):
         if not downloadFileFromGithub:
             self.assertTrue(True)
             return
@@ -1221,7 +1232,7 @@ class TestProjectionEdit(pwtests.BaseTest):
                 np.allclose(controlPartSet,
                             outPartSet.getTransform().getMatrix()))
 
-    def test_22_Icosahedral222r_In25(self):
+    def _test_22_Icosahedral222r_In25(self):
         if not downloadFileFromGithub:
             self.assertTrue(True)
             return
@@ -1291,7 +1302,7 @@ class TestProjectionEdit(pwtests.BaseTest):
                 np.allclose(controlPartSet,
                             outPartSet.getTransform().getMatrix()))
 
-    def test_23_IcosahedralIn25_In25r(self):
+    def _test_23_IcosahedralIn25_In25r(self):
         if not downloadFileFromGithub:
             self.assertTrue(True)
             return

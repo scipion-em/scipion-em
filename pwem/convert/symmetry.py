@@ -697,15 +697,15 @@ class Tetrahedral(object):
               targetSym == cts.SYM_TETRAHEDRAL_Z3R):
             print("========================222 -> ")
             matrix = _multiplyMatrices(
-                     _rotationTransform((0, 0, 1),  45.0),
                      _rotationTransform((1, 0, 0),
-                                        -acos(1 / sqrt(3)) * 180 / pi)
+                                        -acos(1 / sqrt(3)) * 180 / pi),
+                     _rotationTransform((0, 0, 1),  45.0)
             )
-            matrix = _multiplyMatrices(
-                     matrix,
-                     _reflectMatrix((0, 0, 1))
-            )
-            matrix = _invertMatrix(matrix)
+            # matrix = _multiplyMatrices(
+            #          matrix,
+            #          _reflectMatrix((0, 0, 1))
+            # )
+            # matrix = _invertMatrix(matrix)
             if targetSym == cts.SYM_TETRAHEDRAL_Z3:
                 return matrix
             else:
