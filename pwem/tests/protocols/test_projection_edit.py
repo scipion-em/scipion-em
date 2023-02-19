@@ -385,7 +385,7 @@ class TestProjectionEdit(pwtests.BaseTest):
         volume = protImportVol.outputVolume
         return volume
 
-    def _test_00_MoveVector(self):
+    def test_00_MoveVector(self):
         """Rotate projections alignments so in the reconstruction
         vecor (0,0,1) becames (1,0,0). Rotation along plane
         np.cross([0,0,1], [1,0,0])"""
@@ -421,7 +421,7 @@ class TestProjectionEdit(pwtests.BaseTest):
             self.assertTrue(np.allclose(controlPartSet,
                                         outPartSet.getTransform().getMatrix()))
 
-    def _test_01_MoveVector(self):
+    def test_01_MoveVector(self):
         """Rotate projections alignments so the reconstruction
         is rotated by 90 degrees
         """
@@ -496,7 +496,7 @@ class TestProjectionEdit(pwtests.BaseTest):
                 np.allclose(controlPartSet,
                             outPartSet.getTransform().getMatrix()))
 
-    def _test_05_rotateAroundVector(self):
+    def test_05_rotateAroundVector(self):
         """Rotate projections alignments around
         vector (0,0,1) by 60 degrees"""
         funcName = inspect.stack()[0][3]
@@ -531,7 +531,7 @@ class TestProjectionEdit(pwtests.BaseTest):
                 np.allclose(controlPartSet,
                             outPartSet.getTransform().getMatrix()))
 
-    def _test_06_rotateAroundVector(self):
+    def test_06_rotateAroundVector(self):
         """Rotate projections alignments around vector x by 90
         """
         if not downloadFileFromGithub:
@@ -602,7 +602,7 @@ class TestProjectionEdit(pwtests.BaseTest):
                 np.allclose(controlPartSet,
                             outPartSet.getTransform().getMatrix()))
 
-    def _test_10_Dihedral(self):
+    def test_10_Dihedral(self):
         """Rotate projections alignments between dihedral x/y
         symmetries"""
         funcName = inspect.stack()[0][3]
@@ -635,7 +635,7 @@ class TestProjectionEdit(pwtests.BaseTest):
                 np.allclose(controlPartSet,
                             outPartSet.getTransform().getMatrix()))
 
-    def _test_11_DihedralY(self):
+    def test_11_DihedralY(self):
         if not downloadFileFromGithub:
             self.assertTrue(True)
             return
@@ -704,7 +704,7 @@ class TestProjectionEdit(pwtests.BaseTest):
 
             _ = self.launchProtocol(recProt2)
 
-    def _test_12_DihedralX(self):
+    def test_12_DihedralX(self):
         if not downloadFileFromGithub:
             self.assertTrue(True)
             return
@@ -785,7 +785,7 @@ class TestProjectionEdit(pwtests.BaseTest):
 
             _ = self.launchProtocol(recProt2)
 
-    def _test_14_Tetrahedral(self):
+    def test_14_Tetrahedral(self):
         """Rotate projections alignments between dihedral x/y
         symmetries"""
         funcName = inspect.stack()[0][3]
@@ -821,7 +821,7 @@ class TestProjectionEdit(pwtests.BaseTest):
                 np.allclose(controlPartSet,
                             outPartSet.getTransform().getMatrix()))
 
-    def _test_15_Tetrahedral222_z3(self):
+    def test_15_Tetrahedral222_z3(self):
         if not downloadFileFromGithub:
             self.assertTrue(True)
             return
@@ -894,7 +894,7 @@ class TestProjectionEdit(pwtests.BaseTest):
                 np.allclose(controlPartSet,
                             outPartSet.getTransform().getMatrix()))
 
-    def _test_16_Tetrahedral222_z3r(self):
+    def test_16_Tetrahedral222_z3r(self):
         if not downloadFileFromGithub:
             self.assertTrue(True)
             return
@@ -979,7 +979,7 @@ class TestProjectionEdit(pwtests.BaseTest):
                 np.allclose(controlPartSet,
                             outPartSet.getTransform().getMatrix()))
 
-    def _test_17_Tetrahedralz3r_z3(self):
+    def test_17_Tetrahedralz3r_z3(self):
         if not downloadFileFromGithub:
             self.assertTrue(True)
             return
@@ -1049,7 +1049,7 @@ class TestProjectionEdit(pwtests.BaseTest):
                 np.allclose(controlPartSet,
                             outPartSet.getTransform().getMatrix()))
 
-    def _test_18_Tetrahedralz3_z3r(self):
+    def test_18_Tetrahedralz3_z3r(self):
 
         if not downloadFileFromGithub:
             self.assertTrue(True)
@@ -1134,7 +1134,7 @@ class TestProjectionEdit(pwtests.BaseTest):
                 np.allclose(controlPartSet.getTransform().getMatrix(),
                             outPartSet.getTransform().getMatrix()))
 
-    def _test_20_Ico222_222r(self):
+    def test_20_Ico222_222r(self):
         """Rotate projections alignments between icosahedral
         symmetries"""
         setPartSqliteName = self.proj.getTmpPath("particles_rot_ico.sqlite")
@@ -1165,7 +1165,7 @@ class TestProjectionEdit(pwtests.BaseTest):
                 np.allclose(
                     controlPartSet, outPartSet.getTransform().getMatrix()))
 
-    def _test_21_Icosahedral222_222r(self):
+    def test_21_Icosahedral222_222r(self):
         if not downloadFileFromGithub:
             self.assertTrue(True)
             return
@@ -1237,7 +1237,7 @@ class TestProjectionEdit(pwtests.BaseTest):
                 np.allclose(controlPartSet,
                             outPartSet.getTransform().getMatrix()))
 
-    def _test_22_Icosahedral222r_In25(self):
+    def test_22_Icosahedral222r_In25(self):
         if not downloadFileFromGithub:
             self.assertTrue(True)
             return

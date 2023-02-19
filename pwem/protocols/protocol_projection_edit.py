@@ -44,7 +44,7 @@ from pwem.constants import (SYM_I222, SYM_I222r, SYM_In25, SYM_In25r,
 
 class ProtProjectionEditor(EMProtocol):
     """
-    Protocol to edit the proejction directions of all the items of a set using
+    Protocol to edit the projection directions of all the items of a set using
     a formula.
     This could be useful for aplying geometrical transformation to a set of
     particles.
