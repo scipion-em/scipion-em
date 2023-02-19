@@ -44,13 +44,13 @@ from pwem.constants import (SYM_I222, SYM_I222r, SYM_In25, SYM_In25r,
 
 class ProtProjectionEditor(EMProtocol):
     """
-    Protocol to edit the projection directions of all the items of a set using
-    a formula.
-    This could be useful for aplying geometrical transformation to a set of
+    This protocol edits the projection directions of all the items of a set of particles using
+    a formula. This could be useful for applying geometrical transformation to a set of
     particles.
-    Several predefined operation are offered as given such as
-    * rotate the projection vector to another projection direction
-    * rotate a the projection vector around a given vector
+
+    Several predefined operation are offered such as
+    * apply the rotation matrix define by a origin vector and a target vector
+    * rotate the projection vector around a given vector by  A degrees
     * convert between icosahedral symmetries
     * convert between dihedral symmetries
     * convert between tetrahedral symmetries

@@ -283,8 +283,8 @@ samplingRate = 1.5
 # very like does not make sense for automatic testing
 downloadFileFromGithub = True
 # recosntruct volume, this is useful if there is a human
-# to check the results and relion is isntalled
-# xmipp is not OK because the tetrahedral symmetry recosntruction
+# to check the results and relion is installed
+# xmipp is not OK because the tetrahedral symmetry reconstruction
 # is not implemented properlly
 reconstructVolume = True
 
