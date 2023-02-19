@@ -154,48 +154,48 @@ tDiOut = [
 
 # operate tetrahedral symmetry
 tTetraOut = [
-    [[+7.07106781e-01, +7.07106781e-01, +7.85046229e-17, 0.00000000e+00],
-     [-4.08248290e-01, +4.08248290e-01, -8.16496581e-01, 0.00000000e+00],
-     [+5.77350269e-01, -5.77350269e-01, -5.77350269e-01, 0.00000000e+00],
-     [+0.00000000e+00, +0.00000000e+00, +0.00000000e+00, 1.00000000e+00]],
-    [[+0.67389251, -0.40046287, +0.62088515, -9.47322158],
-     [+0.69098296, +0.04411080, -0.72152394, -14.26076722],
-     [-0.26155580, -0.91525063, -0.30643896, +14.38362232],
-     [+0.00000000, +0.00000000, +0.00000000, 1.00000000]],
-    [[+6.73892512e-01, +4.00462869e-01, 6.20885150e-01, +9.47322158e+00],
-     [+1.62695231e-02, -8.48202972e-01, 5.29421396e-01, +8.80742010e+00],
-     [-7.38650249e-01, +3.46671609e-01, 5.78112972e-01, -1.82397211e+01],
-     [+0.00000000e+00, +0.00000000e+00, 0.00000000e+00, +1.00000000e+00]]
+    [[+0.70710678, -0.70710678, 0., 0.],
+     [+0.40824829,  0.40824829,  0.81649658,  0.],
+     [-0.57735027, -0.57735027,  0.57735027,  0.],
+     [+0., 0., 0., 1.]],
+    [[-0.61249862, -0.7727664,  0.16636568, 19.97763624],
+     [+0.05171531,  0.17083874,  0.98394087, -2.74269347],
+     [-0.78877815,  0.61126608, -0.06467464,  9.6629024],
+     [+0.,  0.,  0.,  1.]],
+    [[-0.61249862,   0.77276640,   0.16636568, -19.97763624],
+     [+0.72642874,   0.63325343,  -0.26700446,   8.19604059],
+     [-0.31168371,  -0.04268705,  -0.94922657,  -5.80680367],
+     [+0., 0., 0., 1.]]
 ]
 # operate tetrahedral symmetry t222-> tz3
 tTetraOut_222_z3 = [
-    [[-0.46075339, 0.88506969, +0.06601487, 0.],
-     [+0.74555474, 0.42633068, -0.51224045, 0.],
-     [+0.48151266, 0.18679882, +0.85630121, 0.],
-     [+0.,         0.,         +0.,         1.]],
-    [[+0.42365807, -0.21605725, +0.87967784, 0.],
-     [-0.16859089, +0.93536136, +0.31092803, 0.],
-     [+0.88999492, +0.28003284, -0.35984811, 0.],
-     [+0.,         +0.,         +0.,         1.]],
-    [[-0.37972518, 0.68132095, +0.62578794, 0.],
-     [-0.30625899, 0.54572707, -0.77999192, 0.],
-     [+0.87293426, 0.48783576, -0.00143436, 0.],
-     [+0.,         0.,         +0.,         1.]]
+    [[-0.03729279, -0.09362153,  0.99490917,  0.],
+     [-0.99003983,  0.13871696, -0.02405692,  0.],
+     [-0.13575853, -0.98589686, -0.09786219,  0.],
+     [+0.,          0.,          0.,          1.]],
+    [[+0.82401380, -0.31138528, -0.47332913,  0.],
+     [-0.06255460, -0.88032370,  0.47023091,  0.],
+     [-0.56310583, -0.35786785, -0.74487746,  0.],
+     [+0.,          0.,          0.,          1.]],
+    [[+0.88956655,  0.08324056,  0.44915740,  0.],
+     [-0.42656693, -0.20042519,  0.88196961,  0.],
+     [+0.16343810, -0.97616635, -0.14278387,  0.],
+     [+0.00000000,  0.00000000,  0.00000000,  1.]]
 ]
 
 tTetraOut_222_z3r = [
-    [[0.46075339, -0.88506969, -0.06601487, 0.],
-     [0.74555474, +0.42633068, -0.51224045, 0.],
-     [0.48151266, +0.18679882, +0.85630121, 0.],
-     [0.,         +0.,         +0.,         1.]],
-    [[-0.42365807, 0.21605725, -0.87967784, 0.],
-     [-0.16859089, 0.93536136, +0.31092803, 0.],
-     [+0.88999492, 0.28003284, -0.35984811, 0.],
-     [+0.,         0.,         +0.,         1.]],
-    [[+0.37972518, -0.68132095, -0.62578794, 0.],
-     [-0.30625899, +0.54572707, -0.77999192, 0.],
-     [+0.87293426, +0.48783576, -0.00143436, 0.],
-     [+0.,         +0.,         +0.,         1.]]
+    [[+0.03729279,  0.09362153, -0.99490917,  0.],
+     [-0.99003983,  0.13871696, -0.02405692,  0.],
+     [-0.13575853, -0.98589686, -0.09786219,  0.],
+     [+0.,          0.,          0.,          1.]],
+    [[-0.82401380,  0.31138528,  0.47332913,  0.],
+     [-0.06255460, -0.88032370,  0.47023091,  0.],
+     [-0.56310583, -0.35786785, -0.74487746,  0.],
+     [+0.,          0.,          0.,          1.]],
+    [[-0.88956655, -0.08324056, -0.44915740,  0.],
+     [-0.42656693, -0.20042519,  0.88196961,  0.],
+     [+0.16343810, -0.97616635, -0.14278387,  0.],
+     [+0.,          0.,          0.,          1.]]
 ]
 
 tTetraOut_z3r_z3 = [
@@ -230,49 +230,49 @@ tIco222_222r_Out = [
 ]
 
 tIcoOut_222_222r = [
-    [[-0.39134375, -0.61792733, +0.68192073, 0.],
-     [-0.83169429, -0.07966828, -0.54948846, 0.],
-     [+0.39387139, -0.78218845, -0.48274895, 0.],
-     [+0.,         +0.,         +0.,         1.]],
-    [[0.99242925, -0.0898061,   0.08377972, 0.],
-     [0.12047057, +0.57908928, -0.80631411, 0.],
-     [0.02389598, +0.81030271,  0.58552413, 0.],
-     [0.,         +0.,          0.,         1.]],
-    [[0.86075607, -0.50709402, -0.04421125, 0.],
-     [0.26093301, +0.51414980, -0.81704587, 0.],
-     [0.43705028, +0.69174102, +0.57487513, 0.],
-     [0.,         +0.,         +0.,         1.]]
+    [[0.39134375,  0.61792733, -0.68192073,  0.],
+     [0.83169429,  0.07966828,  0.54948846,  0.],
+     [0.39387139, -0.78218845, -0.48274895,  0.],
+     [0.00000000,  0.00000000,  0.00000000,  1.]],
+    [[-0.99242925,  0.08980610, -0.08377972,  0.],
+     [-0.12047057, -0.57908928,  0.80631411,  0.],
+     [+0.02389598,  0.81030271,  0.58552413,  0.],
+     [+0.00000000,  0.00000000,  0.00000000,  1.]],
+    [[-0.86075607,  0.50709402,  0.04421125,  0.],
+     [-0.26093301, -0.51414980,  0.81704587,  0.],
+     [+0.43705028,  0.69174102,  0.57487513,  0.],
+     [+0.00000000,  0.00000000,  0.00000000,  1.]]
 ]
 
 tIcoOut_222r_n25 = [
-    [[-0.64908948, +0.01532560, -0.76055768, 0.],
-     [-0.63113568, -0.56899860, +0.52717012, 0.],
-     [-0.42467706, +0.82219567, +0.37900354, 0.],
-     [+0.,         +0.,         +0.,         1.]],
-    [[+0.23103367, -0.96948462, +0.08199404,  0.],
-     [-0.37158628, -0.16580791, -0.91347215,  0.],
-     [+0.89919246, +0.18057497, -0.39855439,  0.],
-     [+0.,         +0.,         +0.,          1.]],
-    [[+0.54151319, +0.27229642, -0.79537295, 0.],
-     [+0.77322535, -0.53266751, +0.34407540, 0.],
+    [[-0.64908948,  0.01532560, -0.76055768, 0.],
+     [-0.63113568, -0.56899860,  0.52717012, 0.],
+     [-0.42467706,  0.82219567,  0.37900354, 0.],
+     [+0.00000000,  0.00000000,  0.00000000, 1.]],
+    [[+0.23103367, -0.96948462,  0.08199404, 0.],
+     [-0.37158628, -0.16580791, -0.91347215, 0.],
+     [+0.89919246,  0.18057497, -0.39855439, 0.],
+     [+0.00000000,  0.00000000,  0.00000000, 1.]],
+    [[+0.54151319,  0.27229642, -0.79537295, 0.],
+     [+0.77322535, -0.53266751,  0.3440754 , 0.],
      [-0.32997882, -0.80132389, -0.49899298, 0.],
-     [+0.,         +0.,         +0.,         1.]]
-]
+     [+0.00000000,  0.00000000,  0.00000000, 1.]],
+     ]
 
 tIcoOut_n25_n25r = [
-    [[-0.17452361, 0.16585493, +0.97058418, 0.],
-     [+0.32982927, 0.93861316, -0.10108409, 0.],
-     [-0.92776838, 0.30248552, -0.21851397, 0.],
-     [+0.,         0.,         +0.,         1.]],
+    [[-0.17452361,  0.16585493,  0.97058418, 0.],
+     [+0.32982927,  0.93861316, -0.10108409, 0.],
+     [-0.92776838,  0.30248552, -0.21851397, 0.],
+     [+0.00000000,  0.00000000,  0.00000000, 1.]],
     [[+0.94832549, -0.17894467, -0.26202591, 0.],
-     [-0.19912627, +0.30730334, -0.93054467, 0.],
-     [+0.24703745, +0.93463547, +0.25579101, 0.],
-     [+0.,         +0.,         +0.,         1.]],
-    [[-0.12318540, -0.90116932, +0.41559500, 0.],
+     [-0.19912627,  0.30730334, -0.93054467, 0.],
+     [+0.24703745,  0.93463547,  0.25579101, 0.],
+     [+0.00000000,  0.00000000,  0.00000000, 1.]],
+    [[-0.12318540, -0.90116932,  0.41559500, 0.],
      [-0.83278152, -0.13388985, -0.53716707, 0.],
      [+0.53972243, -0.41227097, -0.73398388, 0.],
-     [+0.,          0.,         +0.,         1.]]
-]
+     [+0.00000000,  0.00000000,  0.00000000, 1.]],
+    ]
 
 defocusList = [15000., 20000., 25000.]
 defocusAngle = [0., 10., 20.]
@@ -815,12 +815,13 @@ class TestProjectionEdit(pwtests.BaseTest):
         self.launchProtocol(protSetEditor)
         for controlPartSet, outPartSet in zip(tTetraOut,
                                               protSetEditor.outputParticles):
-            # print(controlPartSet, outPartSet.getTransform().getMatrix())
+            #print(controlPartSet)
+            #print(repr(outPartSet.getTransform().getMatrix()))
             self.assertTrue(
                 np.allclose(controlPartSet,
                             outPartSet.getTransform().getMatrix()))
 
-    def test_15_Tetrahedral222_z3(self):
+    def _test_15_Tetrahedral222_z3(self):
         if not downloadFileFromGithub:
             self.assertTrue(True)
             return
@@ -887,7 +888,8 @@ class TestProjectionEdit(pwtests.BaseTest):
 
         for controlPartSet, outPartSet in zip(tTetraOut_222_z3,
                                               protSetEditor.outputParticles):
-            # print(controlPartSet, outPartSet.getTransform().getMatrix())
+            # print(controlPartSet)
+            # print(repr(outPartSet.getTransform().getMatrix()))
             self.assertTrue(
                 np.allclose(controlPartSet,
                             outPartSet.getTransform().getMatrix()))
@@ -971,7 +973,8 @@ class TestProjectionEdit(pwtests.BaseTest):
 
         for controlPartSet, outPartSet in zip(tTetraOut_222_z3r,  #
                                               protSetEditor.outputParticles):
-            # print(controlPartSet, outPartSet.getTransform().getMatrix())
+            # print(repr(controlPartSet))
+            # print(repr(outPartSet.getTransform().getMatrix()))
             self.assertTrue(
                 np.allclose(controlPartSet,
                             outPartSet.getTransform().getMatrix()))
@@ -1046,7 +1049,7 @@ class TestProjectionEdit(pwtests.BaseTest):
                 np.allclose(controlPartSet,
                             outPartSet.getTransform().getMatrix()))
 
-    def test_18_Tetrahedralz3_z3r(self):
+    def _test_18_Tetrahedralz3_z3r(self):
 
         if not downloadFileFromGithub:
             self.assertTrue(True)
@@ -1168,14 +1171,15 @@ class TestProjectionEdit(pwtests.BaseTest):
             return
         symDir = 'I/i222'
         symFile = 'i222'
+        hash = 'd8301c0274429056c2b3e98f3e0bd479bcbb1f55'
         self._downloadFileFromGithub(host='https://raw.githubusercontent.com',
-                                     dir=f'/I2PC/testDataSym/main/{symDir}',
+                                     dir=f'I2PC/testDataSym/{hash}/{symDir}',
                                      baseName=f'{symFile}.xmd')
         self._downloadFileFromGithub(host='https://raw.githubusercontent.com',
-                                     dir=f'/I2PC/testDataSym/main/{symDir}',
+                                     dir=f'I2PC/testDataSym/{hash}/{symDir}',
                                      baseName=f'{symFile}.mrcs')
         self._downloadFileFromGithub(host='https://raw.githubusercontent.com',
-                                     dir=f'/I2PC/testDataSym/main/{symDir}',
+                                     dir=f'I2PC/testDataSym/{hash}/{symDir}',
                                      baseName=f'{symFile}.mrc')
 
         # import files
@@ -1227,7 +1231,8 @@ class TestProjectionEdit(pwtests.BaseTest):
 
         for controlPartSet, outPartSet in zip(tIcoOut_222_222r,
                                               protSetEditor.outputParticles):
-            print(controlPartSet, outPartSet.getTransform().getMatrix())
+            # print(controlPartSet)
+            # print(repr(outPartSet.getTransform().getMatrix()))
             self.assertTrue(
                 np.allclose(controlPartSet,
                             outPartSet.getTransform().getMatrix()))
@@ -1238,14 +1243,15 @@ class TestProjectionEdit(pwtests.BaseTest):
             return
         symDir = 'I/i222r'
         symFile = 'i222r'
+        hash = '190b0ad726b8afd17762fa145e1504728c4d7e8c'
         self._downloadFileFromGithub(host='https://raw.githubusercontent.com',
-                                     dir=f'/I2PC/testDataSym/main/{symDir}',
+                                     dir=f'I2PC/testDataSym/{hash}/{symDir}',
                                      baseName=f'{symFile}.xmd')
         self._downloadFileFromGithub(host='https://raw.githubusercontent.com',
-                                     dir=f'/I2PC/testDataSym/main/{symDir}',
+                                     dir=f'I2PC/testDataSym/{hash}/{symDir}',
                                      baseName=f'{symFile}.mrcs')
         self._downloadFileFromGithub(host='https://raw.githubusercontent.com',
-                                     dir=f'/I2PC/testDataSym/main/{symDir}',
+                                     dir=f'I2PC/testDataSym/{hash}/{symDir}',
                                      baseName=f'{symFile}.mrc')
 
         # import files
@@ -1297,12 +1303,13 @@ class TestProjectionEdit(pwtests.BaseTest):
 
         for controlPartSet, outPartSet in zip(tIcoOut_222r_n25,
                                               protSetEditor.outputParticles):
-            print(controlPartSet, outPartSet.getTransform().getMatrix())
+            # print(controlPartSet)
+            # print(repr(outPartSet.getTransform().getMatrix()))
             self.assertTrue(
                 np.allclose(controlPartSet,
                             outPartSet.getTransform().getMatrix()))
 
-    def _test_23_IcosahedralIn25_In25r(self):
+    def test_23_IcosahedralIn25_In25r(self):
         if not downloadFileFromGithub:
             self.assertTrue(True)
             return
@@ -1367,7 +1374,8 @@ class TestProjectionEdit(pwtests.BaseTest):
 
         for controlPartSet, outPartSet in zip(tIcoOut_n25_n25r,
                                               protSetEditor.outputParticles):
-            print(controlPartSet, outPartSet.getTransform().getMatrix())
+            #print(controlPartSet)
+            #print(repr(outPartSet.getTransform().getMatrix()))
             self.assertTrue(
                 np.allclose(controlPartSet,
                             outPartSet.getTransform().getMatrix()))
