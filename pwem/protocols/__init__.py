@@ -38,6 +38,7 @@ from .protocol_particles_picking import *
 from .protocol_2d import *
 from .protocol_3d import *
 from .protocol_sets import *
+from .protocol_projection_edit import *
 from .protocol_pdf_report import *
 from .protocol_tiltpairs import *
 from .protocol_ctf_assign import ProtCTFAssign
@@ -55,6 +56,7 @@ from .protocol_export import *
 from .protocol_tests import *
 
 from .protocol_origin_sampling_volume import ProtOrigSampling
+from .protocol_projection_edit import ProtProjectionEditor
 from .protocol_set_editor import ProtSetEditor
 from .protocol_set_filter import ProtSetFilter
 from .protocol_movie_eraser import ProtMovieEraser

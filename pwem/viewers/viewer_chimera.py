@@ -128,7 +128,6 @@ class Chimera:
         we place a small sphere in the negative axis. In this way
         chimera shows the system of coordinates origin in the
         window center"""
-
         ff = open(bildFileName, "w")
         arrowDict = {}
         arrowDict["x"] = arrowDict["y"] = arrowDict["z"] = \
@@ -137,13 +136,13 @@ class Chimera:
         arrowDict["r2"] = 2 * arrowDict["r1"]
         arrowDict["rho"] = 0.75  # axis thickness
 
-        ff.write(".color 1 0 0\n"
+        ff.write(".color red\n" # red
                  ".arrow 0 0 0 %(x)f 0 0 %(r1)f %(r2)f %(rho)f\n"
                  ".color 0 0 0\n.sphere -%(x)f 0 0 0.00001\n"
-                 ".color 1 1 0\n"
+                 ".color yellow\n" # yellow
                  ".arrow 0 0 0 0 %(y)f 0 %(r1)f %(r2)f %(rho)f\n"
                  ".color 0 0 0\n.sphere 0 -%(y)f 0 0.00001\n"
-                 ".color 0 0 1\n"
+                 ".color blue\n"
                  ".arrow 0 0 0 0 0 %(z)f %(r1)f %(r2)f %(rho)f\n"
                  ".color 0 0 0\n.sphere 0 0 -%(z)f 0.00001\n" %
                  arrowDict)
