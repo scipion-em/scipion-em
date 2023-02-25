@@ -1,3 +1,27 @@
+V3.0.25
+   - New Angular distribution viewer (right click on any SetOfParticles or SetOfSubtomograms will list it)
+
+developers:
+   - SCIPION_CANCEL_XMIPP_BINDING_WARNING defined in the environment will cancel the warning about xmipp binding missing
+   - SCIPION_CANCEL_XMIPP_BINDING_WARNING defined in the github action
+   - function readFromPDBDatabase tries to download an atomic structure up to 5 times before returning  an error (before it tried only once)
+   - function retry search for fatal error messages in the output and if found,  it aborts instead of trying several times.
+   - plotter.py uses logging
+   - Plotter.plotAngularDistribution refactored: uses scatter instead of plot fo each point. It may improve performance.
+   - Plotter.plotAngularDistributionFromSet new: To plot sets with items.getTransform()
+
+V3.0.24
+users:
+   - Version compatible with latest released scipion-em-chimera plugin.
+developers:
+   - biopython updated to 1.79
+   - Using Alphabet from new version of biopython, related tests modified and added.
+   - DataViewer allow for registration of new sets using: DataViewer.registerConfig(type, configDict).
+     Useful for tomography sets and avoiding unnecessary inheritance.
+   - Icon is a png (compatible with future pillow versions)
+   - weakImport("tifffile") added when registering FileHandlers (bug at installation in github action)
+
+
 V3.0.23
 users:
    - Subset protocol optimized, specially for small parametric subsets (random or by ids)
@@ -10,6 +34,7 @@ developers:
    - FileHandler registration moved to main pwem.__init__.
    - Import volumes uses logging
    - Import volumes fixed when downloading an EMDB.
+   - Dataviewer allow registration of other sets. Dataviewer: DataViewer.registerConfig(tomo.objects.SetOfTiltSeriesCoordinates)
 
 V3.0.22 (hotfix)
    - Plugin.guessCudaVersion returns Version("0.0") for cases like this /usr/lib/x86_64-linux-gnu

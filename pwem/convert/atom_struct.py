@@ -53,6 +53,10 @@ import numpy
 import pyworkflow.utils as pwutils
 import shutil
 
+from pwem.objects.data import Alphabet
+
+
+
 SECTION = '_scipion_attributes'
 NAME, RECIP, SPEC, VALUE = SECTION + '.name', SECTION + '.recipient', SECTION + '.specifier', SECTION + '.value'
 
@@ -222,7 +226,14 @@ class AtomicStructHandler:
         if dir is None:
             dir = os.getcwd()
         pdbl = PDBList(pdb=dir)
-        fileName = pdbl.retrieve_pdb_file(pdbID, pdir=dir, file_format=type)
+        for counter in range(5):
+            try:
+                fileName = pdbl.retrieve_pdb_file(pdbID, pdir=dir, file_format=type)
+            except Exception as error:
+                print("Error: ", error)
+                print("Retry connection", counter)
+                if counter == 4:
+                    raise
         return os.path.abspath(fileName)
 
     def checkLabelInFile(self, fileName, label):
@@ -322,7 +333,7 @@ class AtomicStructHandler:
 
         return listOfChains, listOfResidues
 
-    def getSequenceFromChain(self, modelID, chainID):
+    def getSequenceFromChain(self, modelID, chainID, returnAlphabet=False):
         self.checkRead()
         seq = list()
         for model in self.structure:
@@ -332,7 +343,7 @@ class AtomicStructHandler:
                         if len(chain.get_unpacked_list()[0].resname) == 1:
                             print("Your sequence is a nucleotide sequence ("
                                   "RNA)\n")
-                            # alphabet = IUPAC.IUPACAmbiguousRNA._upper()
+                            alphabet = Alphabet.UNAMBIGOUS_RNA_ALPHABET
                             for residue in chain:
                                 # Check if the residue belongs to the
                                 # standard RNA and add those residues to the
@@ -345,7 +356,7 @@ class AtomicStructHandler:
                         elif len(chain.get_unpacked_list()[0].resname) == 2:
                             print("Your sequence is a nucleotide sequence ("
                                   "DNA)\n")
-                            # alphabet = IUPAC.ExtendedIUPACDNA._upper()
+                            alphabet = Alphabet.UNAMBIGOUS_DNA_ALPHABET
                             for residue in chain:
                                 # Check if the residue belongs to the
                                 # standard DNA and add those residues to the
@@ -359,7 +370,7 @@ class AtomicStructHandler:
                             counter = 0
                             for residue in chain:
                                 if is_aa(residue.get_resname(), standard=True):
-                                    # alphabet = IUPAC.ExtendedIUPACProtein._upper()
+                                    alphabet = Alphabet.EXTENDED_PROTEIN_ALPHABET
                                     # The test checks if the amino acid
                                     # is one of the 20 standard amino acids
                                     # Some proteins have "UNK" or "XXX", or other symbols
@@ -379,7 +390,10 @@ class AtomicStructHandler:
                         while seq[0] == "X":
                             del seq[0]
                         # return Seq(str(''.join(seq)), alphabet=alphabet)
-                        return Seq(str(''.join(seq)))
+                        if returnAlphabet:
+                            return Seq(str(''.join(seq))), alphabet
+                        else:
+                            return Seq(str(''.join(seq)))
 
     def getFullID(self, model_id='0', chain_id=None):
         """
@@ -933,11 +947,30 @@ def fromCIFToPDB(inFileName, outFileName, log):
 def fromCIFTommCIF(inFileName, outFileName, log):
     _frombase(inFileName, outFileName, log, 8)
 
+def testLog(log, messages= None, sdterrLog = None):
+    # Method to capture exceptions like error messages from Phenix when map and model are far apart
+    if sdterrLog is None or messages is None:
+        return
 
-def retry(runEnvirom, program, args, cwd, listAtomStruct=[], log=None, clean_dir=None):
+    # read all content of a file
+    for line in sdterrLog(logFile=1):
+        # check if string present in a file
+        for message in messages:
+            if message[0] in line:
+                log.info(pwutils.redStr("Error:  Protocol aborted "))
+                log.info(pwutils.redStr(f"Error: {message[1]}"))
+                raise Exception(pwutils.redStr("Error: %s" % message[1]))
+        if "Sorry" in line:
+            log.info(pwutils.redStr("WARNING, %s" % line))
+
+def retry(runEnvirom, program, args, cwd, listAtomStruct=[], log=None, clean_dir=None, messages=[], sdterrLog=None):
+    messages.append(("Sorry: Input map is all zero after boxing", "Sorry: Input map is all zero after boxing"))
+
     try:
         runEnvirom(program, args, cwd=cwd)
     except:
+        testLog(log, messages,sdterrLog)
+
         # first remove every files or directories in the extra folder,
         # except maps
         partiallyCleaningFolder(program, cwd)
@@ -949,8 +982,10 @@ def retry(runEnvirom, program, args, cwd, listAtomStruct=[], log=None, clean_dir
                 aSH = AtomicStructHandler()
                 aSH.read(atomStructName)
                 aSH.write(atomStructName)
-
-                runEnvirom(program, args, cwd=cwd)
+                try:
+                    runEnvirom(program, args, cwd=cwd)
+                except:
+                    testLog(log, messages,sdterrLog)
             else:
                 try:
                     if atomStructName.endswith(".pdb"):
@@ -961,6 +996,7 @@ def retry(runEnvirom, program, args, cwd, listAtomStruct=[], log=None, clean_dir
                         try:
                             runEnvirom(program, _args, cwd=cwd)
                         except:
+                            testLog(log, messages,sdterrLog)
                             fromCIFTommCIF(newAtomStructName, newAtomStructName, log)
                             runEnvirom(program, _args, cwd=cwd)
                     elif atomStructName.endswith(".cif"):
@@ -971,12 +1007,15 @@ def retry(runEnvirom, program, args, cwd, listAtomStruct=[], log=None, clean_dir
                         try:
                             runEnvirom(program, _args, cwd=cwd)
                         except:
+                            testLog(log, messages,sdterrLog)
                             newAtomStructName = os.path.abspath(
                                 os.path.join(cwd, "retrycif%d.pdb" % i))
                             fromCIFToPDB(atomStructName, newAtomStructName, log)
                             _args = args.replace(atomStructName, newAtomStructName)
                             runEnvirom(program, _args, cwd=cwd)
+                            testLog(log, messages,sdterrLog)
                 except:
+                    testLog(log, messages,sdterrLog)
                     # first remove files or directories in the extra folder,
                     # except maps
                     partiallyCleaningFolder(program, cwd)
@@ -992,9 +1031,11 @@ def retry(runEnvirom, program, args, cwd, listAtomStruct=[], log=None, clean_dir
                         aSH.write(newAtomStructName)
                         _args = args.replace(atomStructName, newAtomStructName)
                         runEnvirom(program, _args, cwd=cwd)
+                        testLog(log, messages,sdterrLog)
                     except:
                         print("CIF file standardisation failed.")
                         # atomStructName = newAtomStructName
+
 
 
 # TODO this should no be here, ROB

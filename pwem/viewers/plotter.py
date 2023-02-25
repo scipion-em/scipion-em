@@ -23,12 +23,14 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-
+import logging
+logger = logging.getLogger(__name__)
 from math import radians
 import numpy as np
 import matplotlib.cm as cm
 from scipy.ndimage.filters import gaussian_filter
 
+from pwem.convert.transformations import euler_from_matrix
 from pyworkflow.gui.plotter import Plotter, plt
 import pwem.emlib.metadata as md
 import numbers
@@ -43,7 +45,7 @@ class EmPlotter(Plotter):
     def plotAngularDistribution(self, title, rot,
                                 tilt, weight=[], max_p=40,
                                 min_p=5, color='blue'):
-        """ Create an special type of subplot, representing the angular
+        """ Create a special type of subplot, representing the angular
         distribution of weight projections. """
         if weight:
             max_w = max(weight)
@@ -51,17 +53,20 @@ class EmPlotter(Plotter):
             a = self.createSubPlot(title,
                                    'Min weight=%(min_w).2f, Max weight=%(max_w).2f'
                                    % locals(), '', projection='polar')
+
+            pointSizes = []
             for r, t, w in zip(rot, tilt, weight):
-                pointsize = int((w - min_w) / (max_w - min_w + 0.001) * (max_p - min_p) + min_p)
-                a.plot(r, t, markerfacecolor=color, marker='.', markersize=pointsize)
+                 pointsize = int((w - min_w) / (max_w - min_w + 0.001) * (max_p - min_p) + min_p)
+                 pointSizes.append(pointsize)
+
+            a.scatter(rot, tilt, s=pointSizes, c=color, marker='.')
         else:
-            a = self.createSubPlot(title, 'Empty plot', '', projection='polar')
-            for r, t in zip(rot, tilt):
-                a.plot(r, t, markerfacecolor=color, marker='.', markersize=10)
+            a = self.createSubPlot(title, 'Non weighted plot', '', projection='polar')
+            a.scatter(rot, tilt, s=10, c=color, marker='.')
         return a
 
     def plotAngularDistributionHistogram(self, title, rot, tilt):
-        """ Create an special type of subplot, representing the angular
+        """ Create a special type of subplot, representing the angular
         distribution of weight projections. """
         heatmap, xedges, yedges = np.histogram2d(rot, tilt, bins=100)
         sigma = min(max(xedges) - min(xedges), max(yedges) - min(yedges)) / 20
@@ -74,6 +79,39 @@ class EmPlotter(Plotter):
         a.set_xlabel('Rotational angle')
         a.set_ylabel('Tilt angle')
         return mappable
+
+
+    def plotAngularDistributionFromSet(self, mdSet, title, weightAttr=None, histogram=False, **kwargs):
+        """ Read the values of the transformation matrix
+         and plot its histogram or its angular distribution.
+
+         :param mdSet: Set with alignment information at with item.getTransform()
+         :param title: Title of the plot
+        """
+        rots = []
+        tilts = []
+        weights = []
+
+        if histogram:
+            for item in mdSet:
+                rot, tilt, psi = euler_from_matrix(item.getTransform().getMatrix())
+                rots.append(rot)
+                tilts.append(tilt)
+
+            return self.plotAngularDistributionHistogram(title, rots, tilts)
+        else:
+            for item in mdSet:
+                rot, tilt, psi = euler_from_matrix(item.getTransform().getMatrix())
+
+                rots.append(rot)
+                tilts.append(tilt)
+
+                if weightAttr:
+                    weight = getattr(item, weightAttr).get()
+                    weights.append(weight)
+
+
+            return self.plotAngularDistribution(title, rots, tilts, weights, **kwargs)
 
     def plotAngularDistributionFromMd(self, mdFile, title, **kwargs):
         """ Read the values of rot, tilt and weights from

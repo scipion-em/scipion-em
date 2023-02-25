@@ -31,45 +31,41 @@ from os.path import exists
 
 
 # sequence related stuff
-SEQ_TYPE = ['aminoacids', 'nucleotides']
-SEQ_TYPE_AMINOACIDS = 0
-SEQ_TYPE_NUCLEOTIDES = 1
-IUPAC_PROTEIN_ALPHABET = ['Extended Protein', 'Protein']
-EXTENDED_PROTEIN_ALPHABET = 0
-PROTEIN_ALPHABET = 1
-IUPAC_NUCLEOTIDE_ALPHABET = ['Ambiguous DNA', 'Unambiguous DNA',
-                             'Extended DNA', 'Ambiguous RNA',
-                             'Unambiguous RNA']
-EXTENDED_DNA_ALPHABET = 0
-AMBIGOUS_DNA_ALPHABET = 1
-UNAMBIGOUS_DNA_ALPHABET = 2
-AMBIGOUS_RNA_ALPHABET = 3
-UNAMBIGOUS_RNA_ALPHABET = 4
 
 
 from Bio.Seq import Seq
-from Bio.Alphabet import IUPAC
 from Bio import Entrez, SeqIO
 import sys
 from Bio.SeqRecord import SeqRecord
 from Bio.Align.Applications import ClustalOmegaCommandline, MuscleCommandline
 from Bio import pairwise2
 from pyworkflow.utils import getExt
+from pwem.objects.data import Alphabet
+
 
 class SequenceHandler:
     def __init__(self, sequence=None,
-                 iUPACAlphabet=0,
-                 isAminoacid=True):
+                 iUPACAlphabet=Alphabet.DUMMY_ALPHABET, doClean=True):
+        iUPACAlphabet = Alphabet.DUMMY_ALPHABET if iUPACAlphabet not in Alphabet.alphabets else iUPACAlphabet
 
-        self.isAminoacid = isAminoacid
-        self.alphabet = indexToAlphabet(isAminoacid, iUPACAlphabet)
+        if iUPACAlphabet == Alphabet.DUMMY_ALPHABET:
+            self.isAminoacid = None
+        else:      
+            self.isAminoacid =  (iUPACAlphabet <   Alphabet.AMBIGOUS_DNA_ALPHABET)
+
+        self.alphabet = iUPACAlphabet ##  indexToAlphabet(isAminoacid, iUPACAlphabet)
 
         if sequence is not None:
-            # sequence = cleanSequence(self.alphabet, sequence)
-            self._sequence = Seq(sequence, alphabet=self.alphabet)
+            if doClean:
+                self._sequence = cleanSequence(self.alphabet, sequence)
+            else:
+                self._sequence = sequence
         else:
             self._sequence = None
-            # type(self._sequence):  <class 'Bio.Seq.Seq'>
+
+    def getSequence(self):
+        """Returns the sequence as Bio.Seq.Seq object"""
+        return Seq(self._sequence)
 
     def getTypeFromFile(self, fileName):
         '''Returns the expected BioPython file type according to the filename'''
@@ -95,7 +91,7 @@ class SequenceHandler:
             records = list(SeqIO.parse(fileName, type))
         else:
             records = []
-        records.append(SeqRecord(self._sequence, id=seqID, name=name,
+        records.append(SeqRecord(Seq(self._sequence), id=seqID, name=name,
                                  description=seqDescription))
         with open(fileName, "w") as output_handle:
             SeqIO.write(records, output_handle, type)
@@ -116,7 +112,7 @@ class SequenceHandler:
 
         records = []
         for seq, seqID, name, seqDescription in zip(sequences, seqIDs, names, seqDescriptions):
-            records.append(SeqRecord(seq, id=seqID, name=name,
+            records.append(SeqRecord(Seq(seq), id=seqID, name=name,
                                description=seqDescription))
         # type(record): < class 'Bio.SeqRecord.SeqRecord'>
         with open(fileName, "w") as output_handle:
@@ -125,6 +121,7 @@ class SequenceHandler:
     def readSequenceFromFile(self, fileName, type="fasta", isAmino=True):
         '''From a sequences file, returns a dictionary with ther FIRST sequence info.
         Dictionary: {'seqID': seqID1, 'sequence': sequence1, 'description': description1, 'alphabet': alphabet1}'''
+
         if type is None:
             type = self.getTypeFromFile(fileName)
         return self.readSequencesFromFile(fileName, isAmino=isAmino)[0]
@@ -133,22 +130,35 @@ class SequenceHandler:
         '''From a sequences file, returns a list of dictionaries with each sequence info.
         Dictionary: [{'seqID': seqID1, 'sequence': sequence1, 'description': description1, 'alphabet': alphabet1},
                      ...]'''
+
         if type is None:
             type = self.getTypeFromFile(fileName)
 
         sequences = []
+
         records = SeqIO.parse(fileName, type)
+
         for rec in records:
-            alphabet = alphabetToIndex(isAmino, rec.seq.alphabet)
-            sequences.append({'seqID': rec.id, 'sequence': str(rec.seq),
+            sequence = str(rec.seq)
+
+            if isAmino:
+                self.alphabet = Alphabet.EXTENDED_PROTEIN_ALPHABET
+            elif 'U' in sequence:
+                self.alphabet = Alphabet.UNAMBIGOUS_RNA_ALPHABET
+            elif 'T' in sequence:
+                self.alphabet = Alphabet.UNAMBIGOUS_DNA_ALPHABET
+            else:
+                self.alphabet = Alphabet.NUCLEOTIDES_ALPHABET
+
+            sequences.append({'seqID': rec.id, 'sequence': sequence,
                               'name': rec.name, 'description': rec.description,
-                              'alphabet': alphabet, 'isAminoacids': isAmino})
+                              'isAminoacids': isAmino, 'alphabet': self.alphabet})
         return sequences
 
     def downloadSeqFromDatabase(self, seqID, dataBase=None):
         # see http://biopython.org/DIST/docs/api/Bio.SeqIO-module.html
         # for format/databases
-        print("Connecting to database...")
+
         seqID = str(seqID)
         sys.stdout.flush()
         counter = 1
@@ -157,22 +167,25 @@ class SequenceHandler:
         error = ""
         if dataBase is None:
             if self.isAminoacid:
-                dataBase = 'UnitProt'
+                dataBase = 'UniProt'
             else:
                 dataBase = 'GeneBank'
 
         while counter <= retries:  # retry up to 5 times if server busy
             try:
-                if dataBase == 'UnitProt':
+                if dataBase == 'UniProt':
                     url = "http://www.uniprot.org/uniprot/%s.xml"
                     format = "uniprot-xml"
+
                     handle = urlopen(url % seqID)
-                    print("URL", url % seqID)
+                    alphabet = Alphabet.EXTENDED_PROTEIN_ALPHABET
                 else:
                     if self.isAminoacid:
                         db = "protein"
+                        alphabet = Alphabet.EXTENDED_PROTEIN_ALPHABET
                     else:
                         db = "nucleotide"
+                        alphabet = Alphabet.NUCLEOTIDES_ALPHABET
                     Entrez.email = "scipion@cnb.csic.es"
                     format = "fasta"
                     handle = Entrez.efetch(db=db, id=seqID,
@@ -197,7 +210,7 @@ class SequenceHandler:
         seqDic = None
         if record is not None:
             seqDic = {'seqID': record.id, 'sequence': str(record.seq), 'description': record.description,
-                      'alphabet': record.seq.alphabet}
+                      'alphabet': alphabet}
         return seqDic, error
 
     def alignSeq(self, referenceSeq):
@@ -216,55 +229,22 @@ def sequenceLength(filename, format='fasta'):
 
 
 def cleanSequenceScipion(isAminoacid, iUPACAlphabet, sequence):
-    return cleanSequence(indexToAlphabet(isAminoacid, iUPACAlphabet), sequence)
+    return cleanSequence(iUPACAlphabet, sequence)
 
 
 def cleanSequence(alphabet, sequence):
+    """Remove all characters that are not in the alphabet
+       :param alphabet: the alphabet to use as integer
+       :param sequence: the sequence to clean
+       """
     str_list = []
     for item in sequence.upper():
-        if item in alphabet.letters:
+        if item in Alphabet.alphabets[alphabet]:
             str_list.append(item)
     value = ''.join(str_list)
     return ''.join(str_list)
 
 
-def indexToAlphabet(isAminoacid, iUPACAlphabet):
-    if isAminoacid:
-        if iUPACAlphabet == EXTENDED_PROTEIN_ALPHABET:
-            alphabet = IUPAC.ExtendedIUPACProtein
-        else:
-            alphabet = IUPAC.IUPACProtein
-    else:
-        if iUPACAlphabet == EXTENDED_DNA_ALPHABET:
-            alphabet = IUPAC.ExtendedIUPACDNA
-        elif iUPACAlphabet == AMBIGOUS_DNA_ALPHABET:
-            alphabet = IUPAC.IUPACAmbiguousDNA
-        elif iUPACAlphabet == UNAMBIGOUS_DNA_ALPHABET:
-            alphabet = IUPAC.IUPACUnambiguousDNA
-        elif iUPACAlphabet == AMBIGOUS_RNA_ALPHABET:
-            alphabet = IUPAC.IUPACAmbiguousRNA
-        else:
-            alphabet = IUPAC.IUPACUnambiguousRNA
-    return alphabet
-
-
-def alphabetToIndex(isAminoacid, alphabet):
-    if isAminoacid:
-        if isinstance(alphabet, IUPAC.ExtendedIUPACProtein):
-            return EXTENDED_PROTEIN_ALPHABET
-        else:
-            return PROTEIN_ALPHABET
-    else:
-        if isinstance(alphabet, IUPAC.ExtendedIUPACDNA):
-            return EXTENDED_DNA_ALPHABET
-        elif isinstance(alphabet, IUPAC.IUPACAmbiguousDNA):
-            return AMBIGOUS_DNA_ALPHABET
-        elif isinstance(alphabet, IUPAC.IUPACUnambiguousDNA):
-            return UNAMBIGOUS_DNA_ALPHABET
-        elif isinstance(alphabet, IUPAC.IUPACAmbiguousRNA):
-            return AMBIGOUS_RNA_ALPHABET
-        else:
-            return UNAMBIGOUS_RNA_ALPHABET
 
 
 def saveFileSequencesToAlign(SeqDic, inFile, type="fasta"):
