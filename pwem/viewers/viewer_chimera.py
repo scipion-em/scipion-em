@@ -26,15 +26,13 @@
 # **************************************************************************
 
 import os
-from multiprocessing.connection import Client
-import threading
 
 import pyworkflow.utils as pwutils
 import pyworkflow.viewer as pwviewer
 import pwem.constants as emcts
 import pwem.emlib.metadata as md
 import pwem.objects as emobj
-from pwem import emlib, Domain
+from pwem import emlib
 from pwem import Config as emConfig
 from pwem.objects import SetOfAtomStructs
 
@@ -296,7 +294,6 @@ class ChimeraView(pwviewer.CommandView):
         pwviewer.CommandView.__init__(self, '%s "%s" &' % (program, inputFile),
                                       env=Chimera.getEnviron(), **kwargs)
 
-
 class ChimeraClientView(ChimeraView):
     """ View for calling an external command. """
     pass
@@ -316,7 +313,7 @@ class ChimeraDataView(ChimeraView):
 class ChimeraViewer(pwviewer.Viewer):
     """ Wrapper to visualize PDB object with Chimera. """
     _environments = [pwviewer.DESKTOP_TKINTER]
-    _targets = [emobj.AtomStruct, emobj.PdbFile, emobj.SetOfAtomStructs]
+    _targets = [emobj.AtomStruct, emobj.PdbFile, emobj.SetOfAtomStructs, emobj.Volume]
 
     def __init__(self, **kwargs):
         pwviewer.Viewer.__init__(self, **kwargs)
@@ -368,6 +365,55 @@ class ChimeraViewer(pwviewer.Viewer):
                 f.close()
                 view = ChimeraView(fnCmd)
                 return [view]
+
+        elif issubclass(cls,emobj.Volume):
+            view = ChimeraView(obj.getFileName())
+            return [view]
+
+        else:
+            raise Exception('ChimeraViewer.visualize: '
+                            'can not visualize class: %s' % obj.getClassName())
+
+
+class ChimeraOldView(pwviewer.CommandView):
+    """ View for calling an external command. """
+
+    def __init__(self, inputFile, **kwargs):
+        program = emConfig.CHIMERA_OLD_BINARY_PATH
+
+        if isinstance(inputFile, str):
+            inputFile = [inputFile]
+
+        files = '" "'.join(inputFile)
+        files = '"' + files + '"'
+
+        files = files.replace(":mrc", "")
+        pwviewer.CommandView.__init__(self, '%s  %s &' % (program, files), **kwargs)
+
+
+class ChimeraOldViewer(pwviewer.Viewer):
+    """ Wrapper to visualize PDB object with Chimera. """
+    _targets = [emobj.AtomStruct, emobj.PdbFile, emobj.SetOfAtomStructs, emobj.Volume]
+
+    def __init__(self, **kwargs):
+        pwviewer.Viewer.__init__(self, **kwargs)
+
+    def _visualize(self, obj, **kwargs):
+        cls = type(obj)
+        if issubclass(cls, emobj.AtomStruct):
+            objSet = SetOfAtomStructs.create(outputPath='/tmp', suffix=self.protocol.getObjId())
+            objSet.append(obj)
+            obj, cls = objSet, type(objSet)
+
+        if issubclass(cls, emobj.SetOfAtomStructs):
+
+            files = [os.path.abspath(AS.getFileName()) for AS in obj.iterItems()]
+            view = ChimeraOldView(files)
+            return [view]
+
+        elif issubclass(cls, emobj.Volume):
+            view = ChimeraOldView(obj.getFileName())
+            return [view]
 
         else:
             raise Exception('ChimeraViewer.visualize: '

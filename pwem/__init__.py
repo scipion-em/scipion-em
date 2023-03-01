@@ -72,6 +72,9 @@ class Config(pw.Config):
     CUDA_BIN = _get('CUDA_BIN', '/usr/local/cuda/bin')
     MAX_PREVIEW_FILE_SIZE = float(_get("MAX_PREVIEW_FILE_SIZE", DEFAULT_MAX_PREVIEW_FILE_SIZE))
 
+    # OLD CHIMERA variable
+    CHIMERA_OLD_BINARY_PATH = _get("CHIMERA_OLD_BINARY_PATH",'')
+
 
 class Domain(pyworkflow.plugin.Domain):
     _name = __name__

@@ -42,3 +42,6 @@ from .viewer_sequence import SequenceViewer
 from .viewer_volumes import viewerProtImportVolumes
 from .viewer_angular_dist import EMAngularDistributionViewer
 from .showj import *
+
+if emConfig.CHIMERA_OLD_BINARY_PATH:
+    from .viewer_chimera import ChimeraOldViewer
