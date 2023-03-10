@@ -84,7 +84,7 @@ class ProtBoxSizeCheckpoint(EMProtocol):
 
         form.addParam('boolTimer', params.BooleanParam, default=False,
                       label='Use timer?',
-                      help='Select yes if you want to use an average of the box sizes as output.')
+                      help='Select yes if you want to use a timer to take the decision.')
 
         form.addParam('timeout', StringParam, default="1h",
                       condition="boolTimer==%d" % True,
