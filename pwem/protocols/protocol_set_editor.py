@@ -81,4 +81,8 @@ class ProtSetEditor(EMProtocol):
         outputArgs = {inputSet.getExtended(): modifiedSet}
         self._defineOutputs(**outputArgs)
 
+    def _summary(self):
+
+        return ["The this formula (%s) is/was applied to the items of the input set." % self.formula.get()]
+
 

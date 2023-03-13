@@ -27,7 +27,7 @@ from pwem.viewers import EmPlotter
 from pyworkflow.viewer import Viewer
 import pwem.objects as emobj
 
-class EMAngularDistributionViewer(Viewer):
+class AngularDistributionViewer(Viewer):
     """ Visualize the output of protocol reconstruct swarm """
     _label = 'Score transformation viewer'
     _targets = [emobj.SetOfParticles]

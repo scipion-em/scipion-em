@@ -52,7 +52,7 @@ class DataViewer(pwviewer.Viewer):
         emobj.SetOfClasses3D,
         emobj.SetOfCoordinates,
         emobj.SetOfCTF,
-        emobj.SetOfImages,
+        emobj.SetOfParticles,
         emobj.SetOfMovies,
         emobj.SetOfNormalModes,
         emobj.SetOfPrincipalComponents,
@@ -63,7 +63,8 @@ class DataViewer(pwviewer.Viewer):
         # TiltPairs related data
         emobj.CoordinatesTiltPair,
         emobj.MicrographsTiltPair,
-        emobj.ParticlesTiltPair
+        emobj.ParticlesTiltPair,
+        emobj.SetOfImages,
     ]
     _configRegistry = dict() # Extra configuration for specific types not in this plugin (e.g.: Tomo objects)
 
