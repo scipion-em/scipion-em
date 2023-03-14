@@ -2,6 +2,8 @@ V3.0.25
    - New Angular distribution viewer (right click on any SetOfParticles or SetOfSubtomograms will list it)
    - Use main color config variable
    - New variable: CHIMERA_OLD_BINARY_PATH: Full path to chimera binary. If defined, it will offer BASIC visualization of pdb and volumes
+   - Set editor: summary show the formula
+   - Join sets: clones all attributes, not only 1st level ones.
    - New protocol box size checkpoint to validate an estimated particle size.
 
 developers:
@@ -12,6 +14,7 @@ developers:
    - plotter.py uses logging
    - Plotter.plotAngularDistribution refactored: uses scatter instead of plot fo each point. It may improve performance.
    - Plotter.plotAngularDistributionFromSet new: To plot sets with items.getTransform()
+   - Volume.getHalfMaps: receives optionally "asList" to return the list instead of the string
 
 V3.0.24
 users:

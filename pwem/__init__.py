@@ -32,7 +32,7 @@ from pkg_resources import parse_version
 
 import pyworkflow as pw
 from pyworkflow.protocol import Protocol
-from pyworkflow.utils import weakImport
+from pyworkflow.utils import weakImport, getSubclasses
 from pyworkflow.viewer import Viewer
 from pyworkflow.wizard import Wizard
 import pyworkflow.plugin
@@ -82,7 +82,7 @@ class Domain(pyworkflow.plugin.Domain):
     _protocolClass = Protocol
     _viewerClass = Viewer
     _wizardClass = Wizard
-    _baseClasses = globals()
+    _baseClasses = getSubclasses(EMObject, globals())
 
 
 class Plugin(pyworkflow.plugin.Plugin):

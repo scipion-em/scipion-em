@@ -159,6 +159,7 @@ class ProtUnionSet(ProtSets):
 
     # --------------------------- STEPS functions ------------------------------
     def createOutputStep(self):
+
         set1 = self.inputSets[0].get()  # 1st set (we use it many times)
 
         # Read ClassName and create the corresponding EMSet (SetOfParticles...)
@@ -183,7 +184,7 @@ class ProtUnionSet(ProtSets):
 
         # TODO ROB remove ignoreExtraAttributes condition
         # or implement it. But this will be for Scipion 1.2
-        self.ignoreExtraAttributes = pwobj.Boolean(True)
+        self.ignoreExtraAttributes = pwobj.Boolean(False)
         if self.ignoreExtraAttributes:
             _, commonAttrs = self.commonAttributes()
 

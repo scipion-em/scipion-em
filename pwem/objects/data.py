@@ -873,8 +873,11 @@ class Volume(Image):
     def hasHalfMaps(self):
         return not self._halfMapFilenames.isEmpty()
 
-    def getHalfMaps(self):
-        return self._halfMapFilenames.get()
+    def getHalfMaps(self, asList=False):
+        if asList:
+            return self._halfMapFilenames
+        else:
+            return self._halfMapFilenames.get()
 
     def setHalfMaps(self, listFileNames):
         return self._halfMapFilenames.set(listFileNames)

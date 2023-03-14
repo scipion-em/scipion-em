@@ -40,7 +40,8 @@ from .viewer_chimera import (Chimera, ChimeraView, ChimeraClientView,
                              ChimeraDataView, ChimeraViewer, ChimeraAngDist)
 from .viewer_sequence import SequenceViewer
 from .viewer_volumes import viewerProtImportVolumes
-from .viewer_angular_dist import EMAngularDistributionViewer
+from .viewer_angular_dist import AngularDistributionViewer
+
 from .showj import *
 
 if emConfig.CHIMERA_OLD_BINARY_PATH:
