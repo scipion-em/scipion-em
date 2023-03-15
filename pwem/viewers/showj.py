@@ -29,6 +29,8 @@ The name of ShowJ is due historical reasons. This data visualization tools
 was first called xmipp_show. And later was re-written using Java and 
 became xmipp_showj.
 """
+import logging
+logger = logging.getLogger(__name__)
 
 import os
 import sys
@@ -37,13 +39,14 @@ from collections import OrderedDict
 import subprocess
 
 from pyworkflow import Config
-from pyworkflow.utils import getFreePort
+from pyworkflow.utils import getFreePort, runCommand
 from pwem import Config as emConfig
 import threading
 import shlex
 import socketserver
 from pyworkflow.constants import SCIPION_DOMAIN, SCIPION_HOME_VAR, SCIPION_DEBUG
 
+javaVersion = None
 
 # ----------------------- Showj constants ---------------------------
 COL_RENDER_NONE = 0
@@ -253,6 +256,20 @@ def getArchitecture():
             return a
     return 'NO_ARCH'
 
+def getJavaVersion():
+    global javaVersion
+
+    if javaVersion is None:
+        version = subprocess.check_output([getJavaBin(), '-version'], stderr=subprocess.STDOUT)
+        javaVersion = int(version.decode("utf-8").split('"')[1].split('.')[0])
+
+    return javaVersion
+def getJavaBin():
+
+    if emConfig.JAVA_HOME:
+        return join(emConfig.JAVA_HOME, "bin", "java")
+    else:
+        return  "java"
 
 def getJavaIJappArguments(memory, appName, appArgs):
     """ Build the command line arguments to launch
@@ -272,10 +289,7 @@ def getJavaIJappArguments(memory, appName, appArgs):
     plugins_dir = os.path.join(imagej_home, "plugins")
     arch = getArchitecture()
 
-    import subprocess
-    version = subprocess.check_output(['java', '-version'], stderr=subprocess.STDOUT)
-    majorVersion = int(version.decode("utf-8").split('"')[1].split('.')[0])
-    if majorVersion > 9:
+    if getJavaVersion() > 9:
         args = "-Xmx%(memory)sg -Djava.library.path=%(lib)s -Dplugins.dir=%(plugins_dir)s -cp %(jdkLib)s/*:%(imagej_home)s/*:%(javaLib)s/* %(appName)s %(appArgs)s" % locals()
     else:
         args = "-Xmx%(memory)sg -d%(arch)s -Djava.library.path=%(lib)s -Dplugins.dir=%(plugins_dir)s -cp %(jdkLib)s/*:%(imagej_home)s/*:%(javaLib)s/* %(appName)s %(appArgs)s" % locals()
@@ -305,9 +319,10 @@ def runJavaIJapp(memory, appName, args, env=None):
         pass
 
     args = getJavaIJappArguments(memory, appName, args)
-    print('java %s' % args)
-    # return subprocess.Popen('java ' + args, shell=True, env=env)
-    cmd = ['java'] + shlex.split(args)
+    javaBin = getJavaBin()
+    logger.info('%s %s' % (javaBin, args))
+    cmd = [javaBin] + shlex.split(args)
+
     return subprocess.Popen(cmd, env=env)
 
 

@@ -59,8 +59,8 @@ class Config(pw.Config):
     # Default XMIPP_HOME: needed here for ShowJ viewers
     XMIPP_HOME = _join(_get('XMIPP_HOME', os.path.join(EM_ROOT, 'xmipp')))
 
-    # Get java home, we might need to provide correct default value
-    JAVA_HOME = _get('JAVA_HOME', '')
+    # Get java home, we might need to provide correct default value. Use SCIPION_JAVA_HOME to force it when there is other JAVA_HOME you don't want/cant to change: e.g. pycharm debugging.
+    JAVA_HOME = _get('SCIPION_JAVA_HOME', _get('JAVA_HOME', ''))
     JAVA_MAX_MEMORY = _get('JAVA_MAX_MEMORY', '4')
 
     # MPI
