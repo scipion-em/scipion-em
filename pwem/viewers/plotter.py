@@ -25,7 +25,7 @@
 # **************************************************************************
 import logging
 logger = logging.getLogger(__name__)
-from math import radians
+from math import radians, degrees
 import numpy as np
 import matplotlib.cm as cm
 from scipy.ndimage.filters import gaussian_filter
@@ -101,10 +101,10 @@ class EmPlotter(Plotter):
             return self.plotAngularDistributionHistogram(title, rots, tilts)
         else:
             for item in mdSet:
-                rot, tilt, psi = euler_from_matrix(item.getTransform().getMatrix())
+                psi, tilt, rot = euler_from_matrix(item.getTransform().getMatrix(), axes="szyz" )
 
                 rots.append(rot)
-                tilts.append(tilt)
+                tilts.append(degrees(tilt))
 
                 if weightAttr:
                     weight = getattr(item, weightAttr).get()

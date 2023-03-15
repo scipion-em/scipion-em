@@ -23,6 +23,7 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
+from pyworkflow.gui import showInfo
 from pwem.viewers import EmPlotter
 from pyworkflow.viewer import Viewer
 import pwem.objects as emobj
@@ -30,7 +31,7 @@ import pwem.objects as emobj
 class AngularDistributionViewer(Viewer):
     """ Visualize the output of protocol reconstruct swarm """
     _label = 'Score transformation viewer'
-    _targets = [emobj.SetOfParticles]
+    _targets = [emobj.SetOfParticles, emobj.SetOfVolumes]
 
     @staticmethod
     def plotAngularDistribution(emSet:emobj.EMSet, histogram=False):
@@ -49,6 +50,12 @@ class AngularDistributionViewer(Viewer):
 
         # Weird plot. Not sure if used at all:
         # views.append(self.plotAngularDistribution(outputSet, histogram=True))
+
+        firstItem = outputSet.getFirstItem()
+
+        if not firstItem.hasTransform():
+            showInfo("Missing alignment information", "This set does not have alignment information.")
+            return
 
         views.append(self.plotAngularDistribution(outputSet))
 
