@@ -230,7 +230,13 @@ class ProtUserSubSet(BatchProtocol):
             itemClassName = db.getSelfClassName()
 
             if itemClassName.startswith('Class'):
-                if outputClassName.startswith('SetOfParticles'):
+
+                if hasattr(inputClasses, "REP_SET_TYPE"):
+
+                    return self._createRepresentativesFromClasses(inputClasses,
+                                                                  getattr(inputClasses, "REP_SET_TYPE"))
+
+                elif outputClassName.startswith('SetOfParticles'):
                     return self._createImagesFromClasses(inputClasses)
                 else:
                     return self._createRepresentativesFromClasses(inputClasses,
@@ -288,18 +294,24 @@ class ProtUserSubSet(BatchProtocol):
         assigned to each class.
         """
         inputImages = inputClasses.getImages()
-        createFunc = getattr(self, '_create' + outputClassName)
+
+        if isinstance(outputClassName, str):
+            createFunc = getattr(self, '_create' + outputClassName)
+            output = createFunc()
+        else:
+            output = outputClassName.create(self.getPath())
+
         modifiedSet = inputClasses.getClass()(filename=self._dbName, prefix=self._dbPrefix)
         self.info("Creating REPRESENTATIVES of images from classes, "
                   "sqlite file: %s" % self._dbName)
 
         count = 0
-        output = createFunc()
+
         output.copyInfo(inputImages)
         output.setSamplingRate(None)
         # For now this is to avoid having a wrong alignment.
         # THis is because is getting the alignment info from the input images and this does not have to match.
-        # This created a error when scaling averages #903
+        # This created an error when scaling averages #903
         output.setAlignment(ALIGN_NONE)
         for cls in modifiedSet:
             if cls.isEnabled():
