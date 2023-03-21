@@ -231,14 +231,20 @@ class ProtUserSubSet(BatchProtocol):
 
             if itemClassName.startswith('Class'):
 
-                if hasattr(inputClasses, "REP_SET_TYPE"):
-
+                if outputClassName.startswith('SetOfParticles'):
+                    # Just to be sure, we check first if we want to create a subset of the items of the class
+                    # If this check is not done in first place, it might be possible to enter through the second
+                    # check (if REP_SET_TYPE is set), generating a SetOfVolumes like instead of a SetOfParticles like
+                    # object
+                    return self._createImagesFromClasses(inputClasses)
+                elif hasattr(inputClasses, "REP_SET_TYPE"):
+                    # Second check determines if we want to create a subset of representatives. In addition, we consider
+                    # that the SetOfClasses stores the information about the type of set to be created
                     return self._createRepresentativesFromClasses(inputClasses,
                                                                   getattr(inputClasses, "REP_SET_TYPE"))
-
-                elif outputClassName.startswith('SetOfParticles'):
-                    return self._createImagesFromClasses(inputClasses)
                 else:
+                    # Third check determines if we want to create a subset of representatives. By default,
+                    # a SetOfVolumes is generated
                     return self._createRepresentativesFromClasses(inputClasses,
                                                                   outputClassName.split(',')[0])
             else:
