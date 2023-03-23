@@ -31,7 +31,6 @@ from pyworkflow.utils import findRootFrom
 
 import pwem.objects as emobj
 import pwem.constants as emcts
-from slugify import slugify
 
 class ScipionImport:
     """ Import 
@@ -92,6 +91,7 @@ class ScipionImport:
         inputSet.loadProperty('_hasCtf', False)
         self._findImagesPath(inputSet)
 
+        self.importedFiles = dict()
         partSet = self.protocol._createSetOfParticles()
         partSet.copyInfo(inputSet)
         
@@ -135,11 +135,18 @@ class ScipionImport:
             # Create a link or copy files to extraPath
             # and update the Row properly
             fn = particle.getFileName()
-            imgBase = slugify(fn, regex_pattern = r'[^-a-z0-9._]+')
+            imgBase = basename(fn)
             imgDst = self.protocol._getExtraPath(imgBase)
             if not exists(imgDst):
+                self.importedFiles[imgBase] = fn
                 self.copyOrLink(join(self._imgPath, fn), imgDst)
-            particle.setFileName(imgDst)
+            else:
+                if self.importedFiles[imgBase] != fn:
+                    fileBaseName = fn.replace("/", "_")
+                    imgDst = self.protocol._getExtraPath(fileBaseName)
+                    if not exists(imgDst):
+                        self.importedFiles[fileBaseName] = fn
+                        self.copyOrLink(join(self._imgPath, fn), imgDst)
 
     def loadAcquisitionInfo(self):
         """ Return a dictionary with acquisition values and 
