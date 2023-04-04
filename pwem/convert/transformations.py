@@ -186,7 +186,8 @@ True
 
 """
 
-import math, sys
+import math
+import sys
 
 import numpy as np
 
@@ -365,11 +366,14 @@ def rotation_from_matrix(matrix):
     # rotation angle depending on direction
     cosa = (np.trace(R33) - 1.0) / 2.0
     if abs(direction[2]) > 1e-8:
-        sina = (R[1, 0] + (cosa - 1.0) * direction[0] * direction[1]) / direction[2]
+        sina = (R[1, 0] + (cosa - 1.0) * direction[0] * direction[1]) /\
+             direction[2]
     elif abs(direction[1]) > 1e-8:
-        sina = (R[0, 2] + (cosa - 1.0) * direction[0] * direction[2]) / direction[1]
+        sina = (R[0, 2] + (cosa - 1.0) * direction[0] * direction[2]) /\
+            direction[1]
     else:
-        sina = (R[2, 1] + (cosa - 1.0) * direction[1] * direction[2]) / direction[0]
+        sina = (R[2, 1] + (cosa - 1.0) * direction[1] * direction[2]) /\
+            direction[0]
     angle = math.atan2(sina, cosa)
     return angle, direction, point
 
@@ -1450,12 +1454,14 @@ def quaternion_slerp(quat0, quat1, fraction, spin=0, shortestpath=True):
     q0 += q1
     return q0
 
+
 def quaternion_distance(q1, q2):
     '''Return distance between two quaternions'''
     q = q1 - q2
     module2_q = q[0] ** 2 + np.linalg.norm(q[1:]) ** 2
     dist = 2 * np.arccos(1 - module2_q / 2)
     return dist
+
 
 def weighted_tensor(tuple_q):
     '''Compute the Tensor as needed for the mean of quaterniones'''
@@ -1465,15 +1471,17 @@ def weighted_tensor(tuple_q):
         T += w_i * q.reshape(-1, 1).dot(q.reshape(1, -1))
     return T
 
+
 def normalized_Principal_Eigenvector(T, q_bar):
     '''Normalize the principal eigenvector o a tensor given a quaternion'''
     new_q_bar = T.dot(q_bar.reshape(-1, 1))
     new_q_bar /= np.linalg.norm(new_q_bar)
     return new_q_bar.reshape(-1)
 
+
 def mean_quaternion(T, q_bar_0=None, tol=1e-3):
     '''Compute the mean of a series of quaternions given a weighted Tensor'''
-    if q_bar_0 == None:
+    if q_bar_0 is None:
         q_bar_0 = random_quaternion()
     cost = sys.maxsize
     while (cost > tol):
@@ -1482,10 +1490,12 @@ def mean_quaternion(T, q_bar_0=None, tol=1e-3):
         q_bar_0 = q_bar_f
     return q_bar_f, cost
 
+
 def listQuaternions(matrices):
     '''Convert a list of transformations matrices into a list of quaternions'''
     quaternions = [quaternion_from_matrix(matrix) for matrix in matrices]
     return np.asarray(quaternions)
+
 
 def qDistMatrix(Q1, Q2):
     '''Returns a Distance matrix from two list of quaternions'''
@@ -1494,6 +1504,7 @@ def qDistMatrix(Q1, Q2):
     dist = [[quaternion_distance(Q1[id_1, :], Q2[id_2, :])
             for id_2 in ids_2] for id_1 in ids_1]
     return np.asarray(dist)
+
 
 def random_quaternion(rand=None):
     """Return uniform random unit quaternion.

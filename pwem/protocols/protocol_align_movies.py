@@ -573,56 +573,6 @@ class ProtAlignMovies(ProtProcessMovies):
         runJob(self._log, eman2.Plugin.getProgram(program), args,
                env=eman2.Plugin.getEnviron())
 
-    def averageMovie(self, movie, inputFn, outputMicFn, binFactor=1, roi=None,
-                     dark=None, gain=None, splineOrder=None, outxmd=None):
-        """ Average a movie (using xmipp) taking into account the
-         possible shifts and other alignment parameters.
-         Params:
-            inputFn: input filename, either the movie file or a metadata
-                with the shifts and other info.
-            dark: dark file
-            gain: gain correction file.
-
-         The output will be the averaged micrograph.
-        """
-        args = '-i %s ' % inputFn
-        args += '--sampling %f ' % movie.getSamplingRate()
-        args += '--useInputShifts '
-
-        if binFactor > 1:
-            args += '--bin %f ' % binFactor
-
-        if roi is not None:
-            x, y, _ = movie.getDim()
-            offsetX, offsetY, cropDimX, cropDimY = roi
-            # cropDim value is <= 0 we should take the whole size
-            if cropDimX <= 0:
-                dimX = x - 1
-            else:
-                dimX = offsetX + cropDimX - 1
-
-            if cropDimY <= 0:
-                dimY = y - 1
-            else:
-                dimY = offsetY + cropDimY - 1
-
-            args += '--cropULCorner %d %d ' % (offsetX, offsetY)
-            args += '--cropDRCorner %d %d ' % (dimX, dimY)
-
-        args += ' --oavg %s ' % outputMicFn
-        args += ' --Bspline %d ' % (splineOrder if splineOrder else 1)
-
-        if dark is not None:
-            args += ' --dark ' + dark
-
-        if gain is not None:
-            args += ' --gain ' + gain
-
-        if outxmd is not None:
-            args += ' -o ' + outxmd
-
-        self.__runXmippProgram('xmipp_movie_alignment_correlation', args)
-
     def computePSD(self, inputMic, oroot, dim=384,  # 384 = 128 + 256, which should be fast for any Fourier Transformer
                    overlap=0.4):
         warnings.warn("Use psd = image.computePSD(overlap=0.4, xdim=384, ydim=384, fftthreads=1) instead",

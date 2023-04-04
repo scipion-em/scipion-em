@@ -32,7 +32,7 @@ from pkg_resources import parse_version
 
 import pyworkflow as pw
 from pyworkflow.protocol import Protocol
-from pyworkflow.utils import weakImport
+from pyworkflow.utils import weakImport, getSubclasses
 from pyworkflow.viewer import Viewer
 from pyworkflow.wizard import Wizard
 import pyworkflow.plugin
@@ -42,7 +42,7 @@ from .objects import EMObject
 from .tests import defineDatasets
 from .utils import *
 
-__version__ = '3.0.25'
+__version__ = '3.0.26'
 NO_VERSION_FOUND_STR = "0.0"
 CUDA_LIB_VAR = 'CUDA_LIB'
 
@@ -59,8 +59,8 @@ class Config(pw.Config):
     # Default XMIPP_HOME: needed here for ShowJ viewers
     XMIPP_HOME = _join(_get('XMIPP_HOME', os.path.join(EM_ROOT, 'xmipp')))
 
-    # Get java home, we might need to provide correct default value
-    JAVA_HOME = _get('JAVA_HOME', '')
+    # Get java home, we might need to provide correct default value. Use SCIPION_JAVA_HOME to force it when there is other JAVA_HOME you don't want/cant to change: e.g. pycharm debugging.
+    JAVA_HOME = _get('SCIPION_JAVA_HOME', _get('JAVA_HOME', ''))
     JAVA_MAX_MEMORY = _get('JAVA_MAX_MEMORY', '4')
 
     # MPI
@@ -72,6 +72,9 @@ class Config(pw.Config):
     CUDA_BIN = _get('CUDA_BIN', '/usr/local/cuda/bin')
     MAX_PREVIEW_FILE_SIZE = float(_get("MAX_PREVIEW_FILE_SIZE", DEFAULT_MAX_PREVIEW_FILE_SIZE))
 
+    # OLD CHIMERA variable
+    CHIMERA_OLD_BINARY_PATH = _get("CHIMERA_OLD_BINARY_PATH",'')
+
 
 class Domain(pyworkflow.plugin.Domain):
     _name = __name__
@@ -79,7 +82,7 @@ class Domain(pyworkflow.plugin.Domain):
     _protocolClass = Protocol
     _viewerClass = Viewer
     _wizardClass = Wizard
-    _baseClasses = globals()
+    _baseClasses = getSubclasses(EMObject, globals())
 
 
 class Plugin(pyworkflow.plugin.Plugin):

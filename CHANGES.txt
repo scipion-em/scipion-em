@@ -1,5 +1,27 @@
+V3.0.26
+   - New Angular distribution viewer (right click on any SetOfParticles or SetOfSubtomograms will list it)
+   - Use main color config variable
+   - New variable: CHIMERA_OLD_BINARY_PATH: Full path to chimera binary. If defined, it will offer BASIC visualization of pdb and volumes
+   - Set editor: summary show the formula
+   - Join sets: clones all attributes, not only 1st level ones.
+   - New protocol box size checkpoint to validate an estimated particle size.
+
+developers:
+   - SCIPION_CANCEL_XMIPP_BINDING_WARNING defined in the environment will cancel the warning about xmipp binding missing
+   - SCIPION_CANCEL_XMIPP_BINDING_WARNING defined in the github action
+   - function readFromPDBDatabase tries to download an atomic structure up to 5 times before returning  an error (before it tried only once)
+   - function retry search for fatal error messages in the output and if found,  it aborts instead of trying several times.
+   - plotter.py uses logging
+   - Plotter.plotAngularDistribution refactored: uses scatter instead of plot fo each point. It may improve performance.
+   - Plotter.plotAngularDistributionFromSet new: To plot sets with items.getTransform()
+   - Volume.getHalfMaps: receives optionally "asList" to return the list instead of the string
+   - showj.py: uses logger
+   - showj.py: javaVersion cached, javaBin taken from Config.JAVA_HOME o "java"
+   - showj.py: SCIPION_JAVA_HOME takes priority over JAVA_HOME (pycharm debugging case)
+
 V3.0.25
    - Hot fix: protocols.conf is packaged now!
+
 V3.0.24
 users:
    - Version compatible with latest released scipion-em-chimera plugin.
