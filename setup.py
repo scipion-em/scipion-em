@@ -88,6 +88,6 @@ setup(
         'pyworkflow.plugin': 'pwem = pwem'
     },
     package_data={
-      'pwem': ['scipion_icon.png', 'templates/*', 'cmd/*']
+      'pwem': ['scipion_icon.png', 'protocols.conf', 'templates/*', 'cmd/*']
     }
 )

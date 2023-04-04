@@ -1,3 +1,5 @@
+V3.0.25
+   - Hot fix: protocols.conf is packaged now!
 V3.0.24
 users:
    - Version compatible with latest released scipion-em-chimera plugin.
