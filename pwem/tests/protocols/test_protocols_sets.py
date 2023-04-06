@@ -206,6 +206,32 @@ class TestSets(pwtests.BaseTest):
         self.assertSetSize(p_subset.outputParticles, 5)
         self.assertIsNotNone(p_subset.outputParticles[8], "Subset by id did not picked item 8.")
 
+    def testSubsetByRange(self):
+        logger.info(pwutils.greenStr(" Test Subset by Range"))
+
+        particles = [p.clone() for p in self.particles]
+
+        def _equal(part1, part2):
+            return part1.getObjDict() == part2.getObjDict()
+
+        # Launch random subset
+        ps1 = self.newProtocol(emprot.ProtSubSetRange)
+        ps1.inputSet.set(self.particles)
+        ps1.setObjLabel('Range 1')
+        ps1.rangeFrom.set(1)
+        ps1.rangeTo.set(10)
+        self.launchProtocol(ps1)
+        self.assertSetSize(ps1.outputParticles, 10)
+        self.assertTrue(_equal(particles[0], ps1.outputParticles.getFirstItem()))
+
+        ps2 = self.newProtocol(emprot.ProtSubSetRange)
+        ps2.inputSet.set(self.particles)
+        ps2.setObjLabel('Range 2')
+        ps2.rangeFrom.set(11)
+        ps2.rangeTo.set(20)
+        self.launchProtocol(ps2)
+        self.assertSetSize(ps2.outputParticles, 10)
+        self.assertTrue(_equal(particles[10], ps2.outputParticles.getFirstItem()))
 
     def testSubsetIntersection(self):
         """Test that the subset operation works as expected."""

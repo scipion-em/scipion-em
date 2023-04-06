@@ -884,3 +884,84 @@ class ProtSubSetByCoord(ProtSets):
                        ' particles.' % (self.outputParticles.getSize(),
                                         self.inputParticles.get().getSize())]
         return summary
+
+
+class ProtSubSetRange(ProtSets):
+    """
+    Create a subset from a set based on a range.
+
+    This overlaps with more general protocol subset 'range' option, but this one
+    is more specific and much faster.
+    """
+    _label = 'subset range'
+
+    # -------------------------- DEFINE param functions -----------------------
+    def _defineParams(self, form):
+        form.addSection(label='Input')
+
+        add = form.addParam  # short notation
+        add('inputSet', pwprot.params.PointerParam, pointerClass='EMSet',
+            label="Input set of items", important=True,
+            help='Input from where the subset will be created.')
+        add('rangeFrom', pwprot.params.IntParam, default=1,
+            label="From",
+            help='Starting index (1-based)')
+        add('rangeTo', pwprot.params.IntParam, default=-1,
+            label="To",
+            help='Ending index (-1 means last index).')
+
+    # -------------------------- INSERT steps functions -----------------------
+    def _insertAllSteps(self):
+        self._insertFunctionStep('createOutputStep')
+
+    # -------------------------- STEPS functions ------------------------------
+    def createOutputStep(self):
+        inputSet = self.inputSet.get()
+
+        inputClassName = inputSet.getClassName()
+
+        try:
+            outputSetFunction = getattr(self, "_create%s" % inputClassName)
+            outputSet = outputSetFunction()
+        except Exception:
+            outputSet = inputSet.createCopy(self._getPath())
+
+        outputSet.copyInfo(inputSet)
+
+        start = self.rangeFrom.get() - 1
+        rangeTo = self.rangeTo.get()
+        end = (rangeTo if rangeTo >= 0 else inputSet.getSize()) - 1
+
+        for i, item in enumerate(inputSet.iterItems()):
+            if i > end:
+                break
+            if i >= start:
+                outputSet.append(item)
+
+        if n := outputSet.getSize():
+            key = 'output' + inputClassName.replace('SetOf', '')
+            self._defineOutputs(**{key: outputSet})
+            self._defineTransformRelation(inputSet, outputSet)
+            self.summaryVar.set(f'Created subset of {n} items.')
+        else:
+            self.summaryVar.set('Output was not generated. Resulting set '
+                                'was EMPTY!!!')
+
+    # -------------------------- INFO functions -------------------------------
+    def _validate(self):
+        """Make sure the input data make sense."""
+
+        # Do not allow failing sets:
+        notImplentedClasses = ['SetOfClasses2D', 'SetOfClasses3D',
+                               'CoordinatesTiltPair']
+
+        if not self.inputSet.get():
+            # Since is mandatory is will not validate
+            return []
+
+        c1 = self.inputSet.get().getClassName()
+        if c1 in notImplentedClasses:
+            return ["%s subset is not implemented." % c1]
+
+    def _summary(self):
+        return [self.summaryVar.get('No results yet')]
