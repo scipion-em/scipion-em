@@ -181,7 +181,7 @@ class ProtAlignMovies(ProtProcessMovies):
             mic = micSet.ITEM_TYPE()
             mic.copyObjId(movie)
             mic.setMicName(movie.getMicName())
-            # The subclass protocol is responsible of generating the output
+            # The subclass protocol is responsible for generating the output
             # micrograph file in the extra path with the required name
             extraMicFn = self._getExtraPath(getOutputMicName(movie))
             mic.setFileName(extraMicFn)
