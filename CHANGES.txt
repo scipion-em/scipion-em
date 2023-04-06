@@ -1,4 +1,4 @@
-V3.0.25
+V3.0.26
    - New Angular distribution viewer (right click on any SetOfParticles or SetOfSubtomograms will list it)
    - Use main color config variable
    - New variable: CHIMERA_OLD_BINARY_PATH: Full path to chimera binary. If defined, it will offer BASIC visualization of pdb and volumes
@@ -18,6 +18,9 @@ developers:
    - showj.py: uses logger
    - showj.py: javaVersion cached, javaBin taken from Config.JAVA_HOME o "java"
    - showj.py: SCIPION_JAVA_HOME takes priority over JAVA_HOME (pycharm debugging case)
+
+V3.0.25
+   - Hot fix: protocols.conf is packaged now!
 
 V3.0.24
 users:
