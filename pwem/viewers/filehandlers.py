@@ -61,6 +61,7 @@ class ImageFileHandler(FileHandler):
         if Ccp4Header.isCompatible(filename):
             ccp4Reader= Ccp4Header(filename, readHeader=True)
             expMsg += "\nHeader info: \nSampling rate: %1.2f, %1.2f, %1.2f" % ccp4Reader.getSampling()
+            expMsg += "\nOrigin: %1.2f, %1.2f, %1.2f" % ccp4Reader.getOrigin()
 
 
         return (dimMsg + "\n" + expMsg) % locals()
@@ -123,7 +124,10 @@ class ChimeraHandler(FileHandler):
 
 class MdFileHandler(ImageFileHandler):
     def getFileIcon(self, objFile):
-        return 'file_md.gif'
+        if objFile.isLink():
+            return 'file_md_link.gif'
+        else:
+            return 'file_md.gif'
 
     def _getImgPath(self, mdFn, imgFn):
         """ Get ups and ups until finding the relative location to images. """
