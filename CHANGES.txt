@@ -1,12 +1,15 @@
 V3.0.26
+ Users:
    - New Angular distribution viewer (right click on any SetOfParticles or SetOfSubtomograms will list it)
    - Use main color config variable
    - New variable: CHIMERA_OLD_BINARY_PATH: Full path to chimera binary. If defined, it will offer BASIC visualization of pdb and volumes
    - Set editor: summary show the formula
    - Join sets: clones all attributes, not only 1st level ones.
    - New protocol box size checkpoint to validate an estimated particle size.
+   - The browser thumbnail show origin info for mrc files
+   - Import volumes set the volume comment to the original file.
 
-developers:
+ Developers:
    - SCIPION_CANCEL_XMIPP_BINDING_WARNING defined in the environment will cancel the warning about xmipp binding missing
    - SCIPION_CANCEL_XMIPP_BINDING_WARNING defined in the github action
    - function readFromPDBDatabase tries to download an atomic structure up to 5 times before returning  an error (before it tried only once)
