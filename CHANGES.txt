@@ -1,4 +1,4 @@
-V3.0.26
+V3.0.27
  Users:
    - New Angular distribution viewer (right click on any SetOfParticles or SetOfSubtomograms will list it)
    - Use main color config variable
@@ -8,6 +8,7 @@ V3.0.26
    - New protocol box size checkpoint to validate an estimated particle size.
    - The browser thumbnail show origin info for mrc files
    - Import volumes set the volume comment to the original file.
+   - Fix subset: Scheduling waits when subset uses other set
 
  Developers:
    - SCIPION_CANCEL_XMIPP_BINDING_WARNING defined in the environment will cancel the warning about xmipp binding missing
@@ -21,6 +22,9 @@ V3.0.26
    - showj.py: uses logger
    - showj.py: javaVersion cached, javaBin taken from Config.JAVA_HOME o "java"
    - showj.py: SCIPION_JAVA_HOME takes priority over JAVA_HOME (pycharm debugging case)
+
+V3.0.26
+   - Hot fix: Import volumes annotates the filename in the volume/s
 
 V3.0.25
    - Hot fix: protocols.conf is packaged now!

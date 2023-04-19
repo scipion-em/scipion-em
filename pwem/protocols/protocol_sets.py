@@ -638,24 +638,25 @@ class ProtSubSet(ProtSets):
         notImplentedClasses = ['SetOfClasses2D', 'SetOfClasses3D',
                                'CoordinatesTiltPair']
 
+        errors =[]
+        if not self.chooseAtRandom and not self.selectIds and not self.inputSubSet.get():
+            errors.append("Subsetting without ids or random selection needs the 'Other set' parameter.")
+
         if not self.inputFullSet.get():
-            # Since is mandatory is will not validate
-            return []
+            # Since is mandatory it will not validate
+            # Stop validating since following validations need this set
+            return errors
 
         c1 = self.inputFullSet.get().getClassName()
         if c1 in notImplentedClasses:
-            return ["%s subset is not implemented." % c1]
+            errors.append("%s subset is not implemented." % c1)
 
         # First dispatch the easy case, where we choose elements at random.
         if self.chooseAtRandom:
-            if self.nElements <= self.inputFullSet.get().getSize():
-                return []
-            else:
-                return ["Number of elements to choose cannot be bigger than",
-                        "the number of elements in the set."]
+            if self.nElements > self.inputFullSet.get().getSize():
+                errors.append("Number of elements to choose cannot be bigger than",
+                        "the number of elements in the set.")
 
-        if not self.inputSubSet.get():
-            return []
 
         # Now the harder case: two sets. Check for compatible classes.
 
@@ -674,12 +675,16 @@ class ProtSubSet(ProtSets):
         #   Particles
         #   Volumes
 
+        if not self.inputSubSet.get():
+            # Stop validating since following validations need this set
+            return errors
+        
         c2 = self.inputSubSet.get().getClassName()
         if c2 in notImplentedClasses:
-            return ["%s subset is not implemented." % c2]
+            errors.append("%s subset is not implemented." % c2)
 
         if c1 == c2:
-            return []
+            return errors
 
         # Avoid combinations that make no sense.
         for classA, classesIncompatible in [
@@ -691,9 +696,9 @@ class ProtSubSet(ProtSets):
              {'SetOfMicrographs', 'SetOfMovies', 'SetOfParticles', 'SetOfCoordinates'})]:
             if ((c1 == classA and c2 in classesIncompatible) or
                     (c2 == classA and c1 in classesIncompatible)):
-                return ["The full set and the subset are of incompatible classes",
-                        "%s and %s." % (c1, c2)]
-        return []  # no errors
+                errors.append("The full set and the subset are of incompatible classes",
+                        "%s and %s." % (c1, c2))
+        return errors
 
     def _summary(self):
         if self.summaryVar.hasValue():
