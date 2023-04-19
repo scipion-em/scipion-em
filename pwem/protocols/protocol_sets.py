@@ -571,66 +571,17 @@ class ProtSubSet(ProtSets):
         outputSet.copyInfo(inputFullSet)
 
         if self.chooseAtRandom or self.selectIds:
-            nElementsFull = len(inputFullSet)
-
             if self.chooseAtRandom:
-                nElements = self.nElements.get()
-
                 # Get all ids form iput set
-                ids = list(inputFullSet.getIdSet())
-
-                # Values here releate to ids index above. This is the only way to
-                # do it rendomly since id are not warrantied to be continuous from 1 (subsets, joins,..)
-                chosen = random.sample(range(nElementsFull),
-                                   nElements)
-
-                self.info("Subseting by random positions")
-
+                self.info("Creating subset from random positions from input set.")
+                ids = set(random.sample(inputFullSet.getIdSet(), self.nElements.get()))
             else:
-                chosen = getListFromRangeString(self.range.get())
-                nElements = len(chosen)
-                ids = None
-                self.info("Subseting by ids: %s" % self.range.get())
-
-            self.debug("Chosen ids: %s" % chosen)
-
-            doProgressBar = False
-            if nElementsFull > 10000:  # show progressBar for large sets
-                progress = ProgressBar(total=len(chosen), fmt=ProgressBar.NOBAR)
-                progress.start()
-                sys.stdout.flush()
-                step = max(100, len(chosen) // 100)
-                doProgressBar = True
-            j = 0  # index for chosen list
-
-            for i,value in enumerate(chosen):
-
-                if doProgressBar and ((i+1) % step == 0):
-                     progress.update(i+1)
-
-                # if coming from random id, random values are positions in ids
-                if self.chooseAtRandom:
-                    # get the id at index
-                    value = ids[value]
-
-                # Get the actual element by id
-                elem = inputFullSet[value]
-
-                if elem is None:
-                    self.warning("Item with id %s not found in set. Skipping it." % value)
-                else:
-                    self._append(outputSet, elem)
-
-            if doProgressBar:
-                progress.finish(printNewLine=True)
-
+                self.info("Creating subset by range: %s" % self.range)
+                ids = set(getListFromRangeString(self.range.get()))
         else:
-            # Store the second set
-            inputSet = self.inputSubSet.get()
-
             # Get the ids from both sets
             fullSetIds = inputFullSet.getIdSet()
-            smallSetIds=inputSet.getIdSet()
+            smallSetIds = self.inputSubSet.get().getIdSet()
 
             # The function to include an element or not
             # depends on the set operation
@@ -638,14 +589,30 @@ class ProtSubSet(ProtSets):
             # if it is 'difference' we want that item is None
             # (not found, different)
             if self.setOperation == self.SET_INTERSECTION:
-                finalIds = fullSetIds.intersection(smallSetIds)
+                ids = fullSetIds.intersection(smallSetIds)
             else:
-                finalIds = fullSetIds.difference(smallSetIds)
+                ids = fullSetIds.difference(smallSetIds)
 
-            for finalId in finalIds:
+        progress = None
+        nElements = len(ids)
 
-                item = inputFullSet[finalId]
-                self._append(outputSet, item)
+        if nElements > 100000:  # show progressBar for large sets
+            progress = ProgressBar(total=nElements, fmt=ProgressBar.NOBAR)
+            progress.start()
+            sys.stdout.flush()
+            step = max(25000, nElements // 25000)
+
+        i = 0
+
+        for elem in inputFullSet.iterItems():
+            if elem.getObjId() in ids:
+                i += 1
+                if progress and i % step == 0:
+                    progress.update(i)
+                self._append(outputSet, elem)
+
+        if progress:
+            progress.finish(printNewLine=True)
 
         if outputSet.getSize():
             key = 'output' + inputClassName.replace('SetOf', '')
@@ -884,3 +851,4 @@ class ProtSubSetByCoord(ProtSets):
                        ' particles.' % (self.outputParticles.getSize(),
                                         self.inputParticles.get().getSize())]
         return summary
+
