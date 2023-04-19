@@ -1,3 +1,5 @@
+V3.0.26
+   - Hot fix: Import volumes annotates the filename in the volume/s
 V3.0.25
    - Hot fix: protocols.conf is packaged now!
 V3.0.24
