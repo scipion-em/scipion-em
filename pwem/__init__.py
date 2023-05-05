@@ -225,11 +225,9 @@ def findFolderWithPattern(path, pattern):
     else:
         return findFolderWithPattern(previous, pattern)
 
-# NOTE: This should not happen in production since tifffile is in the requirements and end up in the package metadata
-# The case for this is the "devel installation", that is not using requirements.txt (maybe it should) but directly
-# running pip install -e path/to/scipion-em
-# This triggers the import of tifffile not yet installed, but about to do so.
-with weakImport("tifffile"):
+# This should only happen when scipion is running and not when just imports are happening
+# e.g.: python console usage or plugin packaging (imports triggered by setup.py).
+if pw.Config.isScipionRunning():
     # register file handlers to preview info in the Filebrowser....
     from pyworkflow.gui.browser import FileTreeProvider, STANDARD_IMAGE_EXTENSIONS
     from .viewers.filehandlers import *
@@ -240,6 +238,6 @@ with weakImport("tifffile"):
              '.xmp', '.tif', '.tiff', '.spi', '.mrc', '.map', '.raw',
              '.inf', '.dm3', '.em', '.pif', '.psd', '.spe', '.ser', '.img',
              '.hed', *STANDARD_IMAGE_EXTENSIONS)
-    register(VolFileHandler(), '.vol', '.hdf')
-    register(StackHandler(), '.stk', '.mrcs', '.st', '.pif', '.dm4')
+    register(VolFileHandler(), '.vol', '.hdf', '.rec')
+    register(StackHandler(), '.stk', '.mrcs', '.st', '.pif', '.dm4', '.ali')
     register(ChimeraHandler(), '.bild', '.mrc', '.pdb', '.vol', '.hdf', '.cif', '.mmcif')

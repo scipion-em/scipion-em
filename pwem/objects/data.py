@@ -1435,6 +1435,12 @@ class SetOfImages(EMSet):
 
     def __str__(self):
         """ String representation of a set of images. """
+        s = "%s (%d items, %s, %s%s)" % \
+            (self.getClassName(), self.getSize(),
+             self._dimStr(), self._samplingRateStr(), self._appendStreamState())
+        return s
+    def _samplingRateStr(self):
+        """ Returns how the sampling rate is presented in a 'str' context."""
         sampling = self.getSamplingRate()
 
         if not sampling:
@@ -1442,10 +1448,7 @@ class SetOfImages(EMSet):
                   % self.getName())
             sampling = -999.0
 
-        s = "%s (%d items, %s, %0.2f Å/px%s)" % \
-            (self.getClassName(), self.getSize(),
-             self._dimStr(), sampling, self._appendStreamState())
-        return s
+        return "%0.2f Å/px" % sampling
 
     def _dimStr(self):
         """ Return the string representing the dimensions. """
