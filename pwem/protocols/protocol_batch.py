@@ -25,6 +25,8 @@
 # **************************************************************************
 
 import os
+import shutil
+
 try:
     from itertools import izip
 except ImportError:
@@ -66,12 +68,12 @@ class ProtUserSubSet(BatchProtocol):
         form.addHidden('outputClassName', StringParam)
 
     def _insertAllSteps(self):
-        self._insertFunctionStep('createSetStep')
+        self._insertFunctionStep(self.createSetStep)
 
     def createSetStep(self):
 
         sourceSet = self.inputObject.get()
-        markedSet = self.createSetObject()  # Set equal to sourceSet but marked with disabled
+        markedSet = self.loadMarkedSet()  # Set equal to sourceSet but marked with disabled
         other = self.other.get()
 
         self.info("Source: %s" % sourceSet)
@@ -82,7 +84,7 @@ class ProtUserSubSet(BatchProtocol):
 
 
         # New recommended way to create subsets: making the set responsible for his own subset process
-        # Once all Sets implement appendFromSet and the if below is gone we can remove this "if"
+        # Once all Sets implement createCopy and the if below is gone we can remove this "if"
         if getattr(markedSet, "USE_CREATE_COPY_FOR_SUBSET", False):
             markedSet.loadAllProperties()
             newSet = markedSet.createCopy(self._getPath(),
@@ -113,10 +115,10 @@ class ProtUserSubSet(BatchProtocol):
         elif isinstance(sourceSet, emobj.SetOfCTF):
             outputClassName = self.outputClassName.get()
             if outputClassName.startswith('SetOfMicrographs'):
-                self._createMicsSubSetFromCTF(sourceSet)
+                self._createMicsSubSetFromCTF()
 
         elif isinstance(sourceSet, emobj.SetOfAtomStructs):
-            self._createSubSetFromAtomStructs(sourceSet)
+            self._createSubSetFromAtomStructs()
 
         elif isinstance(sourceSet, MicrographsTiltPair):
             self._createSubSetFromMicrographsTiltPair(sourceSet)
@@ -145,10 +147,10 @@ class ProtUserSubSet(BatchProtocol):
                     volSet.loadAllProperties()
                     self._createSimpleSubset(volSet)
 
-                # Go for a generic way of creating the set the the
+                # Go for a generic way of creating the set the
                 # input set is not registered (typically from viewers)
                 else:
-                    # We might want to do this before, inside the createSetObject
+                    # We might want to do this before, inside the loadMarkedSet
                     markedSet.loadAllProperties()
                     self._createSimpleSubset(markedSet)
 
@@ -164,6 +166,8 @@ class ProtUserSubSet(BatchProtocol):
             output = createFunc()
         except Exception:
             output = inputObj.createCopy(self._getPath())
+
+        self._copySourceProperties(output)
 
         for item in modifiedSet:
             if item.isEnabled():
@@ -191,6 +195,8 @@ class ProtUserSubSet(BatchProtocol):
             output = createFunc()
         except Exception:
             output = inputImages.createCopy(self._getPath())
+
+        self._copySourceProperties(output)
 
         if copyInfoCallback is None:
             # modifiedSet.loadAllProperties()
@@ -247,14 +253,18 @@ class ProtUserSubSet(BatchProtocol):
         else:
             raise Exception("Unrecognized output type: '%s'" % outputClassName)
 
-    def _createMicsSubSetFromCTF(self, inputCTFs):
+    def _createMicsSubSetFromCTF(self):
         """ Create a subset of Micrographs and CTFs when analyzing the CTFs. """
-        outputMics = self._createSetOfMicrographs()
+        inputCTFs = self.inputObject.get()
         outputCtfs = self._createSetOfCTF()
+        self._copySourceProperties(outputCtfs)
+
+        outputMics = self._createSetOfMicrographs()
         setOfMics = inputCTFs.getMicrographs()
         if setOfMics is None:
             raise Exception('Could not create SetOfMicrographs subset from '
                             'this SetOfCTF, the micrographs were not set.')
+        self._copySourceProperties(outputMics, sourceSet=setOfMics)
         outputMics.copyInfo(setOfMics)
 
         modifiedSet = emobj.SetOfCTF(filename=self._dbName,
@@ -374,9 +384,7 @@ class ProtUserSubSet(BatchProtocol):
         """ Create a new set of images joining all images
         assigned to each class.
         """
-        # inputImages = inputClasses.getImages()
         className = inputClasses.getClassName()
-        # createFunc = getattr(self, '_create' + className)
 
         try:
             createFunc = getattr(self, '_create' + className)
@@ -386,6 +394,7 @@ class ProtUserSubSet(BatchProtocol):
 
         modifiedSet = inputClasses.getClass()(filename=self._dbName, prefix=self._dbPrefix)
         self.info("Creating subset of classes from classes, sqlite file: %s" % self._dbName)
+        self._copySourceProperties(output, sourceSet=inputClasses)
         output.copyInfo(inputClasses)
         output.appendFromClasses(modifiedSet)
         # Register outputs
@@ -429,9 +438,10 @@ class ProtUserSubSet(BatchProtocol):
         self._defineTransformRelation(micrographsTiltPair, output)
         return output
 
-    def _createSubSetFromAtomStructs(self, setOfPDBs):
+    def _createSubSetFromAtomStructs(self):
         """ Create a subset of SetOfAtomStruct. """
         output = emobj.SetOfAtomStructs(filename=self._getPath('atomstructs.sqlite'))
+        self._copySourceProperties(output)
         modifiedSet = emobj.SetOfAtomStructs(filename=self._dbName, prefix=self._dbPrefix)
 
         for pdb in modifiedSet:
@@ -441,7 +451,7 @@ class ProtUserSubSet(BatchProtocol):
         # Register outputs
         outputDict = {'outputAtomStructs': output}
         self._defineOutputs(**outputDict)
-        self._defineTransformRelation(setOfPDBs, output)
+        self._defineTransformRelation(self.inputObject.get(), output)
         return output
 
     def _createSubSetFromParticlesTiltPair(self, particlesTiltPair):
@@ -476,12 +486,12 @@ class ProtUserSubSet(BatchProtocol):
         return output
 
     # noinspection PyAttributeOutsideInit
-    def createSetObject(self):
+    def loadMarkedSet(self):
         """ Moves the sqlite with the enable/disable status to its own
         path to keep it and names it subset.sqlite"""
         _dbName, self._dbPrefix = self.sqliteFile.get().split(',')
         self._dbName = self._getPath('subset.sqlite')
-        os.rename(_dbName, self._dbName)
+        shutil.move(_dbName, self._dbName)
 
         if self._dbPrefix.endswith('_'):
             self._dbPrefix = self._dbPrefix[:-1]
@@ -491,8 +501,21 @@ class ProtUserSubSet(BatchProtocol):
         # Ignoring self._dbPrefix here, since we want to load
         # the top-level set in the sqlite file
         setObj = loadSetFromDb(self._dbName)
+
+        self._copySourceProperties(setObj)
+
         return setObj
 
+    def _copySourceProperties(self, outputSet, sourceSet=None):
+        """ Copy properties from sourceSet.
+        NOTE: set properties are partially extensible. They are persisted in rundb or project.sqlite but not
+        in the set sqlite itself. Since here we receive the sourceSet with the properties loaded from run.db
+        We should copy them into the new set """
+
+        if sourceSet is None:
+            sourceSet=self.inputObject.get()
+
+        outputSet.copy(sourceSet)
     def _summary(self):
         summary = []
         msg = self.summaryVar.get()

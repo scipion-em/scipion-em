@@ -182,10 +182,13 @@ class ProtUnionSet(ProtSets):
         # or we find duplicated ids in the sets
         cleanIds = not self.ignoreDuplicates.get() and self.duplicatedIds()
 
-        # TODO ROB remove ignoreExtraAttributes condition
-        # or implement it. But this will be for Scipion 1.2
-        self.ignoreExtraAttributes = pwobj.Boolean(False)
-        if self.ignoreExtraAttributes:
+        ignoreExtraAttributes = False
+
+        differentAttributes= self._warnings()
+
+        if differentAttributes:
+            self.info(differentAttributes)
+            ignoreExtraAttributes = True
             _, commonAttrs = self.commonAttributes()
 
             # Get the 1st level attributes to be used for the copyAttributes
@@ -206,7 +209,7 @@ class ProtUnionSet(ProtSets):
                             continue
                         idsList[objId] =objId
 
-                    if self.ignoreExtraAttributes:
+                    if ignoreExtraAttributes:
                         newObj = itemSet.get().ITEM_TYPE()
                         newObj.copyAttributes(obj, *copyAttrs)
 

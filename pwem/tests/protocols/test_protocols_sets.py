@@ -49,7 +49,7 @@ import pwem.objects as emobj
 # Used by Roberto's test, where he creates the particles "by hand"
 from pwem.objects.data import Particle, SetOfParticles, Acquisition, CTFModel
 from pyworkflow.utils.utils import prettyDict
-from pyworkflow.object import Float
+from pyworkflow.object import Float, String
 
 
 class TestSets(pwtests.BaseTest):
@@ -531,7 +531,7 @@ class TestSets(pwtests.BaseTest):
 
         # import them
         protImport1 = self.newProtocol(emprot.ProtImportParticles,
-                                       objLabel='import set1',
+                                       objLabel='import set1 - 3 extra attributes',
                                        importFrom=emprot.ProtImportParticles.IMPORT_FROM_SCIPION,
                                        sqliteFile=inFileNameMetadata1,
                                        magnification=10000,
@@ -541,7 +541,7 @@ class TestSets(pwtests.BaseTest):
         self.launchProtocol(protImport1)
 
         protImport2 = self.newProtocol(emprot.ProtImportParticles,
-                                       objLabel='import set2',
+                                       objLabel='import set2 - 2 extra attributes',
                                        importFrom=emprot.ProtImportParticles.IMPORT_FROM_SCIPION,
                                        sqliteFile=inFileNameMetadata2,
                                        magnification=10000,
@@ -552,8 +552,7 @@ class TestSets(pwtests.BaseTest):
 
         # create merge protocol
         p_union = self.newProtocol(emprot.ProtUnionSet,
-                                   objLabel='join different attrs',
-                                   ignoreExtraAttributes=True)
+                                   objLabel='join different attrs')
         p_union.inputSets.append(protImport1.outputParticles)
         p_union.inputSets.append(protImport2.outputParticles)
         self.proj.launchProtocol(p_union, wait=True)
@@ -644,7 +643,6 @@ class TestSets(pwtests.BaseTest):
 
     def testEmptiness(self):
 
-        self.assertSetSize(self.particles)
         self.assertSetSize(self.particles, 76)
 
     def testJoinValidation(self):
@@ -673,6 +671,8 @@ class TestUserSubSet(pwtests.BaseTest):
         """
         emProt = self.newProtocol(emprot.ProtImportParticles)
         classes2DSet = emobj.SetOfClasses2D(filename=self.selectionFn)
+        # Add an extra property
+        classes2DSet._extraProp = String("Extra value")
         emProt._defineOutputs(outputClasses=classes2DSet)
         emProt.setFinished()
         emProt._store()
@@ -682,6 +682,11 @@ class TestUserSubSet(pwtests.BaseTest):
                                      sqliteFile=self.selectionFn + ',',
                                      outputClassName='SetOfClasses2D')
         self.launchProtocol(batchProt)
+
+        # Check if the output has the extra property
+        output = batchProt.outputClasses2D
+        self.assertTrue(hasattr(output,"_extraProp"), "Extra property in set not copied")
+        self.assertEqual(output._extraProp.get(), "Extra value", "Extra property in set VALUE is wrong")
 
 
 if __name__ == '__main__':
