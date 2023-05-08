@@ -32,7 +32,7 @@ from pkg_resources import parse_version
 
 import pyworkflow as pw
 from pyworkflow.protocol import Protocol
-from pyworkflow.utils import weakImport, getSubclasses
+from pyworkflow.utils import  getSubclasses
 from pyworkflow.viewer import Viewer
 from pyworkflow.wizard import Wizard
 import pyworkflow.plugin
@@ -121,11 +121,15 @@ class Plugin(pyworkflow.plugin.Plugin):
 
     @classmethod
     def _defineVariables(cls):
-        cls._defineVar(EM_ROOT_VAR, pwem.Config.EM_ROOT)
-        cls._defineEmVar(MAXIT_HOME, 'maxit-10.1')
+        # Avoid defining variables from children that does not define variables.
+        if cls == Plugin:
+            cls._defineVar(EM_ROOT_VAR, pwem.Config.EM_ROOT)
+            cls._defineEmVar(MAXIT_HOME, 'maxit-10.1')
 
-        # Take this initialization event to define own datasets
-        defineDatasets()
+            # Take this initialization event to define own datasets
+            defineDatasets()
+            # Register filehandlers too
+            cls._registerFileHandlers()
 
     @classmethod
     def defineBinaries(cls, env):
@@ -201,7 +205,21 @@ class Plugin(pyworkflow.plugin.Plugin):
             return parse_version(versionStr)
         else:
             return parse_version(default)
+    @classmethod
+    def _registerFileHandlers(cls):
+        # register file handlers to preview info in the Filebrowser....
+        from pyworkflow.gui.browser import FileTreeProvider, STANDARD_IMAGE_EXTENSIONS
+        from .viewers.filehandlers import MdFileHandler, ParticleFileHandler, VolFileHandler, StackHandler, ChimeraHandler
 
+        register = FileTreeProvider.registerFileHandler
+        register(MdFileHandler(), '.xmd', '.star', '.pos', '.ctfparam', '.doc')
+        register(ParticleFileHandler(),
+                 '.xmp', '.tif', '.tiff', '.spi', '.mrc', '.map', '.raw',
+                 '.inf', '.dm3', '.em', '.pif', '.psd', '.spe', '.ser', '.img',
+                 '.hed', *STANDARD_IMAGE_EXTENSIONS)
+        register(VolFileHandler(), '.vol', '.hdf', '.rec')
+        register(StackHandler(), '.stk', '.mrcs', '.st', '.pif', '.dm4', '.ali')
+        register(ChimeraHandler(), '.bild', '.mrc', '.pdb', '.vol', '.hdf', '.cif', '.mmcif')
 
 
 def findFolderWithPattern(path, pattern):
@@ -225,19 +243,3 @@ def findFolderWithPattern(path, pattern):
     else:
         return findFolderWithPattern(previous, pattern)
 
-# This should only happen when scipion is running and not when just imports are happening
-# e.g.: python console usage or plugin packaging (imports triggered by setup.py).
-if pw.Config.isScipionRunning():
-    # register file handlers to preview info in the Filebrowser....
-    from pyworkflow.gui.browser import FileTreeProvider, STANDARD_IMAGE_EXTENSIONS
-    from .viewers.filehandlers import *
-
-    register = FileTreeProvider.registerFileHandler
-    register(MdFileHandler(), '.xmd', '.star', '.pos', '.ctfparam', '.doc')
-    register(ParticleFileHandler(),
-             '.xmp', '.tif', '.tiff', '.spi', '.mrc', '.map', '.raw',
-             '.inf', '.dm3', '.em', '.pif', '.psd', '.spe', '.ser', '.img',
-             '.hed', *STANDARD_IMAGE_EXTENSIONS)
-    register(VolFileHandler(), '.vol', '.hdf', '.rec')
-    register(StackHandler(), '.stk', '.mrcs', '.st', '.pif', '.dm4', '.ali')
-    register(ChimeraHandler(), '.bild', '.mrc', '.pdb', '.vol', '.hdf', '.cif', '.mmcif')
