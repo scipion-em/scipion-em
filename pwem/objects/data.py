@@ -1360,6 +1360,15 @@ class SetOfImages(EMSet):
     def copyInfo(self, other):
         """ Copy basic information (sampling rate and ctf)
         from other set of images to current one"""
+
+        # Copy possible extra properties
+        # NOTE: this copy info, in some cases is  called passing a different set from which
+        # to copy some properties. Others are different and should not be transferred.
+        # If extra set properties need to be transferred across types we need a different solution
+        # In the same way an extra property in a coordinate is not transferred to a particle.
+        if isinstance(other,self.__class__):
+            self.copy(other)
+
         self.copyAttributes(other, '_samplingRate', '_isPhaseFlipped',
                             '_isAmplitudeCorrected', '_alignment')
         self._acquisition.copyInfo(other._acquisition)

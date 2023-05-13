@@ -9,6 +9,7 @@ V3.0.27
    - The browser thumbnail show origin info for mrc files
    - Import volumes set the volume comment to the original file.
    - Fix subset: Scheduling waits when subset uses other set
+   - Fix import averages imports all imagen in the stack.
 
  Developers:
    - SCIPION_CANCEL_XMIPP_BINDING_WARNING defined in the environment will cancel the warning about xmipp binding missing
@@ -25,6 +26,7 @@ V3.0.27
    - Use new Config.isScipionRunning to register file handlers.
    - Use new Config.isScipionRunning to print xmipp ghost message.
    - SetOfImages._samplingRateStr extracted to convert sampling rate to a str
+   - Extra Set properties should be propagated when dealing with sets.
 
 V3.0.26
    - Hot fix: Import volumes annotates the filename in the volume/s

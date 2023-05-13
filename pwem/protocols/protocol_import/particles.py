@@ -285,7 +285,7 @@ class ProtImportAverages(ProtImportParticles):
     def _getImportChoices(self):
         """ Return a list of possible choices
         from which the import can be done.
-        (usually packages formas such as: xmipp3, eman2, relion...etc.
+        (usually packages formats such as: xmipp3, eman2, relion...etc.
         """
         choices = ProtImportImages._getImportChoices(self)
         return choices

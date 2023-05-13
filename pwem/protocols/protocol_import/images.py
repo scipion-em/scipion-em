@@ -152,9 +152,12 @@ class ProtImportImages(ProtImportFiles):
             self.handleImgHed(copyOrLink, fileName, dst)
             
             if self._checkStacks:
-                _, _, _, n = imgh.getDimensions(dst)
-                
+                _, _, z, n = imgh.getDimensions(dst)
+                self.info("Checking if %s is a stack: elements are %s" % (fileName, z))
+                n=z
+
             if n > 1:
+                self.info("Adding each element in the stack")
                 for index in range(1, n+1):
                     img.cleanObjId()
                     img.setMicId(fileId)

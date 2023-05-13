@@ -34,6 +34,7 @@ import unittest
 
 from pwem.protocols import ProtUserSubSet
 from pyworkflow.tests import DataSet
+import pyworkflow.object as pwobj
 
 try:
     from itertools import izip
@@ -83,6 +84,10 @@ class TestSets(pwtests.BaseTest):
         launch(p_imp_micros, wait=True)
         cls.micros = p_imp_micros.outputMicrographs
 
+        # Add an extra property
+        cls.micros._extraProp = pwobj.String("extra prop value")
+        p_imp_micros._store(cls.micros)
+
         # Micrographs SMALL - This is a mic with different dimensions
         logger.info(pwutils.magentaStr("==> Importing data - micrographs SMALL"))
         p_imp_micros = new(emprot.ProtImportMicrographs,
@@ -98,6 +103,8 @@ class TestSets(pwtests.BaseTest):
                             samplingRate=9.896)
         launch(p_imp_volumes, wait=True)
         cls.vols = p_imp_volumes.outputVolumes
+        cls.vols._extraProp = pwobj.String("extra vols value")
+        p_imp_volumes._store(cls.vols)
 
         # Movies
         logger.info(pwutils.magentaStr("==> Importing data - movies"))
@@ -109,6 +116,8 @@ class TestSets(pwtests.BaseTest):
                            darkFile=cls.dataset_ribo.getFile('volume'))
         launch(p_imp_movies, wait=True)
         cls.movies = p_imp_movies.outputMovies
+        cls.movies._extraProp = pwobj.String("extra movies value")
+        p_imp_movies._store(cls.movies)
 
         # Particles
         logger.info(pwutils.magentaStr("==> Importing data - particles"))
@@ -117,6 +126,8 @@ class TestSets(pwtests.BaseTest):
                               samplingRate=3.5)
         launch(p_imp_particles, wait=True)
         cls.particles = p_imp_particles.outputParticles
+        cls.particles._extraProp = pwobj.String("extra particles value")
+        p_imp_particles._store(cls.particles)
 
         # Particles with micId
         logger.info(pwutils.magentaStr("==> Importing data - particles with micId"))
@@ -169,9 +180,13 @@ class TestSets(pwtests.BaseTest):
             for em_set in self.outputs(p_split):
                 for elem in em_set:
                     self.assertTrue(elem.strId() in unsplit_set)
+
+                self.compareSetProperties(set0, em_set)
+
             # Number of elements of all split sets equal to original number?
             self.assertEqual(sum(len(x) for x in self.outputs(p_split)),
                              len(set0))
+
 
         check(self.micros)
         check(self.micros, randomize=True)
@@ -206,6 +221,8 @@ class TestSets(pwtests.BaseTest):
         self.assertSetSize(p_subset.outputParticles, 5)
         self.assertIsNotNone(p_subset.outputParticles[8], "Subset by id did not picked item 8.")
 
+        self.compareSetProperties(p_subset.outputParticles, self.particles)
+
     def testSubsetByRange(self):
         logger.info(pwutils.greenStr(" Test Subset by Range"))
 
@@ -224,6 +241,8 @@ class TestSets(pwtests.BaseTest):
         self.assertSetSize(ps1.outputParticles, 10)
         self.assertTrue(_equal(particles[0], ps1.outputParticles.getFirstItem()))
 
+        self.compareSetProperties(self.particles, ps1.outputParticles)
+
         ps2 = self.newProtocol(emprot.ProtSubSet)
         ps2.inputFullSet.set(self.particles)
         ps2.setObjLabel('Range 2')
@@ -232,6 +251,8 @@ class TestSets(pwtests.BaseTest):
         self.launchProtocol(ps2)
         self.assertSetSize(ps2.outputParticles, 10)
         self.assertTrue(_equal(particles[10], ps2.outputParticles.getFirstItem()))
+
+        self.compareSetProperties(self.particles, ps2.outputParticles)
 
     def testSubsetIntersection(self):
         """Test that the subset operation works as expected."""
@@ -334,6 +355,8 @@ class TestSets(pwtests.BaseTest):
             p = setParts[partId]
             self.assertEqual(p.getMicId(), micId)
 
+            self.compareSetProperties(setParts, self.partMicId)
+
         # Whole set of micrographs
         setMics = self.micsMicId
         # Create a subsets of Mics to apply the protocol
@@ -372,6 +395,8 @@ class TestSets(pwtests.BaseTest):
         self.assertEqual(p_subset_by_coords.outputParticles.getSize(), 5236,
                          "The number of created particles is incorrect.")
 
+        self.compareSetProperties(p_subset_by_coords.outputParticles, self.partMicId)
+
     def testMerge(self):
         """Test that the union operation works as expected."""
 
@@ -395,6 +420,8 @@ class TestSets(pwtests.BaseTest):
             self.assertEqual(len(output), sum(len(x) for x in setsIds))
             # We might be able to do more interesting tests, using the
             # collected setsIds.
+
+            self.compareSetProperties(output, set0)
 
         check(self.micros)
         check(self.vols)
@@ -475,6 +502,8 @@ class TestSets(pwtests.BaseTest):
             self.assertAlmostEqual(attrb1[counter], img._attrb1, 4)
             self.assertAlmostEqual(attrb2[counter], img._attrb2, 4)
             counter += 1
+
+        self.compareSetProperties(p_union.outputSet, protImport1.outputParticles)
 
     def testMergeDifferentAttrs(self):
         """ Test merge from subsets with different attributes.
@@ -576,6 +605,9 @@ class TestSets(pwtests.BaseTest):
                              "Object id's not kept.")
             counter += 1
 
+        self.compareSetProperties(p_union.outputSet, protImport1.outputParticles)
+
+
     def testOrderBy(self):
         """ create set of particles and orderby a given attribute
         """
@@ -641,6 +673,9 @@ class TestSets(pwtests.BaseTest):
                 prettyDict(item2.getObjDict())
             self.assertTrue(item1.equalAttributes(item2), )
 
+        self.compareSetProperties(prot1.outputParticles, protSplitSet.outputParticles01)
+        self.compareSetProperties(prot1.outputParticles, protSplitSet.outputParticles02)
+
     def testEmptiness(self):
 
         self.assertSetSize(self.particles, 76)
@@ -658,6 +693,7 @@ class TestSets(pwtests.BaseTest):
             self.launchProtocol(p_union)
 
 
+
 class TestUserSubSet(pwtests.BaseTest):
     @classmethod
     def setUpClass(cls):
@@ -671,6 +707,11 @@ class TestUserSubSet(pwtests.BaseTest):
         """
         emProt = self.newProtocol(emprot.ProtImportParticles)
         classes2DSet = emobj.SetOfClasses2D(filename=self.selectionFn)
+        # This can't be done. It brings acquisition and other properties that are not longer
+        # valid for this set. -->classes2DSet.loadAllProperties()
+        # Set representatives boolean.
+        classes2DSet._representatives.set(True)
+
         # Add an extra property
         classes2DSet._extraProp = String("Extra value")
         emProt._defineOutputs(outputClasses=classes2DSet)
@@ -687,6 +728,8 @@ class TestUserSubSet(pwtests.BaseTest):
         output = batchProt.outputClasses2D
         self.assertTrue(hasattr(output,"_extraProp"), "Extra property in set not copied")
         self.assertEqual(output._extraProp.get(), "Extra value", "Extra property in set VALUE is wrong")
+
+        self.compareSetProperties(output, classes2DSet)
 
 
 if __name__ == '__main__':
