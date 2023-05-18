@@ -45,6 +45,7 @@ class DataViewer(pwviewer.Viewer):
     """ Wrapper to visualize different type of objects
     with the Xmipp program xmipp_showj
     """
+    _name = "Xmipp metadata viewer"
     _environments = [pwviewer.DESKTOP_TKINTER, pwviewer.WEB_DJANGO]
     _targets = [
         emobj.Image,

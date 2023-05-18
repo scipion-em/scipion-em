@@ -9,6 +9,7 @@ V3.0.27
    - The browser thumbnail show origin info for mrc files
    - Import volumes set the volume comment to the original file.
    - Fix subset: Scheduling waits when subset uses other set
+   - ChimeraViewer: Handle also set of volumes and 3d classifications
 
  Developers:
    - SCIPION_CANCEL_XMIPP_BINDING_WARNING defined in the environment will cancel the warning about xmipp binding missing
