@@ -126,6 +126,7 @@ class Chimera:
         we place a small sphere in the negative axis. In this way
         chimera shows the system of coordinates origin in the
         window center"""
+
         ff = open(bildFileName, "w")
         arrowDict = {}
         arrowDict["x"] = arrowDict["y"] = arrowDict["z"] = \
@@ -145,12 +146,6 @@ class Chimera:
                  ".color 0 0 0\n.sphere 0 0 -%(z)f 0.00001\n" %
                  arrowDict)
         ff.close()
-
-
-def printCmd(cmd):
-    """ Debug function. """
-    pass
-    # print cmd
 
 
 class ChimeraAngDist(pwviewer.CommandView):
@@ -288,32 +283,32 @@ class ChimeraAngDist(pwviewer.CommandView):
 class ChimeraView(pwviewer.CommandView):
     """ View for calling an external command. """
 
-    def __init__(self, inputFile, **kwargs):
-        program = Chimera.getProgram()
-        inputFile = inputFile.replace(":mrc", "")
-        pwviewer.CommandView.__init__(self, '%s "%s" &' % (program, inputFile),
-                                      env=Chimera.getEnviron(), **kwargs)
+    def getProgram(self):
+        return Chimera.getProgram()
 
-class ChimeraClientView(ChimeraView):
-    """ View for calling an external command. """
-    pass
+    def getEnviron(self):
+        return Chimera.getEnviron()
 
+    def __init__(self, inputFiles, **kwargs):
 
-class ChimeraDataView(ChimeraView):
+        if isinstance(inputFiles,str):
+            inputFiles = [inputFiles]
 
-    def __init__(self, dataview, vol, viewParams={}, **kwargs):
-        self.dataview = dataview
-        ChimeraClientView.__init__(self, vol.getFileName())
+        program = self.getProgram()
 
-    def show(self):
-        self.dataview.show()
-        ChimeraClientView.show(self)
-
+        # Join files
+        filesStr = '" "'.join(inputFiles)
+        filesStr = filesStr.replace(":mrc", "")
+        pwviewer.CommandView.__init__(self, '%s "%s" &' % (program, filesStr),
+                                      env=self.getEnviron(), **kwargs)
 
 class ChimeraViewer(pwviewer.Viewer):
     """ Wrapper to visualize PDB object with Chimera. """
     _environments = [pwviewer.DESKTOP_TKINTER]
-    _targets = [emobj.AtomStruct, emobj.PdbFile, emobj.SetOfAtomStructs, emobj.Volume]
+    _targets = [emobj.AtomStruct, emobj.PdbFile, emobj.SetOfAtomStructs,
+                emobj.Volume, emobj.SetOfVolumes, emobj.SetOfClasses3D]
+
+    _name = "ChimeraX"
 
     def __init__(self, **kwargs):
         pwviewer.Viewer.__init__(self, **kwargs)
@@ -370,54 +365,49 @@ class ChimeraViewer(pwviewer.Viewer):
             view = ChimeraView(obj.getFileName())
             return [view]
 
+        elif issubclass(cls,emobj.EMSet):
+            files = obj.getFiles()
+            view = ChimeraView(files)
+            return [view]
+
         else:
             raise Exception('ChimeraViewer.visualize: '
                             'can not visualize class: %s' % obj.getClassName())
 
 
-class ChimeraOldView(pwviewer.CommandView):
+class ChimeraOldView(ChimeraView):
     """ View for calling an external command. """
 
-    def __init__(self, inputFile, **kwargs):
-        program = emConfig.CHIMERA_OLD_BINARY_PATH
+    def getProgram(self):
+        return emConfig.CHIMERA_OLD_BINARY_PATH
 
-        if isinstance(inputFile, str):
-            inputFile = [inputFile]
+    def getEnviron(self):
+        return None
 
-        files = '" "'.join(inputFile)
-        files = '"' + files + '"'
-
-        files = files.replace(":mrc", "")
-        pwviewer.CommandView.__init__(self, '%s  %s &' % (program, files), **kwargs)
-
-
-class ChimeraOldViewer(pwviewer.Viewer):
-    """ Wrapper to visualize PDB object with Chimera. """
-    _targets = [emobj.AtomStruct, emobj.PdbFile, emobj.SetOfAtomStructs, emobj.Volume]
+class ChimeraOldViewer(ChimeraViewer):
+    """ Wrapper to visualize Chimera OLD (1.10 , 1.13, ..) compatible objects . """
+    _name = "Chimera"
 
     def __init__(self, **kwargs):
         pwviewer.Viewer.__init__(self, **kwargs)
 
     def _visualize(self, obj, **kwargs):
         cls = type(obj)
-        if issubclass(cls, emobj.AtomStruct):
-            objSet = SetOfAtomStructs.create(outputPath='/tmp', suffix=self.protocol.getObjId())
-            objSet.append(obj)
-            obj, cls = objSet, type(objSet)
 
-        if issubclass(cls, emobj.SetOfAtomStructs):
+        if issubclass(cls, emobj.EMSet):
 
-            files = [os.path.abspath(AS.getFileName()) for AS in obj.iterItems()]
+            files = obj.getFiles()
             view = ChimeraOldView(files)
             return [view]
 
-        elif issubclass(cls, emobj.Volume):
+        elif issubclass(cls, (emobj.Volume, emobj.AtomStruct)):
             view = ChimeraOldView(obj.getFileName())
             return [view]
 
         else:
-            raise Exception('ChimeraViewer.visualize: '
+            raise Exception('ChimeraOldViewer.visualize: '
                             'can not visualize class: %s' % obj.getClassName())
+
 
 
 def mapVolsWithColorkey(displayVolFileName,
