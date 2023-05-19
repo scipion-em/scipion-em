@@ -67,10 +67,10 @@ class ProtImportSequence(ProtImportFiles):
                       label="Sequence ID", allowsNull=True,
                       expertLevel=params.LEVEL_ADVANCED,
                       help="Write a sequence ID. Otherwise, if the "
-                           "sequence derives from GeneBank/UniProt/PDB "
+                           "sequence derives from GenBank/UniProt/PDB "
                            "databases, the respective database ID will be "
                            "selected as starting sequence ID; examples: if "
-                           "you select GeneBank accession AJ520101, SCIPION "
+                           "you select GenBank accession AJ520101, SCIPION "
                            "will assign AJ520101 as sequence ID; if "
                            "you select UniProt accession P12345, SCIPION will "
                            "assign P12345 as sequence ID; if you "
@@ -87,7 +87,7 @@ class ProtImportSequence(ProtImportFiles):
                       expertLevel=params.LEVEL_ADVANCED,
                       help="Write a description for your sequence. Otherwise, "
                            "if the "
-                           "sequence derives from GeneBank/UniProt/PDB "
+                           "sequence derives from GenBank/UniProt/PDB "
                            "databases, the respective database description "
                            "will be "
                            "selected as starting sequence description. In "
@@ -102,7 +102,7 @@ class ProtImportSequence(ProtImportFiles):
                       help='Select the type of sequence to import.')
         form.addParam('inputProteinSequence', params.EnumParam,
                       choices=['plain text', 'atomic structure', 'file',
-                               'UniProt ID', 'NCBI/GENBANK ID'],
+                               'UniProt ID', 'NCBI/GenBank ID'],
                       display=params.EnumParam.DISPLAY_HLIST,
                       condition='inputSequence == %d' % Alphabet.AMINOACIDS,
                       label="From ",
@@ -156,12 +156,12 @@ class ProtImportSequence(ProtImportFiles):
                            'https://www.uniprot.org/')
         form.addParam('inputNucleotideSequence', params.EnumParam,
                       choices=['plain text', 'atomic structure', 'file',
-                               'GeneBank'],
+                               'NCBI/GenBank ID'],
                       display=params.EnumParam.DISPLAY_HLIST,
                       condition='inputSequence == %d' %  Alphabet.NUCLEOTIDES,
                       label="From ",
                       default=self.IMPORT_FROM_NUCLEOTIDE_PLAIN_TEXT,
-                      help='Select one of the four options: write the '
+                      help='Select one of the five options: write the '
                            'nucleic acid sequence or import it '
                            'from a local file or an online server.')
         form.addParam('nucleotideIUPACalphabet', params.EnumParam,
@@ -262,8 +262,8 @@ class ProtImportSequence(ProtImportFiles):
                                  self.IMPORT_FROM_NUCLEOTIDE_GENEBANK,
                                  Alphabet.AMINOACIDS,
                                  self.IMPORT_FROM_PROTEIN_GENEBANK),
-                      label="GeneBank accession ", allowsNull=True,
-                      help='Write a GeneBank accession.\n')
+                      label="GenBank accession ", allowsNull=True,
+                      help='Write a GenBank accession.\n')
 
 
     def _insertAllSteps(self):
@@ -367,7 +367,7 @@ class ProtImportSequence(ProtImportFiles):
               (selectedChain, selectedModel, self.structureHandler.structure.get_id()))
 
     def sequenceDatabaseDownloadStep(self, sequenceDB):
-        """Download UniProt/GeneBank sequence from its respective database
+        """Download UniProt/GenBank sequence from its respective database
         """
         # sequenceDB = str(sequenceDB)
         isAminoacid=(self.inputSequence == Alphabet.AMINOACIDS)
@@ -482,7 +482,7 @@ class ProtImportSequence(ProtImportFiles):
                     summary.append("Sequence *%s* imported from file *%s*\n"
                                    % (self.name, self.pdbFile.get()))
             elif self.inputNucleotideSequence == self.IMPORT_FROM_NUCLEOTIDE_GENEBANK:
-                summary.append("Sequence *%s* imported from geneBank ID "
+                summary.append("Sequence *%s* imported from GenBank ID "
                                "*%s*\n"
                                % (self.name, geneBankID))
             elif self.inputNucleotideSequence == \
