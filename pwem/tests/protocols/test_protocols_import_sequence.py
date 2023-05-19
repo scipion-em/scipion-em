@@ -501,7 +501,7 @@ class TestImportSequence(TestImportBase):
         sequence = prot19.outputSequence
         self.assertEqual("P12345", sequence.getId())
         self.assertEqual('USER_SEQ', sequence.getSeqName())
-        self.assertEqual('Aspartate aminotransferase, mitochondrial',
+        self.assertEqual('sp|P12345.2|AATM_RABIT RecName: Full=Aspartate aminotransferase, mitochondrial; Short=mAspAT; AltName: Full=Fatty acid-binding protein; Short=FABP-1; AltName: Full=Glutamate oxaloacetate transaminase 2; AltName: Full=Kynurenine aminotransferase 4; AltName: Full=Kynurenine aminotransferase IV; AltName: Full=Kynurenine--oxoglutarate transaminase 4; AltName: Full=Kynurenine--oxoglutarate transaminase IV; AltName: Full=Plasma membrane-associated fatty acid-binding protein; Short=FABPpm; AltName: Full=Transaminase A; Flags: Precursor',
                          sequence.getDescription())
         self.assertEqual("MALLHSARVL", sequence.getSequence()[:10])
         self.assertEqual(Alphabet.EXTENDED_PROTEIN_ALPHABET, sequence.getAlphabet()) # Protein
