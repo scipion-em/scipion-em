@@ -373,7 +373,7 @@ class ProtImportSequence(ProtImportFiles):
         isAminoacid=(self.inputSequence == Alphabet.AMINOACIDS)
         if self.uniProtSequence.get() is not None:
             seqHandler = emconv.SequenceHandler(iUPACAlphabet=Alphabet.EXTENDED_PROTEIN_ALPHABET)
-            dataBase = 'UnitProt'
+            dataBase = 'UniProt'
 
         elif self._getGeneBankID() is not None:
             if isAminoacid:

@@ -145,6 +145,7 @@ class Plugin(pyworkflow.plugin.Plugin):
             env.addPackage(MAXIT, version='10.1',
                            tar=MAXIT_TAR,
                            url=MAXIT_URL,
+                           neededProgs=['gcc', 'flex', 'make', 'bison', 'tcsh'],
                            commands=maxit_commands,
                            default=default)  # scipion installb maxit
             # requirements bison, flex, gcc
