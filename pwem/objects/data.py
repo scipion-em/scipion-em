@@ -1656,6 +1656,12 @@ class SetOfAtomStructs(EMSet):
     # Hint to GUI components to expose internal items for direct selection
     EXPOSE_ITEMS = True
 
+    def getFiles(self):
+        files = []
+        for atomStruct in self.iterItems():
+            files.append(atomStruct.getFileName())
+
+        return files
 
 class SetOfPDBs(SetOfAtomStructs):
     """ Set containing PDB items. """
@@ -2073,6 +2079,13 @@ class SetOfClasses(EMSet):
                 rep.setSamplingRate(classItem.getSamplingRate())
 
                 yield rep
+
+    def getFiles(self):
+
+        files = []
+        for rep in self.iterRepresentatives():
+            files.append(rep.getFileName())
+        return files
 
     def getSamplingRate(self):
         return self.getImages().getSamplingRate()
