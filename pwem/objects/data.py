@@ -1099,7 +1099,7 @@ class AtomStruct(EMFile):
         return self._volume is not None
 
     def setVolume(self, volume):
-        if type(volume) is Volume:
+        if issubclass(type(volume), Volume):
             self._volume = volume
         else:
             raise Exception('TypeError', 'ERROR: SetVolume, This is not a '
