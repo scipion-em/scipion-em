@@ -882,10 +882,17 @@ class Volume(Image):
     def setHalfMaps(self, listFileNames):
         return self._halfMapFilenames.set(listFileNames)
 
-    def fixMRCVolume(self):
-        """ Fixes the header of the mrc file pointed by this object """
-        from pwem.convert.headers import fixVolume
+    def fixMRCVolume(self, setSamplingRate=False):
+        """ Fixes the header of the mrc file pointed by this object
+
+        :param setSamplingRate: if true, it will set the header's sampling rate of the MRC file it refers
+
+        """
+        from pwem.convert.headers import fixVolume, setMRCSamplingRate
         fixVolume(self.getFileName())
+
+        if setSamplingRate:
+            setMRCSamplingRate(self.getFileName(), self.getSamplingRate())
 
     def __str__(self):
         """ returns string representation adding halves info to base image.__str__"""
