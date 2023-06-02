@@ -211,9 +211,9 @@ def moveParticlesInsideUnitCell(setIN, setOUT, sym=cts.SYM_CYCLIC, n=1):
             # print something to keep the user engaged
             logger.info(f"{counter}/{totalNumberOfParticles}")
 
-            particle = moveParticleInsideUnitCell(par, matrixSet, unitCellPlanes)
-            if particle:
-                setOUT.append(par)
+        particle = moveParticleInsideUnitCell(par, matrixSet, unitCellPlanes)
+        if particle:
+            setOUT.append(particle)
 
 
 def moveParticleInsideUnitCell(particle, matrixSet, unitCellPlanes):
