@@ -313,6 +313,9 @@ def getUnitCell(sym=cts.SYM_CYCLIC,
                    circumscribed_radius=circumscribed_radius,
                    offset=offset)
         vectorsEdge, vectorsPlane = c.unitCellPlanes()
+        # This function return a three vector planes, but cyclic symmetry only
+        # need two, so we duplicate the last one
+        vectorsPlane.append(vectorsPlane[-1])
         if DEBUG:
             bildFileName = f'/tmp/C{n}.bild'
             vLabels = ['v1', 'v2', 'v3']
