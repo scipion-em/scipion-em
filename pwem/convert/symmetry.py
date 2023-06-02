@@ -28,6 +28,8 @@ This module returns the matrices related with the different
 point symmetries. Code based on chimera file sym.py
 """
 
+import logging
+logger = logging.getLogger(__name__)
 from math import sin, cos, pi, acos, sqrt, asin
 import numpy as np
 from numpy.linalg import inv as matrix_inverse
@@ -199,43 +201,57 @@ def moveParticlesInsideUnitCell(setIN, setOUT, sym=cts.SYM_CYCLIC, n=1):
     """
     matrixSet = getSymmetryMatrices(sym=sym, n=n)
     # get unit cell vectors
-    _, (u, v, w) = getUnitCell(sym=sym, n=n, generalize=False)
+    _, unitCellPlanes = getUnitCell(sym=sym, n=n, generalize=False)
     counter = 0  # counter for the number of particles
     totalNumberOfParticles = len(setIN)
-    totalNumberOFMatrices = len(matrixSet)
     # for each particle in set
     for par in setIN:
         counter += 1
         if counter % 1000 == 0:
             # print something to keep the user engaged
-            print(f"{counter}/{totalNumberOfParticles}")
-        # get projection direction
-        colunm = par.getTransform().getMatrix()[0:3, 2]
-        if (np.dot(colunm, u) > 0) and \
-           (np.dot(colunm, v) > 0) and \
-           (np.dot(colunm, w) > 0):
-            pass  # particle is inside unit cell so nothing needs to be done
-        else:
-            # loop over symmetry matrices
-            for i, matrix in enumerate(matrixSet):
-                matrix3 = np.array(matrix)
-                matrix3 = np.delete(matrix3, -1, 1)
-                columPrime = matrix3.dot(colunm)[:3]
-                if (np.dot(columPrime, u) > 0) and \
-                   (np.dot(columPrime, v) > 0) and \
-                   (np.dot(columPrime, w) > 0):
-                    matrix = np.dot(matrix, par.getTransform().getMatrix())
-                    t = par.getTransform()
-                    t.setMatrix(matrix)
-                    par.setTransform(t)
-                    setOUT.append(par)
-                    break
-                if i == totalNumberOFMatrices-1:
-                    print("Error: something went wrong in "
-                          "moveParticlesInsideUnitCell")
-                    print("       no matrix move particle direction "
-                          "inside the unit cell")
-                    print("       particle id: ", par.getObjId())
+            logger.info(f"{counter}/{totalNumberOfParticles}")
+
+            particle = moveParticleInsideUnitCell(par, matrixSet, unitCellPlanes)
+            if particle:
+                setOUT.append(par)
+
+
+def moveParticleInsideUnitCell(particle, matrixSet, unitCellPlanes):
+    """ Move a single particle inside it's unit cell
+    :param particle: to move
+    :param matrixSet: value returned when calling getSymmetryMatrices with the right symmetry and order
+    :param unitCellPlanes: second term retunred by getUnitCell when called with the right symmetry and order
+    """
+    # get projection direction
+    colunm = particle.getTransform().getMatrix()[0:3, 2]
+    totalNumberOFMatrices = len(matrixSet)
+    u, v, w = unitCellPlanes
+
+    if (np.dot(colunm, u) > 0) and \
+            (np.dot(colunm, v) > 0) and \
+            (np.dot(colunm, w) > 0):
+        # particle is inside unit cell so nothing needs to be done
+        return particle
+    else:
+        # loop over symmetry matrices
+        for i, matrix in enumerate(matrixSet):
+            matrix3 = np.array(matrix)
+            matrix3 = np.delete(matrix3, -1, 1)
+            columPrime = matrix3.dot(colunm)[:3]
+            if (np.dot(columPrime, u) > 0) and \
+                    (np.dot(columPrime, v) > 0) and \
+                    (np.dot(columPrime, w) > 0):
+                matrix = np.dot(matrix, particle.getTransform().getMatrix())
+                t = particle.getTransform()
+                t.setMatrix(matrix)
+                particle.setTransform(t)
+                return particle
+
+        logger.info("Error: something went wrong in "
+              "moveParticlesInsideUnitCell")
+        logger.info("       no matrix move particle direction "
+              "inside the unit cell")
+        logger.info("       particle id: ", particle.getObjId())
 
 
 def getSymmetryMatrices(sym=cts.SYM_CYCLIC,
@@ -321,7 +337,7 @@ def getUnitCell(sym=cts.SYM_CYCLIC,
             vLabels = ['v1', 'v2', 'v3']
             pLabels = ['p1', 'p2']
     elif sym == cts.SYM_DIHEDRAL_X or sym == cts.SYM_DIHEDRAL_Y:
-        print("getUnitCell:", cts.SCIPION_SYM_NAME[sym])
+        logger.info("getUnitCell: %s" % cts.SCIPION_SYM_NAME[sym])
         d = Dihedral(n=n,
                      center=center,
                      circumscribed_radius=circumscribed_radius,
@@ -503,11 +519,11 @@ class Cyclic(object):
         plane1 = np.cross(v1, v3)
         plane2 = np.cross(v3, v2)
         if DEBUG:
-            print("v1", v1)
-            print("v2", v2)
-            print("v3", v3)
-            print("plane1", plane1)
-            print("plane2", plane2)
+            logger.info("v1 %s" % v1)
+            logger.info("v2 %s" % v2)
+            logger.info("v3 %s" % v3)
+            logger.info("plane1 %s" % plane1)
+            logger.info("plane2 %s" % plane2)
         c = self.circumscribed_radius
         return [v1*c, v2*c, v3*c], [plane1*c, plane2*c]
 
@@ -539,7 +555,7 @@ class Dihedral(Cyclic):
             # matrix that reflect in the x axis
             reflect = ((1, 0, 0, 0), (0, -1, 0, 0), (0, 0, -1, 0))
         else:
-            print("Be carefull untested code")
+            logger.info("Be carefull untested code")
             # matrix that reflect in the y axis
             reflect = ((-1, 0, 0, 0), (0, 1, 0, 0), (0, 0, -1, 0))
 
@@ -555,20 +571,17 @@ class Dihedral(Cyclic):
         vectorsEdge, vectorsPlane = super().unitCellPlanes()
         vectorsPlane.append(np.array([0., 0., self.circumscribed_radius]))
         if DEBUG:
-            print("v1", vectorsEdge[0])
-            print("v2", vectorsEdge[1])
-            print("eigenvector", vectorsEdge[2])
-            print("plane1", vectorsPlane[0])
-            print("plane2", vectorsPlane[1])
-            print("plane3", vectorsPlane[2])
+            logger.info("v1 %s" % vectorsEdge[0])
+            logger.info("v2 %s" % vectorsEdge[1])
+            logger.info("eigenvector %s" % vectorsEdge[2])
+            logger.info("plane1 %s" % vectorsPlane[0])
+            logger.info("plane2 %s" % vectorsPlane[1])
+            logger.info("plane3 %s" % vectorsPlane[2])
 
         return vectorsEdge, vectorsPlane
 
     def coordinateSystemTransform(self, origSym, targetSym):
-        print("========================",
-              cts.SCIPION_SYM_NAME[origSym],
-              "->",
-              cts.SCIPION_SYM_NAME[targetSym])
+        logger.info("========================%s->%s" % ( cts.SCIPION_SYM_NAME[origSym], cts.SCIPION_SYM_NAME[targetSym]))
         if origSym == targetSym:
             return np.identity(4)
         elif origSym == cts.SYM_DIHEDRAL_X and targetSym == cts.SYM_DIHEDRAL_Y:
@@ -645,7 +658,7 @@ class Tetrahedral(object):
         """ get planes that define a unit cell for tetrahedral symmetry of
             order n
         """
-        print("Unit cell sym", cts.SCIPION_SYM_NAME[self.sym])
+        logger.info("Unit cell sym %s" % cts.SCIPION_SYM_NAME[self.sym])
         _ = self.symmetryMatrices()
         # four corners tetahedron
         v0 = _normalizeVector(np.array(self.aa[4][0])) *\
@@ -681,13 +694,13 @@ class Tetrahedral(object):
         plane2 = _normalizeVector(np.cross(_3fold_2, vp))  # green
         plane3 = _normalizeVector(np.cross(vp, _3fold_1))  # magenta
         if DEBUG:
-            print("v0", _3fold_1)
-            print("v1", _3fold_2)
-            print("v2", vp)
+            logger.info("v0 %s" % _3fold_1)
+            logger.info("v1 %s" % _3fold_2)
+            logger.info("v2 %s" % vp)
 
-            print("plane1", plane1)
-            print("plane2", plane2)
-            print("plane3", plane3)
+            logger.info("plane1 %s" % plane1)
+            logger.info("plane2 %s" % plane2)
+            logger.info("plane3 %s" % plane3)
         return [_3fold_1, vp, _3fold_2], [plane1, plane2, plane3]
 
     def coordinateSystemTransform(self, origSym, targetSym):
@@ -698,7 +711,7 @@ class Tetrahedral(object):
               targetSym == cts.SYM_TETRAHEDRAL_Z3 or
               origSym == cts.SYM_TETRAHEDRAL_222 and
               targetSym == cts.SYM_TETRAHEDRAL_Z3R):
-            print("========================222 -> ")
+            logger.info("========================222 -> ")
             matrix = _multiplyMatrices(
                      _rotationTransform((1, 0, 0),
                                         -acos(1 / sqrt(3)) * 180 / pi),
@@ -795,13 +808,13 @@ class Octahedral(object):
         plane3 = _normalizeVector(
             np.cross(_4fold_1, _3fold_1))  # magenta
         if DEBUG:
-            print("v0", _4fold_1)
-            print("v1", _3fold_2)
-            print("v2", _3fold_1)
+            logger.info("v0 %s" % _4fold_1)
+            logger.info("v1 %s" % _3fold_2)
+            logger.info("v2 %s" % _3fold_1)
 
-            print("plane1", plane1)
-            print("plane2", plane2)
-            print("plane3", plane3)
+            logger.info("plane1 %s" % plane1)
+            logger.info("plane2 %s" % plane2)
+            logger.info("plane3 %s" % plane3)
         return [_4fold_1, _3fold_2, _3fold_1], [plane1, plane2, plane3]
 
 
@@ -1330,11 +1343,11 @@ class Icosahedron(object):
         plane2 = _normalizeVector(np.cross(_3fold, _5fold_2))  # magenta
         plane3 = _normalizeVector(np.cross(_5fold_2, _5fold_1))  # green
         if DEBUG:
-            print("v0", _3fold)
-            print("v1", _5fold_1)
-            print("v2", _5fold_2)
+            logger.info("v0 %s" % _3fold)
+            logger.info("v1 %s" % _5fold_1)
+            logger.info("v2 %s" % _5fold_2)
 
-            print("plane1", plane1)
-            print("plane2", plane2)
-            print("plane3", plane3)
+            logger.info("plane1 %s" % plane1)
+            logger.info("plane2 %s" % plane2)
+            logger.info("plane3 %s" % plane3)
         return [_3fold, _5fold_1, _5fold_2], [plane1, plane2, plane3]
