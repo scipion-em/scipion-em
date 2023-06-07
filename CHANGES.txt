@@ -20,6 +20,7 @@ V3.0.27
    - Plotter.plotAngularDistribution refactored: uses scatter instead of plot fo each point. It may improve performance.
    - Plotter.plotAngularDistributionFromSet new: To plot sets with items.getTransform()
    - Volume.getHalfMaps: receives optionally "asList" to return the list instead of the string
+   - Volume.fixMRCVolume, now receives (optionally) a boolean to set the header's sampling rate of the MRC file it refers
    - showj.py: uses logger
    - showj.py: javaVersion cached, javaBin taken from Config.JAVA_HOME o "java"
    - showj.py: SCIPION_JAVA_HOME takes priority over JAVA_HOME (pycharm debugging case)
