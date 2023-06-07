@@ -192,16 +192,102 @@ def _transposeMatrix(tf):
 
 # ==================== End of utility functions ====================
 
+class SymmetryHelper:
+    """ Class to assist the developers with symmetry stuff. It is designed as a static class
+    so there is no need to instantiate it. It provides methods to "move" angles to a common unit cell."""
+
+
+    _matricesAndPlanes = {} # Dictionary to cache all the symmetry matrices and unit cell planes per symmetry order
+
+    @classmethod
+    def getSymmetryKey(cls,sym, n):
+        return "%s_%s" % (sym, n)
+
+    @classmethod
+    def getSymmetryMatricesAndPlanes(cls, sym, n):
+        """ Lazy return a tuple of symmetry matrices and unit cell planes for the symmetry and order passed
+
+        :param sym: Symmetry type
+        :param n: symmetry order
+
+        """
+
+        key = cls.getSymmetryKey(sym, n)
+        if key not in cls._matricesAndPlanes.keys():
+
+            logger.info("Gettting symmetry matrices and unitcell planes for %s, %s." % (sym,n))
+            matrixSet = getSymmetryMatrices(sym=sym, n=n)
+            # get unit cell vectors
+            _, unitCellPlanes = getUnitCell(sym=sym, n=n, generalize=False)
+
+            cls._matricesAndPlanes[key] = (matrixSet, unitCellPlanes)
+
+        return cls._matricesAndPlanes[key]
+
+    @classmethod
+    def moveParticleInsideUnitCell(cls, particle, symmetry, symmetryOrder):
+        """ Edit the particle's transformation matrix to the unit cell define in scipion's convention
+        that is the same as relion and xmipp. This is useful to move for example Cryosparc angles to a same unit cell
+        and therefore been able to plot angular distribution. This method can be used in the typical "updateParticle"
+        callback when generating any output set.
+
+        :param particle: Particle to move.
+        :param symmetry: symmetry type in scipion's convention.
+        :param symmetryOrder: order of the symmetry
+
+        """
+
+        # For C1 particles we do not move angles to unit cell.
+        if symmetry==cts.SYM_CYCLIC and symmetryOrder==1:
+            logger.debug("Cancelling unit cell migration due to C1 symmetry.")
+            return
+
+        matrices, unitCellPlanes = cls.getSymmetryMatricesAndPlanes(symmetry, symmetryOrder)
+        cls._moveParticleInsideUnitCell(particle, matrices, unitCellPlanes)
+
+
+    @classmethod
+    def _moveParticleInsideUnitCell(cls, particle, matrixSet, unitCellPlanes):
+        """ Move a single particle inside its unit cell receiving the matices and unit cell planes
+            :param particle: to move
+            :param matrixSet: value returned when calling getSymmetryMatrices with the right symmetry and order
+            :param unitCellPlanes: second term returned by getUnitCell when called with the right symmetry and order
+            """
+        # get projection direction
+        colunm = particle.getTransform().getMatrix()[0:3, 2]
+        u, v, w = unitCellPlanes
+
+        if (np.dot(colunm, u) > 0) and \
+                (np.dot(colunm, v) > 0) and \
+                (np.dot(colunm, w) > 0):
+            # particle is inside unit cell so nothing needs to be done
+            return particle
+        else:
+            # loop over symmetry matrices
+            for i, matrix in enumerate(matrixSet):
+                matrix3 = np.array(matrix)
+                matrix3 = np.delete(matrix3, -1, 1)
+                columPrime = matrix3.dot(colunm)[:3]
+                if (np.dot(columPrime, u) > 0) and \
+                        (np.dot(columPrime, v) > 0) and \
+                        (np.dot(columPrime, w) > 0):
+                    matrix = np.dot(matrix, particle.getTransform().getMatrix())
+                    t = particle.getTransform()
+                    t.setMatrix(matrix)
+                    particle.setTransform(t)
+                    return particle
+
+            logger.info("Error: something went wrong in moveParticlesInsideUnitCell."
+                        " No matrix found to move particle the inside the unit cell."
+                        "       particle id: %s" % particle.getObjId())
+
 
 def moveParticlesInsideUnitCell(setIN, setOUT, sym=cts.SYM_CYCLIC, n=1):
     """ Move particles projection direction inside the unit cell associated
     to symmetry sym.
     This function (1) gets the symmetry matrices and (2) applies them to
-         each proejction direction until is inside the unit cell.
+         each projection direction until is inside the unit cell.
     """
-    matrixSet = getSymmetryMatrices(sym=sym, n=n)
-    # get unit cell vectors
-    _, unitCellPlanes = getUnitCell(sym=sym, n=n, generalize=False)
     counter = 0  # counter for the number of particles
     totalNumberOfParticles = len(setIN)
     # for each particle in set
@@ -211,47 +297,14 @@ def moveParticlesInsideUnitCell(setIN, setOUT, sym=cts.SYM_CYCLIC, n=1):
             # print something to keep the user engaged
             logger.info(f"{counter}/{totalNumberOfParticles}")
 
-        particle = moveParticleInsideUnitCell(par, matrixSet, unitCellPlanes)
+        particle = SymmetryHelper.moveParticleInsideUnitCell(par, sym, n)
         if particle:
             setOUT.append(particle)
 
 
 def moveParticleInsideUnitCell(particle, matrixSet, unitCellPlanes):
-    """ Move a single particle inside it's unit cell
-    :param particle: to move
-    :param matrixSet: value returned when calling getSymmetryMatrices with the right symmetry and order
-    :param unitCellPlanes: second term retunred by getUnitCell when called with the right symmetry and order
-    """
-    # get projection direction
-    colunm = particle.getTransform().getMatrix()[0:3, 2]
-    totalNumberOFMatrices = len(matrixSet)
-    u, v, w = unitCellPlanes
-
-    if (np.dot(colunm, u) > 0) and \
-            (np.dot(colunm, v) > 0) and \
-            (np.dot(colunm, w) > 0):
-        # particle is inside unit cell so nothing needs to be done
-        return particle
-    else:
-        # loop over symmetry matrices
-        for i, matrix in enumerate(matrixSet):
-            matrix3 = np.array(matrix)
-            matrix3 = np.delete(matrix3, -1, 1)
-            columPrime = matrix3.dot(colunm)[:3]
-            if (np.dot(columPrime, u) > 0) and \
-                    (np.dot(columPrime, v) > 0) and \
-                    (np.dot(columPrime, w) > 0):
-                matrix = np.dot(matrix, particle.getTransform().getMatrix())
-                t = particle.getTransform()
-                t.setMatrix(matrix)
-                particle.setTransform(t)
-                return particle
-
-        logger.info("Error: something went wrong in "
-              "moveParticlesInsideUnitCell")
-        logger.info("       no matrix move particle direction "
-              "inside the unit cell")
-        logger.info("       particle id: ", particle.getObjId())
+    logger.warning("FOR DEVELOPERS: This method is deprecated. Call SymmetryHelper.moveParticleInsideUnitCell for convenience.")
+    SymmetryHelper._moveParticleInsideUnitCell(particle, matrixSet, unitCellPlanes)
 
 
 def getSymmetryMatrices(sym=cts.SYM_CYCLIC,

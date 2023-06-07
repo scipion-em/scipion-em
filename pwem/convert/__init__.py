@@ -27,7 +27,7 @@
 from .utils import getSubsetByDefocus, downloadPdb
 from .atom_struct import AtomicStructHandler, toCIF, cifToPdb
 from .headers import Ccp4Header
-from .symmetry import (getSymmetryMatrices, Icosahedron, getUnitCell, moveParticlesInsideUnitCell)
+from .symmetry import (getSymmetryMatrices, Icosahedron, getUnitCell, moveParticlesInsideUnitCell, SymmetryHelper)
 from .transformations import identity_matrix
 from .sequence import *
 from .transformations import (euler_matrix, translation_matrix,
