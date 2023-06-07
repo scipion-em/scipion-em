@@ -193,11 +193,14 @@ def _transposeMatrix(tf):
 # ==================== End of utility functions ====================
 
 class SymmetryHelper:
-    """ Class to assist the developers with symmetry stuff. It is designed as a static class
-    so there is no need to instantiate it. It provides methods to "move" angles to a common unit cell."""
+    """ This is a static class so there is no need to instantiate it. 
+        Given a symmetry the class provides methods to "move" projection
+        directions to the equivalent orientation that lays within the unit 
+        cells defined at https://scipion-em.github.io/docs/release-3.0.0/docs/developer/symmetries/symmetries.html?highlight=symmetry."""
 
-
-    _matricesAndPlanes = {} # Dictionary to cache all the symmetry matrices and unit cell planes per symmetry order
+    # Dictionary to cache all the symmetry matrices and unit cell 
+    # planes for a particular symmetry
+    _matricesAndPlanes = {}  
 
     @classmethod
     def getSymmetryKey(cls,sym, n):
@@ -226,8 +229,9 @@ class SymmetryHelper:
 
     @classmethod
     def moveParticleInsideUnitCell(cls, particle, symmetry, symmetryOrder):
-        """ Edit the particle's transformation matrix to the unit cell define in scipion's convention
-        that is the same as relion and xmipp. This is useful to move for example Cryosparc angles to a same unit cell
+        """ apply to the projection direction the symmetry matrix that "moves" the projection
+        direction to the equivalent orientation that lays within the "canonical" unit
+        This is useful to move for example Cryosparc angles to a same unit cell
         and therefore been able to plot angular distribution. This method can be used in the typical "updateParticle"
         callback when generating any output set.
 
@@ -248,7 +252,8 @@ class SymmetryHelper:
 
     @classmethod
     def _moveParticleInsideUnitCell(cls, particle, matrixSet, unitCellPlanes):
-        """ Move a single particle inside its unit cell receiving the matices and unit cell planes
+        """ Move the particle projection direction so it lays inside the canonical unit cell,
+            symmetry matrices and unit cell planes needs to be precomputed
             :param particle: to move
             :param matrixSet: value returned when calling getSymmetryMatrices with the right symmetry and order
             :param unitCellPlanes: second term returned by getUnitCell when called with the right symmetry and order
@@ -258,8 +263,8 @@ class SymmetryHelper:
         u, v, w = unitCellPlanes
 
         if (np.dot(colunm, u) > 0) and \
-                (np.dot(colunm, v) > 0) and \
-                (np.dot(colunm, w) > 0):
+           (np.dot(colunm, v) > 0) and \
+           (np.dot(colunm, w) > 0):
             # particle is inside unit cell so nothing needs to be done
             return particle
         else:
@@ -269,8 +274,8 @@ class SymmetryHelper:
                 matrix3 = np.delete(matrix3, -1, 1)
                 columPrime = matrix3.dot(colunm)[:3]
                 if (np.dot(columPrime, u) > 0) and \
-                        (np.dot(columPrime, v) > 0) and \
-                        (np.dot(columPrime, w) > 0):
+                   (np.dot(columPrime, v) > 0) and \
+                   (np.dot(columPrime, w) > 0):
                     matrix = np.dot(matrix, particle.getTransform().getMatrix())
                     t = particle.getTransform()
                     t.setMatrix(matrix)
@@ -278,7 +283,7 @@ class SymmetryHelper:
                     return particle
 
             logger.info("Error: something went wrong in moveParticlesInsideUnitCell."
-                        " No matrix found to move particle the inside the unit cell."
+                        " No matrix found to move the particle projection direction inside the unit cell."
                         "       particle id: %s" % particle.getObjId())
 
 
