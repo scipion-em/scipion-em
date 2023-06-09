@@ -1,4 +1,4 @@
-V3.0.27
+V3.1.0
  Users:
    - New Angular distribution viewer (right click on any SetOfParticles or SetOfSubtomograms will list it)
    - Use main color config variable
@@ -27,6 +27,9 @@ V3.0.27
    - Use new Config.isScipionRunning to register file handlers.
    - Use new Config.isScipionRunning to print xmipp ghost message.
    - SetOfImages._samplingRateStr extracted to convert sampling rate to a str
+
+V3.0.27
+   - Hot fix: Assign angles assign full shifts by default. Warns about loosing xFrac and yFrac comming from extract coordinates.
 
 V3.0.26
    - Hot fix: Import volumes annotates the filename in the volume/s
