@@ -1,3 +1,5 @@
+V3.0.27
+   - Hot fix: Assign angles assign full shifts by default. Warns about loosing xFrac and yFrac comming from extract coordinates.
 V3.0.26
    - Hot fix: Import volumes annotates the filename in the volume/s
 V3.0.25
