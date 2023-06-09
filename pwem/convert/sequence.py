@@ -45,7 +45,9 @@ from pwem.objects.data import Alphabet
 
 class SequenceHandler:
     def __init__(self, sequence=None,
-                 iUPACAlphabet=Alphabet.DUMMY_ALPHABET):
+                 iUPACAlphabet=Alphabet.DUMMY_ALPHABET, doClean=True):
+        iUPACAlphabet = Alphabet.DUMMY_ALPHABET if iUPACAlphabet not in Alphabet.alphabets else iUPACAlphabet
+
         if iUPACAlphabet == Alphabet.DUMMY_ALPHABET:
             self.isAminoacid = None
         else:      
@@ -54,7 +56,10 @@ class SequenceHandler:
         self.alphabet = iUPACAlphabet ##  indexToAlphabet(isAminoacid, iUPACAlphabet)
 
         if sequence is not None:
-            self._sequence = cleanSequence(self.alphabet, sequence)
+            if doClean:
+                self._sequence = cleanSequence(self.alphabet, sequence)
+            else:
+                self._sequence = sequence
         else:
             self._sequence = None
 
@@ -162,13 +167,13 @@ class SequenceHandler:
         error = ""
         if dataBase is None:
             if self.isAminoacid:
-                dataBase = 'UnitProt'
+                dataBase = 'UniProt'
             else:
                 dataBase = 'GeneBank'
 
         while counter <= retries:  # retry up to 5 times if server busy
             try:
-                if dataBase == 'UnitProt':
+                if dataBase == 'UniProt':
                     url = "http://www.uniprot.org/uniprot/%s.xml"
                     format = "uniprot-xml"
 
