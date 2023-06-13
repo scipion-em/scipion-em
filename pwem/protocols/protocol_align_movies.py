@@ -171,6 +171,106 @@ class ProtAlignMovies(ProtProcessMovies):
 
         return outputSet
 
+    def _updateOutputMicSet(self, newDone, sqliteFn, getOutputMicName,
+                            outputName, streamMode):
+        """ Updated the output micrographs set with new items found. """
+        micSet = self._loadOutputSet(emobj.SetOfMicrographs, sqliteFn)
+        doneFailed = []
+
+        for movie in newDone:
+            mic = micSet.ITEM_TYPE()
+            mic.copyObjId(movie)
+            mic.setMicName(movie.getMicName())
+            # The subclass protocol is responsible for generating the output
+            # micrograph file in the extra path with the required name
+            extraMicFn = self._getExtraPath(getOutputMicName(movie))
+            mic.setFileName(extraMicFn)
+            if not os.path.exists(extraMicFn):
+                print(pwutils.yellowStr("WARNING: Micrograph %s was not generated, "
+                                        "can't add it to output set." % extraMicFn))
+                doneFailed.append(movie)
+                continue
+            # Tolerate errors here. Usually here some plots are generated.
+            try:
+                self._preprocessOutputMicrograph(mic, movie)
+            except Exception as e:
+                self.error("Couldn't prepare output details: %s" % e)
+                doneFailed.append(movie)
+                continue
+
+            micSet.append(mic)
+
+        self._updateOutputSet(outputName, micSet, streamMode)
+        if doneFailed:
+            self._writeFailedList(doneFailed)
+
+        if self._firstTimeOutput:
+            # We consider that Movies are 'transformed' into the Micrographs
+            # This will allow to extend the CTF associated to a set of
+            # micrographs to another set of micrographs generated from a
+            # different movie alignment
+            self._defineTransformRelation(self.inputMovies, micSet)
+
+    def _updateOutputMovieSet(self, newDone, streamMode):
+        saveMovie = self.getAttributeValue('doSaveMovie', False)
+        movieSet = self._loadOutputSet(emobj.SetOfMovies, 'movies.sqlite',
+                                       fixSampling=saveMovie)
+
+        # If we need to save the movies
+        if saveMovie:
+            movieSet.setGain(None)
+            movieSet.setDark(None)
+
+        for movie in newDone:
+            try:
+                newMovie = self._createOutputMovie(movie)
+                if newMovie.getAlignment().getShifts()[0]:
+                    movieSet.append(newMovie)
+                else:
+                    print(pwutils.yellowStr("WARNING: Movie %s has empty alignment "
+                                            "data, can't add it to output set."
+                                            % movie.getFileName()))
+
+            # Warn about any exception creating the movie
+            except Exception as e:
+                print(pwutils.redStr("ERROR: Movie %s couldn't be "
+                                     "added to the output set.\n%s"
+                                     % (movie.getFileName(), e)))
+
+        self._updateOutputSet(OUT_MOVIES, movieSet, streamMode)
+
+        if self._firstTimeOutput:
+            # Probably is a good idea to store a cached summary for the
+            # first resulting movie of the processing.
+            self._storeSummary(newDone[0])
+            # If the movies are not written out, then dimensions can be
+            # copied from the input movies
+            if not saveMovie:
+                movieSet.setDim(self.inputMovies.get().getDim())
+            self._defineTransformRelation(self.inputMovies, movieSet)
+
+    def _updateOutputSets(self, newDone, streamMode):
+        if self._createOutputMovies():
+            self._updateOutputMovieSet(newDone, streamMode)
+
+        if self._createOutputMicrographs():
+            self._updateOutputMicSet(newDone, 'micrographs.sqlite',
+                                self._getOutputMicName,
+                                OUT_MICS, streamMode)
+
+        if self._createOutputWeightedMicrographs():
+            self._updateOutputMicSet(newDone, 'micrographs_dose-weighted.sqlite',
+                                self._getOutputMicWtName,
+                                OUT_MICS_DW, streamMode)
+
+        if self._doSplitEvenOdd():
+            self._updateOutputMicSet(newDone, 'micrographs_even.sqlite',
+                                self._getOutputMicEvenName,
+                                OUT_MICS_EVEN, streamMode)
+            self._updateOutputMicSet(newDone, 'micrographs_odd.sqlite',
+                                self._getOutputMicOddName,
+                                OUT_MICS_ODD, streamMode)
+
     def _checkNewOutput(self):
         if getattr(self, 'finished', False):
             return
@@ -187,7 +287,7 @@ class ProtAlignMovies(ProtProcessMovies):
         self.debug('   listOfMovies: %s, doneList: %s, newDone: %s'
                    % (len(self.listOfMovies), len(doneList), len(newDone)))
 
-        firstTime = len(doneList) == 0
+        self._firstTimeOutput = len(doneList) == 0
         allDone = len(doneList) + len(newDone)
         # We have finished when there is not more input movies (stream closed)
         # and the number of processed movies is equal to the number of inputs
@@ -209,100 +309,7 @@ class ProtAlignMovies(ProtProcessMovies):
                    % (allDone, len(self.listOfMovies)))
         self.debug('   streamMode: %s' % streamMode)
 
-        if self._createOutputMovies():
-            saveMovie = self.getAttributeValue('doSaveMovie', False)
-            movieSet = self._loadOutputSet(emobj.SetOfMovies, 'movies.sqlite',
-                                           fixSampling=saveMovie)
-
-            # If need to save the movie
-            if saveMovie:
-                movieSet.setGain(None)
-                movieSet.setDark(None)
-
-            for movie in newDone:
-                try:
-                    newMovie = self._createOutputMovie(movie)
-                    if newMovie.getAlignment().getShifts()[0]:
-                        movieSet.append(newMovie)
-                    else:
-                        print(pwutils.yellowStr("WARNING: Movie %s has empty alignment "
-                                                "data, can't add it to output set."
-                                                % movie.getFileName()))
-
-                # Warn about any exception creating the movie
-                except Exception as e:
-                    print(pwutils.redStr("ERROR: Movie %s couldn't be "
-                                         "added to the output set.\n%s"
-                                         % (movie.getFileName(), e)))
-
-            self._updateOutputSet(OUT_MOVIES, movieSet, streamMode)
-
-            if firstTime:
-                # Probably is a good idea to store a cached summary for the
-                # first resulting movie of the processing.
-                self._storeSummary(newDone[0])
-                # If the movies are not written out, then dimensions can be
-                # copied from the input movies
-                if not saveMovie:
-                    movieSet.setDim(self.inputMovies.get().getDim())
-                self._defineTransformRelation(self.inputMovies, movieSet)
-
-        def _updateOutputMicSet(sqliteFn, getOutputMicName, outputName):
-            """ Updated the output micrographs set with new items found. """
-            micSet = self._loadOutputSet(emobj.SetOfMicrographs, sqliteFn)
-            doneFailed = []
-
-            for movie in newDone:
-                mic = micSet.ITEM_TYPE()
-                mic.copyObjId(movie)
-                mic.setMicName(movie.getMicName())
-                # The subclass protocol is responsible of generating the output
-                # micrograph file in the extra path with the required name
-                extraMicFn = self._getExtraPath(getOutputMicName(movie))
-                mic.setFileName(extraMicFn)
-                if not os.path.exists(extraMicFn):
-                    print(pwutils.yellowStr("WARNING: Micrograph %s was not generated, "
-                                            "can't add it to output set." % extraMicFn))
-                    doneFailed.append(movie)
-                    continue
-                # Tolerate errors here. Usually here some plots are generated.
-                try:
-                    self._preprocessOutputMicrograph(mic, movie)
-                except Exception as e:
-                    self.error("Couldn't prepare output details: %s" % e)
-                    doneFailed.append(movie)
-                    continue
-
-                micSet.append(mic)
-
-            self._updateOutputSet(outputName, micSet, streamMode)
-            if doneFailed:
-                self._writeFailedList(doneFailed)
-
-            if firstTime:
-                # We consider that Movies are 'transformed' into the Micrographs
-                # This will allow to extend the CTF associated to a set of
-                # micrographs to another set of micrographs generated from a
-                # different movie alignment
-                self._defineTransformRelation(self.inputMovies, micSet)
-
-        if self._createOutputMicrographs():
-            _updateOutputMicSet('micrographs.sqlite',
-                                self._getOutputMicName,
-                                OUT_MICS)
-
-        if self._createOutputWeightedMicrographs():
-            _updateOutputMicSet('micrographs_dose-weighted.sqlite',
-                                self._getOutputMicWtName,
-                                OUT_MICS_DW)
-
-        if self._doSplitEvenOdd():
-            _updateOutputMicSet('micrographs_even.sqlite',
-                                self._getOutputMicEvenName,
-                                OUT_MICS_EVEN)
-            _updateOutputMicSet('micrographs_odd.sqlite',
-                                self._getOutputMicOddName,
-                                OUT_MICS_ODD)
+        self._updateOutputSets(newDone, streamMode)
 
         if self.finished:  # Unlock createOutputStep if finished all jobs
             outputStep = self._getFirstJoinStep()
@@ -412,7 +419,6 @@ class ProtAlignMovies(ProtProcessMovies):
         return first, last
 
     def _createOutputMovie(self, movie):
-
         # Parse the alignment parameters and store the log files
         alignedMovie = movie.clone()
         n = movie.getNumberOfFrames()
@@ -424,7 +430,7 @@ class ProtAlignMovies(ProtProcessMovies):
         # function for allow the protocol to not define this flag
         # and use False as default
         if self.getAttributeValue('doSaveMovie', False):
-            # The subclass protocol is responsible of generating the output
+            # The subclass protocol is responsible for generating the output
             # movie file in the extra path with the required name
             extraMovieFn = self._getExtraPath(self._getOutputMovieName(movie))
             alignedMovie.setFileName(extraMovieFn)
@@ -465,7 +471,7 @@ class ProtAlignMovies(ProtProcessMovies):
         # Remove the first extension
         fnRoot = pwutils.removeBaseExt(fn)
         # Check if there is a second extension
-        # (Assuming is is only a dot and 3 or 4 characters after it
+        # (Assuming it is only a dot and 3 or 4 characters after it
         # Do not perform this check if the file name is short
         if len(fnRoot) > 5:
             if fnRoot[-4] == '.' or fnRoot[-5] == '.':

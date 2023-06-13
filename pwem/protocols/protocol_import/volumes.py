@@ -224,11 +224,13 @@ class ProtImportVolumes(ProtImportImages):
             if n == 1:
                 vol.cleanObjId()
                 vol.setFileName(newFileName)
+                vol.setObjComment(vol.getBaseName())
                 volSet.append(vol)
             else:
                 for index in range(1, n + 1):
                     vol.cleanObjId()
                     vol.setLocation(index, newFileName)
+                    vol.setObjComment("%s@%s" % (index, vol.getBaseName()))
                     volSet.append(vol)
 
         if volSet.getSize() > 1:

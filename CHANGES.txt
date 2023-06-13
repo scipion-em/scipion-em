@@ -1,12 +1,17 @@
-V3.0.25
+V3.1.0
+ Users:
    - New Angular distribution viewer (right click on any SetOfParticles or SetOfSubtomograms will list it)
    - Use main color config variable
    - New variable: CHIMERA_OLD_BINARY_PATH: Full path to chimera binary. If defined, it will offer BASIC visualization of pdb and volumes
    - Set editor: summary show the formula
    - Join sets: clones all attributes, not only 1st level ones.
    - New protocol box size checkpoint to validate an estimated particle size.
+   - The browser thumbnail show origin info for mrc files
+   - Import volumes set the volume comment to the original file.
+   - Fix subset: Scheduling waits when subset uses other set
+   - ChimeraViewer: Handle also set of volumes and 3d classifications
 
-developers:
+ Developers:
    - SCIPION_CANCEL_XMIPP_BINDING_WARNING defined in the environment will cancel the warning about xmipp binding missing
    - SCIPION_CANCEL_XMIPP_BINDING_WARNING defined in the github action
    - function readFromPDBDatabase tries to download an atomic structure up to 5 times before returning  an error (before it tried only once)
@@ -15,9 +20,22 @@ developers:
    - Plotter.plotAngularDistribution refactored: uses scatter instead of plot fo each point. It may improve performance.
    - Plotter.plotAngularDistributionFromSet new: To plot sets with items.getTransform()
    - Volume.getHalfMaps: receives optionally "asList" to return the list instead of the string
+   - Volume.fixMRCVolume, now receives (optionally) a boolean to set the header's sampling rate of the MRC file it refers
    - showj.py: uses logger
    - showj.py: javaVersion cached, javaBin taken from Config.JAVA_HOME o "java"
    - showj.py: SCIPION_JAVA_HOME takes priority over JAVA_HOME (pycharm debugging case)
+   - Use new Config.isScipionRunning to register file handlers.
+   - Use new Config.isScipionRunning to print xmipp ghost message.
+   - SetOfImages._samplingRateStr extracted to convert sampling rate to a str
+
+V3.0.27
+   - Hot fix: Assign angles assign full shifts by default. Warns about loosing xFrac and yFrac comming from extract coordinates.
+
+V3.0.26
+   - Hot fix: Import volumes annotates the filename in the volume/s
+
+V3.0.25
+   - Hot fix: protocols.conf is packaged now!
 
 V3.0.24
 users:
