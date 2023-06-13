@@ -182,17 +182,22 @@ class ProtUnionSet(ProtSets):
         # or we find duplicated ids in the sets
         cleanIds = not self.ignoreDuplicates.get() and self.duplicatedIds()
 
-        # TODO ROB remove ignoreExtraAttributes condition
-        # or implement it. But this will be for Scipion 1.2
-        self.ignoreExtraAttributes = pwobj.Boolean(False)
-        if self.ignoreExtraAttributes:
-            _, commonAttrs = self.commonAttributes()
+        # Warn in the log in case attributes will be lost
+        allSetAttributes, commonAttrs = self.commonAttributes()
+        warnings = self._getHeterogeneityWarning(allSetAttributes, commonAttrs)
+        if warnings:
+            self.info(warnings)
 
-            # Get the 1st level attributes to be used for the copyAttributes
-            copyAttrs = list()
-            for attr in commonAttrs:
-                if "." not in attr:
-                    copyAttrs.append(attr)
+        # Always ingnore non common attributtes
+        ignoreExtraAttributes = True
+
+        # Get the 1st level attributes to be used for the copyAttributes
+        copyAttrs = list()
+        for attr in commonAttrs:
+            if "." not in attr:
+                copyAttrs.append(attr)
+
+        self.info("Common attributes to all sets are: %s" % copyAttrs)
 
         idsList = {}
         setNum = 0
@@ -205,8 +210,8 @@ class ProtUnionSet(ProtSets):
                         if objId in idsList:
                             continue
                         idsList[objId] =objId
-
-                    if self.ignoreExtraAttributes:
+                    # This is always TRUE, if stable we could remove the if and the else.
+                    if ignoreExtraAttributes:
                         newObj = itemSet.get().ITEM_TYPE()
                         newObj.copyAttributes(obj, *copyAttrs)
 
@@ -358,9 +363,15 @@ class ProtUnionSet(ProtSets):
 
     def _warnings(self):
         """ Warn about loosing info. """
-        warnings = []
+
         # Get all attributes "map"
         allSetsAttributes, commonAttributes = self.commonAttributes()
+
+        return self._getHeterogeneityWarning(allSetsAttributes, commonAttributes)
+
+    def _getHeterogeneityWarning(self, allSetsAttributes, commonAttributes):
+
+        warnings = []
         # Use a set
         commonAttributes = set(commonAttributes)
 
@@ -381,7 +392,8 @@ class ProtUnionSet(ProtSets):
                             "We will keep only the common ones. This may "
                             "cause the lost of important data like CFT, "
                             "alignment information,...")
-        return warnings
+
+        return  warnings
 
     def _summary(self):
         if not hasattr(self, 'outputSet'):
