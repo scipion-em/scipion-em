@@ -2012,15 +2012,15 @@ class SetOfClasses(EMSet):
         return self._representatives.get()
 
     def getImages(self):
-        """ Return the SetOFImages used to create the SetOfClasses. """
+        """ Return the SetOfImages used to create the SetOfClasses. """
         return self._imagesPointer.get()
 
     def getImagesPointer(self):
-        """" Return the pointer to the SetOFImages used to create the SetOfClasses. """
+        """" Return the pointer to the SetOfImages used to create the SetOfClasses. """
         return self._imagesPointer
 
     def setImages(self, images):
-        """ Set the images (particles 2d associated with this set of classes.
+        """ Set the images (particles) 2d associated with this set of classes.
         Params:
             images: An indirect pointer (with extended) to a set of images.
         """
