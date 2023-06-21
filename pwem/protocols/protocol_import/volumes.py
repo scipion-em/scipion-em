@@ -92,7 +92,6 @@ class ProtImportVolumes(ProtImportImages):
                       condition='importFrom == IMPORT_FROM_FILES',
                       label=pwutils.Message.LABEL_SAMP_RATE)
         form.addParam('setOrigCoord', params.BooleanParam,
-                      condition='importFrom == IMPORT_FROM_FILES',
                       label="Set origin of coordinates",
                       help="Option YES:\nA new volume will be created with "
                            "the "
