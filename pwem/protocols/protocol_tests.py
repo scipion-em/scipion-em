@@ -123,11 +123,11 @@ class ProtStress(ProtTests):
     # ------------------------ INFO functions ----------------------------------
     def _validate(self):
         message = []
-        from distutils.spawn import find_executable
+        from shutil import which
         if self.noCpu == 0 and self.noIO == 0 and self.noMem == 0:
             pass
         else:
-            if find_executable(self._program) is None:
+            if which(self._program) is None:
                 message = ["Cannot find executable %s" % self._program]
         return message
 

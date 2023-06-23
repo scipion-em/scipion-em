@@ -873,16 +873,26 @@ class Volume(Image):
     def hasHalfMaps(self):
         return not self._halfMapFilenames.isEmpty()
 
-    def getHalfMaps(self):
-        return self._halfMapFilenames.get()
+    def getHalfMaps(self, asList=False):
+        if asList:
+            return self._halfMapFilenames
+        else:
+            return self._halfMapFilenames.get()
 
     def setHalfMaps(self, listFileNames):
         return self._halfMapFilenames.set(listFileNames)
 
-    def fixMRCVolume(self):
-        """ Fixes the header of the mrc file pointed by this object """
-        from pwem.convert.headers import fixVolume
+    def fixMRCVolume(self, setSamplingRate=False):
+        """ Fixes the header of the mrc file pointed by this object
+
+        :param setSamplingRate: if true, it will set the header's sampling rate of the MRC file it refers
+
+        """
+        from pwem.convert.headers import fixVolume, setMRCSamplingRate
         fixVolume(self.getFileName())
+
+        if setSamplingRate:
+            setMRCSamplingRate(self.getFileName(), self.getSamplingRate())
 
     def __str__(self):
         """ returns string representation adding halves info to base image.__str__"""
@@ -1034,11 +1044,11 @@ class Sequence(EMObject):
         self._alphabet.set(Integer(seqDic['alphabet']))
         self._isAminoacids.set(Boolean(seqDic['isAminoacids']))
 
-    def exportToFile(self, seqFileName):
+    def exportToFile(self, seqFileName, doClean=True):
         '''Exports the sequence to the specified file'''
         import pwem.convert as emconv
         seqHandler = emconv.SequenceHandler(self.getSequence(),
-                                            self._alphabet.get())
+                                            self._alphabet.get(), doClean)
         # retrieving  args from scipion object
         seqID = self.getId() if self.getId() is not None else 'seqID'
         seqName = self.getSeqName() if self.getSeqName() is not None else 'seqName'
@@ -1049,13 +1059,13 @@ class Sequence(EMObject):
                             #seqFiP12345 USER_SEQ 
                             # Aspartate aminotransferase, mitochondrial
 
-    def appendToFile(self, seqFileName):
+    def appendToFile(self, seqFileName, doClean=True):
         '''Exports the sequence to the specified file. If it already exists,
         the sequence is appended to the ones in the file'''
         logger.info("Appending sequence to file: %s" % seqFileName)
         import pwem.convert as emconv
         seqHandler = emconv.SequenceHandler(self.getSequence(),
-                                            Alphabet.DUMMY_ALPHABET)
+                                            Alphabet.DUMMY_ALPHABET, doClean)
         # retrieving  args from scipion object
         seqID = self.getId() if self.getId() is not None else 'seqID'
         seqName = self.getSeqName() if self.getSeqName() is not None else 'seqName'
@@ -1096,7 +1106,7 @@ class AtomStruct(EMFile):
         return self._volume is not None
 
     def setVolume(self, volume):
-        if type(volume) is Volume:
+        if issubclass(type(volume), Volume):
             self._volume = volume
         else:
             raise Exception('TypeError', 'ERROR: SetVolume, This is not a '
@@ -1432,6 +1442,12 @@ class SetOfImages(EMSet):
 
     def __str__(self):
         """ String representation of a set of images. """
+        s = "%s (%d items, %s, %s%s)" % \
+            (self.getClassName(), self.getSize(),
+             self._dimStr(), self._samplingRateStr(), self._appendStreamState())
+        return s
+    def _samplingRateStr(self):
+        """ Returns how the sampling rate is presented in a 'str' context."""
         sampling = self.getSamplingRate()
 
         if not sampling:
@@ -1439,10 +1455,7 @@ class SetOfImages(EMSet):
                   % self.getName())
             sampling = -999.0
 
-        s = "%s (%d items, %s, %0.2f Å/px%s)" % \
-            (self.getClassName(), self.getSize(),
-             self._dimStr(), sampling, self._appendStreamState())
-        return s
+        return "%0.2f Å/px" % sampling
 
     def _dimStr(self):
         """ Return the string representing the dimensions. """
@@ -1650,6 +1663,12 @@ class SetOfAtomStructs(EMSet):
     # Hint to GUI components to expose internal items for direct selection
     EXPOSE_ITEMS = True
 
+    def getFiles(self):
+        files = []
+        for atomStruct in self.iterItems():
+            files.append(atomStruct.getFileName())
+
+        return files
 
 class SetOfPDBs(SetOfAtomStructs):
     """ Set containing PDB items. """
@@ -1993,15 +2012,15 @@ class SetOfClasses(EMSet):
         return self._representatives.get()
 
     def getImages(self):
-        """ Return the SetOFImages used to create the SetOfClasses. """
+        """ Return the SetOfImages used to create the SetOfClasses. """
         return self._imagesPointer.get()
 
     def getImagesPointer(self):
-        """" Return the pointer to the SetOFImages used to create the SetOfClasses. """
+        """" Return the pointer to the SetOfImages used to create the SetOfClasses. """
         return self._imagesPointer
 
     def setImages(self, images):
-        """ Set the images (particles 2d associated with this set of classes.
+        """ Set the images (particles) 2d associated with this set of classes.
         Params:
             images: An indirect pointer (with extended) to a set of images.
         """
@@ -2067,6 +2086,13 @@ class SetOfClasses(EMSet):
                 rep.setSamplingRate(classItem.getSamplingRate())
 
                 yield rep
+
+    def getFiles(self):
+
+        files = []
+        for rep in self.iterRepresentatives():
+            files.append(rep.getFileName())
+        return files
 
     def getSamplingRate(self):
         return self.getImages().getSamplingRate()
