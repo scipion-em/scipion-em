@@ -1101,7 +1101,7 @@ class TestSymmetry(pwtests.unittest.TestCase):
             img.setObjId(None)
             t.setObjId(None)
 
-        emconv.moveParticlesInsideUnitCell(setIN=imgSetIN, 
+        emconv.moveParticlesInsideUnitCell(setIN=imgSetIN,
                                            setOUT=imgSetOUT,
                                            sym=emcts.SYM_I222r)
         for i, img in enumerate(imgSetOUT):

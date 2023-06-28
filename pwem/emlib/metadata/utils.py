@@ -112,7 +112,10 @@ class Row:
                 if type(value) is str:
                     value = str(value)
                 try:
-                    md.setValue(label, value, objId)
+                    if labelType(label) == 2:
+                        md.setValue(label, float(value), objId)
+                    else:
+                        md.setValue(label, value, objId)
                 except Exception as ex:
                     import sys
                     print("XmippMdRow.writeToMd: Error writing value to metadata.", file=sys.stderr)
