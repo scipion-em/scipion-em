@@ -34,7 +34,8 @@ from pwem.convert.transformations import euler_from_matrix
 from pyworkflow.gui.plotter import Plotter, plt
 import pwem.emlib.metadata as md
 import numbers
-
+from math import sin, cos, atan2, sqrt, pi
+from pwem import emlib
 
 class EmPlotter(Plotter):
     """ Class to create several plots. """
@@ -88,6 +89,17 @@ class EmPlotter(Plotter):
          :param mdSet: Set with alignment information at with item.getTransform()
          :param title: Title of the plot
         """
+        def magnitude(x, y, z):
+            """Returns the magnitude of the vector."""
+            return sqrt(x * x + y * y + z * z)
+
+        def to_spherical(x, y, z):
+            """Converts a cartesian coordinate (x, y, z) into a spherical one (radius, theta, phi)."""
+            radius = magnitude(x, y, z)
+            theta = atan2(sqrt(x * x + y * y), z)
+            phi = atan2(y, x)
+            return (radius, theta, phi)
+
         rots = []
         tilts = []
         weights = []
@@ -100,17 +112,31 @@ class EmPlotter(Plotter):
 
             return self.plotAngularDistributionHistogram(title, rots, tilts)
         else:
+            # f = open("/tmp/kk.bild", "w")
             for item in mdSet:
-                psi, tilt, rot = euler_from_matrix(item.getTransform().getMatrix(), axes="szyz" )
+                psi, tilt, rot = euler_from_matrix(matrix=item.getTransform().getMatrix(), axes='szyz')
+                x, y, z = emlib.Euler_direction(degrees(rot), 
+                                                degrees(tilt), 
+                                                degrees(psi))
+                # f.write(f".sphere {x} {y} {z} .01\n")
+                # radius, theta, phi = to_spherical(x, y, z)
+                ## may be radius, theta, phi = to_spherical(x, z, y)
+                radius, theta, phi = to_spherical(y, z, x)
+                if phi > pi:
+                    phi -= 2*pi
 
-                rots.append(rot)
-                tilts.append(degrees(tilt))
+                if phi < 0:
+                    phi = - phi
+                    theta += pi
+
+                rots.append(theta)  # rot will be ploted as angle so it should be in radians
+                tilts.append(degrees(phi)) # tilt will be ploted as radius and we are used to see it in degrees
 
                 if weightAttr:
                     weight = getattr(item, weightAttr).get()
                     weights.append(weight)
 
-
+            # f.close()
             return self.plotAngularDistribution(title, rots, tilts, weights, **kwargs)
 
     def plotAngularDistributionFromMd(self, mdFile, title, **kwargs):
@@ -284,5 +310,4 @@ class PlotData:
     def _getValue(self, obj, column):
         if column == 'id':
             return obj.getObjId()
-
         return obj.getNestedValue(column)
