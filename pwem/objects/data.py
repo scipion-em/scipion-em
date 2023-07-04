@@ -573,6 +573,8 @@ class Image(EMObject):
         self._origin = None
         if location:
             self.setLocation(location)
+        self._zFlex = None
+        self._zRed = None
 
     def getSamplingRate(self):
         """ Return image sampling rate. (A/pix) """
@@ -652,9 +654,12 @@ class Image(EMObject):
     def getBaseName(self):
         return os.path.basename(self.getFileName())
 
-    def copyInfo(self, other):
+    def copyInfo(self, other, copyAll=False):
         """ Copy basic information """
-        self.copyAttributes(other, '_samplingRate')
+        if copyAll:
+            self.copy(other, copyId=False)
+        else:
+            self.copyAttributes(other, '_samplingRate')
 
     def copyLocation(self, other):
         """ Copy location index and filename from other image. """
@@ -759,6 +764,23 @@ class Image(EMObject):
         """ Sets the sampling rate to the mrc file represented by this image"""
         from pwem.convert.headers import setMRCSamplingRate
         setMRCSamplingRate(self.getFileName(), self.getSamplingRate())
+    def getZFlex(self):
+        return np.fromstring(self._zFlex.get(), sep=",")
+
+    def setZFlex(self, zFlex):
+        csvZFlex = CsvList()
+        for c in zFlex:
+            csvZFlex.append(c)
+        self._zFlex = csvZFlex
+
+    def getZRed(self):
+        return np.fromstring(self._zRed.get(), sep=",")
+
+    def setZRed(self, zRed):
+        csvZRed = CsvList()
+        for c in zRed:
+            csvZRed.append(c)
+        self._zRed = csvZRed
 
 class Micrograph(Image):
     """ Represents an EM Micrograph object """
@@ -1273,6 +1295,7 @@ class SetOfImages(EMSet):
         EMSet.__init__(self, **kwargs)
         self._samplingRate = Float()
         self._hasCtf = Boolean(kwargs.get('ctf', False))
+        self._flexProg = None
         self._alignment = String(ALIGN_NONE)
         self._isPhaseFlipped = Boolean(False)
         self._isAmplitudeCorrected = Boolean(False)
@@ -1294,6 +1317,14 @@ class SetOfImages(EMSet):
 
     def setHasCTF(self, value):
         self._hasCtf.set(value)
+
+    def hasFlexInfo(self):
+        return bool(self._flexProg.get())
+
+    def getFlexProg(self):
+        return self._flexProg.get()
+    def setFlexProg(self, value):
+        self._flexProg = String(value)
 
     def hasAlignment(self):
         return self._alignment != ALIGN_NONE
@@ -1364,12 +1395,15 @@ class SetOfImages(EMSet):
         if self._firstDim.isEmpty():
             self._firstDim.set(image.getDim())
 
-    def copyInfo(self, other):
+    def copyInfo(self, other, copyAll=False):
         """ Copy basic information (sampling rate and ctf)
         from other set of images to current one"""
-        self.copyAttributes(other, '_samplingRate', '_isPhaseFlipped',
-                            '_isAmplitudeCorrected', '_alignment')
-        self._acquisition.copyInfo(other._acquisition)
+        if copyAll:
+            self.copy(other, copyId=False)
+        else:
+            self.copyAttributes(other, '_samplingRate', '_isPhaseFlipped',
+                                '_isAmplitudeCorrected', '_alignment')
+            self._acquisition.copyInfo(other._acquisition)
 
     def getFiles(self):
         filePaths = set()
@@ -1572,11 +1606,11 @@ class SetOfParticles(SetOfImages):
                            "(e.g.: input param are this kind of pointers. Without get()!)")
 
 
-    def copyInfo(self, other):
+    def copyInfo(self, other, copyAll=False):
         """ Copy basic information (voltage, spherical aberration and
         sampling rate) from other set of micrographs to current one.
         """
-        SetOfImages.copyInfo(self, other)
+        SetOfImages.copyInfo(self, other, copyAll=copyAll)
         if hasattr(other, '_coordsPointer'):
             self.copyAttributes(other, "_coordsPointer")
         self.setHasCTF(other.hasCTF())

@@ -69,7 +69,6 @@ class ProtUserSubSet(BatchProtocol):
         self._insertFunctionStep('createSetStep')
 
     def createSetStep(self):
-
         sourceSet = self.inputObject.get()
         markedSet = self.createSetObject()  # Set equal to sourceSet but marked with disabled
         other = self.other.get()
@@ -313,7 +312,7 @@ class ProtUserSubSet(BatchProtocol):
 
         count = 0
 
-        output.copyInfo(inputImages)
+        output.copyInfo(inputImages)  # MEETING: copyAll would be bad here
         output.setSamplingRate(None)
         # For now this is to avoid having a wrong alignment.
         # THis is because is getting the alignment info from the input images and this does not have to match.
@@ -352,7 +351,7 @@ class ProtUserSubSet(BatchProtocol):
         """
         inputImages = inputClasses.getImages()
         # Copy all info form the original 'classified' images
-        output.copyInfo(inputImages)
+        output.copyInfo(inputImages, copyAll=True)
         # Take the alignment of the first class
         cls = inputClasses.getFirstItem()
         output.setAlignment(cls.getAlignment())
