@@ -654,7 +654,10 @@ class Image(EMObject):
 
     def copyInfo(self, other):
         """ Copy basic information """
-        self.copyAttributes(other, '_samplingRate')
+        if type(self) is type(other):
+            self.copy(other, copyId=False)
+        else:
+            self.copyAttributes(other, '_samplingRate')
 
     def copyLocation(self, other):
         """ Copy location index and filename from other image. """
@@ -1367,9 +1370,12 @@ class SetOfImages(EMSet):
     def copyInfo(self, other):
         """ Copy basic information (sampling rate and ctf)
         from other set of images to current one"""
-        self.copyAttributes(other, '_samplingRate', '_isPhaseFlipped',
-                            '_isAmplitudeCorrected', '_alignment')
-        self._acquisition.copyInfo(other._acquisition)
+        if type(self) is type(other):
+            self.copy(other, copyId=False)
+        else:
+            self.copyAttributes(other, '_samplingRate', '_isPhaseFlipped',
+                                '_isAmplitudeCorrected', '_alignment')
+            self._acquisition.copyInfo(other._acquisition)
 
     def getFiles(self):
         filePaths = set()
