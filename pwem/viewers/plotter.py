@@ -81,63 +81,61 @@ class EmPlotter(Plotter):
         a.set_ylabel('Tilt angle')
         return mappable
 
+    def plotAngularDistributionFromSet(self, mdSet, title, weighted=False, histogram=False, **kwargs):
+        """ Read the values of the transformation matrix
+                 and plot its histogram or its angular distribution.
 
-    def plotAngularDistributionFromSet(self, mdSet, title, weightAttr=None, histogram=False, **kwargs):
+                 :param mdSet: Set with alignment information at with item.getTransform()
+                 :param title: Title of the plot
+                """
+
+        def eulerAnglesGetter (item):
+
+            psi, tilt, rot = euler_from_matrix(matrix=item.getTransform().getMatrix(), axes='szyz')
+
+            return degrees(psi), degrees(tilt), degrees(rot)
+
+
+        self.plotAngularDistributionBase(mdSet, eulerAnglesGetter, title, weighted, histogram, **kwargs)
+
+    def plotAngularDistributionBase(self, data, eulerAnglesGetterCallback, title, weighted=False, histogram=False, **kwargs):
         """ Read the values of the transformation matrix
          and plot its histogram or its angular distribution.
 
-         :param mdSet: Set with alignment information at with item.getTransform()
-         :param title: Title of the plot
+         :param data: any particles iterator containing particles with alignment information.
+         :param eulerAnglesGetterCallback: a callback to extract rot, tilt, psi IN DEGREES from each row, receiving the row/item.
+         :param title: Title of the plot.
+         :param weighted: Pass true to show a weighted plot.
+
         """
-        def magnitude(x, y, z):
-            """Returns the magnitude of the vector."""
-            return sqrt(x * x + y * y + z * z)
 
-        def to_spherical(x, y, z):
-            """Converts a cartesian coordinate (x, y, z) into a spherical one (radius, theta, phi)."""
-            radius = magnitude(x, y, z)
-            theta = atan2(sqrt(x * x + y * y), z)
-            phi = atan2(y, x)
-            return (radius, theta, phi)
-
-        rots = []
-        tilts = []
+        thetas = []
+        phis = []
         weights = []
 
         if histogram:
-            for item in mdSet:
-                rot, tilt, psi = euler_from_matrix(item.getTransform().getMatrix())
-                rots.append(rot)
-                tilts.append(tilt)
+            for item in data:
+                rot, tilt, psi = eulerAnglesGetterCallback(item)
+                thetas.append(rot)
+                phis.append(tilt)
 
-            return self.plotAngularDistributionHistogram(title, rots, tilts)
+            return self.plotAngularDistributionHistogram(title, thetas, phis)
         else:
             # f = open("/tmp/kk.bild", "w")
-            for item in mdSet:
-                psi, tilt, rot = euler_from_matrix(matrix=item.getTransform().getMatrix(), axes='szyz')
-                x, y, z = emlib.Euler_direction(degrees(rot), 
-                                                degrees(tilt), 
-                                                degrees(psi))
-                # f.write(f".sphere {x} {y} {z} .01\n")
-                # radius, theta, phi = to_spherical(x, y, z)
-                ## may be radius, theta, phi = to_spherical(x, z, y)
-                radius, theta, phi = to_spherical(y, z, x)
-                if phi > pi:
-                    phi -= 2*pi
+            print("Psi\tTilt\tRot")
+            for item in data:
 
-                if phi < 0:
-                    phi = - phi
-                    theta += pi
+                # TODO: weighted and just a random subset
+                psi, tilt, rot = eulerAnglesGetterCallback(item)
+                print("%s\t%s\t%s" % (psi, tilt, rot))
 
-                rots.append(theta)  # rot will be ploted as angle so it should be in radians
-                tilts.append(degrees(phi)) # tilt will be ploted as radius and we are used to see it in degrees
+                theta, phi = eulerAngles_to_2D(rot, tilt, psi)
 
-                if weightAttr:
-                    weight = getattr(item, weightAttr).get()
-                    weights.append(weight)
+                thetas.append(theta)  # rot will be plotted as angle so it should be in radians
+                phis.append(degrees(phi)) # tilt will be plotted as radius and we are used to see it in degrees
 
             # f.close()
-            return self.plotAngularDistribution(title, rots, tilts, weights, **kwargs)
+            return self.plotAngularDistribution(title, thetas, phis, weights, **kwargs)
 
     def plotAngularDistributionFromMd(self, mdFile, title, **kwargs):
         """ Read the values of rot, tilt and weights from
@@ -166,7 +164,7 @@ class EmPlotter(Plotter):
             return self.plotAngularDistribution(title, rot, tilt, weight, **kwargs)
 
     def plotHist(self, yValues, nbins, color='blue', **kwargs):
-        """ Create an histogram. """
+        """ Create a histogram. """
         # In some cases yValues is a generator, which cannot be indexed
         self.hist(list(yValues), nbins, facecolor=color, **kwargs)
 
@@ -311,3 +309,35 @@ class PlotData:
         if column == 'id':
             return obj.getObjId()
         return obj.getNestedValue(column)
+
+
+# Functions for the angular distribution. Maybe they could go to other place?
+def magnitude(x, y, z):
+    """Returns the magnitude of the vector."""
+    return sqrt(x * x + y * y + z * z)
+
+def to_spherical(x, y, z):
+    """Converts a cartesian coordinate (x, y, z) into a spherical one (radius, theta, phi)."""
+    radius = magnitude(x, y, z)
+    theta = atan2(sqrt(x * x + y * y), z)
+    phi = atan2(y, x)
+    return (radius, theta, phi)
+
+def eulerAngles_to_2D(rot, tilt, psi):
+    """Converts euler angles to their 2D representation for a polar plot"""
+
+    x, y, z = emlib.Euler_direction(rot,
+                                    tilt,
+                                    psi)
+    # f.write(f".sphere {x} {y} {z} .01\n")
+    # radius, theta, phi = to_spherical(x, y, z)
+    ## may be radius, theta, phi = to_spherical(x, z, y)
+    radius, theta, phi = to_spherical(y, z, x)
+    if phi > pi:
+        phi -= 2 * pi
+
+    if phi < 0:
+        phi = - phi
+        theta += pi
+
+    return theta, phi
