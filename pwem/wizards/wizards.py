@@ -472,6 +472,8 @@ class SelectAttributeWizard(VariableWizard):
             item = inputSet.getFirstItem()
         elif issubclass(inputSet.__class__, pwobj.Object):
             item = inputSet
+        else:
+            raise ValueError('The input is not defined')
         return item
 
     def getInputAttributes(self, form, inputParam):
