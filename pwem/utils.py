@@ -126,3 +126,14 @@ def cleanFileName(fn, warn=True):
             cleaned = True
 
     return fn, cleaned
+
+def round_to_nearest(number, base):
+    """ Rounds number to the nearest integer: E.g: pass base=5 to round to the nearest
+     number multiple of 5
+
+    :param number: number to be rounded
+    :param base: integer to limit the rounding to
+    """
+
+    return base * round(number/base)
+
