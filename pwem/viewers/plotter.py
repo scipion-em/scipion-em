@@ -34,8 +34,10 @@ from pwem.convert.transformations import euler_from_matrix
 from pyworkflow.gui.plotter import Plotter, plt
 import pwem.emlib.metadata as md
 import numbers
-from math import sin, cos, atan2, sqrt, pi
-from pwem import emlib
+from math import atan2, sqrt, pi
+from pwem import emlib, round_to_nearest
+
+
 
 class EmPlotter(Plotter):
     """ Class to create several plots. """
@@ -112,6 +114,7 @@ class EmPlotter(Plotter):
         thetas = []
         phis = []
         weights = []
+        weightsIndex=dict() # Dictionary to hold as key the unique id theta-phi and the index were the weight is stored
 
         if histogram:
             for item in data:
@@ -121,18 +124,51 @@ class EmPlotter(Plotter):
 
             return self.plotAngularDistributionHistogram(title, thetas, phis)
         else:
+
+            cancelAddition = False
             # f = open("/tmp/kk.bild", "w")
-            print("Psi\tTilt\tRot")
             for item in data:
 
-                # TODO: weighted and just a random subset
+                # TODO Make random subset
                 psi, tilt, rot = eulerAnglesGetterCallback(item)
-                print("%s\t%s\t%s" % (psi, tilt, rot))
 
+                logger.debug("Rot, tilt, psi: ", rot, tilt, psi)
                 theta, phi = eulerAngles_to_2D(rot, tilt, psi)
 
-                thetas.append(theta)  # rot will be plotted as angle so it should be in radians
-                phis.append(degrees(phi)) # tilt will be plotted as radius and we are used to see it in degrees
+                if weighted:
+                    # Round them to the nearest angle in base 5.
+                    theta, phi = round_to_nearest(theta,0.1), round_to_nearest(phi,0.1)
+
+                    # Get the theta dict
+                    thetaDict = weightsIndex.get(theta, None)
+
+                    if thetaDict is None:
+                        thetaDict = dict()
+                        weightsIndex[theta] = thetaDict
+
+                    phiDict = thetaDict.get(phi, None)
+
+                    if phiDict is None:
+                        phiDict =dict()
+                        thetaDict[phi] = phiDict
+
+                    weightIndex = phiDict.get(phi, None)
+
+                    if weightIndex is None:
+                        weightIndex=len(weights)
+                        phiDict[phi] = weightIndex
+                        weights.append(0)
+                        cancelAddition = False
+                    else:
+                        cancelAddition = True
+
+                    weight = weights[weightIndex]+1
+                    weights[weightIndex] = weight
+
+
+                if not cancelAddition:
+                    thetas.append(theta)  # rot will be plotted as angle so it should be in radians
+                    phis.append(degrees(phi)) # tilt will be plotted as radius and we are used to see it in degrees
 
             # f.close()
             return self.plotAngularDistribution(title, thetas, phis, weights, **kwargs)
@@ -169,7 +205,7 @@ class EmPlotter(Plotter):
         self.hist(list(yValues), nbins, facecolor=color, **kwargs)
 
     def plotScatter(self, xValues, yValues, color='blue', **kwargs):
-        """ Create an scatter plot. """
+        """ Create a scatter plot. """
         self.scatterP(xValues, yValues, c=color, **kwargs)
 
     def plotMatrix(self, img
@@ -308,6 +344,7 @@ class PlotData:
     def _getValue(self, obj, column):
         if column == 'id':
             return obj.getObjId()
+
         return obj.getNestedValue(column)
 
 
