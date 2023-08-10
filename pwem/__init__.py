@@ -75,6 +75,9 @@ class Config(pw.Config):
     # OLD CHIMERA variable
     CHIMERA_OLD_BINARY_PATH = _get("CHIMERA_OLD_BINARY_PATH",'')
 
+    # Path to either ImageJ or Fiji binary program
+    IMAGEJ_BINARY_PATH = _get("IMAGEJ_BINARY_PATH",'')
+
 
 class Domain(pyworkflow.plugin.Domain):
     _name = __name__
@@ -210,7 +213,7 @@ class Plugin(pyworkflow.plugin.Plugin):
     def _registerFileHandlers(cls):
         # register file handlers to preview info in the Filebrowser....
         from pyworkflow.gui.browser import FileTreeProvider, STANDARD_IMAGE_EXTENSIONS
-        from .viewers.filehandlers import MdFileHandler, ParticleFileHandler, VolFileHandler, StackHandler, ChimeraHandler
+        from .viewers.filehandlers import MdFileHandler, ParticleFileHandler, VolFileHandler, StackHandler, ChimeraHandler, ImajeJFileHandler
 
         register = FileTreeProvider.registerFileHandler
         register(MdFileHandler(), '.xmd', '.star', '.pos', '.ctfparam', '.doc')
@@ -221,6 +224,15 @@ class Plugin(pyworkflow.plugin.Plugin):
         register(VolFileHandler(), '.vol', '.hdf', '.rec')
         register(StackHandler(), '.stk', '.mrcs', '.st', '.pif', '.dm4', '.ali')
         register(ChimeraHandler(), '.bild', '.mrc', '.pdb', '.vol', '.hdf', '.cif', '.mmcif')
+
+        if Config.IMAGEJ_BINARY_PATH:
+            register(ImajeJFileHandler(), '.mrcs', '.mrc', '.st', '.ali', '.rec', '.tif', '.tiff', *STANDARD_IMAGE_EXTENSIONS)
+        else:
+            msg= "Optional: ImageJ of Fiji not configured can be configured to open files from the File Browser." \
+                 " Please add 'IMAGEJ_BINARY_PATH' to the config file (%s)" \
+                 "and point to the binary file that will open the files." % pw.Config.SCIPION_CONFIG
+            logger.info(msg)
+
 
 
 def findFolderWithPattern(path, pattern):

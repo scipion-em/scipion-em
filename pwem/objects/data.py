@@ -600,6 +600,12 @@ class Image(EMObject):
         x, y, z, n = ImageHandler().getDimensions(self)
         return None if x is None else (x, y, z)
 
+    def getImage(self):
+        """ Returns the actual image this objects represents"""
+        from pwem.emlib.image import ImageHandler
+        ih = ImageHandler()
+        return ih.read(self)
+
     def getXDim(self):
         return self.getDim()[0] if self.getDim() is not None else 0
 
@@ -1849,10 +1855,14 @@ class SetOfCoordinates(EMSet):
         for coord in self.iterItems(where=coordWhere):
             yield coord
 
-    def getMicrographs(self):
+    def getMicrographs(self, asPointer=False):
         """ Returns the SetOfMicrographs associated with
         this SetOfCoordinates"""
-        return self._micrographsPointer.get()
+
+        if asPointer:
+            return self._micrographsPointer
+        else:
+            return self._micrographsPointer.get()
 
     def setMicrographs(self, micrographs):
         """ Set the micrographs associated with this set of coordinates.
@@ -1894,6 +1904,8 @@ class SetOfCoordinates(EMSet):
 
         # TODO: we might what here to copy the mics too, same as done with
         # acquisition in SetOfImages
+        if isinstance(other, SetOfCoordinates):
+            self.setMicrographs(other.getMicrographs(asPointer=True))
 
 
 class Matrix(Scalar):

@@ -36,6 +36,9 @@ from pyworkflow.gui.browser import FileHandler, isStandardImage
 
 from pwem import emlib
 
+import logging
+logger = logging.getLogger(__name__)
+
 
 class ImageFileHandler(FileHandler):
     _image = emlib.Image()
@@ -108,6 +111,22 @@ class StackHandler(ImageFileHandler):
 
     def getFileIcon(self, objFile):
         return 'file_stack.gif' if not objFile.isLink() else 'file_stack_link.gif'
+
+class ImajeJFileHandler(FileHandler):
+
+    def getFileActions(self, objFile):
+        from pyworkflow.viewer import CommandView
+
+        fn = objFile.getPath()
+        fijiPath = pwem.Config.IMAGEJ_BINARY_PATH
+
+        if fijiPath:
+            cmd = '%s "%s"' % (fijiPath, fn)
+            return [('Open with ImageJ/Fiji', lambda: CommandView(cmd).show(),
+                 pwutils.Icon.ACTION_VISUALIZE)]
+
+    def getFileIcon(self, objFile):
+        return 'file_image.gif' if not objFile.isLink() else 'file_image_link.gif'
 
 
 class ChimeraHandler(FileHandler):
