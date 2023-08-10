@@ -57,6 +57,8 @@ class ProtImportCoordinates(ProtImportFiles, ProtParticlePicking):
     IMPORT_FROM_DOGPICKER = 4
     IMPORT_FROM_SCIPION = 5
 
+    OUTPUT_NAME='outputCoordinates'
+
     def _getImportChoices(self):
         """ Return a list of possible choices
         from which the import can be done.
@@ -131,14 +133,14 @@ class ProtImportCoordinates(ProtImportFiles, ProtParticlePicking):
                     # Parse the coordinates in the given format for this micrograph
                     ci.importCoordinates(coordFile, addCoordinate=addCoordinate)
 
-            self._defineOutputs(outputCoordinates=coordsSet)
+            self._defineOutputs(**{self.OUTPUT_NAME:coordsSet})
             self._defineSourceRelation(self.inputMicrographs, coordsSet)
 
     # ---------------- INFO functions -----------------------------------------
     def _summary(self):
         summary = []
 
-        if not hasattr(self, 'outputCoordinates'):
+        if not hasattr(self, self.OUTPUT_NAME):
             msg = 'Output coordinates not ready yet'
         else:
             msg = "%s  coordinates from " % self.outputCoordinates.getSize()
@@ -153,7 +155,7 @@ class ProtImportCoordinates(ProtImportFiles, ProtParticlePicking):
                 msg += " Y coordinate was inverted."
 
             summary.append(msg)
-            summary.append("Output coordinates: %s." % self.getObjectTag('outputCoordinates'))
+            summary.append("Output coordinates: %s." % self.getObjectTag(self.OUTPUT_NAME))
         return summary
 
     def _methods(self):
