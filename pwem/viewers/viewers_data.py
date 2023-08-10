@@ -268,3 +268,14 @@ class DataViewer(pwviewer.Viewer):
             self._views.append(DataView(obj.getFileName()))
 
         return self._views
+
+class BasicMDViewer(DataViewer):
+    """ Viewer to show sets in the metadataviewer to allow manual subsets when
+    DataViewer shows it in a different way: e.g: Coordinates2D."""
+    _name = "Basic MD viewer"
+    _targets = [emobj.SetOfCoordinates, emobj.SetOfFSCs]
+
+    def _visualize(self, obj, **kwargs):
+        fn = obj.getFileName()
+        self._addObjView(obj, fn, {MODE: MODE_MD})
+        return self._views

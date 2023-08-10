@@ -600,6 +600,12 @@ class Image(EMObject):
         x, y, z, n = ImageHandler().getDimensions(self)
         return None if x is None else (x, y, z)
 
+    def getImage(self):
+        """ Returns the actual image this objects represents"""
+        from pwem.emlib.image import ImageHandler
+        ih = ImageHandler()
+        return ih.read(self)
+
     def getXDim(self):
         return self.getDim()[0] if self.getDim() is not None else 0
 
@@ -654,7 +660,10 @@ class Image(EMObject):
 
     def copyInfo(self, other):
         """ Copy basic information """
-        self.copyAttributes(other, '_samplingRate')
+        if type(self) is type(other):
+            self.copy(other, copyId=False)
+        else:
+            self.copyAttributes(other, '_samplingRate')
 
     def copyLocation(self, other):
         """ Copy location index and filename from other image. """
@@ -1367,9 +1376,12 @@ class SetOfImages(EMSet):
     def copyInfo(self, other):
         """ Copy basic information (sampling rate and ctf)
         from other set of images to current one"""
-        self.copyAttributes(other, '_samplingRate', '_isPhaseFlipped',
-                            '_isAmplitudeCorrected', '_alignment')
-        self._acquisition.copyInfo(other._acquisition)
+        if type(self) is type(other):
+            self.copy(other, copyId=False)
+        else:
+            self.copyAttributes(other, '_samplingRate', '_isPhaseFlipped',
+                                '_isAmplitudeCorrected', '_alignment')
+            self._acquisition.copyInfo(other._acquisition)
 
     def getFiles(self):
         filePaths = set()
@@ -1843,10 +1855,14 @@ class SetOfCoordinates(EMSet):
         for coord in self.iterItems(where=coordWhere):
             yield coord
 
-    def getMicrographs(self):
+    def getMicrographs(self, asPointer=False):
         """ Returns the SetOfMicrographs associated with
         this SetOfCoordinates"""
-        return self._micrographsPointer.get()
+
+        if asPointer:
+            return self._micrographsPointer
+        else:
+            return self._micrographsPointer.get()
 
     def setMicrographs(self, micrographs):
         """ Set the micrographs associated with this set of coordinates.
@@ -1888,6 +1904,8 @@ class SetOfCoordinates(EMSet):
 
         # TODO: we might what here to copy the mics too, same as done with
         # acquisition in SetOfImages
+        if isinstance(other, SetOfCoordinates):
+            self.setMicrographs(other.getMicrographs(asPointer=True))
 
 
 class Matrix(Scalar):
