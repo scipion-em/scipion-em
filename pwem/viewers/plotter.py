@@ -140,7 +140,7 @@ class EmPlotter(Plotter):
             return self.plotAngularDistribution(title, rot, tilt, weight, **kwargs)
 
     def plotHist(self, yValues, nbins, color='blue', **kwargs):
-        """ Create an histogram. """
+        """ Create a histogram. """
         # In some cases yValues is a generator, which cannot be indexed
         self.hist(list(yValues), nbins, facecolor=color, **kwargs)
 

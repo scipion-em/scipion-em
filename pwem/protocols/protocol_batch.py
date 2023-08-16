@@ -230,9 +230,21 @@ class ProtUserSubSet(BatchProtocol):
             itemClassName = db.getSelfClassName()
 
             if itemClassName.startswith('Class'):
+
                 if outputClassName.startswith('SetOfParticles'):
+                    # Just to be sure, we check first if we want to create a subset of the items of the class
+                    # If this check is not done in first place, it might be possible to enter through the second
+                    # check (if REP_SET_TYPE is set), generating a SetOfVolumes like instead of a SetOfParticles like
+                    # object
                     return self._createImagesFromClasses(inputClasses)
+                elif hasattr(inputClasses, "REP_SET_TYPE"):
+                    # Second check determines if we want to create a subset of representatives. In addition, we consider
+                    # that the SetOfClasses stores the information about the type of set to be created
+                    return self._createRepresentativesFromClasses(inputClasses,
+                                                                  getattr(inputClasses, "REP_SET_TYPE"))
                 else:
+                    # Third check determines if we want to create a subset of representatives. By default,
+                    # a SetOfVolumes is generated
                     return self._createRepresentativesFromClasses(inputClasses,
                                                                   outputClassName.split(',')[0])
             else:
@@ -288,18 +300,24 @@ class ProtUserSubSet(BatchProtocol):
         assigned to each class.
         """
         inputImages = inputClasses.getImages()
-        createFunc = getattr(self, '_create' + outputClassName)
+
+        if isinstance(outputClassName, str):
+            createFunc = getattr(self, '_create' + outputClassName)
+            output = createFunc()
+        else:
+            output = outputClassName.create(self.getPath())
+
         modifiedSet = inputClasses.getClass()(filename=self._dbName, prefix=self._dbPrefix)
         self.info("Creating REPRESENTATIVES of images from classes, "
                   "sqlite file: %s" % self._dbName)
 
         count = 0
-        output = createFunc()
+
         output.copyInfo(inputImages)
         output.setSamplingRate(None)
         # For now this is to avoid having a wrong alignment.
         # THis is because is getting the alignment info from the input images and this does not have to match.
-        # This created a error when scaling averages #903
+        # This created an error when scaling averages #903
         output.setAlignment(ALIGN_NONE)
         for cls in modifiedSet:
             if cls.isEnabled():
