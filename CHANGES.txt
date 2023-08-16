@@ -1,3 +1,6 @@
+V3.2.1:
+   Developers:
+     - ImageHandler.getDimensions uses ImageReader registry and its readers (Xmipp, Tiff, Eman, ...)image
 V3.2.0:
  Users:
    - New viewer: "Basic MD viewer" to allow doing manual subsets on those sets where before it wasn't possible (Coordinates2D, FSCs)
