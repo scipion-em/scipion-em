@@ -41,7 +41,7 @@ def loadSetFromDb(dbName, dbPrefix=''):
 
 
 def runProgram(program, params):
-    """ Runs a em program setting its environment matching a prefix"""
+    """ Runs an em program setting its environment matching a prefix"""
     env = None
 
     # Allow passing absolute paths
