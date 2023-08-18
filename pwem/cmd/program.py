@@ -29,6 +29,8 @@ Launch main project window
 """
 
 import sys
+from subprocess import CalledProcessError
+
 from pwem import runProgram
 from pyworkflow import Config
 
@@ -40,7 +42,11 @@ def main():
     # Initialize plugin discovery and initialization
     Config.getDomain().getPlugins()
 
-    runProgram(program, params)
+    try:
+        runProgram(program, params)
+    except CalledProcessError as e:
+        print("Command %s failed. Exiting with %s" % (e.cmd, e.returncode))
+        sys.exit(e.returncode)
 
 
 if __name__ == '__main__':
