@@ -1,3 +1,4 @@
+V3.2.2; Hotfix: bugy logline commented
 V3.2.1: Hotfix: set dimensions are updated upon set creation
 V3.2.0:
  Users:
