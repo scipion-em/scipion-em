@@ -1370,7 +1370,7 @@ class SetOfImages(EMSet):
         """ Store dimensions when the first image is found.
         This function should be called only once, to avoid reading
         dimension from image file. """
-        logger.info("Getting the dimensions for the first item: %s" % image)
+        #logger.info("Getting the dimensions for the first item: %s" % image)
         self._firstDim.set(image.getDim())
 
     def copyInfo(self, other):
