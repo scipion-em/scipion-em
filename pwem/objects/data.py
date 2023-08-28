@@ -1370,7 +1370,7 @@ class SetOfImages(EMSet):
         """ Store dimensions when the first image is found.
         This function should be called only once, to avoid reading
         dimension from image file. """
-        #logger.info("Getting the dimensions for the first item: %s" % image)
+        logger.info("Getting the dimensions for the first item: %s" % image.getFileName())
         self._firstDim.set(image.getDim())
 
     def copyInfo(self, other):
@@ -1454,9 +1454,14 @@ class SetOfImages(EMSet):
 
     def __str__(self):
         """ String representation of a set of images. """
-        s = "%s (%d items, %s, %s%s)" % \
-            (self.getClassName(), self.getSize(),
-             self._dimStr(), self._samplingRateStr(), self._appendStreamState())
+        try:
+            s = "%s (%d items, %s, %s%s)" % \
+                (self.getClassName(), self.getSize(),
+                self._dimStr(), self._samplingRateStr(), self._appendStreamState())
+        except Exception as e:
+            s = "Couldn't convert the set to text."
+            logger.error(s, exc_info=e)
+
         return s
     def _samplingRateStr(self):
         """ Returns how the sampling rate is presented in a 'str' context."""
