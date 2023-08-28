@@ -199,3 +199,20 @@ RESIDUES3TO1 = {'CYS': 'C', 'ASP': 'D', 'SER': 'S', 'GLN': 'Q', 'LYS': 'K',
                 'ALA': 'A', 'VAL': 'V', 'GLU': 'E', 'TYR': 'Y', 'MET': 'M'}
 
 RESIDUES1TO3 = {v: k for k, v in RESIDUES3TO1.items()}
+
+
+# File extensions
+# MRC
+EXT_MRC ="mrc"
+EXT_MRC_MRC="%s:%s" % (EXT_MRC,EXT_MRC)
+EXT_MRCS ="mrcs"
+EXT_MRC_MRCS="%s:%s" % (EXT_MRC,EXT_MRCS)
+EXT_ST ="st"
+EXT_REC = "rec"
+EXT_ALI = "ali"
+EXT_MAP = "map"
+
+ALL_MRC_EXTENSIONS =[EXT_MRC, EXT_MRCS, EXT_MRC_MRC, EXT_MRC_MRCS,
+                     EXT_ST, EXT_REC, EXT_ALI, EXT_MAP]
+
+ALL_TIF_EXTENSIONS = ['tif','tiff', 'gain', 'eer']

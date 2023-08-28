@@ -34,6 +34,7 @@ import collections
 import struct
 from math import isnan
 
+from pwem import ALL_MRC_EXTENSIONS
 from pyworkflow.utils import getExt
 from ..emlib.image import ImageHandler
 
@@ -354,10 +355,10 @@ class Ccp4Header:
 
 
 def getFileFormat(fileName):
-    ext = getExt(fileName)
-    if ext in ['.mrc', '.map', '.mrcs', '.mrc:mrc', '.mrc:mrcs', '.st', '.rec', '.ali']:
+    ext = getExt(fileName).replace(".","")
+    if ext in ALL_MRC_EXTENSIONS:
         return MRC
-    elif ext == '.spi' or ext == '.vol':
+    elif ext == 'spi' or ext == 'vol':
         return SPIDER
     else:
         return UNKNOWNFORMAT
