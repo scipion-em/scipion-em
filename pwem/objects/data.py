@@ -1377,7 +1377,7 @@ class SetOfImages(EMSet):
         """ Copy basic information (sampling rate and ctf)
         from other set of images to current one"""
         if type(self) is type(other):
-            self.copy(other, copyId=False)
+            self.copy(other, copyId=False, ignoreAttrs=['_mapperPath', '_size', '_streamState', '_firstDim'])
         else:
             self.copyAttributes(other, '_samplingRate', '_isPhaseFlipped',
                                 '_isAmplitudeCorrected', '_alignment')
