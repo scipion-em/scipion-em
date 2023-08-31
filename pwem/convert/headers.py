@@ -234,7 +234,7 @@ class Ccp4Header:
 
     def getNumberOfObjects(self):
         # Special case for volume stacks...
-        return int(self._header['NS'] / self._header['NZ'])
+        return max(int(self._header['NS'] / self._header['NZ']),1)
 
     def getXYZN(self):
         if self.getISPG() and not self.isMovie:
