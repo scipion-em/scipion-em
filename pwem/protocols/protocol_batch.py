@@ -244,7 +244,6 @@ class ProtUserSubSet(BatchProtocol):
 
         return output
 
-
     def _getSelectionTxtDict(self):
 
         if self._selectedIds is None:
@@ -252,7 +251,7 @@ class ProtUserSubSet(BatchProtocol):
             ids = None
             # This file has a single line with id separated by spaces
             with open(self.sqliteFile.get(), "r") as fh:
-                line = fh.readline()
+                line = fh.readline().strip()
                 ids = line.split(" ")
 
             for id in ids:
