@@ -1,6 +1,9 @@
 V3.3.0:
+   Users:
+     - Fix: importing non cubic volumes could render 0 elements in dimensions. Now minimum is 1.
    Developers:
      - ImageHandler.getDimensions uses ImageReader registry and its readers (Xmipp, Tiff, Eman, ...)image
+     - User subset: ready for new metadata viewer using txt files with ids.
 
 V3.2.2; Hotfix: bugy logline commented
 

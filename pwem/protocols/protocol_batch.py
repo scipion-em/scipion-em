@@ -52,18 +52,27 @@ class BatchProtocol(EMProtocol):
 
 class ProtUserSubSet(BatchProtocol):
     """ Create subsets from the GUI.
-    This protocol will be executed mainly calling the script 'pw_create_image_subsets.py'
-    from the ShowJ gui. The enabled/disabled changes will be stored in a temporary sqlite
-    file that will be read to create the new subset.
+    This protocol will be executed mainly from the ShowJ gui or the new metadata viewer.
+    For ShowJ: The enabled/disabled changes will be stored in a temporary sqlite
+    For the Metadata viewer: the original sqlite is passed and a path of a txt file with the ids selected.
+
+    Example of a ShowJ socket message:
+
+     run protocol ProtUserSubSet inputObject=380 sqliteFile='Runs/000335_ProtImodTSNormalization/tiltseries_state.sqlite','' outputClassName=SetOfTiltSeries other='' label='create subset'
+
+    run protocol is received by ProjectTCPRequestHandler.handle()
+
     """
     def __init__(self, **args):
         BatchProtocol.__init__(self, **args)
+        self._selectedIds = None
 
     def _defineParams(self, form):
-        form.addHidden('inputObject', PointerParam, pointerClass='Object')
-        form.addHidden('other', StringParam, allowsNull=True)
-        form.addHidden('sqliteFile', FileParam)
-        form.addHidden('outputClassName', StringParam)
+        form.addSection("Input")
+        form.addParam('inputObject', PointerParam, label="Input set", pointerClass='EMSet')
+        form.addParam('other', StringParam, allowsNull=True, label="Other")
+        form.addParam('sqliteFile', FileParam, label="Selection file")
+        form.addParam('outputClassName', StringParam, label="Output type")
 
     def _insertAllSteps(self):
         self._insertFunctionStep('createSetStep')
@@ -74,9 +83,9 @@ class ProtUserSubSet(BatchProtocol):
         markedSet = self.createSetObject()  # Set equal to sourceSet but marked with disabled
         other = self.other.get()
 
-        self.info("Source: %s" % sourceSet)
+        self.info("Source: %s" % sourceSet) # Scipion object input for this protocol
         self.info("Output type: %s" % self.outputClassName)
-        self.info("Subset (sqlite) file: %s" % self.sqliteFile)
+        self.info("Subset file: %s" % self.sqliteFile) # Sqlite with the selection (ShowJ case) or
         if other:
             self.info("Other: %s" % other)
 
@@ -166,7 +175,7 @@ class ProtUserSubSet(BatchProtocol):
             output = inputObj.createCopy(self._getPath())
 
         for item in modifiedSet:
-            if item.isEnabled():
+            if self._itemSelected(item):
                 output.append(item)
 
         if hasattr(modifiedSet, 'copyInfo'):
@@ -179,6 +188,25 @@ class ProtUserSubSet(BatchProtocol):
             self._defineTransformRelation(inputObj, output)
 
         return output
+
+    def usingShowJ(self):
+        return ".sqlite" in self.sqliteFile.get()
+
+    def _itemSelected(self, item):
+        """ Returns true if the element is selected. We will have to modes: ShowJ or Metadata viewer
+        ShowJ marks the items as enable=False
+        Metadata viewer, passes a file with the id selected
+
+        """
+        if self.usingShowJ():
+            return item.isEnabled()
+        else:
+            return self._itemInSelectionTxt(item)
+
+    def _itemInSelectionTxt(self, item):
+
+        id = item.getObjId()
+        return id in self._getSelectionTxtDict()
 
     def _createSubSetFromImages(self, inputImages,
                                 copyInfoCallback=None):
@@ -198,7 +226,7 @@ class ProtUserSubSet(BatchProtocol):
         else:
             copyInfoCallback(output)
 
-        output.appendFromImages(modifiedSet)
+        output.appendFromImages(modifiedSet, self._itemSelected)
         # Register outputs
         self._defineOutput(className, output)
 
@@ -215,6 +243,22 @@ class ProtUserSubSet(BatchProtocol):
         self.summaryVar.set(msg)
 
         return output
+
+
+    def _getSelectionTxtDict(self):
+
+        if self._selectedIds is None:
+            self._selectedIds = dict()
+            ids = None
+            # This file has a single line with id separated by spaces
+            with open(self.sqliteFile.get(), "r") as fh:
+                line = fh.readline()
+                ids = line.split(" ")
+
+            for id in ids:
+                self._selectedIds[int(id)] = id
+
+        return self._selectedIds
 
     def _createSubSetFromClasses(self, inputClasses):
         outputClassName = self.outputClassName.get()
@@ -237,6 +281,7 @@ class ProtUserSubSet(BatchProtocol):
                     # check (if REP_SET_TYPE is set), generating a SetOfVolumes like instead of a SetOfParticles like
                     # object
                     return self._createImagesFromClasses(inputClasses)
+
                 elif hasattr(inputClasses, "REP_SET_TYPE"):
                     # Second check determines if we want to create a subset of representatives. In addition, we consider
                     # that the SetOfClasses stores the information about the type of set to be created
@@ -274,7 +319,7 @@ class ProtUserSubSet(BatchProtocol):
 
         count = 0
         for ctf in modifiedSet:
-            if ctf.isEnabled():
+            if self._itemSelected(ctf):
                 mic = ctf.getMicrograph()
                 outputMics.append(mic)
                 outputCtfs.append(ctf)
@@ -320,7 +365,7 @@ class ProtUserSubSet(BatchProtocol):
         # This created an error when scaling averages #903
         output.setAlignment(ALIGN_NONE)
         for cls in modifiedSet:
-            if cls.isEnabled():
+            if self._itemSelected(cls):
                 img = cls.getRepresentative()
                 if not output.getSamplingRate():
                     output.setSamplingRate(cls.getSamplingRate()
@@ -372,7 +417,7 @@ class ProtUserSubSet(BatchProtocol):
         modifiedSet = inputClasses.getClass()(filename=self._dbName, prefix=self._dbPrefix)
         self.info("Creating subset of images from classes, sqlite file: %s" % self._dbName)
         self._copyInfoAndSetAlignment(inputClasses, output)
-        output.appendFromClasses(modifiedSet)
+        output.appendFromClasses(modifiedSet, filterClassFunc=self._itemSelected)
         # Register outputs
         self._defineOutput(className, output)
         if inputClasses.hasObjId():
@@ -405,7 +450,7 @@ class ProtUserSubSet(BatchProtocol):
         modifiedSet = inputClasses.getClass()(filename=self._dbName, prefix=self._dbPrefix)
         self.info("Creating subset of classes from classes, sqlite file: %s" % self._dbName)
         output.copyInfo(inputClasses)
-        output.appendFromClasses(modifiedSet)
+        output.appendFromClasses(modifiedSet,filterClassFunc=self._itemSelected)
         # Register outputs
         self._defineOutput(className, output)
         if inputClasses.hasObjId():
@@ -497,12 +542,19 @@ class ProtUserSubSet(BatchProtocol):
     def createSetObject(self):
         """ Moves the sqlite with the enable/disable status to its own
         path to keep it and names it subset.sqlite"""
-        _dbName, self._dbPrefix = self.sqliteFile.get().split(',')
-        self._dbName = self._getPath('subset.sqlite')
-        os.rename(_dbName, self._dbName)
 
-        if self._dbPrefix.endswith('_'):
-            self._dbPrefix = self._dbPrefix[:-1]
+        if self.usingShowJ():
+
+            _dbName, self._dbPrefix = self.sqliteFile.get().split(',')
+            self._dbName = self._getPath('subset.sqlite')
+            os.rename(_dbName, self._dbName)
+
+            if self._dbPrefix.endswith('_'):
+                self._dbPrefix = self._dbPrefix[:-1]
+
+        else:
+            self._dbName = self.inputObject.get().getFileName()
+            self._dbPrefix = ""
 
         from pwem.utils import loadSetFromDb
 
