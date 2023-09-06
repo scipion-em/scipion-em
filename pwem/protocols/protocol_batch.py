@@ -66,6 +66,8 @@ class ProtUserSubSet(BatchProtocol):
     def __init__(self, **args):
         BatchProtocol.__init__(self, **args)
         self._selectedIds = None
+        self._dbName = None # To keep the path to the database to read
+        self._selectionTxt = None # To keep the file (txt) that has the selection. Extracted from sqliteFile tuple.
 
     def _defineParams(self, form):
         form.addSection("Input")
@@ -249,8 +251,9 @@ class ProtUserSubSet(BatchProtocol):
         if self._selectedIds is None:
             self._selectedIds = dict()
             ids = None
+            self.info("Reading selection from %s" % self._dbName)
             # This file has a single line with id separated by spaces
-            with open(self.sqliteFile.get(), "r") as fh:
+            with open(self._selectionTxt, "r") as fh:
                 line = fh.readline().strip()
                 ids = line.split(" ")
 
@@ -542,18 +545,19 @@ class ProtUserSubSet(BatchProtocol):
         """ Moves the sqlite with the enable/disable status to its own
         path to keep it and names it subset.sqlite"""
 
+        _dbName, self._dbPrefix = self.sqliteFile.get().split(',')
+
         if self.usingShowJ():
 
-            _dbName, self._dbPrefix = self.sqliteFile.get().split(',')
             self._dbName = self._getPath('subset.sqlite')
             os.rename(_dbName, self._dbName)
-
-            if self._dbPrefix.endswith('_'):
-                self._dbPrefix = self._dbPrefix[:-1]
-
         else:
             self._dbName = self.inputObject.get().getFileName()
-            self._dbPrefix = ""
+            self._selectionTxt = _dbName
+
+        # Prefix: used to create subsets from Particles from a class (specific table in a set of classes)
+        if self._dbPrefix.endswith('_'):
+            self._dbPrefix = self._dbPrefix[:-1]
 
         from pwem.utils import loadSetFromDb
 

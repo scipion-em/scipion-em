@@ -28,18 +28,22 @@
 import logging
 from datetime import datetime
 
+from metadataviewer.model import BoolRenderer, ImageRenderer, StrRenderer
+
 logger = logging.getLogger()
 
 import sqlite3
-from metadataviewer.dao.model import IDAO, Table
+from metadataviewer.model import Table, Column
+from metadataviewer.dao.model import IDAO
 
-EXTENDED_COLUMN_NAME = '_representative'
 ALLOWED_COLUMNS_TYPES = ['String', 'Float', 'Integer', 'Boolean', 'Matrix']
 ADITIONAL_INFO_DISPLAY_COLUMN_LIST = ['_size', 'id']
 EXCLUDED_COLUMNS = ['label', 'comment', 'creation', '_streamState']
 CLASS_OBJECT = 1
 REPRESENTATIVE_OBJECT = 2
 CLASS_ELEMENTS = 3
+EXTENDED_COLUMN_NAME = '_index@_filename'
+ENABLED_COLUMN = 'enabled'
 
 
 class SqliteFile(IDAO):
@@ -155,23 +159,23 @@ class SqliteFile(IDAO):
         tableName = table.getName()
         colNames = self._labels[tableName]
         indexCol = self.findColbyName(colNames, '_index')
-        representativeCol = self.findColbyName(colNames, '_filename')
+        fileNameCol = self.findColbyName(colNames, '_filename')
 
-        if indexCol and representativeCol:
+        if indexCol and fileNameCol:
             logger.debug("The columns _index and _filename have been found. "
                          "We will proceed to create a new column with the "
                          "values of these columns.")
-            self._extendedColumn = indexCol, representativeCol
+            self._extendedColumn = indexCol, fileNameCol
         else:
             indexCol = self.findColbyName(colNames, '_representative._index')
-            representativeCol = self.findColbyName(colNames,
+            fileNameCol = self.findColbyName(colNames,
                                                    '_representative._filename')
-            if indexCol and representativeCol:
+            if indexCol and fileNameCol:
                 logger.debug("The columns _representative._index and "
                              "_representative._filename have been found. "
                              "We will proceed to create a new column with the "
                              "values of these columns.")
-                self._extendedColumn = indexCol, representativeCol
+                self._extendedColumn = indexCol, fileNameCol
 
     def generateTableActions(self, table, objectManager):
         """Generate actions for a given table in order to create subsets"""
@@ -202,11 +206,30 @@ class SqliteFile(IDAO):
 
         row = self.getTableRow(tableName, 0, classes=self._tables[tableName])
         values = [value for key, value in row.items() if key not in EXCLUDED_COLUMNS]
-        if self._extendedColumn:
-            logger.debug("Creating an extended column: %s" % EXTENDED_COLUMN_NAME)
-            colNames.insert(self._extendedColumn[1] + 1, EXTENDED_COLUMN_NAME)
-            values.insert(self._extendedColumn[1] + 1, str(values[self._extendedColumn[0]]) + '@' + str(values[self._extendedColumn[1]]))
-        table.createColumns(colNames, values)
+
+        for index, colName in enumerate(colNames):
+
+            isFileNameCol = self.hasExtendedColumn() and index == self._extendedColumn[1]
+            sortable = True
+
+            if colName == ENABLED_COLUMN:
+                renderer = BoolRenderer()
+            elif isFileNameCol:
+                renderer = StrRenderer()
+            else:
+                renderer = table.guessRenderer(values[index])
+
+            newCol = Column(colName, renderer)
+            newCol.setIsSorteable(sortable)
+            table.addColumn(newCol)
+
+            if isFileNameCol:
+                logger.debug("Creating an extended column: %s" % EXTENDED_COLUMN_NAME)
+                extraCol = Column(EXTENDED_COLUMN_NAME, ImageRenderer())
+                table.addColumn(extraCol)
+
+
+
         table.setAlias(self._aliases[tableName])
         self.generateTableActions(table, objectManager)
 
@@ -354,8 +377,9 @@ class SqliteFile(IDAO):
             timestamp = now.strftime(format)
             path = 'Logs/selection_%s.txt' % timestamp
             self.writeSelection(table, path)
+            path +="," # Always add a comma, it is expected by the user subset protocol
             if tableName != 'objects':
-                path += ',%s' % tableName.split('Objects')[0]
+                path += tableName.split('Objects')[0]
             self.userSubsetCreationCallback(subsetName, path, objectType)
 
     def writeSelection(self, table: Table, path):

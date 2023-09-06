@@ -26,9 +26,15 @@
 # **************************************************************************
 from pwem.objects import EMSet
 from pyworkflow.viewer import Viewer, View
-from metadataviewer.model import ObjectManager
+from metadataviewer.model import ObjectManager, ImageRenderer
+
+from .readers import STKImageReader, MRCImageReader
 from .sqlite_dao import SqliteFile
 from ...protocols import ProtUserSubSet
+
+# Register the readers only once
+ImageRenderer.registerImageReader(MRCImageReader)
+ImageRenderer.registerImageReader(STKImageReader)
 
 
 class MDView(View):
