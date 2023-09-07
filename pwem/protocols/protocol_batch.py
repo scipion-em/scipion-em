@@ -60,7 +60,7 @@ class ProtUserSubSet(BatchProtocol):
 
      run protocol ProtUserSubSet inputObject=380 sqliteFile='Runs/000335_ProtImodTSNormalization/tiltseries_state.sqlite','' outputClassName=SetOfTiltSeries other='' label='create subset'
 
-    run protocol is received by ProjectTCPRequestHandler.handle()
+     run protocol is received by ProjectTCPRequestHandler.handle()
 
     """
     def __init__(self, **args):

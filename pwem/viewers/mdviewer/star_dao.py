@@ -183,7 +183,8 @@ class StarFile(IDAO):
             self._file.close()
             self._file = None
 
-    def getCompatibleFileTypes(self):
+    @classmethod
+    def getCompatibleFileTypes(cls):
         """Return a list of compatible extension of files"""
         logger.debug("Selected StarFile DAO")
         return ['star', 'xmd']

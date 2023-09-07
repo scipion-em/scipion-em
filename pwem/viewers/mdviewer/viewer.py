@@ -24,41 +24,41 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
+import os.path
+import subprocess
+
 from pwem.objects import EMSet
+from pyworkflow import PYTHON
 from pyworkflow.viewer import Viewer, View
-from metadataviewer.model import ObjectManager, ImageRenderer
-
-from .readers import STKImageReader, MRCImageReader
-from .sqlite_dao import SqliteFile
-from ...protocols import ProtUserSubSet
-
-# Register the readers only once
-ImageRenderer.registerImageReader(MRCImageReader)
-ImageRenderer.registerImageReader(STKImageReader)
+from pwem.viewers.mdviewer.readers import SCIPION_PORT, SCIPION_OBJECT_ID
 
 
 class MDView(View):
 
-    def __init__(self, emSet: EMSet, protocol, projectWindow):
+    def __init__(self, emSet: EMSet, protocol, port):
         self._emSet = emSet
         self.protocol = protocol
-        self.projectWindow = projectWindow
+        self.port = port
 
     def show(self):
-        objectManager = ObjectManager()
-        objectManager.registerDAO(SqliteFile)
-        SqliteFile.userSubsetCreationCallback = self.userSubsetCreationCallback
-        objectManager.open(self._emSet.getFileName())
+        env = os.environ
+        env[SCIPION_PORT] = str(self.port)
+        env[SCIPION_OBJECT_ID] = str(self._emSet.getObjId())
 
-    def userSubsetCreationCallback(self, subsetName, selectionFile, outputType):
-        project = self.protocol.getProject()
-        protocol = project.newProtocol(ProtUserSubSet)
-        protocol.setObjLabel(subsetName)
-        protocol.sqliteFile.set(selectionFile)
-        protocol.inputObject.set(self._emSet)
-        protocol.outputClassName.set(outputType)
-        # protocol.other.set()
-        self.projectWindow.getViewWidget().executeProtocol(protocol)
+        subprocess.Popen(
+            [PYTHON, "-m", "metadataviewer","--extensionpath",
+            os.path.join(os.path.dirname(__file__),"readers.py"),
+            self._emSet.getFileName()])
+
+    # def userSubsetCreationCallback(self, subsetName, selectionFile, outputType):
+    #     project = self.protocol.getProject()
+    #     protocol = project.newProtocol(ProtUserSubSet)
+    #     protocol.setObjLabel(subsetName)
+    #     protocol.sqliteFile.set(selectionFile)
+    #     protocol.inputObject.set(self._emSet)
+    #     protocol.outputClassName.set(outputType)
+    #     # protocol.other.set()
+    #     self.projectWindow.getViewWidget().executeProtocol(protocol)
 
 
 class MDViewer(Viewer):
@@ -66,7 +66,7 @@ class MDViewer(Viewer):
     _targets = [EMSet]
 
     def _visualize(self, obj, **kwargs):
-        return [MDView(obj, self.protocol, self.formWindow)]
+        return [MDView(obj, self.protocol, self._project.port)]
 
 
 
