@@ -41,6 +41,84 @@ from .showj import (RENDER, SAMPLINGRATE, ORDER, VISIBLE, MODE, MODE_MD,
 from ..convert.headers import Ccp4Header
 
 
+class RegistryViewerConfig:
+    config = {}
+
+    @classmethod
+    def getConfig(cls, type):
+        return cls.config.get(type, None)
+
+    @classmethod
+    def registerConfig(cls, type, config=None):
+        """
+        Allow registration of other objects
+        :param type: Class to register --> SetOfXXX
+        :param config: Optional, dictionary with the fields configuration, otherwise all fields will be shown.
+
+        :return: Nothing
+
+        """
+        if config is None:
+            config = {MODE: MODE_MD}
+
+        cls.config[type] = config
+
+# Registering viewer config
+RegistryViewerConfig.registerConfig(emobj.SetOfPDBs, {ORDER: 'id _filename ',
+                                   VISIBLE: 'id _filename ',
+                                   MODE: MODE_MD,
+                                   RENDER: "no"})
+
+
+#SetOfParticles
+labels = ('id enabled _index _filename _xmipp_zScore _xmipp_cumulativeSSNR '
+                      '_sampling _xmipp_scoreByVariance _xmipp_scoreEmptiness '
+                      '_ctfModel._defocusU _ctfModel._defocusV _ctfModel._defocusAngle '
+                      '_transform._matrix')
+RegistryViewerConfig.registerConfig(emobj.SetOfParticles,
+                                   {ORDER: labels,
+                                   VISIBLE: labels,
+                                    SORT_BY: '_xmipp_zScore asc',
+                                    RENDER: '_filename'})
+
+
+# SetOfVolumes
+labels = 'id enabled comment _filename '
+RegistryViewerConfig.registerConfig(emobj.SetOfVolumes,
+                                   {ORDER: labels,
+                                   VISIBLE: labels,
+                                    SORT_BY: '_xmipp_zScore asc',
+                                    RENDER: '_filename'})
+
+# SetOfMovies
+labels = 'id _filename _samplingRate _acquisition._dosePerFrame _acquisition._doseInitial '
+RegistryViewerConfig.registerConfig(emobj.SetOfMovies,
+                                   {ORDER: labels,
+                                   VISIBLE: labels,
+                                    MODE: MODE_MD,
+                                    RENDER: 'no'})
+
+#MicrographsTiltPair
+labels = 'id enabled _untilted._filename _tilted._filename'
+renderLabels = '_untilted._filename _tilted._filename'
+
+RegistryViewerConfig.registerConfig(emobj.MicrographsTiltPair,
+                                   {ORDER: labels,
+                                   VISIBLE: labels,
+                                    MODE: MODE_MD,
+                                    RENDER: renderLabels})
+
+
+#ParticlesTiltPair
+labels = 'id enabled _untilted._filename _tilted._filename'
+renderLabels = '_untilted._filename _tilted._filename'
+RegistryViewerConfig.registerConfig(emobj.ParticlesTiltPair,
+                                   {ORDER: labels,
+                                   VISIBLE: labels,
+                                    MODE: MODE_MD,
+                                    RENDER: renderLabels})
+
+
 class DataViewer(pwviewer.Viewer):
     """ Wrapper to visualize different type of objects
     with the Xmipp program xmipp_showj
@@ -67,7 +145,6 @@ class DataViewer(pwviewer.Viewer):
         emobj.ParticlesTiltPair,
         emobj.SetOfImages,
     ]
-    _configRegistry = dict() # Extra configuration for specific types not in this plugin (e.g.: Tomo objects)
 
     @classmethod
     def registerConfig(cls, type, config=None):
@@ -80,11 +157,7 @@ class DataViewer(pwviewer.Viewer):
 
         """
         cls._targets.append(type)
-
-        if config is None:
-            config = {MODE: MODE_MD}
-
-        cls._configRegistry[type]=config
+        RegistryViewerConfig.registerConfig(type, config)
 
     def __init__(self, **kwargs):
         pwviewer.Viewer.__init__(self, **kwargs)
@@ -100,11 +173,14 @@ class DataViewer(pwviewer.Viewer):
         cls = type(obj)
 
         # Try registry first
-        config = self._configRegistry.get(cls, None)
+        config = RegistryViewerConfig.getConfig(cls)
 
         if config is not None:
             fn = obj.getFileName()
-            self._addObjView(obj, fn, config)
+            objView = self._addObjView(obj, fn, config)
+            if issubclass(cls, emobj.SetOfMovies):
+                # For movies increase the JVM memory by 1 GB, just in case
+                objView.setMemory(getJvmMaxMemory() + 1)
             return self._views
 
         if issubclass(cls, emobj.Volume):
@@ -128,44 +204,44 @@ class DataViewer(pwviewer.Viewer):
             fn = emlib.image.ImageHandler.locationToXmipp(obj)
             self._addObjView(obj, fn)
 
-        elif issubclass(cls, emobj.SetOfPDBs):
-            fn = obj.getFileName()
-            labels = 'id _filename '
-            self._addObjView(obj, fn, {ORDER: labels,
-                                       VISIBLE: labels,
-                                       MODE: MODE_MD,
-                                       RENDER: "no"})
+        # elif issubclass(cls, emobj.SetOfPDBs):
+        #     fn = obj.getFileName()
+        #     labels = 'id _filename '
+        #     self._addObjView(obj, fn, {ORDER: labels,
+        #                                VISIBLE: labels,
+        #                                MODE: MODE_MD,
+        #                                RENDER: "no"})
 
-        elif issubclass(cls, emobj.SetOfMovies):
-            fn = obj.getFileName()
-            # Enabled for the future has to be available
-            labels = ('id _filename _samplingRate _acquisition._dosePerFrame '
-                      '_acquisition._doseInitial ')
-            moviesView = self._addObjView(obj, fn, {ORDER: labels,
-                                                    VISIBLE: labels,
-                                                    MODE: MODE_MD,
-                                                    RENDER: "no"})
-            # For movies increase the JVM memory by 1 GB, just in case
-            moviesView.setMemory(getJvmMaxMemory() + 1)
+        # elif issubclass(cls, emobj.SetOfMovies):
+        #     fn = obj.getFileName()
+        #     # Enabled for the future has to be available
+        #     labels = ('id _filename _samplingRate _acquisition._dosePerFrame '
+        #               '_acquisition._doseInitial ')
+        #     moviesView = self._addObjView(obj, fn, {ORDER: labels,
+        #                                             VISIBLE: labels,
+        #                                             MODE: MODE_MD,
+        #                                             RENDER: "no"})
+        #     # For movies increase the JVM memory by 1 GB, just in case
+        #     moviesView.setMemory(getJvmMaxMemory() + 1)
 
         elif issubclass(cls, emobj.SetOfMicrographs):
             self._views.append(MicrographsView(self._project, obj, **kwargs))
 
-        elif issubclass(cls, emobj.MicrographsTiltPair):
-            labels = 'id enabled _untilted._filename _tilted._filename'
-            renderLabels = '_untilted._filename _tilted._filename'
-            self._addObjView(obj, obj.getFileName(), {ORDER: labels,
-                                                      VISIBLE: labels,
-                                                      MODE: MODE_MD,
-                                                      RENDER: renderLabels})
-
-        elif issubclass(cls, emobj.ParticlesTiltPair):
-            labels = 'id enabled _untilted._filename _tilted._filename'
-            renderLabels = '_untilted._filename _tilted._filename'
-            self._addObjView(obj, obj.getFileName(), {ORDER: labels,
-                                                      VISIBLE: labels,
-                                                      RENDER: renderLabels,
-                                                      MODE: MODE_MD})
+        # elif issubclass(cls, emobj.MicrographsTiltPair):
+        #     labels = 'id enabled _untilted._filename _tilted._filename'
+        #     renderLabels = '_untilted._filename _tilted._filename'
+        #     self._addObjView(obj, obj.getFileName(), {ORDER: labels,
+        #                                               VISIBLE: labels,
+        #                                               MODE: MODE_MD,
+        #                                               RENDER: renderLabels})
+        #
+        # elif issubclass(cls, emobj.ParticlesTiltPair):
+        #     labels = 'id enabled _untilted._filename _tilted._filename'
+        #     renderLabels = '_untilted._filename _tilted._filename'
+        #     self._addObjView(obj, obj.getFileName(), {ORDER: labels,
+        #                                               VISIBLE: labels,
+        #                                               RENDER: renderLabels,
+        #                                               MODE: MODE_MD})
 
         elif issubclass(cls, emobj.SetOfCoordinates):
             # FIXME: Remove dependency on xmipp3 plugin to visualize coordinates
@@ -197,24 +273,24 @@ class DataViewer(pwviewer.Viewer):
                                                      tmpDir, self.protocol,
                                                      inTmpFolder=True))
 
-        elif issubclass(cls, emobj.SetOfParticles):
-            fn = obj.getFileName()
-            labels = ('id enabled _index _filename _xmipp_zScore _xmipp_cumulativeSSNR '
-                      '_sampling _xmipp_scoreByVariance _xmipp_scoreEmptiness '
-                      '_ctfModel._defocusU _ctfModel._defocusV _ctfModel._defocusAngle '
-                      '_transform._matrix')
-            self._addObjView(obj, fn, {ORDER: labels,
-                                       VISIBLE: labels,
-                                       SORT_BY: '_xmipp_zScore asc',
-                                       RENDER: '_filename'})
+        # elif issubclass(cls, emobj.SetOfParticles):
+        #     fn = obj.getFileName()
+        #     labels = ('id enabled _index _filename _xmipp_zScore _xmipp_cumulativeSSNR '
+        #               '_sampling _xmipp_scoreByVariance _xmipp_scoreEmptiness '
+        #               '_ctfModel._defocusU _ctfModel._defocusV _ctfModel._defocusAngle '
+        #               '_transform._matrix')
+        #     self._addObjView(obj, fn, {ORDER: labels,
+        #                                VISIBLE: labels,
+        #                                SORT_BY: '_xmipp_zScore asc',
+        #                                RENDER: '_filename'})
 
-        elif issubclass(cls, emobj.SetOfVolumes):
-            fn = obj.getFileName()
-            labels = 'id enabled comment _filename '
-            self._addObjView(obj, fn, {MODE: MODE_MD,
-                                       ORDER: labels,
-                                       VISIBLE: labels,
-                                       RENDER: '_filename'})
+        # elif issubclass(cls, emobj.SetOfVolumes):
+        #     fn = obj.getFileName()
+        #     labels = 'id enabled comment _filename '
+        #     self._addObjView(obj, fn, {MODE: MODE_MD,
+        #                                ORDER: labels,
+        #                                VISIBLE: labels,
+        #                                RENDER: '_filename'})
 
         elif issubclass(cls, emobj.SetOfClasses2D):
             self._views.append(ClassesView(self._project, obj.strId(),
@@ -268,6 +344,7 @@ class DataViewer(pwviewer.Viewer):
             self._views.append(DataView(obj.getFileName()))
 
         return self._views
+
 
 class BasicMDViewer(DataViewer):
     """ Viewer to show sets in the metadataviewer to allow manual subsets when

@@ -335,7 +335,6 @@ class SqliteFile(IDAO):
         for index, colName in enumerate(colNames):
 
             isFileNameCol = self.hasExtendedColumn() and index == self._extendedColumn[1]
-            sortable = True
 
             if colName == ENABLED_COLUMN:
                 renderer = BoolRenderer()
@@ -345,15 +344,17 @@ class SqliteFile(IDAO):
                 renderer = table.guessRenderer(values[index])
 
             newCol = Column(colName, renderer)
-            newCol.setIsSorteable(sortable)
+            newCol.setIsSorteable(True)
+            newCol.setIsVisible(objectManager.isLabelVisible(colName))
             table.addColumn(newCol)
 
             if isFileNameCol:
                 logger.debug("Creating an extended column: %s" % EXTENDED_COLUMN_NAME)
                 extraCol = Column(EXTENDED_COLUMN_NAME, ImageRenderer())
+                extraCol.setIsVisible(newCol.isVisible())
+                extraCol.setIsSorteable(False)
                 table.addColumn(extraCol)
-
-
+                newCol.setIsVisible(False)
 
         table.setAlias(self._aliases[tableName])
         self.generateTableActions(table, objectManager)

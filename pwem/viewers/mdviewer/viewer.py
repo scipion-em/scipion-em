@@ -28,6 +28,7 @@ import os.path
 import subprocess
 
 from pwem.objects import EMSet
+from pwem.viewers.viewers_data import RegistryViewerConfig
 from pyworkflow import PYTHON
 from pyworkflow.viewer import Viewer, View
 from pwem.viewers.mdviewer.readers import SCIPION_PORT, SCIPION_OBJECT_ID
@@ -44,21 +45,18 @@ class MDView(View):
         env = os.environ
         env[SCIPION_PORT] = str(self.port)
         env[SCIPION_OBJECT_ID] = str(self._emSet.getObjId())
+        visibleLabels = self.getVisibleLabels()
 
         subprocess.Popen(
-            [PYTHON, "-m", "metadataviewer","--extensionpath",
-            os.path.join(os.path.dirname(__file__),"readers.py"),
-            self._emSet.getFileName()])
+            [PYTHON, "-m", "metadataviewer", "--extensionpath", os.path.join(os.path.dirname(__file__), "readers.py"),
+            self._emSet.getFileName(), "--visiblelabels", visibleLabels])
 
-    # def userSubsetCreationCallback(self, subsetName, selectionFile, outputType):
-    #     project = self.protocol.getProject()
-    #     protocol = project.newProtocol(ProtUserSubSet)
-    #     protocol.setObjLabel(subsetName)
-    #     protocol.sqliteFile.set(selectionFile)
-    #     protocol.inputObject.set(self._emSet)
-    #     protocol.outputClassName.set(outputType)
-    #     # protocol.other.set()
-    #     self.projectWindow.getViewWidget().executeProtocol(protocol)
+    def getVisibleLabels(self):
+        from pwem.viewers import VISIBLE
+        config = RegistryViewerConfig.getConfig(type(self._emSet))
+        if config is not None and VISIBLE in config:
+            return config[VISIBLE]
+        return ''
 
 
 class MDViewer(Viewer):
