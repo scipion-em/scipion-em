@@ -37,7 +37,7 @@ import pwem.protocols as emprot
 from .views import (ObjectView, MicrographsView, CoordinatesObjectView,
                     ClassesView, Classes3DView, CtfView, DataView)
 from .showj import (RENDER, SAMPLINGRATE, ORDER, VISIBLE, MODE, MODE_MD,
-                    SORT_BY, getJvmMaxMemory, launchTiltPairPickerGUI)
+                    SORT_BY, getJvmMaxMemory, launchTiltPairPickerGUI, LABELS)
 from ..convert.headers import Ccp4Header
 
 
@@ -118,6 +118,15 @@ RegistryViewerConfig.registerConfig(emobj.ParticlesTiltPair,
                                     MODE: MODE_MD,
                                     RENDER: renderLabels})
 
+labels = 'enabled id _size _representative._filename'
+RegistryViewerConfig.registerConfig(emobj.SetOfClasses2D,
+                                   {ORDER: labels,
+                                   VISIBLE: labels,
+                                    RENDER: '_representative._filename',
+                                    SORT_BY: '_size desc',
+                                    LABELS: 'id _size'})
+
+
 
 class DataViewer(pwviewer.Viewer):
     """ Wrapper to visualize different type of objects
@@ -171,6 +180,10 @@ class DataViewer(pwviewer.Viewer):
 
     def _visualize(self, obj, **kwargs):
         cls = type(obj)
+
+        if issubclass(cls, emobj.SetOfClasses2D):
+            return [ClassesView(self._project, obj.strId(), obj.getFileName(), **kwargs)]
+
 
         # Try registry first
         config = RegistryViewerConfig.getConfig(cls)
@@ -292,10 +305,10 @@ class DataViewer(pwviewer.Viewer):
         #                                VISIBLE: labels,
         #                                RENDER: '_filename'})
 
-        elif issubclass(cls, emobj.SetOfClasses2D):
-            self._views.append(ClassesView(self._project, obj.strId(),
-                                           obj.getFileName(), **kwargs))
-
+        # elif issubclass(cls, emobj.SetOfClasses2D):
+        #     self._views.append(ClassesView(self._project, obj.strId(),
+        #                                    obj.getFileName(), **kwargs))
+        #
         elif issubclass(cls, emobj.SetOfClasses3D):
             self._views.append(Classes3DView(self._project, obj.strId(),
                                              obj.getFileName()))
