@@ -612,8 +612,15 @@ class TiffImageReader(ImageReader):
         tif = TiffFile(filePath)
         frames = len(tif.pages)  # number of pages in the file
         page = tif.pages[0]  # get shape and dtype of the image in the first page
-        x, y = page.shape
-        return x, y, frames, 1
+
+        # TO confirm but dimensions seems to be swap or at least in synx with page.axes
+        # So we are using axes attribute to get x and y
+        x, y = page.shape # IMPORTANT: to match xmipp convention
+        axes = page.axes.lower()
+        if axes.startswith("y"):
+            x,y = y,x
+
+        return x, y, 1, frames
 
 class EMANImageReader(ImageReader):
     """ Image reader for eman file formats"""
