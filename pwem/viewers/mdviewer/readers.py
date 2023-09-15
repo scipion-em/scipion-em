@@ -164,11 +164,13 @@ class STKImageReader(ImageReader):
 ALLOWED_COLUMNS_TYPES = ['String', 'Float', 'Integer', 'Boolean', 'Matrix']
 ADITIONAL_INFO_DISPLAY_COLUMN_LIST = ['_size', 'id']
 EXCLUDED_COLUMNS = ['label', 'comment', 'creation', '_streamState']
+PERMANENT_COLUMNS = ['id', 'enabled']
 CLASS_OBJECT = 1
 REPRESENTATIVE_OBJECT = 2
 CLASS_ELEMENTS = 3
-EXTENDED_COLUMN_NAME = '_index@_filename'
+EXTENDED_COLUMN_NAME = 'stack'
 ENABLED_COLUMN = 'enabled'
+PROPERTIES_TABLE = 'Properties'
 
 
 class SqliteFile(IDAO):
@@ -218,7 +220,7 @@ class SqliteFile(IDAO):
     def composeObjectType(self):
         """Define the different objects types"""
         # General type defined into Properties table
-        firstRow = self.getTableRow('Properties', 0)
+        firstRow = self.getTableRow(PROPERTIES_TABLE, 0)
         objectType = firstRow['value']
         self._objectsType[self._aliases['objects']] = objectType
 
@@ -341,7 +343,7 @@ class SqliteFile(IDAO):
             elif isFileNameCol:
                 renderer = StrRenderer()
             else:
-                renderer = table.guessRenderer(values[index])
+                renderer = table.guessRenderer(str(values[index]))
 
             newCol = Column(colName, renderer)
             newCol.setIsSorteable(True)
@@ -349,12 +351,13 @@ class SqliteFile(IDAO):
             table.addColumn(newCol)
 
             if isFileNameCol:
-                logger.debug("Creating an extended column: %s" % EXTENDED_COLUMN_NAME)
-                extraCol = Column(EXTENDED_COLUMN_NAME, ImageRenderer())
+                #logger.debug("Creating an extended column: %s" % EXTENDED_COLUMN_NAME)
+                extraCol = Column(colName, ImageRenderer())
                 extraCol.setIsVisible(newCol.isVisible())
                 extraCol.setIsSorteable(False)
                 table.addColumn(extraCol)
                 newCol.setIsVisible(False)
+                newCol.setName(EXTENDED_COLUMN_NAME)
 
         table.setAlias(self._aliases[tableName])
         self.generateTableActions(table, objectManager)
