@@ -1273,6 +1273,13 @@ class EMSet(Set, EMObject):
     def getFiles(self):
         return Set.getFiles(self)
 
+    @staticmethod
+    def isItemEnabled(item):
+        """ Returns if the item is enabled...to be used as a callback. In some other cases (new user subsets)
+         this method will be replaced"""
+
+        return item.isEnabled()
+
 
 class SetOfImages(EMSet):
     """ Represents a set of Images """
@@ -1370,8 +1377,8 @@ class SetOfImages(EMSet):
         """ Store dimensions when the first image is found.
         This function should be called only once, to avoid reading
         dimension from image file. """
-        if self._firstDim.isEmpty():
-            self._firstDim.set(image.getDim())
+        logger.info("Getting the dimensions for the first item: %s" % image.getFileName())
+        self._firstDim.set(image.getDim())
 
     def copyInfo(self, other):
         """ Copy basic information (sampling rate and ctf)
@@ -1454,9 +1461,14 @@ class SetOfImages(EMSet):
 
     def __str__(self):
         """ String representation of a set of images. """
-        s = "%s (%d items, %s, %s%s)" % \
-            (self.getClassName(), self.getSize(),
-             self._dimStr(), self._samplingRateStr(), self._appendStreamState())
+        try:
+            s = "%s (%d items, %s, %s%s)" % \
+                (self.getClassName(), self.getSize(),
+                self._dimStr(), self._samplingRateStr(), self._appendStreamState())
+        except Exception as e:
+            s = "Couldn't convert the set to text."
+            logger.error(s, exc_info=e)
+
         return s
     def _samplingRateStr(self):
         """ Returns how the sampling rate is presented in a 'str' context."""
@@ -1485,20 +1497,32 @@ class SetOfImages(EMSet):
                 img.setAcquisition(self.getAcquisition())
             yield img
 
-    def appendFromImages(self, imagesSet):
+    def appendFromImages(self, imagesSet, itemSelectionCallback=None):
         """ Iterate over the images and append
         every image that is enabled.
+
+        :param imagesSet: Set to go copy items from
+        :param itemSelectionCallback: Optional, callback receiving an item and returning true if it has to be added
+
         """
+
+        if itemSelectionCallback is None:
+            itemSelectionCallback = SetOfImages.isItemEnabled
+
         for img in imagesSet:
-            if img.isEnabled():
+            if itemSelectionCallback(img):
                 self.append(img)
 
-    def appendFromClasses(self, classesSet):
+    def appendFromClasses(self, classesSet, filterClassFunc=None):
         """ Iterate over the classes and the element inside each
         class and append to the set all that are enabled.
         """
+
+        if filterClassFunc is None:
+            filterClassFunc = SetOfImages.isItemEnabled
+
         for cls in classesSet:
-            if cls.isEnabled() and cls.getSize() > 0:
+            if filterClassFunc(cls) and cls.getSize() > 0:
                 for img in cls:
                     if img.isEnabled():
                         self.append(img)
@@ -2118,6 +2142,9 @@ class SetOfClasses(EMSet):
     def appendFromClasses(self, classesSet, filterClassFunc=None, updateClassCallback=None):
         """ Iterate over the classes and the elements inside each
         class and append classes and items that are enabled.
+
+        :param classesSet: Set of classes to copy items from
+        :param filterClassFunc: Extra callback to exclude classes. Receives a class item, should return a boolean
         """
         if filterClassFunc is None:
             filterClassFunc = lambda cls: True

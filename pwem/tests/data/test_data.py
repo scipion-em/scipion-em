@@ -240,8 +240,10 @@ class TestImageHandler(unittest.TestCase):
         tifffileLogger = logging.getLogger("tifffile.tifffile")
         tifffileLogger.disabled = True
 
-        X, Y, Z, N = ih.getDimensions(self.dsFormat.getFile("eer"))
-        self.assertEqual([X, Y, Z, N], [4096, 4096, 567, 1])
+        eerFile = self.dsFormat.getFile("eer")
+        logger.info("Reading dimension for %s" % eerFile )
+        X, Y, Z, N = ih.getDimensions(eerFile)
+        self.assertEqual([X, Y, Z, N], [4096, 4096, 1, 567])
 
     def test_convertMicrographs(self):
         """ Convert micrographs to different formats.
@@ -293,6 +295,7 @@ class TestImageHandler(unittest.TestCase):
         """
         micFn = self.dsFormat.getFile('c3-adp-se-xyz-0228_200.tif')
 
+        logger.info("Reading and converting %s" % micFn)
         ih = emlib.image.ImageHandler()
         # Check that we can read the dimensions of the dm4 file:
         EXPECTED_SIZE = (7676, 7420, 1, 38)
