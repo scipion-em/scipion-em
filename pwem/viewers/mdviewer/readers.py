@@ -216,6 +216,8 @@ class SqliteFile(IDAO):
                     objectTable = divTable[0] + '_Objects'
                     self._tables[objectTable] = tableName
                     self._names.append(objectTable)
+        self._tables[PROPERTIES_TABLE] = PROPERTIES_TABLE
+        self._names.append(PROPERTIES_TABLE)
 
     def composeObjectType(self):
         """Define the different objects types"""
@@ -235,12 +237,15 @@ class SqliteFile(IDAO):
 
     def composeTableAlias(self, tableName):
         """Create an alias for the given table"""
-        firstRow = self.getTableRow(tableName, 0)
-        className = firstRow['class_name']
-        if tableName.__contains__('_'):
-            alias = tableName.split('_')[0] + '_' + className
+        if tableName != PROPERTIES_TABLE:
+            firstRow = self.getTableRow(tableName, 0)
+            className = firstRow['class_name']
+            if tableName.__contains__('_'):
+                alias = tableName.split('_')[0] + '_' + className
+            else:
+                alias = className
         else:
-            alias = className
+            alias = PROPERTIES_TABLE
         return alias
 
     def getTableNames(self):
@@ -332,6 +337,8 @@ class SqliteFile(IDAO):
         self.updateExtendColumn(table)
 
         row = self.getTableRow(tableName, 0, classes=self._tables[tableName])
+        if 'id' not in row:
+            table.setHasColumnId(False)
         values = [value for key, value in row.items() if key not in EXCLUDED_COLUMNS]
 
         for index, colName in enumerate(colNames):
@@ -377,18 +384,21 @@ class SqliteFile(IDAO):
         mode = 'ASC' if orderAsc else 'DESC'
         self.updateExtendColumn(page.getTable())
 
-        for row in self.iterTable(tableName, start=firstRow, limit=limit,
-                                  classes=self._tables[tableName],
-                                  orderBy=column, mode=mode):
+        for rowcount, row in enumerate(self.iterTable(tableName, start=firstRow, limit=limit,
+                                       classes=self._tables[tableName],
+                                       orderBy=column, mode=mode)):
             if row:
+                values = [value for key, value in row.items() if key not in EXCLUDED_COLUMNS]
                 if 'id' in row.keys():
                     id = row['id']
-                    values = [value for key, value in row.items() if key not in EXCLUDED_COLUMNS]
-                    # Checking if exists an extended column
-                    if self.hasExtendedColumn():
-                        values.insert(self._extendedColumn[1] + 1,
-                                      str(values[self._extendedColumn[0]]) + '@' + values[self._extendedColumn[1]])
-                    page.addRow((int(id), values))
+                else:
+                    id = rowcount
+
+                # Checking if exists an extended column
+                if self.hasExtendedColumn() and tableName != PROPERTIES_TABLE:
+                    values.insert(self._extendedColumn[1] + 1,
+                                  str(values[self._extendedColumn[0]]) + '@' + values[self._extendedColumn[1]])
+                page.addRow((int(id), values))
 
     def getRowsCount(self, tableName):
         """ Return the number of elements in the given table. """
@@ -446,7 +456,7 @@ class SqliteFile(IDAO):
         if 'start' in kwargs:
             query += f" OFFSET {kwargs['start']}"
 
-        if 'classes' not in kwargs:
+        if 'classes' not in kwargs or kwargs['classes'] == PROPERTIES_TABLE:
             res = self._con.execute(query)
             while row := res.fetchone():
                 yield row
@@ -475,9 +485,10 @@ class SqliteFile(IDAO):
 
     def _getColumnMap(self, tableName, column):
         """Get the column name that has been mapped"""
-        for key, value in self._columnsMap[tableName].items():
-            if value == column:
-                return key
+        if tableName in self._columnsMap:
+            for key, value in self._columnsMap[tableName].items():
+                if value == column:
+                    return key
         return None
 
     def getTableRow(self, tableName, rowIndex, **kwargs):
