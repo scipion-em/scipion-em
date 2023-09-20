@@ -118,7 +118,8 @@ RegistryViewerConfig.registerConfig(emobj.ParticlesTiltPair,
                                     MODE: MODE_MD,
                                     RENDER: renderLabels})
 
-labels = 'enabled id _size _representative._filename'
+# SetOfClasses2D
+labels = 'enabled id _size _representative._filename _filename'
 RegistryViewerConfig.registerConfig(emobj.SetOfClasses2D,
                                    {ORDER: labels,
                                    VISIBLE: labels,
