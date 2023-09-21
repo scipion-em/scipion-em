@@ -161,7 +161,8 @@ class STKImageReader(ImageReader):
         return ['stk', 'vol']
 
 
-ALLOWED_COLUMNS_TYPES = ['String', 'Float', 'Integer', 'Boolean', 'Matrix']
+ALLOWED_COLUMNS_TYPES = ['String', 'Float', 'Integer', 'Boolean', 'Matrix',
+                         'CsvList']
 ADITIONAL_INFO_DISPLAY_COLUMN_LIST = ['_size', 'id']
 EXCLUDED_COLUMNS = ['label', 'comment', 'creation', '_streamState']
 PERMANENT_COLUMNS = ['id', 'enabled']
@@ -171,6 +172,7 @@ CLASS_ELEMENTS = 3
 EXTENDED_COLUMN_NAME = 'stack'
 ENABLED_COLUMN = 'enabled'
 PROPERTIES_TABLE = 'Properties'
+OBJECT_TABLE = 'objects'
 
 
 class SqliteFile(IDAO):
@@ -212,10 +214,11 @@ class SqliteFile(IDAO):
         for tableName in tablesNames:
             divTable = tableName.split('_')
             if len(divTable) > 1:
-                if divTable[0].startswith('Class') and divTable[1].startswith('Class') and tableName not in self._tables:
-                    objectTable = divTable[0] + '_Objects'
+                if divTable[-1].startswith('Class') and tableName not in self._tables:
+                    objectTable = tableName.replace(divTable[-1], '') + 'Objects'
                     self._tables[objectTable] = tableName
                     self._names.append(objectTable)
+
         self._tables[PROPERTIES_TABLE] = PROPERTIES_TABLE
         self._names.append(PROPERTIES_TABLE)
 
@@ -224,7 +227,7 @@ class SqliteFile(IDAO):
         # General type defined into Properties table
         firstRow = self.getTableRow(PROPERTIES_TABLE, 0)
         objectType = firstRow['value']
-        self._objectsType[self._aliases['objects']] = objectType
+        self._objectsType[self._aliases[OBJECT_TABLE]] = objectType
 
         for alias in self._aliases.values():
             objectTypeAux = alias.split('_')
@@ -241,7 +244,10 @@ class SqliteFile(IDAO):
             firstRow = self.getTableRow(tableName, 0)
             className = firstRow['class_name']
             if tableName.__contains__('_'):
-                alias = tableName.split('_')[0] + '_' + className
+                tableSplit = tableName.split('_')
+                lenTableSplit = len(tableSplit)
+                if lenTableSplit > 1:
+                    alias = tableName.replace(tableSplit[-1],'') + className
             else:
                 alias = className
         else:
@@ -251,8 +257,8 @@ class SqliteFile(IDAO):
     def getTableNames(self):
         """ Return all the table names found in the database. """
         if not self._names:
-            self._tables = {'objects': 'classes'}
-            self._names = ['objects']
+            self._tables = {OBJECT_TABLE: 'classes'}
+            self._names = [OBJECT_TABLE]
 
             res = self._con.execute("SELECT name FROM sqlite_master WHERE type='table'")
             tablesNames = [row['name'] for row in res.fetchall()]
@@ -274,8 +280,8 @@ class SqliteFile(IDAO):
 
             self.composeObjectType()
 
-        if len(self._tables) > 1:
-            self._tableWithAdditionalInfo = 'objects'
+        if len(self._tables) > 2: # Assuming that there are more tables than just Object and Properties
+            self._tableWithAdditionalInfo = OBJECT_TABLE
         return self._names
 
     def findColbyName(self, colNames, colName):
@@ -310,7 +316,7 @@ class SqliteFile(IDAO):
 
     def generateTableActions(self, table, objectManager):
         """Generate actions for a given table in order to create subsets"""
-        if self.getScipionPort():
+        if self.getScipionPort() and table.getName() != PROPERTIES_TABLE:
             alias = table.getAlias()
             labels = list(self._objectsType.keys())
             objectTypes = list(self._objectsType.values())
@@ -323,12 +329,10 @@ class SqliteFile(IDAO):
                     table.addAction('Averages', lambda: self.createSubsetCallback(table, 'SetOfAverages', objectManager))
                 else:
                     table.addAction('Volumes', lambda: self.createSubsetCallback(table, 'SetOfVolumes',  objectManager))
-
-            else:
-                if len(aliasSplit) == 2:
+            elif alias.startswith('Class'):
                     table.addAction(aliasSplit[1], lambda: self.createSubsetCallback(table, self._objectsType[aliasSplit[1]], objectManager))
-                else:
-                    table.addAction(aliasSplit[0], lambda: self.createSubsetCallback(table, self._objectsType[aliasSplit[0]], objectManager))
+            elif alias in self._objectsType and self._objectsType[alias].startswith('SetOf'):
+                table.addAction(alias, lambda: self.createSubsetCallback(table, self._objectsType[alias], objectManager))
 
     def fillTable(self, table, objectManager):
         """Create the table structure (columns) and set the table alias"""
@@ -518,8 +522,8 @@ class SqliteFile(IDAO):
             path = 'Logs/selection_%s.txt' % timestamp
             self.writeSelection(table, path)
             path +="," # Always add a comma, it is expected by the user subset protocol
-            if tableName != 'objects':
-                path += tableName.split('Objects')[0]
+            if tableName != OBJECT_TABLE:
+                path += tableName.split(OBJECT_TABLE)[0]
 
         self.sendSubsetCreationMessage(path, objectType, subsetName)
 
@@ -543,7 +547,7 @@ class SqliteFile(IDAO):
 
     def getScipionPort(self):
         """ Returns Scipion port or None if not in the environment"""
-        return os.getenv(SCIPION_PORT)
+        return os.getenv(SCIPION_PORT, '1300')
 
     def getScipionObjectId(self):
         """ Returns Scipion object id"""
