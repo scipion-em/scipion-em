@@ -54,11 +54,12 @@ class MRCImageReader(ImageReader):
     @lru_cache
     def getMrcImage(cls, fileName):
         logger.info("Reading %s" % fileName)
-        return mrcfile.open(fileName, permissive=True)
+        return  mrcfile.mmap(fileName, mode='r+')
 
     @classmethod
     def getCompatibleFileTypes(cls) -> list:
-        return ['mrc', 'mrc:mrc', 'mrcs', 'em', 'rec', 'ali']
+        return ['mrc', 'mrc:mrc', 'mrcs', 'em', 'rec', 'ali', 'st', 'mrcs:mrc',
+                'mrcs:mrcs', 'mrc:mrcs']
 
 
 class STKImageReader(ImageReader):
