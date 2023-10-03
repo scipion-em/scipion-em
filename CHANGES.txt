@@ -1,3 +1,7 @@
+V3.3.1:
+    Developers:
+     - classifyItems method of SetOfClasses updates an existing output set than can be utilized for streaming protocols
+
 V3.3.0:
    Users:
      - Fix: importing non cubic volumes could render 0 elements in dimensions. Now minimum is 1.
