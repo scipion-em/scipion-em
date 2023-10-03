@@ -24,6 +24,8 @@
 import csv
 import os
 import re
+
+from pwem.objects import SetOfClasses2D
 from pyworkflow.config import Config as pwConfig
 from pyworkflow.gui import getDefaultFont, openTextFileEditor
 
@@ -227,13 +229,11 @@ class ClassesView(ObjectView):
 
     def __init__(self, project, inputid, path, other='',
                  viewParams={}, **kwargs):
-        labels = 'enabled id _size _representative._filename'
-        defaultViewParams = {ORDER: labels,
-                             VISIBLE: labels,
-                             RENDER: '_representative._filename',
-                             SORT_BY: '_size desc',
-                             LABELS: 'id _size',
-                             }
+        from pwem.viewers.viewers_data import RegistryViewerConfig
+        config = RegistryViewerConfig.getConfig(SetOfClasses2D)
+
+        defaultViewParams = config.copy()
+
         defaultViewParams.update(viewParams)
         ObjectView.__init__(self, project, inputid, path, other,
                             defaultViewParams, **kwargs)
