@@ -1,7 +1,3 @@
-V3.3.1:
-    Developers:
-     - classifyItems method of SetOfClasses updates an existing output set than can be utilized for streaming protocols
-
 V3.3.0:
    Users:
      - Fix: importing non cubic volumes could render 0 elements in dimensions. Now minimum is 1.
@@ -9,6 +5,7 @@ V3.3.0:
      - ImageHandler.getDimensions uses ImageReader registry and its readers (Xmipp, Tiff, Eman, ...) image
      - tiff dimensions (gain, eer, tif, tiff) are swap. They originall  y were opposite to xmipp and others convention.
      - User subset: ready for new metadata viewer using txt files with ids.
+     - classifyItems method of SetOfClasses updates an existing output set than can be utilized for streaming protocols
 
 V3.2.2; Hotfix: buggy logline commented
 
