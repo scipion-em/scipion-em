@@ -35,7 +35,7 @@ import pwem.objects as emobj
 from pwem.protocols import (ProtImportParticles, ProtProjectionEditor,
                             ProtImportVolumes)
 from pwem.objects.data import Particle, SetOfParticles, Acquisition, CTFModel
-from pwem.constants import ALIGN_PROJ
+from pwem.constants import ALIGN_PROJ, SYM_CYCLIC
 from pwem.constants import (SYM_I222, SYM_I222r, SYM_In25, SYM_In25r,
                             SYM_DIHEDRAL_X, SYM_DIHEDRAL_Y,
                             SYM_TETRAHEDRAL_222, SYM_TETRAHEDRAL_Z3,
@@ -387,7 +387,7 @@ class TestProjectionEdit(pwtests.BaseTest):
 
     def test_00_MoveVector(self):
         """Rotate projections alignments so in the reconstruction
-        vecor (0,0,1) becames (1,0,0). Rotation along plane
+        vector (0,0,1) becomes (1,0,0). Rotation along plane
         np.cross([0,0,1], [1,0,0])"""
         funcName = inspect.stack()[0][3]
         setPartSqliteName = self.proj.getTmpPath(
@@ -495,6 +495,28 @@ class TestProjectionEdit(pwtests.BaseTest):
             self.assertTrue(
                 np.allclose(controlPartSet,
                             outPartSet.getTransform().getMatrix()))
+
+        self._moveParticlesToUnitCell(protSetEditor, "outputParticles", SYM_CYCLIC, 7)
+
+    def _moveParticlesToUnitCell(self, inputProt, extended, symmetry, order):
+        """ Moves the orientation of the particles to the unit cell of the corresponding symmetry and order
+
+        :param symmetry: Symmetry to use
+        :param order: Symmetry order
+
+        """
+        # edit projection direction
+        protSetEditor = self.newProtocol(
+            ProtProjectionEditor, objLabel="Move to %s%s" %(symmetry, order))
+        protSetEditor.inputSet.set(inputProt)
+        protSetEditor.inputSet.setExtended(extended)
+        protSetEditor.operation.set(
+            ProtProjectionEditor.CHOICE_MOVE_UC)
+        protSetEditor.targetSymmetryToMove.set(symmetry)
+        protSetEditor.symmetryOrderToMove.set(order)
+        self.launchProtocol(protSetEditor)
+
+
 
     def test_05_rotateAroundVector(self):
         """Rotate projections alignments around

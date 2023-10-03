@@ -25,20 +25,20 @@
 # **************************************************************************
 from pyworkflow.gui import showInfo
 from pwem.viewers import EmPlotter
-from pyworkflow.viewer import Viewer
+from pyworkflow.viewer import ProtocolViewer
 import pwem.objects as emobj
 
-class AngularDistributionViewer(Viewer):
-    """ Visualize the output of protocol reconstruct swarm """
-    _label = 'Score transformation viewer'
+class AngularDistributionViewer(ProtocolViewer):
+    """ Visualize particles, subtomograms with orientation information """
+    _label = "Angular distribution viewer"
     _targets = [emobj.SetOfParticles, emobj.SetOfVolumes]
 
     @staticmethod
-    def plotAngularDistribution(emSet:emobj.EMSet, histogram=False):
+    def plotAngularDistribution(emSet:emobj.EMSet, type=1):
 
         plotter = EmPlotter(x=1, y=1, windowTitle='Angular distribution')
 
-        plotter.plotAngularDistributionFromSet(emSet, "Angular distribution", histogram=histogram)
+        plotter.plotAngularDistributionFromSet(emSet, "Angular distribution", type=type)
 
         return plotter
 
@@ -58,6 +58,8 @@ class AngularDistributionViewer(Viewer):
             return
 
         views.append(self.plotAngularDistribution(outputSet))
+        views.append(self.plotAngularDistribution(outputSet,type=2))
+        views.append(self.plotAngularDistribution(outputSet, type=3))
 
         return views
 

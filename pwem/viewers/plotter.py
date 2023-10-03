@@ -24,6 +24,8 @@
 # *
 # **************************************************************************
 import logging
+import math
+
 logger = logging.getLogger(__name__)
 from math import radians, degrees
 import numpy as np
@@ -49,7 +51,7 @@ class EmPlotter(Plotter):
                                 tilt, weight=[], max_p=40,
                                 min_p=5, color='blue'):
         """ Create a special type of subplot, representing the angular
-        distribution of weight projections. """
+        distribution in 2d of weighted projections. """
         if weight:
             max_w = max(weight)
             min_w = min(weight)
@@ -68,10 +70,56 @@ class EmPlotter(Plotter):
             a.scatter(rot, tilt, s=10, c=color, marker='.')
         return a
 
-    def plotAngularDistributionHistogram(self, title, rot, tilt):
+
+    def scatter3DPlot(self, x, y,z, title="3D scatter plot", drawsphere=True, markerSize=1):
+
+        ax =self.createSubPlot(title, xlabel=None, ylabel=None, projection='3d')
+        ax.set_box_aspect(aspect=(1, 1, 1))
+        cmhot = plt.get_cmap("jet")
+        ax.scatter(x, y, z, markerSize,c=markerSize, s=60, cmap=cmhot, alpha=1)#, marker=m)
+
+
+        ax.set_xlabel('X Label')
+        ax.set_ylabel('Y Label')
+        ax.set_zlabel('Z Label')
+        # ax.set_xlim([-1,1])
+        # ax.set_ylim([-1, 1])
+        # ax.set_zlim([-1, 1])
+
+        # Add a color bar which maps values to colors.
+        # self.figure.colorbar(cm.ScalarMappable(norm=norm, cmap=cmhot), shrink=0.5, aspect=5)
+
+        if drawsphere:
+            # draw sphere
+            u, v = np.mgrid[0:2 * np.pi:20j, 0:np.pi:10j]
+            x1 = np.cos(u) * np.sin(v)
+            y1 = np.sin(u) * np.sin(v)
+            z1 = np.cos(v)
+            ax.plot_wireframe(x1, y1, z1, color="black", alpha=0.2)
+            ax.plot_surface(x1, y1, z1, color="red", alpha=0.1)
+
+        return ax
+
+    def plotAngularDistribution3D(self, title, rots,tilts, weights):
+
+        x,y,z = self._anglesToSphereCoords(rots, tilts)
+
+        return self.scatter3DPlot(x,y,z, title=title,markerSize=weights)
+
+
+    def plotAngularDistributionHistogram(self, title, data, eulerAnglesGetterCallback):
         """ Create a special type of subplot, representing the angular
-        distribution of weight projections. """
-        heatmap, xedges, yedges = np.histogram2d(rot, tilt, bins=100)
+        distribution of projections. """
+
+        # Extract the rot and tilt from the data
+        thetas = []
+        phis = []
+        for item in data:
+            rot, tilt, psi = eulerAnglesGetterCallback(item)
+            thetas.append(rot)
+            phis.append(tilt)
+
+        heatmap, xedges, yedges = np.histogram2d(thetas, phis, bins=100)
         sigma = min(max(xedges) - min(xedges), max(yedges) - min(yedges)) / 20
         heatmap = gaussian_filter(heatmap, sigma=sigma)
         heatmapImage = heatmap.T
@@ -83,95 +131,126 @@ class EmPlotter(Plotter):
         a.set_ylabel('Tilt angle')
         return mappable
 
-    def plotAngularDistributionFromSet(self, mdSet, title, weighted=False, histogram=False, **kwargs):
+    def plotAngularDistributionFromSet(self, mdSet, title, type=2, **kwargs):
         """ Read the values of the transformation matrix
                  and plot its histogram or its angular distribution.
 
+                 :param type: Type of plot 1=histogram, 2=2D polar, 3=3D
                  :param mdSet: Set with alignment information at with item.getTransform()
                  :param title: Title of the plot
                 """
 
         def eulerAnglesGetter (item):
 
-            psi, tilt, rot = euler_from_matrix(matrix=item.getTransform().getMatrix(), axes='szyz')
+            matrix = item.getTransform().getRotationMatrix()
+            matrixI = np.linalg.inv(matrix)
+            rot, tilt, psi = euler_from_matrix(matrix=matrixI, axes='szyz')
 
-            return degrees(psi), degrees(tilt), degrees(rot)
+            if tilt<0:
+                tilt= -tilt
+                rot = -rot
+
+            return degrees(rot), degrees(tilt), degrees(psi)
 
 
-        self.plotAngularDistributionBase(mdSet, eulerAnglesGetter, title, weighted, histogram, **kwargs)
+        self.plotAngularDistributionBase(mdSet, eulerAnglesGetter, title, type, **kwargs)
 
-    def plotAngularDistributionBase(self, data, eulerAnglesGetterCallback, title, weighted=False, histogram=False, **kwargs):
+
+    def plotAngularDistributionBase(self, data, eulerAnglesGetterCallback, title,
+                                    type=2, **kwargs):
         """ Read the values of the transformation matrix
          and plot its histogram or its angular distribution.
 
          :param data: any particles iterator containing particles with alignment information.
          :param eulerAnglesGetterCallback: a callback to extract rot, tilt, psi IN DEGREES from each row, receiving the row/item.
          :param title: Title of the plot.
-         :param weighted: Pass true to show a weighted plot.
-
+         :param type: 1 for histogram, 2 for polar plot, 3 for 3d plot
         """
 
-        thetas = []
-        phis = []
-        weights = []
-        weightsIndex=dict() # Dictionary to hold as key the unique id theta-phi and the index were the weight is stored
+        if type==1:
+            return self.plotAngularDistributionHistogram(title, data , eulerAnglesGetterCallback)
 
-        if histogram:
-            for item in data:
-                rot, tilt, psi = eulerAnglesGetterCallback(item)
-                thetas.append(rot)
-                phis.append(tilt)
-
-            return self.plotAngularDistributionHistogram(title, thetas, phis)
         else:
 
-            cancelAddition = False
-            # f = open("/tmp/kk.bild", "w")
+            rots =[]
+            tilts= []
+
+            # Get the euler angles
             for item in data:
+                rot, tilt, psi = eulerAnglesGetterCallback(item)
+                rots.append(rot)
+                tilts.append(tilt)
 
-                # TODO Make random subset
-                psi, tilt, rot = eulerAnglesGetterCallback(item)
+            # Weight (group) rots and tilts
+            rots, tilts, weights = self.weightEulerAngles(rots, tilts, rotInRadians=type==2)
 
-                logger.debug("Rot, tilt, psi: ", rot, tilt, psi)
-                theta, phi = eulerAngles_to_2D(rot, tilt, psi)
+            if type==2:
+                return self.plotAngularDistribution(title, rots, tilts, weight=weights,**kwargs)
 
-                if weighted:
-                    # Round them to the nearest angle in base 5.
-                    theta, phi = round_to_nearest(theta,0.1), round_to_nearest(phi,0.1)
+            else:
+                return self.plotAngularDistribution3D(title, rots, tilts, weights=weights )
 
-                    # Get the theta dict
-                    thetaDict = weightsIndex.get(theta, None)
+    def weightEulerAngles(self, rots, tilts, delta=3, rotInRadians=False):
+        """ Receives the list of rots and tilts angles (in deg) and returns
+         a reduced list of rots, tilts and weights lists
 
-                    if thetaDict is None:
-                        thetaDict = dict()
-                        weightsIndex[theta] = thetaDict
+         :param rotCaster: method that receives the rot in degrees and returns it converted to something else, radians?"""
 
-                    phiDict = thetaDict.get(phi, None)
+        # Holds pairs of rot, tilt
+        projectionList = []
 
-                    if phiDict is None:
-                        phiDict =dict()
-                        thetaDict[phi] = phiDict
+        def getCloseProjectionIndex(angleRot, angleTilt):
+            """ Get an existing projection close to angleRot, angleTilt.
+            Return None if not found close enough.
+            """
+            for index, projection in enumerate(projectionList):
+                if (abs(projection[0] - angleRot) <= delta and
+                        abs(projection[1] - angleTilt) <= delta):
+                    return index
+            return None
 
-                    weightIndex = phiDict.get(phi, None)
+        weight = 1. / len(rots)
 
-                    if weightIndex is None:
-                        weightIndex=len(weights)
-                        phiDict[phi] = weightIndex
-                        weights.append(0)
-                        cancelAddition = False
-                    else:
-                        cancelAddition = True
+        new_rots = []
+        new_tilts = []
+        weights = []
 
-                    weight = weights[weightIndex]+1
-                    weights[weightIndex] = weight
+        if rotInRadians:
+            rotCaster = np.radians
+        else:
+            rotCaster = lambda rot: rot
 
+        # Weight the rots and tilts
+        for rot, tilt in zip(rots, tilts):
+            projectionIndex = getCloseProjectionIndex(rot, tilt)
 
-                if not cancelAddition:
-                    thetas.append(theta)  # rot will be plotted as angle so it should be in radians
-                    phis.append(degrees(phi)) # tilt will be plotted as radius and we are used to see it in degrees
+            if projectionIndex is None:
+                projectionList.append([rot, tilt])
+                new_rots.append(rotCaster(rot))
+                new_tilts.append(tilt)
+                weights.append(weight)
+            else:
+                weights[projectionIndex] += weight
 
-            # f.close()
-            return self.plotAngularDistribution(title, thetas, phis, weights, **kwargs)
+        return new_rots, new_tilts, weights
+
+    def _anglesToSphereCoords(self, rots, tilts):
+        """ Converts euler angles (rot and tilts) to spherical coordinates."""
+
+        X=[]
+        Y=[]
+        Z=[]
+
+        for rot, tilt in zip(rots, tilts):
+
+            # Converts to euler direction
+            x, y, z = emlib.Euler_direction(rot, tilt, 0)
+
+            X.append(x)
+            Y.append(y)
+            Z.append(z)
+
+        return X, Y, Z
 
     def plotAngularDistributionFromMd(self, mdFile, title, **kwargs):
         """ Read the values of rot, tilt and weights from
@@ -183,15 +262,22 @@ class EmPlotter(Plotter):
             weight: MDL_WEIGHT
         """
         angMd = md.MetaData(mdFile)
-        rot = []
-        tilt = []
 
         if 'histogram' in kwargs:
-            for row in md.iterRows(angMd):
-                rot.append(row.getValue(md.MDL_ANGLE_ROT))
-                tilt.append(row.getValue(md.MDL_ANGLE_TILT))
-            return self.plotAngularDistributionHistogram(title, rot, tilt)
+            def eulerAnglesGetter(row):
+                return row.getValue(md.MDL_ANGLE_ROT), row.getValue(md.MDL_ANGLE_TILT), None
+
+            class MDIter:
+                def __init__(self, mdObj):
+                    self.mdObj = mdObj
+                def __iter__(self):
+                    for row in md.iterRows(self.mdObj):
+                        yield row
+
+            return self.plotAngularDistributionHistogram(title, MDIter(angMd), eulerAnglesGetter)
         else:
+            rot = []
+            tilt = []
             weight = []
             for row in md.iterRows(angMd):
                 rot.append(radians(row.getValue(md.MDL_ANGLE_ROT)))
@@ -354,7 +440,11 @@ def magnitude(x, y, z):
     return sqrt(x * x + y * y + z * z)
 
 def to_spherical(x, y, z):
-    """Converts a cartesian coordinate (x, y, z) into a spherical one (radius, theta, phi)."""
+    """Converts a cartesian coordinate (x, y, z) into a spherical one (radius, theta, phi) in radians.
+        theta ranges from 0 t PI
+        phi ranges from -PI to PI
+
+    """
     radius = magnitude(x, y, z)
     theta = atan2(sqrt(x * x + y * y), z)
     phi = atan2(y, x)
