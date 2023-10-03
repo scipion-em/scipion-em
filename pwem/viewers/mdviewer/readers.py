@@ -427,6 +427,37 @@ class SqliteFile(IDAO):
         rowsIds = [row['id'] for row in rowsList]
         return rowsIds
 
+    def getColumnsValues(self, tableName, columns, xAxis, selection, limit,
+                         reverse=True):
+        """Get the values of the selected columns in order to plot them"""
+
+        logger.debug("Reading the table %s and selected some columns values")
+        cols = columns
+        if xAxis and xAxis not in cols:
+            cols.append(xAxis)
+        columnNames = []
+        for column in cols:
+            col = self._getColumnMap(tableName, column)
+            if col == None:
+                col = column
+            columnNames.append(col)
+
+        columnNames = ", ".join(columnNames)
+
+        col = self._getColumnMap(tableName, xAxis)
+        if col != None:
+            xAxis = col
+
+        mode = 'ASC' if reverse else 'DESC'
+        orderBy = ' ORDER BY %s %s' % (xAxis, mode) if xAxis else ''
+        limit = ' LIMIT %d' % limit if limit is not None else ''
+
+        query = "SELECT %s FROM %s %s %s"  % (columnNames, tableName,
+                                                    orderBy, limit)
+        columnsValues = self._con.execute(query).fetchall()
+
+        return columnsValues
+
     def iterTable(self, tableName, **kwargs):
         """
         Method to iterate over the table's rows
