@@ -60,12 +60,14 @@ class ProtUserSubSet(BatchProtocol):
 
      run protocol ProtUserSubSet inputObject=380 sqliteFile='Runs/000335_ProtImodTSNormalization/tiltseries_state.sqlite','' outputClassName=SetOfTiltSeries other='' label='create subset'
 
-    run protocol is received by ProjectTCPRequestHandler.handle()
+     run protocol is received by ProjectTCPRequestHandler.handle()
 
     """
     def __init__(self, **args):
         BatchProtocol.__init__(self, **args)
         self._selectedIds = None
+        self._dbName = None # To keep the path to the database to read
+        self._selectionTxt = None # To keep the file (txt) that has the selection. Extracted from sqliteFile tuple.
 
     def _defineParams(self, form):
         form.addSection("Input")
@@ -244,15 +246,15 @@ class ProtUserSubSet(BatchProtocol):
 
         return output
 
-
     def _getSelectionTxtDict(self):
 
         if self._selectedIds is None:
             self._selectedIds = dict()
             ids = None
+            self.info("Reading selection from %s" % self._dbName)
             # This file has a single line with id separated by spaces
-            with open(self.sqliteFile.get(), "r") as fh:
-                line = fh.readline()
+            with open(self._selectionTxt, "r") as fh:
+                line = fh.readline().strip()
                 ids = line.split(" ")
 
             for id in ids:
@@ -543,18 +545,19 @@ class ProtUserSubSet(BatchProtocol):
         """ Moves the sqlite with the enable/disable status to its own
         path to keep it and names it subset.sqlite"""
 
+        _dbName, self._dbPrefix = self.sqliteFile.get().split(',')
+
         if self.usingShowJ():
 
-            _dbName, self._dbPrefix = self.sqliteFile.get().split(',')
             self._dbName = self._getPath('subset.sqlite')
             os.rename(_dbName, self._dbName)
-
-            if self._dbPrefix.endswith('_'):
-                self._dbPrefix = self._dbPrefix[:-1]
-
         else:
             self._dbName = self.inputObject.get().getFileName()
-            self._dbPrefix = ""
+            self._selectionTxt = _dbName
+
+        # Prefix: used to create subsets from Particles from a class (specific table in a set of classes)
+        if self._dbPrefix.endswith('_'):
+            self._dbPrefix = self._dbPrefix[:-1]
 
         from pwem.utils import loadSetFromDb
 
