@@ -2187,6 +2187,15 @@ class SetOfClasses(EMSet):
         itemDataIter = itemDataIterator  # shortcut
 
         clsDict = {}  # Dictionary to store the (classId, classSet) pairs
+        if not self.isEmpty():
+            for item in self.iterItems():
+                # clone with a param to clone also mapper path?
+                clone = item.clone()
+                self._setItemMapperPath(clone)
+                # Maybe enableAppend of class based on enableAppend of set?
+                clone.enableAppend()
+                clsDict[item.getObjId()] = clone
+
         inputSet = self.getImages()
         iterParams = iterParams or {}
 
