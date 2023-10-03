@@ -4,7 +4,7 @@ V3.3.0:
    Developers:
      - ImageHandler.getDimensions uses ImageReader registry and its readers (Xmipp, Tiff, Eman, ...)image
      - User subset: ready for new metadata viewer using txt files with ids.
-     - New metadata viewer(BETA). To use it run 'scipion3 pip install metadata-viewer'. Right click on outputs should show "Scipion metadata viewer"
+     - New metadata viewer(BETA). To use it run 'scipion3 pip install metadata-viewer mrcfile'. Right click on outputs should show "Scipion metadata viewer"
 
 V3.2.2; Hotfix: bugy logline commented
 
