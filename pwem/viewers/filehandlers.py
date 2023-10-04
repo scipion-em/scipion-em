@@ -30,10 +30,14 @@ import os
 
 import pwem
 import pyworkflow.utils as pwutils
+from pwem.convert import Ccp4Header
 from pyworkflow import gui
 from pyworkflow.gui.browser import FileHandler, isStandardImage
 
 from pwem import emlib
+
+import logging
+logger = logging.getLogger(__name__)
 
 
 class ImageFileHandler(FileHandler):
@@ -56,6 +60,13 @@ class ImageFileHandler(FileHandler):
             dimMsg += " x %(n)d"
             expMsg += " x Objects"
             objType = 'Stack'
+
+        if Ccp4Header.isCompatible(filename):
+            ccp4Reader= Ccp4Header(filename, readHeader=True)
+            expMsg += "\nHeader info: \nSampling rate: %1.2f, %1.2f, %1.2f" % ccp4Reader.getSampling()
+            expMsg += "\nOrigin: %1.2f, %1.2f, %1.2f" % ccp4Reader.getOrigin()
+
+
         return (dimMsg + "\n" + expMsg) % locals()
 
     def _getImagePreview(self, filename):
@@ -101,6 +112,22 @@ class StackHandler(ImageFileHandler):
     def getFileIcon(self, objFile):
         return 'file_stack.gif' if not objFile.isLink() else 'file_stack_link.gif'
 
+class ImajeJFileHandler(FileHandler):
+
+    def getFileActions(self, objFile):
+        from pyworkflow.viewer import CommandView
+
+        fn = objFile.getPath()
+        fijiPath = pwem.Config.IMAGEJ_BINARY_PATH
+
+        if fijiPath:
+            cmd = '%s "%s"' % (fijiPath, fn)
+            return [('Open with ImageJ/Fiji', lambda: CommandView(cmd).show(),
+                 pwutils.Icon.ACTION_VISUALIZE)]
+
+    def getFileIcon(self, objFile):
+        return 'file_image.gif' if not objFile.isLink() else 'file_image_link.gif'
+
 
 class ChimeraHandler(FileHandler):
 
@@ -116,7 +143,10 @@ class ChimeraHandler(FileHandler):
 
 class MdFileHandler(ImageFileHandler):
     def getFileIcon(self, objFile):
-        return 'file_md.gif'
+        if objFile.isLink():
+            return 'file_md_link.gif'
+        else:
+            return 'file_md.gif'
 
     def _getImgPath(self, mdFn, imgFn):
         """ Get ups and ups until finding the relative location to images. """

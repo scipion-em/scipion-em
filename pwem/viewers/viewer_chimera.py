@@ -26,15 +26,13 @@
 # **************************************************************************
 
 import os
-from multiprocessing.connection import Client
-import threading
 
 import pyworkflow.utils as pwutils
 import pyworkflow.viewer as pwviewer
 import pwem.constants as emcts
 import pwem.emlib.metadata as md
 import pwem.objects as emobj
-from pwem import emlib, Domain
+from pwem import emlib
 from pwem import Config as emConfig
 from pwem.objects import SetOfAtomStructs
 
@@ -137,23 +135,17 @@ class Chimera:
         arrowDict["r2"] = 2 * arrowDict["r1"]
         arrowDict["rho"] = 0.75  # axis thickness
 
-        ff.write(".color 1 0 0\n"
+        ff.write(".color red\n" # red
                  ".arrow 0 0 0 %(x)f 0 0 %(r1)f %(r2)f %(rho)f\n"
                  ".color 0 0 0\n.sphere -%(x)f 0 0 0.00001\n"
-                 ".color 1 1 0\n"
+                 ".color yellow\n" # yellow
                  ".arrow 0 0 0 0 %(y)f 0 %(r1)f %(r2)f %(rho)f\n"
                  ".color 0 0 0\n.sphere 0 -%(y)f 0 0.00001\n"
-                 ".color 0 0 1\n"
+                 ".color blue\n"
                  ".arrow 0 0 0 0 0 %(z)f %(r1)f %(r2)f %(rho)f\n"
                  ".color 0 0 0\n.sphere 0 0 -%(z)f 0.00001\n" %
                  arrowDict)
         ff.close()
-
-
-def printCmd(cmd):
-    """ Debug function. """
-    pass
-    # print cmd
 
 
 class ChimeraAngDist(pwviewer.CommandView):
@@ -291,33 +283,32 @@ class ChimeraAngDist(pwviewer.CommandView):
 class ChimeraView(pwviewer.CommandView):
     """ View for calling an external command. """
 
-    def __init__(self, inputFile, **kwargs):
-        program = Chimera.getProgram()
-        inputFile = inputFile.replace(":mrc", "")
-        pwviewer.CommandView.__init__(self, '%s "%s" &' % (program, inputFile),
-                                      env=Chimera.getEnviron(), **kwargs)
+    def getProgram(self):
+        return Chimera.getProgram()
 
+    def getEnviron(self):
+        return Chimera.getEnviron()
 
-class ChimeraClientView(ChimeraView):
-    """ View for calling an external command. """
-    pass
+    def __init__(self, inputFiles, **kwargs):
 
+        if isinstance(inputFiles,str):
+            inputFiles = [inputFiles]
 
-class ChimeraDataView(ChimeraView):
+        program = self.getProgram()
 
-    def __init__(self, dataview, vol, viewParams={}, **kwargs):
-        self.dataview = dataview
-        ChimeraClientView.__init__(self, vol.getFileName())
-
-    def show(self):
-        self.dataview.show()
-        ChimeraClientView.show(self)
-
+        # Join files
+        filesStr = '" "'.join(inputFiles)
+        filesStr = filesStr.replace(":mrc", "")
+        pwviewer.CommandView.__init__(self, '%s "%s" &' % (program, filesStr),
+                                      env=self.getEnviron(), **kwargs)
 
 class ChimeraViewer(pwviewer.Viewer):
     """ Wrapper to visualize PDB object with Chimera. """
     _environments = [pwviewer.DESKTOP_TKINTER]
-    _targets = [emobj.AtomStruct, emobj.PdbFile, emobj.SetOfAtomStructs]
+    _targets = [emobj.AtomStruct, emobj.PdbFile, emobj.SetOfAtomStructs,
+                emobj.Volume, emobj.SetOfVolumes, emobj.SetOfClasses3D]
+
+    _name = "ChimeraX"
 
     def __init__(self, **kwargs):
         pwviewer.Viewer.__init__(self, **kwargs)
@@ -370,9 +361,53 @@ class ChimeraViewer(pwviewer.Viewer):
                 view = ChimeraView(fnCmd)
                 return [view]
 
+        elif issubclass(cls,emobj.Volume):
+            view = ChimeraView(obj.getFileName())
+            return [view]
+
+        elif issubclass(cls,emobj.EMSet):
+            files = obj.getFiles()
+            view = ChimeraView(files)
+            return [view]
+
         else:
             raise Exception('ChimeraViewer.visualize: '
                             'can not visualize class: %s' % obj.getClassName())
+
+
+class ChimeraOldView(ChimeraView):
+    """ View for calling an external command. """
+
+    def getProgram(self):
+        return emConfig.CHIMERA_OLD_BINARY_PATH
+
+    def getEnviron(self):
+        return None
+
+class ChimeraOldViewer(ChimeraViewer):
+    """ Wrapper to visualize Chimera OLD (1.10 , 1.13, ..) compatible objects . """
+    _name = "Chimera"
+
+    def __init__(self, **kwargs):
+        pwviewer.Viewer.__init__(self, **kwargs)
+
+    def _visualize(self, obj, **kwargs):
+        cls = type(obj)
+
+        if issubclass(cls, emobj.EMSet):
+
+            files = obj.getFiles()
+            view = ChimeraOldView(files)
+            return [view]
+
+        elif issubclass(cls, (emobj.Volume, emobj.AtomStruct)):
+            view = ChimeraOldView(obj.getFileName())
+            return [view]
+
+        else:
+            raise Exception('ChimeraOldViewer.visualize: '
+                            'can not visualize class: %s' % obj.getClassName())
+
 
 
 def mapVolsWithColorkey(displayVolFileName,

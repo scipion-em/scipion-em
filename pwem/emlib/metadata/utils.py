@@ -90,30 +90,38 @@ class Row:
 
     def readFromMd(self, md, objId):
         """ Get all row values from a given id of a metadata. """
-        self._labelDict.clear()
         self._objId = objId
-
-        for label in md.getActiveLabels():
-            self._labelDict[label] = md.getValue(label, objId)
+        try:
+            self._labelDict = md.getRow(objId)
+        except AttributeError:  # can be eventually removed, once we are sure that users have recent Xmipp
+            self._labelDict.clear()
+            for label in md.getActiveLabels():
+                self._labelDict[label] = md.getValue(label, objId)
 
     def addToMd(self, md):
         self.writeToMd(md, md.addObject())
 
     def writeToMd(self, md, objId):
         """ Set back row values to a metadata row. """
-        for label, value in self._labelDict.items():
-            # TODO: Check how to handle correctly unicode type
-            # in Xmipp and Scipion
-            if type(value) is str:
-                value = str(value)
-            try:
-                md.setValue(label, value, objId)
-            except Exception as ex:
-                import sys
-                print("XmippMdRow.writeToMd: Error writing value to metadata.", file=sys.stderr)
-                print("                     label: %s, value: %s, type(value): %s" % (
-                    label2Str(label), value, type(value)), file=sys.stderr)
-                raise ex
+        try:
+            md.setRow(self._labelDict, objId)
+        except AttributeError:  # can be eventually removed, once we are sure that users have recent Xmipp
+            for label, value in self._labelDict.items():
+                # TODO: Check how to handle correctly unicode type
+                # in Xmipp and Scipion
+                if type(value) is str:
+                    value = str(value)
+                try:
+                    if labelType(label) == 2:
+                        md.setValue(label, float(value), objId)
+                    else:
+                        md.setValue(label, value, objId)
+                except Exception as ex:
+                    import sys
+                    print("XmippMdRow.writeToMd: Error writing value to metadata.", file=sys.stderr)
+                    print("                     label: %s, value: %s, type(value): %s" % (
+                        label2Str(label), value, type(value)), file=sys.stderr)
+                    raise ex
 
     def readFromFile(self, fn):
         md = MetaData(fn)

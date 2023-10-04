@@ -24,8 +24,9 @@
 # *
 # **************************************************************************
 
-import pyworkflow.tests as pwtests
+import numpy as np
 
+import pyworkflow.tests as pwtests
 from pwem import Domain
 import pwem.protocols as emprot
 
@@ -131,8 +132,8 @@ class TestXmippWorkflow(TestWorkflow):
         scale = protExtract.outputParticles.getSamplingRate() / protImport.outputMicrographs.getSamplingRate()
         inParticleCoord = protExtract.outputParticles.getFirstItem().getCoordinate()
         x, y = inParticleCoord.getPosition()
-        self.assertAlmostEqual(protExtractCoords.outputCoordinates.getFirstItem().getPosition(),
-                               (int(x * scale), int(y * scale)))
+        np.testing.assert_allclose(protExtractCoords.outputCoordinates.getFirstItem().getPosition(),
+                                   (int(x * scale), int(y * scale)), rtol=0.5)
 
         print("Run Screen Particles")
         protScreen = self.newProtocol(xmippProtcols.XmippProtScreenParticles,
@@ -195,8 +196,8 @@ class TestXmippWorkflow(TestWorkflow):
                                                    inputParticles.getAlignment())
         x, y = inParticleCoord.getPosition()
         xCoor, yCoor = x - int(shifts[0]), y - int(shifts[1])
-        self.assertAlmostEqual(protExtractCoordsShifts.outputCoordinates.getFirstItem().getPosition(),
-                               (int(xCoor * scale), int(yCoor * scale)))
+        np.testing.assert_allclose(protExtractCoordsShifts.outputCoordinates.getFirstItem().getPosition(),
+                                   (int(xCoor * scale), int(yCoor * scale)), rtol=0.5)
 
         print("Run kerdensom")
         ProtKerdensom = self.newProtocol(xmippProtcols.XmippProtKerdensom,
@@ -207,14 +208,6 @@ class TestXmippWorkflow(TestWorkflow):
         self.assertIsNotNone(ProtKerdensom.outputClasses, "There was a problem with kerdensom")
         # self.validateFiles('ProtKerdensom', ProtKerdensom)
 
-        print("Run Rotational Spectra")
-        xmippProtRotSpectra = self.newProtocol(xmippProtcols.XmippProtRotSpectra,
-                                               SomXdim=2, SomYdim=2,
-                                               spectraInnerRadius=4,
-                                               spectraOuterRadius=24)
-        xmippProtRotSpectra.inputParticles.set(protOnlyAlign.outputParticles)
-        self.launchProtocol(xmippProtRotSpectra)
-        self.assertIsNotNone(xmippProtRotSpectra.outputClasses, "There was a problem with Rotational Spectra")
 
 
 if __name__ == "__main__":

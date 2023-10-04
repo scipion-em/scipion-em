@@ -119,6 +119,139 @@ class Acquisition(EMObject):
                 self._amplitudeContrast.get())
 
 
+class Transform(EMObject):
+    """ This class will contain a transformation matrix
+    that can be applied to 2D/3D objects like images and volumes.
+    It should contain information about euler angles, translation(or shift)
+    and mirroring.
+    Shifts are stored in pixels as treated in extract coordinates, or assign angles,...
+    """
+
+    # Basic Transformation factory
+    ROT_X_90_CLOCKWISE = 'rotX90c'
+    ROT_Y_90_CLOCKWISE = 'rotY90c'
+    ROT_Z_90_CLOCKWISE = 'rotZ90c'
+    ROT_X_90_COUNTERCLOCKWISE = 'rotX90cc'
+    ROT_Y_90_COUNTERCLOCKWISE = 'rotY90cc'
+    ROT_Z_90_COUNTERCLOCKWISE = 'rotZ90cc'
+
+    def __init__(self, matrix=None, **kwargs):
+        EMObject.__init__(self, **kwargs)
+        self._matrix = Matrix()
+        if matrix is not None:
+            self.setMatrix(matrix)
+
+    def getMatrix(self):
+        return self._matrix.getMatrix()
+
+    def getRotationMatrix(self):
+        M = self.getMatrix()
+        return M[:3, :3]
+
+    def getShifts(self):
+        M = self.getMatrix()
+        return M[1, 4], M[2, 4], M[3, 4]
+
+    def getMatrixAsList(self):
+        """ Return the values of the Matrix as a list. """
+        return self._matrix.getMatrix().flatten().tolist()
+
+    def setMatrix(self, matrix):
+        self._matrix.setMatrix(matrix)
+
+    def __str__(self):
+        return str(self._matrix)
+
+    def scale(self, factor):
+        m = self.getMatrix()
+        m *= factor
+        m[3, 3] = 1.
+
+    def scaleShifts(self, factor):
+        # By default Scipion uses a coordinate system associated with the volume rather than the projection
+        m = self.getMatrix()
+        m[0, 3] *= factor
+        m[1, 3] *= factor
+        m[2, 3] *= factor
+
+    def invert(self):
+        # Local import to avoid loop pwem --> data --> convert --> Plugin (at pwem)
+        from pwem.convert.transformations import inverse_matrix
+
+        self._matrix.setMatrix(inverse_matrix(self._matrix.getMatrix()))
+
+        return self._matrix
+
+    def getShifts(self):
+        m = self.getMatrix()
+        return m[0, 3], m[1, 3], m[2, 3]
+
+    def setShifts(self, x, y, z):
+        m = self.getMatrix()
+        m[0, 3] = x
+        m[1, 3] = y
+        m[2, 3] = z
+
+    def setShiftsTuple(self, shifts):
+        self.setShifts(shifts[0], shifts[1], shifts[2])
+
+    def composeTransform(self, matrix):
+        """Apply a transformation matrix to the current matrix """
+        new_matrix = np.matmul(matrix, self.getMatrix())
+        # new_matrix = matrix * self.getMatrix()
+        self._matrix.setMatrix(new_matrix)
+
+    @classmethod
+    def create(cls, type):
+        if type == cls.ROT_X_90_CLOCKWISE:
+            return Transform(matrix=np.array([
+                [1, 0, 0, 0],
+                [0, 0, 1, 0],
+                [0, -1, 0, 0],
+                [0, 0, 0, 1]]))
+        elif type == cls.ROT_X_90_COUNTERCLOCKWISE:
+            return Transform(matrix=np.array([
+                [1, 0, 0, 0],
+                [0, 0, -1, 0],
+                [0, 1, 0, 0],
+                [0, 0, 0, 1]]))
+        elif type == cls.ROT_Y_90_CLOCKWISE:
+            return Transform(matrix=np.array([
+                [1, 0, -1, 0],
+                [0, 1, 0, 0],
+                [1, 0, 0, 0],
+                [0, 0, 0, 1]]))
+        elif type == cls.ROT_Y_90_COUNTERCLOCKWISE:
+            return Transform(matrix=np.array([
+                [1, 0, 1, 0],
+                [0, 1, 0, 0],
+                [-1, 0, 0, 0],
+                [0, 0, 0, 1]]))
+        elif type == cls.ROT_Z_90_CLOCKWISE:
+            return Transform(matrix=np.array([
+                [0, 1, 0, 0],
+                [-1, 0, 0, 0],
+                [0, 0, 1, 0],
+                [0, 0, 0, 1]]))
+        elif type == cls.ROT_Z_90_COUNTERCLOCKWISE:
+            return Transform(matrix=np.array([
+                [0, -1, 0, 0],
+                [1, 0, 0, 0],
+                [0, 0, 1, 0],
+                [0, 0, 0, 1]]))
+        else:
+            TRANSFORMATION_FACTORY_TYPES = [
+                cls.ROT_X_90_CLOCKWISE,
+                cls.ROT_Y_90_CLOCKWISE,
+                cls.ROT_Z_90_CLOCKWISE,
+                cls.ROT_X_90_COUNTERCLOCKWISE,
+                cls.ROT_Y_90_COUNTERCLOCKWISE,
+                cls.ROT_Z_90_COUNTERCLOCKWISE
+            ]
+            raise Exception('Introduced Transformation type is not recognized.\nAdmitted values are\n'
+                            '%s' % ' '.join(TRANSFORMATION_FACTORY_TYPES))
+
+
 class CTFModel(EMObject):
     """ Represents a generic CTF model. """
 
@@ -467,6 +600,12 @@ class Image(EMObject):
         x, y, z, n = ImageHandler().getDimensions(self)
         return None if x is None else (x, y, z)
 
+    def getImage(self):
+        """ Returns the actual image this objects represents"""
+        from pwem.emlib.image import ImageHandler
+        ih = ImageHandler()
+        return ih.read(self)
+
     def getXDim(self):
         return self.getDim()[0] if self.getDim() is not None else 0
 
@@ -521,7 +660,10 @@ class Image(EMObject):
 
     def copyInfo(self, other):
         """ Copy basic information """
-        self.copyAttributes(other, '_samplingRate')
+        if type(self) is type(other):
+            self.copy(other, copyId=False)
+        else:
+            self.copyAttributes(other, '_samplingRate')
 
     def copyLocation(self, other):
         """ Copy location index and filename from other image. """
@@ -553,7 +695,7 @@ class Image(EMObject):
     def hasTransform(self):
         return self._transform is not None
 
-    def getTransform(self):
+    def getTransform(self)-> Transform:
         return self._transform
 
     def setTransform(self, newTransform):
@@ -740,16 +882,26 @@ class Volume(Image):
     def hasHalfMaps(self):
         return not self._halfMapFilenames.isEmpty()
 
-    def getHalfMaps(self):
-        return self._halfMapFilenames.get()
+    def getHalfMaps(self, asList=False):
+        if asList:
+            return self._halfMapFilenames
+        else:
+            return self._halfMapFilenames.get()
 
     def setHalfMaps(self, listFileNames):
         return self._halfMapFilenames.set(listFileNames)
 
-    def fixMRCVolume(self):
-        """ Fixes the header of the mrc file pointed by this object """
-        from pwem.convert.headers import fixVolume
+    def fixMRCVolume(self, setSamplingRate=False):
+        """ Fixes the header of the mrc file pointed by this object
+
+        :param setSamplingRate: if true, it will set the header's sampling rate of the MRC file it refers
+
+        """
+        from pwem.convert.headers import fixVolume, setMRCSamplingRate
         fixVolume(self.getFileName())
+
+        if setSamplingRate:
+            setMRCSamplingRate(self.getFileName(), self.getSamplingRate())
 
     def __str__(self):
         """ returns string representation adding halves info to base image.__str__"""
@@ -780,12 +932,64 @@ class EMFile(EMObject):
         """ Use the _objValue attribute to store filename. """
         self._filename.set(filename)
 
+class Alphabet():
+    """ class with a dictionary of all valid alphabets"""
+    # sequence types
+    AMINOACIDS = 0
+    NUCLEOTIDES = 1
+    
+    SEQ_TYPE = ['aminoacids', 'nucleotides']
+
+    # alphabets for proteins
+    PROTEIN_ALPHABET = 0
+    EXTENDED_PROTEIN_ALPHABET = 1
+
+    # alphabets for nucleotides
+    AMBIGOUS_DNA_ALPHABET = 2
+    UNAMBIGOUS_DNA_ALPHABET = 3
+    EXTENDED_DNA_ALPHABET = 4
+    AMBIGOUS_RNA_ALPHABET = 5
+    UNAMBIGOUS_RNA_ALPHABET = 6 
+    NUCLEOTIDES_ALPHABET = 7
+
+    # dummy alphabet
+    DUMMY_ALPHABET = 8
+
+    # dictionary with all alphabets
+    alphabets = {}; alphabetsLabels = {}
+
+    alphabets[PROTEIN_ALPHABET] = 'ACDEFGHIKLMNPQRSTVWY'
+    alphabets[EXTENDED_PROTEIN_ALPHABET] = 'ACDEFGHIKLMNPQRSTVWYBJOUXZ'
+    alphabets[AMBIGOUS_DNA_ALPHABET] = 'GATCRYWSMKHBVDN'
+    alphabets[UNAMBIGOUS_DNA_ALPHABET] = 'GATC'
+    alphabets[EXTENDED_DNA_ALPHABET] = 'GATCBDSW'
+    alphabets[AMBIGOUS_RNA_ALPHABET] = 'GAUCRYWSMKHBVDN'
+    alphabets[UNAMBIGOUS_RNA_ALPHABET] = 'GAUC'
+    alphabets[NUCLEOTIDES_ALPHABET] = 'GAC'
+    alphabets[DUMMY_ALPHABET] = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+
+    # dictionary with all alphabets labels
+    alphabetsLabels[PROTEIN_ALPHABET] = 'Protein'
+    alphabetsLabels[EXTENDED_PROTEIN_ALPHABET] = 'Extended Protein'
+    alphabetsLabels[AMBIGOUS_DNA_ALPHABET] = 'Ambigous DNA'
+    alphabetsLabels[UNAMBIGOUS_DNA_ALPHABET] = 'Unambigous DNA'
+    alphabetsLabels[EXTENDED_DNA_ALPHABET] = 'Extended DNA'
+    alphabetsLabels[AMBIGOUS_RNA_ALPHABET] = 'Ambigous RNA'
+    alphabetsLabels[UNAMBIGOUS_RNA_ALPHABET] = 'Unambigous RNA'
+
+    
 
 class Sequence(EMObject):
     """Class containing a sequence of aminoacids/nucleotides
        Attribute names follow the biopython default ones
+            param: name: name of the sequence
+            param: sequence: string with the sequence
+            param: alphabet: integer with the alphabet to be used
+            param: isAminoacids: boolean indicating if the sequence is an aminoacid sequence
+            param: id: string with the sequence id
+            param: description: string with the sequence description
+           
     """
-
     def __init__(self, name=None, sequence=None,
                  alphabet=None, isAminoacids=True, id=None, description=None,
                  **kwargs):
@@ -849,11 +1053,11 @@ class Sequence(EMObject):
         self._alphabet.set(Integer(seqDic['alphabet']))
         self._isAminoacids.set(Boolean(seqDic['isAminoacids']))
 
-    def exportToFile(self, seqFileName):
+    def exportToFile(self, seqFileName, doClean=True):
         '''Exports the sequence to the specified file'''
         import pwem.convert as emconv
         seqHandler = emconv.SequenceHandler(self.getSequence(),
-                                            isAminoacid=self.getIsAminoacids())
+                                            self._alphabet.get(), doClean)
         # retrieving  args from scipion object
         seqID = self.getId() if self.getId() is not None else 'seqID'
         seqName = self.getSeqName() if self.getSeqName() is not None else 'seqName'
@@ -861,13 +1065,16 @@ class Sequence(EMObject):
         seqHandler.saveFile(seqFileName, seqID,
                             name=seqName, seqDescription=seqDescription,
                             type=None)
+                            #seqFiP12345 USER_SEQ 
+                            # Aspartate aminotransferase, mitochondrial
 
-    def appendToFile(self, seqFileName):
+    def appendToFile(self, seqFileName, doClean=True):
         '''Exports the sequence to the specified file. If it already exists,
         the sequence is appended to the ones in the file'''
+        logger.info("Appending sequence to file: %s" % seqFileName)
         import pwem.convert as emconv
         seqHandler = emconv.SequenceHandler(self.getSequence(),
-                                            isAminoacid=self.getIsAminoacids())
+                                            Alphabet.DUMMY_ALPHABET, doClean)
         # retrieving  args from scipion object
         seqID = self.getId() if self.getId() is not None else 'seqID'
         seqName = self.getSeqName() if self.getSeqName() is not None else 'seqName'
@@ -908,7 +1115,7 @@ class AtomStruct(EMFile):
         return self._volume is not None
 
     def setVolume(self, volume):
-        if type(volume) is Volume:
+        if issubclass(type(volume), Volume):
             self._volume = volume
         else:
             raise Exception('TypeError', 'ERROR: SetVolume, This is not a '
@@ -1066,6 +1273,13 @@ class EMSet(Set, EMObject):
     def getFiles(self):
         return Set.getFiles(self)
 
+    @staticmethod
+    def isItemEnabled(item):
+        """ Returns if the item is enabled...to be used as a callback. In some other cases (new user subsets)
+         this method will be replaced"""
+
+        return item.isEnabled()
+
 
 class SetOfImages(EMSet):
     """ Represents a set of Images """
@@ -1163,15 +1377,18 @@ class SetOfImages(EMSet):
         """ Store dimensions when the first image is found.
         This function should be called only once, to avoid reading
         dimension from image file. """
-        if self._firstDim.isEmpty():
-            self._firstDim.set(image.getDim())
+        logger.info("Getting the dimensions for the first item: %s" % image.getFileName())
+        self._firstDim.set(image.getDim())
 
     def copyInfo(self, other):
         """ Copy basic information (sampling rate and ctf)
         from other set of images to current one"""
-        self.copyAttributes(other, '_samplingRate', '_isPhaseFlipped',
-                            '_isAmplitudeCorrected', '_alignment')
-        self._acquisition.copyInfo(other._acquisition)
+        if type(self) is type(other):
+            self.copy(other, copyId=False)
+        else:
+            self.copyAttributes(other, '_samplingRate', '_isPhaseFlipped',
+                                '_isAmplitudeCorrected', '_alignment')
+            self._acquisition.copyInfo(other._acquisition)
 
     def getFiles(self):
         filePaths = set()
@@ -1244,6 +1461,17 @@ class SetOfImages(EMSet):
 
     def __str__(self):
         """ String representation of a set of images. """
+        try:
+            s = "%s (%d items, %s, %s%s)" % \
+                (self.getClassName(), self.getSize(),
+                self._dimStr(), self._samplingRateStr(), self._appendStreamState())
+        except Exception as e:
+            s = "Couldn't convert the set to text."
+            logger.error(s, exc_info=e)
+
+        return s
+    def _samplingRateStr(self):
+        """ Returns how the sampling rate is presented in a 'str' context."""
         sampling = self.getSamplingRate()
 
         if not sampling:
@@ -1251,10 +1479,7 @@ class SetOfImages(EMSet):
                   % self.getName())
             sampling = -999.0
 
-        s = "%s (%d items, %s, %0.2f Å/px%s)" % \
-            (self.getClassName(), self.getSize(),
-             self._dimStr(), sampling, self._appendStreamState())
-        return s
+        return "%0.2f Å/px" % sampling
 
     def _dimStr(self):
         """ Return the string representing the dimensions. """
@@ -1272,20 +1497,32 @@ class SetOfImages(EMSet):
                 img.setAcquisition(self.getAcquisition())
             yield img
 
-    def appendFromImages(self, imagesSet):
+    def appendFromImages(self, imagesSet, itemSelectionCallback=None):
         """ Iterate over the images and append
         every image that is enabled.
+
+        :param imagesSet: Set to go copy items from
+        :param itemSelectionCallback: Optional, callback receiving an item and returning true if it has to be added
+
         """
+
+        if itemSelectionCallback is None:
+            itemSelectionCallback = SetOfImages.isItemEnabled
+
         for img in imagesSet:
-            if img.isEnabled():
+            if itemSelectionCallback(img):
                 self.append(img)
 
-    def appendFromClasses(self, classesSet):
+    def appendFromClasses(self, classesSet, filterClassFunc=None):
         """ Iterate over the classes and the element inside each
         class and append to the set all that are enabled.
         """
+
+        if filterClassFunc is None:
+            filterClassFunc = SetOfImages.isItemEnabled
+
         for cls in classesSet:
-            if cls.isEnabled() and cls.getSize() > 0:
+            if filterClassFunc(cls) and cls.getSize() > 0:
                 for img in cls:
                     if img.isEnabled():
                         self.append(img)
@@ -1462,6 +1699,12 @@ class SetOfAtomStructs(EMSet):
     # Hint to GUI components to expose internal items for direct selection
     EXPOSE_ITEMS = True
 
+    def getFiles(self):
+        files = []
+        for atomStruct in self.iterItems():
+            files.append(atomStruct.getFileName())
+
+        return files
 
 class SetOfPDBs(SetOfAtomStructs):
     """ Set containing PDB items. """
@@ -1476,16 +1719,21 @@ class SetOfSequences(EMSet):
     """Set containing Sequence items."""
     ITEM_TYPE = Sequence
 
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.aligned = Boolean(kwargs.get('aligned', False))
+
+
     def exportToFile(self, seqFileName):
         '''Writes the sequences in the set in the specified file'''
         for sequence in self:
             sequence.appendToFile(seqFileName)
 
-    def importFromFile(self, seqFileName, isAmino=True):
+    def importFromFile(self, seqFileName, isAmino=True, type=None):
         '''Appends elements to the set from sequences found in the specified file'''
         import pwem.convert as emconv
         seqHandler = emconv.SequenceHandler()
-        seqsDic = seqHandler.readSequencesFromFile(seqFileName, type=None, isAmino=isAmino)
+        seqsDic = seqHandler.readSequencesFromFile(seqFileName, type=type, isAmino=isAmino)
         for seqDic in seqsDic:
             newSeq = Sequence(sequence=seqDic['sequence'], id=seqDic['seqID'],
                               name=seqDic['name'], description=seqDic['description'],
@@ -1631,10 +1879,14 @@ class SetOfCoordinates(EMSet):
         for coord in self.iterItems(where=coordWhere):
             yield coord
 
-    def getMicrographs(self):
+    def getMicrographs(self, asPointer=False):
         """ Returns the SetOfMicrographs associated with
         this SetOfCoordinates"""
-        return self._micrographsPointer.get()
+
+        if asPointer:
+            return self._micrographsPointer
+        else:
+            return self._micrographsPointer.get()
 
     def setMicrographs(self, micrographs):
         """ Set the micrographs associated with this set of coordinates.
@@ -1676,6 +1928,8 @@ class SetOfCoordinates(EMSet):
 
         # TODO: we might what here to copy the mics too, same as done with
         # acquisition in SetOfImages
+        if isinstance(other, SetOfCoordinates):
+            self.setMicrographs(other.getMicrographs(asPointer=True))
 
 
 class Matrix(Scalar):
@@ -1713,139 +1967,6 @@ class Matrix(Scalar):
         """
         self.setMatrix(np.copy(other.getMatrix()))
         self._objValue = other._objValue
-
-
-class Transform(EMObject):
-    """ This class will contain a transformation matrix
-    that can be applied to 2D/3D objects like images and volumes.
-    It should contain information about euler angles, translation(or shift)
-    and mirroring.
-    Shifts are stored in pixels as treated in extract coordinates, or assign angles,...
-    """
-
-    # Basic Transformation factory
-    ROT_X_90_CLOCKWISE = 'rotX90c'
-    ROT_Y_90_CLOCKWISE = 'rotY90c'
-    ROT_Z_90_CLOCKWISE = 'rotZ90c'
-    ROT_X_90_COUNTERCLOCKWISE = 'rotX90cc'
-    ROT_Y_90_COUNTERCLOCKWISE = 'rotY90cc'
-    ROT_Z_90_COUNTERCLOCKWISE = 'rotZ90cc'
-
-    def __init__(self, matrix=None, **kwargs):
-        EMObject.__init__(self, **kwargs)
-        self._matrix = Matrix()
-        if matrix is not None:
-            self.setMatrix(matrix)
-
-    def getMatrix(self):
-        return self._matrix.getMatrix()
-
-    def getRotationMatrix(self):
-        M = self.getMatrix()
-        return M[:3, :3]
-
-    def getShifts(self):
-        M = self.getMatrix()
-        return M[1, 4], M[2, 4], M[3, 4]
-
-    def getMatrixAsList(self):
-        """ Return the values of the Matrix as a list. """
-        return self._matrix.getMatrix().flatten().tolist()
-
-    def setMatrix(self, matrix):
-        self._matrix.setMatrix(matrix)
-
-    def __str__(self):
-        return str(self._matrix)
-
-    def scale(self, factor):
-        m = self.getMatrix()
-        m *= factor
-        m[3, 3] = 1.
-
-    def scaleShifts(self, factor):
-        # By default Scipion uses a coordinate system associated with the volume rather than the projection
-        m = self.getMatrix()
-        m[0, 3] *= factor
-        m[1, 3] *= factor
-        m[2, 3] *= factor
-
-    def invert(self):
-        # Local import to avoid loop pwem --> data --> convert --> Plugin (at pwem)
-        from pwem.convert.transformations import inverse_matrix
-
-        self._matrix.setMatrix(inverse_matrix(self._matrix.getMatrix()))
-
-        return self._matrix
-
-    def getShifts(self):
-        m = self.getMatrix()
-        return m[0, 3], m[1, 3], m[2, 3]
-
-    def setShifts(self, x, y, z):
-        m = self.getMatrix()
-        m[0, 3] = x
-        m[1, 3] = y
-        m[2, 3] = z
-
-    def setShiftsTuple(self, shifts):
-        self.setShifts(shifts[0], shifts[1], shifts[2])
-
-    def composeTransform(self, matrix):
-        """Apply a transformation matrix to the current matrix """
-        new_matrix = np.matmul(matrix, self.getMatrix())
-        # new_matrix = matrix * self.getMatrix()
-        self._matrix.setMatrix(new_matrix)
-
-    @classmethod
-    def create(cls, type):
-        if type == cls.ROT_X_90_CLOCKWISE:
-            return Transform(matrix=np.array([
-                [1, 0, 0, 0],
-                [0, 0, 1, 0],
-                [0, -1, 0, 0],
-                [0, 0, 0, 1]]))
-        elif type == cls.ROT_X_90_COUNTERCLOCKWISE:
-            return Transform(matrix=np.array([
-                [1, 0, 0, 0],
-                [0, 0, -1, 0],
-                [0, 1, 0, 0],
-                [0, 0, 0, 1]]))
-        elif type == cls.ROT_Y_90_CLOCKWISE:
-            return Transform(matrix=np.array([
-                [1, 0, -1, 0],
-                [0, 1, 0, 0],
-                [1, 0, 0, 0],
-                [0, 0, 0, 1]]))
-        elif type == cls.ROT_Y_90_COUNTERCLOCKWISE:
-            return Transform(matrix=np.array([
-                [1, 0, 1, 0],
-                [0, 1, 0, 0],
-                [-1, 0, 0, 0],
-                [0, 0, 0, 1]]))
-        elif type == cls.ROT_Z_90_CLOCKWISE:
-            return Transform(matrix=np.array([
-                [0, 1, 0, 0],
-                [-1, 0, 0, 0],
-                [0, 0, 1, 0],
-                [0, 0, 0, 1]]))
-        elif type == cls.ROT_Z_90_COUNTERCLOCKWISE:
-            return Transform(matrix=np.array([
-                [0, -1, 0, 0],
-                [1, 0, 0, 0],
-                [0, 0, 1, 0],
-                [0, 0, 0, 1]]))
-        else:
-            TRANSFORMATION_FACTORY_TYPES = [
-                cls.ROT_X_90_CLOCKWISE,
-                cls.ROT_Y_90_CLOCKWISE,
-                cls.ROT_Z_90_CLOCKWISE,
-                cls.ROT_X_90_COUNTERCLOCKWISE,
-                cls.ROT_Y_90_COUNTERCLOCKWISE,
-                cls.ROT_Z_90_COUNTERCLOCKWISE
-            ]
-            raise Exception('Introduced Transformation type is not recognized.\nAdmitted values are\n'
-                            '%s' % ' '.join(TRANSFORMATION_FACTORY_TYPES))
 
 
 class Class2D(SetOfParticles):
@@ -1933,15 +2054,15 @@ class SetOfClasses(EMSet):
         return self._representatives.get()
 
     def getImages(self):
-        """ Return the SetOFImages used to create the SetOfClasses. """
+        """ Return the SetOfImages used to create the SetOfClasses. """
         return self._imagesPointer.get()
 
     def getImagesPointer(self):
-        """" Return the pointer to the SetOFImages used to create the SetOfClasses. """
+        """" Return the pointer to the SetOfImages used to create the SetOfClasses. """
         return self._imagesPointer
 
     def setImages(self, images):
-        """ Set the images (particles 2d associated with this set of classes.
+        """ Set the images (particles) 2d associated with this set of classes.
         Params:
             images: An indirect pointer (with extended) to a set of images.
         """
@@ -2008,12 +2129,22 @@ class SetOfClasses(EMSet):
 
                 yield rep
 
+    def getFiles(self):
+
+        files = []
+        for rep in self.iterRepresentatives():
+            files.append(rep.getFileName())
+        return files
+
     def getSamplingRate(self):
         return self.getImages().getSamplingRate()
 
     def appendFromClasses(self, classesSet, filterClassFunc=None, updateClassCallback=None):
         """ Iterate over the classes and the elements inside each
         class and append classes and items that are enabled.
+
+        :param classesSet: Set of classes to copy items from
+        :param filterClassFunc: Extra callback to exclude classes. Receives a class item, should return a boolean
         """
         if filterClassFunc is None:
             filterClassFunc = lambda cls: True
@@ -2056,6 +2187,15 @@ class SetOfClasses(EMSet):
         itemDataIter = itemDataIterator  # shortcut
 
         clsDict = {}  # Dictionary to store the (classId, classSet) pairs
+        if not self.isEmpty():
+            for item in self.iterItems():
+                # clone with a param to clone also mapper path?
+                clone = item.clone()
+                self._setItemMapperPath(clone)
+                # Maybe enableAppend of class based on enableAppend of set?
+                clone.enableAppend()
+                clsDict[item.getObjId()] = clone
+
         inputSet = self.getImages()
         iterParams = iterParams or {}
 
@@ -2458,10 +2598,10 @@ class FSC(EMObject):
             if float(self._y[i]) < threshold or i == dataLength-1:
                 above_res = float(self._x[i-1])
                 above_fsc = float(self._y[i-1])
-                bellow_res = float(self._x[i])
-                bellow_fsc = float(self._y[i])
+                below_res = float(self._x[i])
+                below_fsc = float(self._y[i])
                 break
-        resolution = bellow_res - ((threshold-bellow_fsc)/(above_fsc-bellow_fsc) * (bellow_res-above_res))
+        resolution = below_res - ((threshold-below_fsc)/(above_fsc-below_fsc) * (below_res-above_res))
         return "{0:.1f}".format(1/resolution)
 
 

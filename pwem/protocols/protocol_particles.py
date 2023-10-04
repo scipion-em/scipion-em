@@ -245,7 +245,7 @@ class ProtExtractParticles(ProtParticles):
 
     def _extractMicrograph(self, mic, *args):
         """ This function should be implemented by subclasses in order
-        to picking the given micrograph. """
+        to pick the given micrograph. """
         pass
 
     # ---------- Methods to extract many micrographs at once ------------------

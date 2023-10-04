@@ -28,8 +28,8 @@
 from matplotlib.ticker import FuncFormatter
 from matplotlib.widgets import Button
 
+from pyworkflow import Config
 import pyworkflow.viewer as pwviewer
-import pyworkflow.utils as pwutils
 
 import pwem.objects as emobj
 import pwem.protocols as emprot
@@ -71,7 +71,7 @@ class FscViewer(pwviewer.Viewer):
                              horizontalalignment='center',
                              transform=axcreateFSC.transAxes, color='white')
             bcreateFSC = Button(axcreateFSC, '',  # leave label empty
-                                color=pwutils.Color.RED_COLOR,
+                                color=Config.SCIPION_MAIN_COLOR,
                                 hovercolor='maroon')
             bcreateFSC.on_clicked(self.createFSCObject)
             self._addButton = False

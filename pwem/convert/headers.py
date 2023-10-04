@@ -34,6 +34,7 @@ import collections
 import struct
 from math import isnan
 
+from pwem import ALL_MRC_EXTENSIONS
 from pyworkflow.utils import getExt
 from ..emlib.image import ImageHandler
 
@@ -233,7 +234,7 @@ class Ccp4Header:
 
     def getNumberOfObjects(self):
         # Special case for volume stacks...
-        return int(self._header['NS'] / self._header['NZ'])
+        return max(int(self._header['NS'] / self._header['NZ']),1)
 
     def getXYZN(self):
         if self.getISPG() and not self.isMovie:
@@ -323,10 +324,10 @@ class Ccp4Header:
 
         if ext == '.mrcs':
             self.isMovie = True
-        elif ext == '.mrc:mrcs':  # Movie --> dims = [X, Y, Z = 1, N]
+        elif ':mrcs' in ext :  # Movie --> dims = [X, Y, Z = 1, N]
             self.isMovie = True
             fileName = fileName.replace(':mrcs', '')
-        elif ext in ['.mrc:mrc', '.map:mrc']:  # Volume --> dims = [X, Y, Z, N = 1]
+        elif ':mrc' in ext:  # Volume --> dims = [X, Y, Z, N = 1]
             fileName = fileName.replace(':mrc', '')
 
         return fileName
@@ -348,12 +349,16 @@ class Ccp4Header:
 
         ccp4header.writeHeader()
 
+    @classmethod
+    def isCompatible(cls, file):
+        return getFileFormat(file) == MRC
+
 
 def getFileFormat(fileName):
-    ext = getExt(fileName)
-    if ext in ['.mrc', '.map', '.mrcs', '.mrc:mrc', '.mrc:mrcs', '.st', '.rec', '.ali']:
+    ext = getExt(fileName).replace(".","")
+    if ext in ALL_MRC_EXTENSIONS:
         return MRC
-    elif ext == '.spi' or ext == '.vol':
+    elif ext == 'spi' or ext == 'vol':
         return SPIDER
     else:
         return UNKNOWNFORMAT

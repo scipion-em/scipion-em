@@ -1,5 +1,89 @@
+V3.3.0:
+   Users:
+     - Fix: importing non cubic volumes could render 0 elements in dimensions. Now minimum is 1.
+   Developers:
+     - ImageHandler.getDimensions uses ImageReader registry and its readers (Xmipp, Tiff, Eman, ...) image
+     - tiff dimensions (gain, eer, tif, tiff) are swap. They originall  y were opposite to xmipp and others convention.
+     - User subset: ready for new metadata viewer using txt files with ids.
+     - classifyItems method of SetOfClasses updates an existing output set than can be utilized for streaming protocols
+     - New metadata viewer(BETA). To use it run 'scipion3 pip install metadata-viewer mrcfile'. Right click on outputs should show "Scipion metadata viewer"
+
+V3.2.2; Hotfix: buggy logline commented
+
+V3.2.1: Hotfix: set dimensions are updated upon set creation
+
+V3.2.0:
+ Users:
+   - New viewer: "Basic MD viewer" to allow doing manual subsets on those sets where before it wasn't possible (Coordinates2D, FSCs)
+   - ImageJ filehandler: Set IMAGEJ_BINARY_PATH to the ImageJ or Fiji binary.
+   Developers:
+     - SetOfCoordinates tweaks: better use of micrographs pointer
+
+V3.1.0
+ Users:
+   - New Angular distribution viewer (right click on any SetOfParticles or SetOfSubtomograms will list it)
+   - Use main color config variable
+   - New variable: CHIMERA_OLD_BINARY_PATH: Full path to chimera binary. If defined, it will offer BASIC visualization of pdb and volumes
+   - Set editor: summary show the formula
+   - Join sets: clones all attributes, not only 1st level ones.
+   - New protocol box size checkpoint to validate an estimated particle size.
+   - The browser thumbnail show origin info for mrc files
+   - Import volumes set the volume comment to the original file.
+   - Fix subset: Scheduling waits when subset uses other set
+   - ChimeraViewer: Handle also set of volumes and 3d classifications
+
+ Developers:
+   - SCIPION_CANCEL_XMIPP_BINDING_WARNING defined in the environment will cancel the warning about xmipp binding missing
+   - SCIPION_CANCEL_XMIPP_BINDING_WARNING defined in the github action
+   - function readFromPDBDatabase tries to download an atomic structure up to 5 times before returning  an error (before it tried only once)
+   - function retry search for fatal error messages in the output and if found,  it aborts instead of trying several times.
+   - plotter.py uses logging
+   - Plotter.plotAngularDistribution refactored: uses scatter instead of plot fo each point. It may improve performance.
+   - Plotter.plotAngularDistributionFromSet new: To plot sets with items.getTransform()
+   - Volume.getHalfMaps: receives optionally "asList" to return the list instead of the string
+   - Volume.fixMRCVolume, now receives (optionally) a boolean to set the header's sampling rate of the MRC file it refers
+   - showj.py: uses logger
+   - showj.py: javaVersion cached, javaBin taken from Config.JAVA_HOME o "java"
+   - showj.py: SCIPION_JAVA_HOME takes priority over JAVA_HOME (pycharm debugging case)
+   - Use new Config.isScipionRunning to register file handlers.
+   - Use new Config.isScipionRunning to print xmipp ghost message.
+   - SetOfImages._samplingRateStr extracted to convert sampling rate to a str
+
+V3.0.27
+   - Hot fix: Assign angles assign full shifts by default. Warns about loosing xFrac and yFrac comming from extract coordinates.
+
+V3.0.26
+   - Hot fix: Import volumes annotates the filename in the volume/s
+
+V3.0.25
+   - Hot fix: protocols.conf is packaged now!
+
+V3.0.24
+users:
+   - Version compatible with latest released scipion-em-chimera plugin.
+developers:
+   - biopython updated to 1.79
+   - Using Alphabet from new version of biopython, related tests modified and added.
+   - DataViewer allow for registration of new sets using: DataViewer.registerConfig(type, configDict).
+     Useful for tomography sets and avoiding unnecessary inheritance.
+   - Icon is a png (compatible with future pillow versions)
+   - weakImport("tifffile") added when registering FileHandlers (bug at installation in github action)
+
+
 V3.0.23
-   - Subset optimized, specially for small parametric subsets (random or by ids)
+users:
+   - Subset protocol optimized, specially for small parametric subsets (random or by ids)
+   - Assign angles protocol optimized.
+   - Filebrowser: thumbnails info shown always without the need of loading viewers.
+   - Thumbnails for mrc files (and its flavours) show also headers sampling rate.
+
+developers:
+   - Plugins discovery takes into account priority packages: pwem, tomo, ..
+   - FileHandler registration moved to main pwem.__init__.
+   - Import volumes uses logging
+   - Import volumes fixed when downloading an EMDB.
+   - Dataviewer allow registration of other sets. Dataviewer: DataViewer.registerConfig(tomo.objects.SetOfTiltSeriesCoordinates)
+
 V3.0.22 (hotfix)
    - Plugin.guessCudaVersion returns Version("0.0") for cases like this /usr/lib/x86_64-linux-gnu
 

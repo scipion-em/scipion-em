@@ -1,13 +1,13 @@
-#!/usr/bin/env python
 # **************************************************************************
 # *
-# * Authors:     J.M. De la Rosa Trevin (delarosatrevin@scilifelab.se) [1]
+# * Authors: Yunior C. Fonseca Reyna    (cfonseca@cnb.csic.es)
 # *
-# * [1] SciLifeLab, Stockholm University
+# *
+# * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
-# * the Free Software Foundation; either version 3 of the License, or
+# * the Free Software Foundation; either version 2 of the License, or
 # * (at your option) any later version.
 # *
 # * This program is distributed in the hope that it will be useful,
@@ -24,30 +24,5 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-Launch main project window 
-"""
 
-import sys
-from subprocess import CalledProcessError
-
-from pwem import runProgram
-from pyworkflow import Config
-
-
-def main():
-    program = sys.argv[1]
-    params = ' '.join('"%s"' % x for x in sys.argv[2:])
-
-    # Initialize plugin discovery and initialization
-    Config.getDomain().getPlugins()
-
-    try:
-        runProgram(program, params)
-    except CalledProcessError as e:
-        print("Command %s failed. Exiting with %s" % (e.cmd, e.returncode))
-        sys.exit(e.returncode)
-
-
-if __name__ == '__main__':
-    main()
+from .viewer import  MDViewer

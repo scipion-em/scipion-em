@@ -34,6 +34,7 @@ import pyworkflow.object as pwobj
 from pyworkflow.gui import dialog
 import pyworkflow.wizard as pwizard
 from pyworkflow.gui.tree import ListTreeProviderString
+from pyworkflow.gui.dialog import showError
 
 import pwem.convert as emconv
 
@@ -375,23 +376,28 @@ class SelectResidueWizard(SelectChainWizard):
     def getSequence(self, finalResiduesList, idxs):
         roiStr, inSeq = '', False
         for residue in finalResiduesList:
-            if json.loads(residue.get())['residue'] in RESIDUES3TO1:
-                if json.loads(residue.get())['index'] == idxs[0]:
+            resDic = json.loads(residue.get())
+            if resDic['residue'] in RESIDUES3TO1:
+                if resDic['index'] == idxs[0]:
                   inSeq = True
-                if json.loads(residue.get())['index'] == idxs[-1]:
+                if resDic['index'] == idxs[-1]:
                   inSeq = False
-                  roiStr += RESIDUES3TO1[json.loads(residue.get())['residue']]
+                  roiStr += RESIDUES3TO1[resDic['residue']]
                   break
 
                 if inSeq:
-                    roiStr += RESIDUES3TO1[json.loads(residue.get())['residue']]
+                    roiStr += RESIDUES3TO1[resDic['residue']]
         return roiStr
 
     def show(self, form, *params):
       inputParams, outputParam = self.getInputOutput(form)
       protocol = form.protocol
       inputObj = getattr(protocol, inputParams[0]).get()
-      chainStr = getattr(protocol, inputParams[1]).get()
+      if len(inputParams) < 2:
+          # For sequence objects, with no chain
+          chainStr = None
+      else:
+          chainStr = getattr(protocol, inputParams[1]).get()
       finalResiduesList = self.getResidues(form, inputObj, chainStr)
 
       provider = ListTreeProviderString(finalResiduesList)
@@ -401,6 +407,7 @@ class SelectResidueWizard(SelectChainWizard):
 
       idxs = [json.loads(dlg.values[0].get())['index'], json.loads(dlg.values[-1].get())['index']]
       roiStr = self.getSequence(finalResiduesList, idxs)
+
 
       intervalStr = '{"index": "%s-%s", "residues": "%s"}' % (idxs[0], idxs[1], roiStr)
       form.setVar(outputParam[0], intervalStr)
@@ -456,12 +463,14 @@ class SelectAttributeWizard(VariableWizard):
     """Wizard to select attributes stored in a scipion object or set """
     _targets, _inputs, _outputs = [], {}, {}
 
-    def getFirstItem(self, form, inputParam):
-        inputPointer = getattr(form.protocol, inputParam)
-        if issubclass(inputPointer.__class__, pwobj.PointerList):
-            inputPointer = inputPointer[0]
+    def getInputSet(self, form, inputParam):
+      inputPointer = getattr(form.protocol, inputParam)
+      if issubclass(inputPointer.__class__, pwobj.PointerList):
+        inputPointer = inputPointer[0]
+      return inputPointer.get()
 
-        inputSet = inputPointer.get()
+    def getFirstItem(self, form, inputParam):
+        inputSet = self.getInputSet(form, inputParam)
         if issubclass(inputSet.__class__, pwobj.Set):
             item = inputSet.getFirstItem()
         elif issubclass(inputSet.__class__, pwobj.Object):
@@ -477,15 +486,17 @@ class SelectAttributeWizard(VariableWizard):
 
     def show(self, form, *params):
       inputParam, outputParam = self.getInputOutput(form)
-      attrsList = self.getInputAttributes(form, inputParam)
-      finalAttrsList = []
-      for i in attrsList:
-        finalAttrsList.append(pwobj.String(i))
-      provider = ListTreeProviderString(finalAttrsList)
-      dlg = dialog.ListDialog(form.root, "Filter set", provider,
-                            "Select one of the attributes")
-      form.setVar(outputParam[0], dlg.values[0].get())
-
+      if self.getInputSet(form, inputParam[0]):
+        attrsList = self.getInputAttributes(form, inputParam)
+        finalAttrsList = []
+        for i in attrsList:
+          finalAttrsList.append(pwobj.String(i))
+        provider = ListTreeProviderString(finalAttrsList)
+        dlg = dialog.ListDialog(form.root, "Filter set", provider,
+                              "Select one of the attributes")
+        form.setVar(outputParam[0], dlg.values[0].get())
+      else:
+        showError('Input error', 'Input needs to be defined in the form for the wizard be used', form.root)
 
 class ColorScaleWizardRMSD(ColorScaleWizardBase):
     _targets = ColorScaleWizardBase.defineTargets(emview.ChimeraAttributeViewer)

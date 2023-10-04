@@ -60,8 +60,10 @@ def linkXmippBinding():
             print("LD_LIBRARY_PATH must contain scipion lib folder (%s).  Please, add it." % os.path.abspath(
                 pw.Config.getLibFolder()))
 
+cancelWarning = os.environ.get("SCIPION_CANCEL_XMIPP_BINDING_WARNING", False)
 
-print(ghostStr)
+if (not cancelWarning) and pw.Config.isScipionRunning():
+    print(ghostStr)
 
 linkXmippBinding()
 
