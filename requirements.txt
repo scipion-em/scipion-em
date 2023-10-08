@@ -1,4 +1,4 @@
-scipion-pyworkflow>=3.0.15
+scipion-pyworkflow>=3.0.31 # matches scipion-em-xmipp on 10-2023
 biopython==1.81
 tifffile==2021.11.2; python_version == '3.7'
 tifffile==2023.7.10; python_version == '3.8'
