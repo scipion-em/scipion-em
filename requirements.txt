@@ -1,5 +1,7 @@
 scipion-pyworkflow>=3.0.15
-biopython==1.80
-tifffile<=2023.1.23.1
-emtable
-scipy<=1.10.0
+biopython==1.81
+tifffile==2021.11.2; python_version == '3.7'
+tifffile==2023.7.10; python_version == '3.8'
+tifffile==2023.9.26; python_version >= '3.9' # up to date on 10-2023
+emtable>=0.0.14 # up to date on 10-2023
+scipy<=1.10.0 # matches scipion-em-xmipp on 10-2023
