@@ -1,14 +1,16 @@
 import logging
 import os
+from subprocess import Popen
 
 logger = logging.getLogger(__name__)
 from datetime import datetime
 
 import sqlite3
+import pyworkflow as pw
 import metadataviewer
 from metadataviewer.dao.model import IDAO
 from metadataviewer.model import Table, Column, BoolRenderer, ImageRenderer, StrRenderer
-from metadataviewer.model.renderers import ImageReader
+from metadataviewer.model.renderers import ImageReader, ExternalProgram
 
 from functools import lru_cache
 
@@ -20,6 +22,7 @@ import numpy as np
 
 SCIPION_OBJECT_ID = "SCIPION_OBJECT_ID"
 SCIPION_PORT = "SCIPION_PORT"
+
 
 class MRCImageReader(ImageReader):
     @classmethod
@@ -356,6 +359,9 @@ class SqliteFile(IDAO):
                 renderer = StrRenderer()
             else:
                 renderer = table.guessRenderer(str(values[index]))
+                if isinstance(renderer, ImageRenderer):
+                    imageExt = str(values[index]).split('.')[-1]
+                    self.addExternalProgram(renderer, imageExt)
 
             newCol = Column(colName, renderer)
             newCol.setIsSorteable(True)
@@ -363,7 +369,9 @@ class SqliteFile(IDAO):
             table.addColumn(newCol)
 
             if isFileNameCol:
-                #logger.debug("Creating an extended column: %s" % EXTENDED_COLUMN_NAME)
+                logger.debug("Creating an extended column: %s" % EXTENDED_COLUMN_NAME)
+                imageExt = str(values[index]).split('.')[-1]
+                self.addExternalProgram(ImageRenderer(), imageExt)
                 extraCol = Column(colName, ImageRenderer())
                 extraCol.setIsVisible(newCol.isVisible())
                 extraCol.setIsSorteable(False)
@@ -373,6 +381,21 @@ class SqliteFile(IDAO):
 
         table.setAlias(self._aliases[tableName])
         self.generateTableActions(table, objectManager)
+
+    def addExternalProgram(self, renderer: ImageRenderer, imageExt: str):
+        self.addChimera(renderer, imageExt)
+
+    def addChimera(self, renderer: ImageRenderer, imageExt: str):
+        chimeraPath = os.environ.get('CHIMERA_HOME', None)
+        if chimeraPath is not None:
+            if imageExt not in ['st', 'stk']:
+                icon = pw.findResource('chimera.png')
+                def openChimeraCallback(path):
+                    program = os.path.join(chimeraPath, 'bin', 'ChimeraX')
+                    cmd = program + ' "%s"' % path
+                    Popen(cmd, shell=True, cwd=os.getcwd())
+
+                renderer.addProgram(ExternalProgram('ChX', icon, 'ChimeraX', openChimeraCallback))
 
     def fillPage(self, page, actualColumn=0, orderAsc=True):
         """
