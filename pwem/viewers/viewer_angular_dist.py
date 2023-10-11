@@ -23,46 +23,67 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-from pyworkflow.gui import showInfo
+from matplotlib import cm
+
 from pwem.viewers import EmPlotter
 from pyworkflow.viewer import ProtocolViewer
 import pwem.objects as emobj
+from  pyworkflow.protocol.params import LabelParam
 
 class AngularDistributionViewer(ProtocolViewer):
     """ Visualize particles, subtomograms with orientation information """
     _label = "Angular distribution viewer"
     _targets = [emobj.SetOfParticles, emobj.SetOfVolumes]
 
+
+    def _defineParams(self, form):
+
+        form.addSection(label='Visualization')
+
+        form.addParam(self.getParamName(self.doShowHeatMap), LabelParam,
+                      label="Show heatmap")
+
+        form.addParam(self.getParamName(self.doShow2DPolar), LabelParam,
+                      label="Show 2D polar plot")
+
+        form.addParam(self.getParamName(self.doShow3DPlot), LabelParam,
+                      label="Show 3D plot")
+
+        from pwem.wizards import ColorScaleWizardBase
+        ColorScaleWizardBase.defineColorScaleParams(form, defaultHighest=0,
+                                                    defaultLowest=1)
+
+    def getParamName(self, method):
+        return method.__name__ + "P"
+
+    def _getVisualizeDict(self):
+
+        return {self.getParamName(self.doShowHeatMap): self.doShowHeatMap,
+                self.getParamName(self.doShow2DPolar): self.doShow2DPolar,
+                self.getParamName(self.doShow3DPlot): self.doShow3DPlot,
+                }
+
+    def getColorMap(self):
+        cmap = cm.get_cmap(self.colorMap.get())
+        if cmap is None:
+            cmap = cm.jet
+        return cmap
+
     @staticmethod
-    def plotAngularDistribution(emSet:emobj.EMSet, type=1):
+    def plotAngularDistribution(emSet:emobj.EMSet, colormap, type=1):
 
         plotter = EmPlotter(x=1, y=1, windowTitle='Angular distribution')
 
-        plotter.plotAngularDistributionFromSet(emSet, "Angular distribution", type=type)
+        plotter.plotAngularDistributionFromSet(emSet, "Angular distribution", type=type,
+                                               colormap=colormap)
 
-        return plotter
+        return [plotter]
 
-    def _visualize(self, outputSet: emobj.EMSet, **kwargs):
-        # Keep input object in case we need to launch
-        # a new protocol and set dependencies
+    def doShowHeatMap(self, e):
+        return self.plotAngularDistribution(self.protocol, self.getColorMap(), type=1)
 
-        views =[]
+    def doShow2DPolar(self,e):
+        return self.plotAngularDistribution(self.protocol, self.getColorMap(), type=2)
 
-        # Weird plot. Not sure if used at all:
-        # views.append(self.plotAngularDistribution(outputSet, histogram=True))
-
-        firstItem = outputSet.getFirstItem()
-
-        if not firstItem.hasTransform():
-            showInfo("Missing alignment information", "This set does not have alignment information.")
-            return
-
-        views.append(self.plotAngularDistribution(outputSet))
-        views.append(self.plotAngularDistribution(outputSet,type=2))
-        views.append(self.plotAngularDistribution(outputSet, type=3))
-
-        return views
-
-
-
-
+    def doShow3DPlot(self,e):
+        return self.plotAngularDistribution(self.protocol, self.getColorMap(), type=3)
