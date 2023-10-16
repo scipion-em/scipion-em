@@ -262,9 +262,9 @@ class ProtUnionSet(ProtSets):
                 self.cleanExtraAttributes(value, verifyAttrs,
                                           prefixedAttribute + ".")
 
-    def getObjDict(self, includeClass=False, includeBasic=False):
-        return super(ProtUnionSet, self).getObjDict(
-            includeClass=includeClass, includeBasic=includeBasic)
+    # def getObjDict(self, includeClass=False, includeBasic=False):
+    #     return super(ProtUnionSet, self).getObjDict(
+    #         includeClass=includeClass, includeBasic=includeBasic)
 
     def duplicatedIds(self):
         """ Check if there are duplicated ids to renumber from
