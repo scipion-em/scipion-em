@@ -489,7 +489,7 @@ class SqliteFile(IDAO):
             if pos > 0:
                 for colName in columns:
                     col = self._getColumnMap(tableName, colName) or colName
-                    columnsValues[colName].append(int(value[col]))
+                    columnsValues[colName].append((value[col]))
 
         return columnsValues
 
