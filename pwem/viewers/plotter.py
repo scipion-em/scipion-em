@@ -24,6 +24,9 @@
 # *
 # **************************************************************************
 import logging
+
+from pwem.convert.trigonometry import FibonacciSphere
+
 logger = logging.getLogger(__name__)
 from math import radians, degrees
 import numpy as np
@@ -37,6 +40,9 @@ import numbers
 from math import atan2, sqrt, pi
 from pwem import emlib
 
+PLOT_EULER_ANGLES = 1
+PLOT_PROJ_ANGLES = 2
+PLOT_PROJ_DIR = 3
 
 class EmPlotter(Plotter):
     """ Class to create several plots. """
@@ -46,15 +52,21 @@ class EmPlotter(Plotter):
 
     def plotAngularDistribution(self, title, rot,
                                 tilt, weight=[], max_p=40,
-                                min_p=5, color='blue', colormap=None):
+                                min_p=5, color='blue', colormap=None, subtitle=None):
         """ Create a special type of subplot, representing the angular
         distribution in 2d of weighted projections. """
         if weight:
             max_w = max(weight)
-            min_w = min(weight)
+            min_w = 0
+            if subtitle is None:
+                subtitle = 'Min weight=%(min_w).2f, Max weight=%(max_w).2f' % locals()
             a = self.createSubPlot(title,
-                                   'Min weight=%(min_w).2f, Max weight=%(max_w).2f'
-                                   % locals(), '', projection='polar')
+                                   subtitle,
+                                    '', projection='polar')
+
+            label_position = a.get_rlabel_position()
+            a.text(np.radians(label_position + 10), a.get_rmax() / 2., 'Tilt',
+                    rotation=label_position, ha='center', va='center')
 
             pointSizes = []
             for r, t, w in zip(rot, tilt, weight):
@@ -72,9 +84,9 @@ class EmPlotter(Plotter):
         return a
 
 
-    def scatter3DPlot(self, x, y,z, title="3D scatter plot", drawsphere=True, markerSize=1, colormap=cm.jet):
+    def scatter3DPlot(self, x, y,z, title="3D scatter plot", drawsphere=True, markerSize=1, colormap=cm.jet, subtitle=None):
 
-        ax =self.createSubPlot(title, xlabel=None, ylabel=None, projection='3d')
+        ax =self.createSubPlot(title, xlabel=None, ylabel=None, projection='3d', subtitle=subtitle)
         ax.set_box_aspect(aspect=(1, 1, 1))
         sc = ax.scatter(x, y, z, markerSize,c=markerSize, s=60, cmap=colormap, alpha=1)
         plt.colorbar(sc)
@@ -92,23 +104,26 @@ class EmPlotter(Plotter):
 
         if drawsphere:
             # draw sphere
-            u, v = np.mgrid[0:2 * np.pi:20j, 0:np.pi:10j]
+            u, v = np.mgrid[0:2 * np.pi:21j, 0:np.pi:11j]
             x1 = np.cos(u) * np.sin(v)
             y1 = np.sin(u) * np.sin(v)
             z1 = np.cos(v)
-            ax.plot_wireframe(x1, y1, z1, color="black", alpha=0.2)
-            ax.plot_surface(x1, y1, z1, color="red", alpha=0.1)
+            ax.plot_wireframe(x1, y1, z1, color="black", alpha=0.1)
+            ax.plot_surface(x1, y1, z1, color="red", alpha=0.05)
+
+            # 3d axis
+            ax.plot([0, 1.25], [0, 0], [0, 0], color="red")
+            ax.plot([0, 0], [0, 1.25], [0, 0], color="green")
+            ax.plot([0, 0], [0, 0], [0, 1.25], color="blue")
 
         return ax
 
-    def plotAngularDistribution3D(self, title, rots,tilts, weights, colormap=cm.jet):
+    def plotAngularDistribution3D(self, title, x,y,z, weights, subtitle, colormap=cm.jet):
 
-        x,y,z = self._anglesToSphereCoords(rots, tilts)
-
-        return self.scatter3DPlot(x,y,z, title=title,markerSize=weights, colormap=colormap)
+        return self.scatter3DPlot(x,y,z, title=title,markerSize=weights, colormap=colormap, subtitle=subtitle)
 
 
-    def plotAngularDistributionHistogram(self, title, data, eulerAnglesGetterCallback, colormap=cm.jet):
+    def plotAngularDistributionHistogram(self, title, data, eulerAnglesGetterCallback, colormap=cm.jet, subtitle=None):
         """ Create a special type of subplot, representing the angular
         distribution of projections. """
 
@@ -120,20 +135,25 @@ class EmPlotter(Plotter):
             thetas.append(rot)
             phis.append(tilt)
 
-        heatmap, xedges, yedges = np.histogram2d(thetas, phis, bins=100)
+        thetas.append(-180)
+        thetas.append(180)
+        phis.append(0)
+        phis.append(180)
+
+        heatmap, xedges, yedges = np.histogram2d(thetas, phis, bins=1000)
         sigma = min(max(xedges) - min(xedges), max(yedges) - min(yedges)) / 20
         heatmap = gaussian_filter(heatmap, sigma=sigma)
         heatmapImage = heatmap.T
         extent = [xedges[0], xedges[-1], yedges[0], yedges[-1]]
 
-        a = self.createSubPlot(title, 'Angular distribution', '')
+        a = self.createSubPlot(title, 'Angular distribution', '', subtitle=subtitle)
         mappable = a.imshow(heatmapImage, extent=extent, origin='lower', cmap=colormap, aspect='auto')
         a.set_xlabel('Rotational angle')
         a.set_ylabel('Tilt angle')
         plt.colorbar(mappable)
         return mappable
 
-    def plotAngularDistributionFromSet(self, mdSet, title, type=2, colormap=cm.jet, **kwargs):
+    def plotAngularDistributionFromSet(self, mdSet, title, type=PLOT_PROJ_ANGLES, colormap=cm.jet, subtitle="", **kwargs):
         """ Read the values of the transformation matrix
                  and plot its histogram or its angular distribution.
 
@@ -156,11 +176,11 @@ class EmPlotter(Plotter):
             return degrees(rot), degrees(tilt), degrees(psi)
 
 
-        self.plotAngularDistributionBase(mdSet, eulerAnglesGetter, title, type, colormap, **kwargs)
+        self.plotAngularDistributionBase(mdSet, eulerAnglesGetter, title, type, colormap, subtitle=subtitle,**kwargs)
 
 
     def plotAngularDistributionBase(self, data, eulerAnglesGetterCallback, title,
-                                    type=2, colormap=cm.jet, **kwargs):
+                                    type=PLOT_PROJ_ANGLES, colormap=cm.jet, subtitle="", **kwargs):
         """ Read the values of the transformation matrix
          and plot its histogram or its angular distribution.
 
@@ -169,10 +189,12 @@ class EmPlotter(Plotter):
          :param eulerAnglesGetterCallback: a callback to extract rot, tilt, psi IN DEGREES from each row, receiving the row/item.
          :param title: Title of the plot.
          :param type: 1 for histogram, 2 for polar plot, 3 for 3d plot
+         :param subtitle: subtitle of the plot
         """
 
-        if type==1:
-            return self.plotAngularDistributionHistogram(title, data , eulerAnglesGetterCallback, colormap=colormap)
+        if type==PLOT_EULER_ANGLES:
+            return self.plotAngularDistributionHistogram(title, data , eulerAnglesGetterCallback,
+                                                         colormap=colormap, subtitle=subtitle)
 
         else:
 
@@ -185,14 +207,25 @@ class EmPlotter(Plotter):
                 rots.append(rot)
                 tilts.append(tilt)
 
-            # Weight (group) rots and tilts
-            rots, tilts, weights = self.weightEulerAngles(rots, tilts, rotInRadians=type==2)
+            if type==PLOT_PROJ_ANGLES:
+                # Weight (group) rots and tilts
+                rots, tilts, weights = self.weightEulerAngles(rots, tilts, rotInRadians=type == PLOT_PROJ_ANGLES)
 
-            if type==2:
-                return self.plotAngularDistribution(title, rots, tilts, weight=weights, colormap=colormap, **kwargs)
+                return self.plotAngularDistribution(title, rots, tilts, weight=weights, colormap=colormap, subtitle=subtitle, **kwargs)
 
             else:
-                return self.plotAngularDistribution3D(title, rots, tilts, weights=weights, colormap=colormap )
+                # Create discrete point of a fibonacci sphere (5000 points)
+                fiSph = FibonacciSphere()
+
+                Xs, Ys, Zs = self._anglesToSphereCoords(rots, tilts)
+
+                for  x,y,z in zip(Xs,Ys,Zs):
+                    fiSph.append(x,y,z)
+
+                fiSph.cleanWeights()
+
+                return self.plotAngularDistribution3D(title, fiSph.sphX, fiSph.sphY, fiSph.sphZ,
+                                                      fiSph.weights, subtitle,colormap=colormap)
 
     def weightEulerAngles(self, rots, tilts, delta=3, rotInRadians=False):
         """ Receives the list of rots and tilts angles (in deg) and returns

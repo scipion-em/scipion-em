@@ -29,6 +29,8 @@ from pwem.viewers import EmPlotter
 from pyworkflow.viewer import ProtocolViewer
 import pwem.objects as emobj
 from  pyworkflow.protocol.params import LabelParam
+from pwem.viewers.plotter import PLOT_PROJ_ANGLES, PLOT_PROJ_DIR, PLOT_EULER_ANGLES
+
 
 class AngularDistributionViewer(ProtocolViewer):
     """ Visualize particles, subtomograms with orientation information """
@@ -50,8 +52,8 @@ class AngularDistributionViewer(ProtocolViewer):
                       label="Show 3D plot")
 
         from pwem.wizards import ColorScaleWizardBase
-        ColorScaleWizardBase.defineColorScaleParams(form, defaultHighest=0,
-                                                    defaultLowest=1)
+        ColorScaleWizardBase.defineColorScaleParams(form, defaultHighest=20,
+                                                    defaultLowest=0, defaultColorMap="Blues")
 
     def getParamName(self, method):
         return method.__name__ + "P"
@@ -70,20 +72,27 @@ class AngularDistributionViewer(ProtocolViewer):
         return cmap
 
     @staticmethod
-    def plotAngularDistribution(emSet:emobj.EMSet, colormap, type=1):
+    def plotAngularDistribution(emSet:emobj.EMSet, colormap, type):
 
-        plotter = EmPlotter(x=1, y=1, windowTitle='Angular distribution')
+        plotter = EmPlotter(x=1, y=1, windowTitle='Projection direction distribution')
 
-        plotter.plotAngularDistributionFromSet(emSet, "Angular distribution", type=type,
-                                               colormap=colormap)
+
+        subtitle = "Color based on count of particles."
+
+        if type == PLOT_PROJ_ANGLES:
+            subtitle += "\nRadius = polar angle, rotation = azimuthal angle."
+        elif type == PLOT_PROJ_DIR:
+            subtitle += "\nRed line marks origin of coordinates."
+        plotter.plotAngularDistributionFromSet(emSet, "Projection direction distribution", type=type,
+                                               colormap=colormap, subtitle=subtitle)
 
         return [plotter]
 
     def doShowHeatMap(self, e):
-        return self.plotAngularDistribution(self.protocol, self.getColorMap(), type=1)
+        return self.plotAngularDistribution(self.protocol, self.getColorMap(), PLOT_EULER_ANGLES)
 
     def doShow2DPolar(self,e):
-        return self.plotAngularDistribution(self.protocol, self.getColorMap(), type=2)
+        return self.plotAngularDistribution(self.protocol, self.getColorMap(), PLOT_PROJ_ANGLES)
 
     def doShow3DPlot(self,e):
-        return self.plotAngularDistribution(self.protocol, self.getColorMap(), type=3)
+        return self.plotAngularDistribution(self.protocol, self.getColorMap(), PLOT_PROJ_DIR)
