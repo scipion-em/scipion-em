@@ -384,18 +384,38 @@ class SqliteFile(IDAO):
 
     def addExternalProgram(self, renderer: ImageRenderer, imageExt: str):
         self.addChimera(renderer, imageExt)
+        self.addImageJ(renderer)
 
     def addChimera(self, renderer: ImageRenderer, imageExt: str):
         chimeraPath = os.environ.get('CHIMERA_HOME', None)
         if chimeraPath is not None:
             if imageExt not in ['st', 'stk']:
                 icon = pw.findResource('chimera.png')
-                def openChimeraCallback(path):
+
+                def openChimeraCallback(image):
+                    path = image.getImagePath().split('@')[-1]
                     program = os.path.join(chimeraPath, 'bin', 'ChimeraX')
                     cmd = program + ' "%s"' % path
                     Popen(cmd, shell=True, cwd=os.getcwd())
 
-                renderer.addProgram(ExternalProgram('ChX', icon, 'ChimeraX', openChimeraCallback))
+                renderer.addProgram(ExternalProgram('ChX', icon,
+                                                    'Open with ChimeraX',
+                                                    openChimeraCallback))
+
+    def addImageJ(self, renderer: ImageRenderer):
+        imageJPath = os.environ.get('IMAGEJ_BINARY_PATH', None)
+        if imageJPath is not None:
+            icon = pw.findResource('Imagej.png')
+
+            def openImageJCallback(image):
+                path = image.getImagePath().split('@')[-1]
+                program = os.path.join(imageJPath)
+                cmd = program + ' "%s"' % path
+                Popen(cmd, shell=True, cwd=os.getcwd())
+
+            renderer.addProgram(
+                ExternalProgram('IJ', icon, 'Open with ImageJ',
+                                openImageJCallback))
 
     def fillPage(self, page, actualColumn=0, orderAsc=True):
         """
