@@ -20,13 +20,15 @@ class FibonacciSphere:
         # z = [1/100-1, ... 1/100+1]
 
         # z index
-        if z==-1:
+        zIndex = round((z*self.half_points)-1 +(self.half_points)) # + 1 
+        numPoints = self.num_points-1
+        if zIndex < 0:
             zIndex = 0
-        else:
-            zIndex = round((z*self.half_points)-1 +(self.half_points))
+        elif zIndex > numPoints:
+            zIndex = numPoints
 
         zMin = max(zIndex-self.searchRange, 0)
-        zMax = min(zIndex + self.searchRange, self.num_points-1)
+        zMax = min(zIndex + self.searchRange, numPoints)
 
         distance = 4 # way maximun distance
         finalIndex = -1
