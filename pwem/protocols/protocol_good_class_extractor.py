@@ -23,10 +23,17 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
+from datetime import datetime
+import os
+import time
+import sys
+import matplotlib.pyplot as plt
 
+from pyworkflow.utils import prettyTime
 import pyworkflow.protocol.params as params
-import pwem.objects as emobj
-import pyworkflow.utils as pwutils
+from pyworkflow.object import Set
+from pyworkflow.protocol.constants import LEVEL_ADVANCED, STATUS_NEW
+from pyworkflow.protocol import ProtStreamingBase, STEPS_PARALLEL
 from pwem.protocols import EMProtocol
 from pwem.objects import SetOfParticles
 import logging
@@ -34,18 +41,25 @@ logger = logging.getLogger(__file__)
 
 
 OUTPUT_PARTICLES = "outputParticles"
+OUTPUT_DISCARDED_PARTICLES = "outputDiscardedParticles"
 
 
-class ProtGoodClassesExtractor(EMProtocol):
+class ProtGoodClassesExtractor(EMProtocol, ProtStreamingBase):
     """ Extracts items from a SetOfClasses based on the IDs of the given good averages/classes
     """
 
     _label = "good classes selector"
     outputsToDefine = {}
-    _possibleOutputs = {OUTPUT_PARTICLES: SetOfParticles}
+    _possibleOutputs = {OUTPUT_PARTICLES: SetOfParticles,
+                        OUTPUT_DISCARDED_PARTICLES: SetOfParticles}
+    # Mode
+    LIST_CLASSES = 0
+    LIST_IDS = 1
 
     def __init__(self, **args):
         EMProtocol.__init__(self, **args)
+        self.stepsExecutionMode = STEPS_PARALLEL
+        self._initialStep()
 
     def _defineParams(self, form):
         form.addSection(label='Input')
@@ -53,80 +67,139 @@ class ProtGoodClassesExtractor(EMProtocol):
                       pointerClass='SetOfClasses',
                       label='Input classes',
                       help='Set of classes to extract items from.')
-
+        form.addParam('mode', params.EnumParam, choices=['list_classes', 'list_ids'],
+                      label="Select the source from which to extract the good references", default=self.LIST_CLASSES,
+                      display=params.EnumParam.DISPLAY_HLIST,
+                      help='This option allows for either get the good classes from a set of classes '
+                           'or from a list of ids.')
         form.addParam('inputGoodClasses', params.PointerParam,
                       pointerClass='SetOfClasses2D, SetOfAverages',
                       label='Good references',
+                      condition="mode==%d" % self.LIST_CLASSES,
                       help='Set of good reference to stay with from the inputClasses.')
+        form.addParam('inputGoodListIds', params.StringParam,
+                      label='Good references',
+                      condition="mode==%d" % self.LIST_IDS,
+                      help='List of good reference IDs, separated by commas, to retain from the inputClasses.')
+
+        form.addParallelSection(threads=3, mpi=1)
 
     # -------------------------- INSERT steps functions ---------------------------
-    def _insertAllSteps(self):
-        """ Insert all steps
-            """
+    def stepsGeneratorStep(self) -> None:
+        """
+        This step should be implemented by any streaming protocol.
+        It should check its input and when ready conditions are met
+        call the self._insertFunctionStep method.
+        """
+        self._insertFunctionStep(self.closeOutputStep, wait=True)
+        self.newDeps = []
+
+        while not self.finish:
+            if not self._newParticlesToProcess():
+                 self.info('No new particles')
+            else:
+                closeStep = self._getFirstJoinStep()
+                classSet = self._loadInputClassesSet()
+                self.isStreamClosed = classSet.getStreamState()
+
+                if self.selectGood:
+                    self.selectStep = self._insertFunctionStep(self.selectGoodClasses,
+                                                               prerequisites=[])
+
+                self.extractStep = self._insertFunctionStep(self.extractElements, classSet,
+                                                            prerequisites=self.selectStep)
+
+                self.newDeps.append(self.extractStep)
+                closeStep.addPrerequisites(*self.newDeps)
+
+            if self.isStreamClosed == Set.STREAM_CLOSED:
+                print('Stream closed')
+                # Finish everything and close output sets
+                outputStep = self._getFirstJoinStep()
+                if outputStep and outputStep.isWaiting():
+                    outputStep.setStatus(STATUS_NEW)
+                    self.finish = True
+
+            sys.stdout.flush()
+            time.sleep(15)
+
+    # --------------------------- STEPS functions -------------------------------
+    def _initialStep(self):
+        self.finish = False
+        self.selectGood = True
+        self.lastParticleId = -1
+        self.lastBadParticlesId = -1
+        self.isStreamClosed = False
+        self.particlesProcessed = []
+        self.particlesDistribution = {'good': [], 'bad': []}
+        self.badParticles = []
         self.goodClassesIDs = []
-        self._insertFunctionStep(self.selectGoodClasses)
-        self._insertFunctionStep(self.extractElements)
-        # self._insertFunctionStep(self.createOutputStep)
 
-    def extractElements(self):
+    def extractElements(self, inputClasses):
         # For each class (order by number of items)
-        for clazz in self.inputClasses.get().iterItems(orderBy="_size", direction="DESC"):
-            if clazz.getObjId() in self.goodClassesIDs:
-                self._extractElementFromClass(clazz)
+        output = self._loadOutputSet(OUTPUT_PARTICLES, "")
+        outputDiscarded = self._loadOutputSet(OUTPUT_DISCARDED_PARTICLES, "discarded")
+        for clazz in inputClasses.iterItems(orderBy="_size", direction="DESC"):
+            with self._lock:  # Hace falta?
+                if clazz.getObjId() in self.goodClassesIDs:
+                    for image in clazz.iterItems(where="id > %s" % self.lastParticleId):
+                        newImage = image.clone()
+                        output.append(newImage)
+                        self.particlesProcessed.append(image.getObjId())
+                else:
+                    for image in clazz.iterItems(where="id > %s" % self.lastBadParticlesId):
+                        newImageDiscarded = image.clone()
+                        outputDiscarded.append(newImageDiscarded)
+                        self.badParticles.append(image.getObjId())
 
-        output = self._getOutputSet()
-        output.write()
-        self._store(output)
+        self.lastParticleId = max(self.particlesProcessed)
+        self.lastBadParticlesId = max(self.badParticles)
+        print('Last particle input id', self.lastParticleId)
+        print('Size output %d and size discarded output %d' %(len(output), len(outputDiscarded)))
 
-    def _extractElementFromClass(self, clazz):
-        output = self._getOutputSet()
-        # Go through all items and append them
-        for image in clazz:
-            newImage = image.clone()
-            output.append(newImage)
+        # Hace falta el lock o esta comprobacion?
+        if len(output)>0:
+            self._updateOutputSet(OUTPUT_PARTICLES, output, self.isStreamClosed)
+        if len(outputDiscarded)>0:
+            self._updateOutputSet(OUTPUT_DISCARDED_PARTICLES, outputDiscarded, self.isStreamClosed)
+
+        self.createPlots()
 
     def selectGoodClasses(self):
         """ Select only the good Classes from the Averages
         """
-        self.goodClassesIDs = self.inputGoodClasses.get().getIdSet()
+        if self.mode == self.LIST_CLASSES:
+            self.goodClassesIDs = self.inputGoodClasses.get().getIdSet()
+        else:
+            self.goodClassesIDs = self.getGoodIds()
+
         self.info('Good classes IDs:')
         self.info(self.goodClassesIDs)
+        self.selectGood = False
         # Change to list of filenames
-        #print(set(self.inputGoodClasses.get().getUniqueValues('filename')))
-        #for clazz in self.inputGoodClasses.get().iterItems(orderBy="id", direction="ASC"):
-        #    print(clazz.getRepresentative()._filename)
-        #    self.info("Class filename selected: %s" % clazz.getObjName())
-        #    self.goodClassesIDs.append(clazz.getObjId())
+        # print(set(self.inputGoodClasses.get().getUniqueValues('filename')))
+        # print(clazz.getRepresentative()._filename)
+        # self.info("Class filename selected: %s" % clazz.getObjName())
 
-    def _getOutputSet(self):
-        """ Returns the output set creating it if not yet done"""
-        # If output not created yet
-        if not hasattr(self, OUTPUT_PARTICLES):
-            outputSet = None
-            self.info("Creating set from images.")
-            outputSet = createSetFromImages(self.inputClasses.get(), self._getPath())
-            self._defineOutputs(**{OUTPUT_PARTICLES: outputSet})
+    def _loadOutputSet(self, outputName, suffix):
+        """
+        Load the output set if it exists or create a new one.
+        """
+        outputSet = getattr(self, outputName, None)
+        if outputSet is None:
+            outputSet = self._createSetOfParticles(suffix)
+            images = self.inputClasses.get().getImages()
+            outputSet.copyInfo(images)
+            outputSet.setStreamState(Set.STREAM_OPEN)
+        else:
+            outputSet.enableAppend()
 
-        return getattr(self, OUTPUT_PARTICLES)
-
+        return outputSet
 
     def closeOutputStep(self):
+        self.info("Size of good particles output: %d" % len(self.particlesProcessed))
+        self.info("Size of bad particles rejected: %d" % len(self.badParticles))
         self._closeOutputSet()
-
-    # def createOutputStep(self):
-        # """ Create output
-        #             """
-        # inputClasses = self.inputClasses.get()
-        # outputClasses = SetOfClasses2D.create(self._getExtraPath())
-        # outputClasses.copyInfo(inputClasses)
-        # outputClasses.appendFromClasses(inputClasses, filterClassFunc=self._appendClass)
-        #
-        # outputParticles = createSetFromImages(outputClasses, self._getPath())
-        #
-        # self.outputsToDefine[OUTPUT_CLASSES] = outputClasses
-        # self.outputsToDefine[OUTPUT_PARTICLES] = outputParticles
-        #
-        # self._defineOutputs(**self.outputsToDefine)
 
     def _summary(self):
         summary = []
@@ -137,18 +210,89 @@ class ProtGoodClassesExtractor(EMProtocol):
         return errors
 
 # --------------------------- UTILS functions -----------------------------
-    def _appendClass(self, item):
-        return False if not item.getObjId() in self.goodClassesIDs else True
+    def _newParticlesToProcess(self):
+        classesFile = self.inputClasses.get().getFileName()
+        now = datetime.now()
+        self.lastCheck = getattr(self, 'lastCheck', now)
+        mTime = datetime.fromtimestamp(os.path.getmtime(classesFile))
+        self.debug('Last check: %s, modification: %s'
+                   % (prettyTime(self.lastCheck),
+                      prettyTime(mTime)))
+        # If the input have not changed since our last check,
+        # it does not make sense to check for new input data
+        if self.lastCheck > mTime and self.lastParticleId > 0:
+            newParticlesBool = False
+        else:
+            newParticlesBool = True
 
-def createSetFromImages(classesSet, path):
-    """ Creates a the corresponding set from the images of a set of classes"""
-    images = classesSet.getImages()
-    # need to instantiate the right set based on the Items.
-    setClass = None
-    logger.debug("Creating an image set from %s: type %s" % (classesSet.__class__, images))
-    setClass = pwutils.Config.getDomain().getObjects()[images.__class__.__name__]
-    set = setClass.create(outputPath=path)
-    set.copyInfo(images)
+        self.lastCheck = now
+        return newParticlesBool
 
-    return set
+    def _getFirstJoinStepName(self):
+        # This function will be used for streaming, to check which is
+        # the first function that need to wait for all micrographs
+        # to have completed, this can be overriden in subclasses
+        # (e.g., in Xmipp 'sortPSDStep')
+        return 'closeOutputStep'
 
+    def _getFirstJoinStep(self):
+        for s in self._steps:
+            if s.funcName == self._getFirstJoinStepName():
+                return s
+        return None
+
+    def _loadInputClassesSet(self):
+        """ Returns te input set of particles"""
+        classSet = self.inputClasses.get()
+        classSet.loadAllProperties()
+
+        return classSet
+
+    def getGoodIds(self):
+        ids = self.inputGoodListIds.get().split(',')
+        listIDs = [int(id) for id in ids]
+        return listIDs
+
+    def createPlots(self):
+        balancePlot(len(self.particlesProcessed), len(self.badParticles),
+                    self._getExtraPath('particle_distribution.png'))
+        self.particlesDistribution['good'].append(len(self.particlesProcessed))
+        self.particlesDistribution['bad'].append(len(self.badParticles))
+        if len(self.particlesDistribution['good']) >= 3:
+            balanceOverTimePlot(self.particlesDistribution['good'], self.particlesDistribution['bad'],
+                                self._getExtraPath('cumulative_distribution.png'))
+
+def balancePlot(good_particles, bad_particles, fileName):
+    # Labels for the classes
+    classes = ['Good', 'Bad']
+    # Values for the classes
+    particle_counts = [good_particles, bad_particles]
+    # Define colors for the bars
+    colors = ['#007ACC', '#FF585D']
+    # Create a bar plot with custom colors and formal style
+    fig, ax = plt.subplots(figsize=(8, 6))  # Adjust the figure size
+    ax.bar(classes, particle_counts, color=colors, edgecolor='black', linewidth=1.2)
+    # Customize axis labels and title
+    ax.set_xlabel('Classes', fontsize=14)
+    ax.set_ylabel('Number of Particles', fontsize=14)
+    ax.set_title('Particle Distribution in Classes', fontsize=16)
+    # Add grid lines
+    ax.grid(axis='y', linestyle='--', alpha=0.7)
+    # Customize font size for tick labels
+    ax.tick_params(axis='both', which='major', labelsize=12)
+    # Save the figure as an image (e.g., PNG)
+    plt.savefig(fileName, dpi=300, bbox_inches='tight')
+
+def balanceOverTimePlot(cumulative_good, cumulative_bad, fileName):
+    time_points = range(1, len(cumulative_good)+1)
+    # Create a plot for the cumulative distributions over time
+    plt.figure(figsize=(10, 6))  # Adjust the figure size
+    plt.plot(time_points, cumulative_good, marker='o', label='Good Classes', color='blue')
+    plt.plot(time_points, cumulative_bad, marker='o', label='Bad Classes', color='red')
+    plt.xlabel('Time (Updates in time)', fontsize=14)
+    plt.ylabel('Cumulative Distribution (number of particles)', fontsize=14)
+    plt.title('Cumulative Distribution Over Time', fontsize=16)
+    plt.legend()
+    plt.grid(True, linestyle='--', alpha=0.7)
+    # Save the figure as an image (e.g., PNG)
+    plt.savefig(fileName, dpi=300, bbox_inches='tight')
