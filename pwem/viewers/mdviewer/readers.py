@@ -1,14 +1,16 @@
 import logging
 import os
+from subprocess import Popen
 
 logger = logging.getLogger(__name__)
 from datetime import datetime
 
 import sqlite3
+import pyworkflow as pw
 import metadataviewer
 from metadataviewer.dao.model import IDAO
 from metadataviewer.model import Table, Column, BoolRenderer, ImageRenderer, StrRenderer
-from metadataviewer.model.renderers import ImageReader
+from metadataviewer.model.renderers import ImageReader, ExternalProgram
 
 from functools import lru_cache
 
@@ -20,6 +22,7 @@ import numpy as np
 
 SCIPION_OBJECT_ID = "SCIPION_OBJECT_ID"
 SCIPION_PORT = "SCIPION_PORT"
+
 
 class MRCImageReader(ImageReader):
     @classmethod
@@ -356,6 +359,9 @@ class SqliteFile(IDAO):
                 renderer = StrRenderer()
             else:
                 renderer = table.guessRenderer(str(values[index]))
+                if isinstance(renderer, ImageRenderer):
+                    imageExt = str(values[index]).split('.')[-1]
+                    self.addExternalProgram(renderer, imageExt)
 
             newCol = Column(colName, renderer)
             newCol.setIsSorteable(True)
@@ -363,7 +369,9 @@ class SqliteFile(IDAO):
             table.addColumn(newCol)
 
             if isFileNameCol:
-                #logger.debug("Creating an extended column: %s" % EXTENDED_COLUMN_NAME)
+                logger.debug("Creating an extended column: %s" % EXTENDED_COLUMN_NAME)
+                imageExt = str(values[index]).split('.')[-1]
+                self.addExternalProgram(ImageRenderer(), imageExt)
                 extraCol = Column(colName, ImageRenderer())
                 extraCol.setIsVisible(newCol.isVisible())
                 extraCol.setIsSorteable(False)
@@ -373,6 +381,21 @@ class SqliteFile(IDAO):
 
         table.setAlias(self._aliases[tableName])
         self.generateTableActions(table, objectManager)
+
+    def addExternalProgram(self, renderer: ImageRenderer, imageExt: str):
+        self.addChimera(renderer, imageExt)
+
+    def addChimera(self, renderer: ImageRenderer, imageExt: str):
+        chimeraPath = os.environ.get('CHIMERA_HOME', None)
+        if chimeraPath is not None:
+            if imageExt not in ['st', 'stk']:
+                icon = pw.findResource('chimera.png')
+                def openChimeraCallback(path):
+                    program = os.path.join(chimeraPath, 'bin', 'ChimeraX')
+                    cmd = program + ' "%s"' % path
+                    Popen(cmd, shell=True, cwd=os.getcwd())
+
+                renderer.addProgram(ExternalProgram('ChX', icon, 'ChimeraX', openChimeraCallback))
 
     def fillPage(self, page, actualColumn=0, orderAsc=True):
         """
@@ -428,33 +451,45 @@ class SqliteFile(IDAO):
         return rowsIds
 
     def getColumnsValues(self, tableName, columns, xAxis, selection, limit,
-                         reverse=True):
+                         useSelection, reverse=True):
         """Get the values of the selected columns in order to plot them"""
 
-        logger.debug("Reading the table %s and selected some columns values")
+        logger.debug("Reading the table %s and selected some columns values...")
         cols = columns
         if xAxis and xAxis not in cols:
             cols.append(xAxis)
         columnNames = []
         for column in cols:
-            col = self._getColumnMap(tableName, column)
-            if col == None:
-                col = column
+            col = self._getColumnMap(tableName, column) or column
             columnNames.append(col)
 
         columnNames = ", ".join(columnNames)
 
         col = self._getColumnMap(tableName, xAxis)
-        if col != None:
+        if col is not None:
             xAxis = col
 
         mode = 'ASC' if reverse else 'DESC'
         orderBy = ' ORDER BY %s %s' % (xAxis, mode) if xAxis else ''
         limit = ' LIMIT %d' % limit if limit is not None else ''
+        where = f" WHERE id in ({', '.join(map(str, selection.getSelection().keys()))})" if selection.getCount() > 1 and useSelection else ''
 
-        query = "SELECT %s FROM %s %s %s"  % (columnNames, tableName,
-                                                    orderBy, limit)
-        columnsValues = self._con.execute(query).fetchall()
+        query = "SELECT %s FROM %s %s %s %s" % (columnNames, tableName, where,
+                                                 orderBy, limit)
+        selectedColumns = self._con.execute(query).fetchall()
+
+        columnsValues = {}
+
+        firstValue = selectedColumns[0]
+        for colName in columns:
+            col = self._getColumnMap(tableName, colName) or colName
+            columnsValues[colName] = [firstValue[col]]
+
+        for pos, value in enumerate(selectedColumns):
+            if pos > 0:
+                for colName in columns:
+                    col = self._getColumnMap(tableName, colName) or colName
+                    columnsValues[colName].append(int(value[col]))
 
         return columnsValues
 
