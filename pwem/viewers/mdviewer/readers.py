@@ -7,6 +7,7 @@ from datetime import datetime
 
 import sqlite3
 import tempfile
+import time
 
 import pyworkflow as pw
 import metadataviewer
@@ -41,8 +42,8 @@ class MRCImageReader(ImageReader):
         mrcImg = cls.getMrcImage(fileName)
         if mrcImg.is_volume() or isVol:
             dim = mrcImg.data.shape
-            x = int(dim[0] /2)
-            imfloat = mrcImg.data[x,:,:]
+            x = int(dim[0] / 2)
+            imfloat = mrcImg.data[x, :, :]
         elif mrcImg.is_image_stack():
             imfloat = mrcImg.data[index-1]
         else:
@@ -262,6 +263,7 @@ class SqliteFile(IDAO):
 
     def getTableNames(self):
         """ Return all the table names found in the database. """
+        initTime = time.time()
         if not self._names:
             self._tables = {OBJECT_TABLE: 'classes'}
             self._names = [OBJECT_TABLE]
@@ -287,6 +289,8 @@ class SqliteFile(IDAO):
 
         if len(self._tables) > 2: # Assuming that there are more tables than just Object and Properties
             self._tableWithAdditionalInfo = OBJECT_TABLE
+        endTime = time.time()
+        logging.info("GetTableNames: %f" % (endTime - initTime))
         return self._names
 
     def findColbyName(self, colNames, colName):
@@ -341,6 +345,7 @@ class SqliteFile(IDAO):
 
     def fillTable(self, table, objectManager):
         """Create the table structure (columns) and set the table alias"""
+        initTime = time.time()
         tableName = table.getName()
         colNames = self._labels[tableName]
         self.updateExtendColumn(table)
@@ -384,6 +389,8 @@ class SqliteFile(IDAO):
 
         table.setAlias(self._aliases[tableName])
         self.generateTableActions(table, objectManager)
+        endTime = time.time()
+        logging.info("Create the table structure: %f" % (endTime - initTime))
 
     def addExternalProgram(self, renderer: ImageRenderer, imageExt: str):
         self.addChimera(renderer, imageExt)
@@ -445,6 +452,7 @@ Stack.setSlice(slice);
         """
         Read the given table from the sqlite and fill the page(add rows)
         """
+        initTime = time.time()
         tableName = page.getTable().getName()
         # moving to the first row of the page
         pageNumber = page.getPageNumber()
@@ -471,6 +479,8 @@ Stack.setSlice(slice);
                     values.insert(self._extendedColumn[1] + 1,
                                   str(values[self._extendedColumn[0]]) + '@' + values[self._extendedColumn[1]])
                 page.addRow((int(id), values))
+        endTime = time.time()
+        logging.info("Fill the page: %f" % (endTime - initTime))
 
     def getRowsCount(self, tableName):
         """ Return the number of elements in the given table. """
@@ -479,7 +489,10 @@ Stack.setSlice(slice);
 
     def getTableRowCount(self, tableName):
         if tableName not in self._tableCount:
+            initTime = time.time()
             self._tableCount[tableName] = self.getRowsCount(tableName)
+            endTime = time.time()
+            logging.info("Table count: %f" % (endTime - initTime))
         return self._tableCount[tableName]
 
     def getSelectedRangeRowsIds(self, tableName, startRow, numberOfRows, column, reverse=True):
