@@ -485,6 +485,9 @@ Stack.setSlice(slice);
     def getRowsCount(self, tableName):
         """ Return the number of elements in the given table. """
         logger.debug("Reading the table %s" %tableName)
+        if tableName == OBJECT_TABLE:
+            size = int(self._con.execute(f"SELECT * FROM {PROPERTIES_TABLE} WHERE key='_size'").fetchall()[0]['value'])
+            return size
         return self._con.execute(f"SELECT COUNT(*) FROM {tableName}").fetchone()['COUNT(*)']
 
     def getTableRowCount(self, tableName):
