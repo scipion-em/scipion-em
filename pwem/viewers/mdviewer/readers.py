@@ -6,11 +6,13 @@ logger = logging.getLogger(__name__)
 from datetime import datetime
 
 import sqlite3
+import tempfile
+
 import pyworkflow as pw
 import metadataviewer
 from metadataviewer.dao.model import IDAO
 from metadataviewer.model import Table, Column, BoolRenderer, ImageRenderer, StrRenderer
-from metadataviewer.model.renderers import ImageReader, ExternalProgram
+from metadataviewer.model.renderers import ImageReader, Action
 
 from functools import lru_cache
 
@@ -57,7 +59,7 @@ class MRCImageReader(ImageReader):
     @lru_cache
     def getMrcImage(cls, fileName):
         logger.info("Reading %s" % fileName)
-        return  mrcfile.mmap(fileName, mode='r+')
+        return mrcfile.mmap(fileName, mode='r+')
 
     @classmethod
     def getCompatibleFileTypes(cls) -> list:
@@ -276,7 +278,6 @@ class SqliteFile(IDAO):
                 self._aliases[tableName] = alias
 
                 labelsTypes = []
-                self._tableCount[tableName] = self.getRowsCount(tableName)
                 for key, value in firstRow.items():
                     if key not in EXCLUDED_COLUMNS:
                         labelsTypes.append(_guessType(value))
@@ -371,8 +372,10 @@ class SqliteFile(IDAO):
             if isFileNameCol:
                 logger.debug("Creating an extended column: %s" % EXTENDED_COLUMN_NAME)
                 imageExt = str(values[index]).split('.')[-1]
-                self.addExternalProgram(ImageRenderer(), imageExt)
-                extraCol = Column(colName, ImageRenderer())
+                renderer = ImageRenderer()
+                self.addExternalProgram(renderer, imageExt)
+                self.addImageViewer(renderer, imageExt)
+                extraCol = Column(colName, renderer)
                 extraCol.setIsVisible(newCol.isVisible())
                 extraCol.setIsSorteable(False)
                 table.addColumn(extraCol)
@@ -389,33 +392,54 @@ class SqliteFile(IDAO):
     def addChimera(self, renderer: ImageRenderer, imageExt: str):
         chimeraPath = os.environ.get('CHIMERA_HOME', None)
         if chimeraPath is not None:
-            if imageExt not in ['st', 'stk']:
+            if imageExt not in ['st', 'stk', 'mrcs']:
                 icon = pw.findResource('chimera.png')
 
-                def openChimeraCallback(image):
-                    path = image.getImagePath().split('@')[-1]
+                def openChimeraCallback(imagePath):
+                    path = imagePath.split('@')[-1]
                     program = os.path.join(chimeraPath, 'bin', 'ChimeraX')
                     cmd = program + ' "%s"' % path
                     Popen(cmd, shell=True, cwd=os.getcwd())
 
-                renderer.addProgram(ExternalProgram('ChX', icon,
-                                                    'Open with ChimeraX',
-                                                    openChimeraCallback))
+                renderer.addAction(Action('ChX', icon, 'Open with ChimeraX',
+                                          openChimeraCallback))
 
     def addImageJ(self, renderer: ImageRenderer):
         imageJPath = os.environ.get('IMAGEJ_BINARY_PATH', None)
         if imageJPath is not None:
             icon = pw.findResource('Imagej.png')
 
-            def openImageJCallback(image):
-                path = image.getImagePath().split('@')[-1]
+            def openImageJCallback(imagePath):
+                imageSplit = imagePath.split('@')
+                selectedSlice = int(imageSplit[0])
+                path = imageSplit[-1]
                 program = os.path.join(imageJPath)
-                cmd = program + ' "%s"' % path
+                macro = r"""
+path = "%s";
+open(path);
+slice = %d; 
+Stack.setSlice(slice);
+                """ % (os.path.abspath(path), selectedSlice)
+
+                with tempfile.NamedTemporaryFile(delete=False) as tempFile:
+                    tempFile.write(macro.encode('utf-8'))
+                    macroPath = tempFile.name
+
+                cmd = program + ' -macro %s' % macroPath
                 Popen(cmd, shell=True, cwd=os.getcwd())
 
-            renderer.addProgram(
-                ExternalProgram('IJ', icon, 'Open with ImageJ',
-                                openImageJCallback))
+            renderer.addAction(Action('IJ', icon, 'Open with ImageJ',
+                                      openImageJCallback))
+
+    def addImageViewer(self, renderer: ImageRenderer, imageExt: str):
+        icon = pw.findResource('file_vol.png')
+
+        def openImageViewerCallback(imagePath):
+            pass
+
+        if imageExt in ['mrc']:
+            renderer.addAction(Action('IJ', icon, 'Open with ImageViewer',
+                                      openImageViewerCallback))
 
     def fillPage(self, page, actualColumn=0, orderAsc=True):
         """
@@ -454,6 +478,8 @@ class SqliteFile(IDAO):
         return self._con.execute(f"SELECT COUNT(*) FROM {tableName}").fetchone()['COUNT(*)']
 
     def getTableRowCount(self, tableName):
+        if tableName not in self._tableCount:
+            self._tableCount[tableName] = self.getRowsCount(tableName)
         return self._tableCount[tableName]
 
     def getSelectedRangeRowsIds(self, tableName, startRow, numberOfRows, column, reverse=True):
@@ -690,7 +716,6 @@ def _guessType(strValue):
             return float
         except ValueError:
             return str
-
 
 
 def extendMDViewer(om:metadataviewer.model.ObjectManager):
