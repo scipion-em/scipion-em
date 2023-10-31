@@ -25,7 +25,6 @@
 # **************************************************************************
 
 # Expose many basic views
-from pyworkflow.utils import weakImport
 from .views import (DataView, ObjectView, MicrographsView, CtfView,
                     ClassesView, Classes3DView, CoordinatesObjectView,
                     ImageView, TableView)
@@ -43,8 +42,10 @@ from .viewer_volumes import viewerProtImportVolumes
 from .viewer_angular_dist import AngularDistributionViewer
 from .viewers_data import BasicMDViewer
 
-with weakImport("metadataviewer"):
+try:
     from .mdviewer import MDViewer
+except Exception as e:
+    pass
 
 from .showj import *
 

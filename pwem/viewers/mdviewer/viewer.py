@@ -27,8 +27,6 @@
 import os.path
 import subprocess
 
-from PyQt5.QtWidgets import QTableWidget, QMainWindow
-
 from pwem.objects import EMSet
 from pwem.viewers.viewers_data import RegistryViewerConfig
 from pyworkflow import PYTHON
@@ -68,9 +66,6 @@ class MDViewer(Viewer):
     def _visualize(self, obj, **kwargs):
         return [MDView(obj, self.protocol, self._project.port)]
 
-
-class ImageViewer(QMainWindow):
-    pass
 
 
 

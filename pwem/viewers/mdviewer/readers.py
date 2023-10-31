@@ -379,7 +379,6 @@ class SqliteFile(IDAO):
                 imageExt = str(values[index]).split('.')[-1]
                 renderer = ImageRenderer()
                 self.addExternalProgram(renderer, imageExt)
-                self.addImageViewer(renderer, imageExt)
                 extraCol = Column(colName, renderer)
                 extraCol.setIsVisible(newCol.isVisible())
                 extraCol.setIsSorteable(False)
