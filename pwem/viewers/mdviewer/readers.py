@@ -6,11 +6,14 @@ logger = logging.getLogger(__name__)
 from datetime import datetime
 
 import sqlite3
+import tempfile
+import time
+
 import pyworkflow as pw
 import metadataviewer
 from metadataviewer.dao.model import IDAO
 from metadataviewer.model import Table, Column, BoolRenderer, ImageRenderer, StrRenderer
-from metadataviewer.model.renderers import ImageReader, ExternalProgram
+from metadataviewer.model.renderers import ImageReader, Action
 
 from functools import lru_cache
 
@@ -39,8 +42,8 @@ class MRCImageReader(ImageReader):
         mrcImg = cls.getMrcImage(fileName)
         if mrcImg.is_volume() or isVol:
             dim = mrcImg.data.shape
-            x = int(dim[0] /2)
-            imfloat = mrcImg.data[x,:,:]
+            x = int(dim[0] / 2)
+            imfloat = mrcImg.data[x, :, :]
         elif mrcImg.is_image_stack():
             imfloat = mrcImg.data[index-1]
         else:
@@ -57,7 +60,7 @@ class MRCImageReader(ImageReader):
     @lru_cache
     def getMrcImage(cls, fileName):
         logger.info("Reading %s" % fileName)
-        return  mrcfile.mmap(fileName, mode='r+')
+        return mrcfile.mmap(fileName, mode='r+')
 
     @classmethod
     def getCompatibleFileTypes(cls) -> list:
@@ -260,6 +263,7 @@ class SqliteFile(IDAO):
 
     def getTableNames(self):
         """ Return all the table names found in the database. """
+        initTime = time.time()
         if not self._names:
             self._tables = {OBJECT_TABLE: 'classes'}
             self._names = [OBJECT_TABLE]
@@ -276,7 +280,6 @@ class SqliteFile(IDAO):
                 self._aliases[tableName] = alias
 
                 labelsTypes = []
-                self._tableCount[tableName] = self.getRowsCount(tableName)
                 for key, value in firstRow.items():
                     if key not in EXCLUDED_COLUMNS:
                         labelsTypes.append(_guessType(value))
@@ -286,6 +289,8 @@ class SqliteFile(IDAO):
 
         if len(self._tables) > 2: # Assuming that there are more tables than just Object and Properties
             self._tableWithAdditionalInfo = OBJECT_TABLE
+        endTime = time.time()
+        logging.info("GetTableNames: %f" % (endTime - initTime))
         return self._names
 
     def findColbyName(self, colNames, colName):
@@ -340,6 +345,7 @@ class SqliteFile(IDAO):
 
     def fillTable(self, table, objectManager):
         """Create the table structure (columns) and set the table alias"""
+        initTime = time.time()
         tableName = table.getName()
         colNames = self._labels[tableName]
         self.updateExtendColumn(table)
@@ -371,8 +377,9 @@ class SqliteFile(IDAO):
             if isFileNameCol:
                 logger.debug("Creating an extended column: %s" % EXTENDED_COLUMN_NAME)
                 imageExt = str(values[index]).split('.')[-1]
-                self.addExternalProgram(ImageRenderer(), imageExt)
-                extraCol = Column(colName, ImageRenderer())
+                renderer = ImageRenderer()
+                self.addExternalProgram(renderer, imageExt)
+                extraCol = Column(colName, renderer)
                 extraCol.setIsVisible(newCol.isVisible())
                 extraCol.setIsSorteable(False)
                 table.addColumn(extraCol)
@@ -381,26 +388,70 @@ class SqliteFile(IDAO):
 
         table.setAlias(self._aliases[tableName])
         self.generateTableActions(table, objectManager)
+        endTime = time.time()
+        logging.info("Create the table structure: %f" % (endTime - initTime))
 
     def addExternalProgram(self, renderer: ImageRenderer, imageExt: str):
         self.addChimera(renderer, imageExt)
+        self.addImageJ(renderer)
 
     def addChimera(self, renderer: ImageRenderer, imageExt: str):
         chimeraPath = os.environ.get('CHIMERA_HOME', None)
         if chimeraPath is not None:
-            if imageExt not in ['st', 'stk']:
+            if imageExt not in ['st', 'stk', 'mrcs']:
                 icon = pw.findResource('chimera.png')
-                def openChimeraCallback(path):
+
+                def openChimeraCallback(imagePath):
+                    path = imagePath.split('@')[-1]
                     program = os.path.join(chimeraPath, 'bin', 'ChimeraX')
                     cmd = program + ' "%s"' % path
                     Popen(cmd, shell=True, cwd=os.getcwd())
 
-                renderer.addProgram(ExternalProgram('ChX', icon, 'ChimeraX', openChimeraCallback))
+                renderer.addAction(Action('ChX', icon, 'Open with ChimeraX',
+                                          openChimeraCallback))
+
+    def addImageJ(self, renderer: ImageRenderer):
+        imageJPath = os.environ.get('IMAGEJ_BINARY_PATH', None)
+        if imageJPath is not None:
+            icon = pw.findResource('Imagej.png')
+
+            def openImageJCallback(imagePath):
+                imageSplit = imagePath.split('@')
+                selectedSlice = int(imageSplit[0])
+                path = imageSplit[-1]
+                program = os.path.join(imageJPath)
+                macro = r"""
+path = "%s";
+open(path);
+slice = %d; 
+Stack.setSlice(slice);
+                """ % (os.path.abspath(path), selectedSlice)
+
+                with tempfile.NamedTemporaryFile(delete=False) as tempFile:
+                    tempFile.write(macro.encode('utf-8'))
+                    macroPath = tempFile.name
+
+                cmd = program + ' -macro %s' % macroPath
+                Popen(cmd, shell=True, cwd=os.getcwd())
+
+            renderer.addAction(Action('IJ', icon, 'Open with ImageJ',
+                                      openImageJCallback))
+
+    def addImageViewer(self, renderer: ImageRenderer, imageExt: str):
+        icon = pw.findResource('file_vol.png')
+
+        def openImageViewerCallback(imagePath):
+            pass
+
+        if imageExt in ['mrc']:
+            renderer.addAction(Action('IJ', icon, 'Open with ImageViewer',
+                                      openImageViewerCallback))
 
     def fillPage(self, page, actualColumn=0, orderAsc=True):
         """
         Read the given table from the sqlite and fill the page(add rows)
         """
+        initTime = time.time()
         tableName = page.getTable().getName()
         # moving to the first row of the page
         pageNumber = page.getPageNumber()
@@ -427,13 +478,23 @@ class SqliteFile(IDAO):
                     values.insert(self._extendedColumn[1] + 1,
                                   str(values[self._extendedColumn[0]]) + '@' + values[self._extendedColumn[1]])
                 page.addRow((int(id), values))
+        endTime = time.time()
+        logging.info("Fill the page: %f" % (endTime - initTime))
 
     def getRowsCount(self, tableName):
         """ Return the number of elements in the given table. """
         logger.debug("Reading the table %s" %tableName)
+        if tableName == OBJECT_TABLE:
+            size = int(self._con.execute(f"SELECT * FROM {PROPERTIES_TABLE} WHERE key='_size'").fetchall()[0]['value'])
+            return size
         return self._con.execute(f"SELECT COUNT(*) FROM {tableName}").fetchone()['COUNT(*)']
 
     def getTableRowCount(self, tableName):
+        if tableName not in self._tableCount:
+            initTime = time.time()
+            self._tableCount[tableName] = self.getRowsCount(tableName)
+            endTime = time.time()
+            logging.info("Table count: %f" % (endTime - initTime))
         return self._tableCount[tableName]
 
     def getSelectedRangeRowsIds(self, tableName, startRow, numberOfRows, column, reverse=True):
@@ -489,7 +550,7 @@ class SqliteFile(IDAO):
             if pos > 0:
                 for colName in columns:
                     col = self._getColumnMap(tableName, colName) or colName
-                    columnsValues[colName].append(int(value[col]))
+                    columnsValues[colName].append((value[col]))
 
         return columnsValues
 
@@ -670,7 +731,6 @@ def _guessType(strValue):
             return float
         except ValueError:
             return str
-
 
 
 def extendMDViewer(om:metadataviewer.model.ObjectManager):
