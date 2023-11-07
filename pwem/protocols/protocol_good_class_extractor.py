@@ -42,6 +42,7 @@ logger = logging.getLogger(__file__)
 
 OUTPUT_PARTICLES = "outputParticles"
 OUTPUT_DISCARDED_PARTICLES = "outputDiscardedParticles"
+LAST_DONE_FILE = "last_done.txt"
 
 
 class ProtGoodClassesExtractor(EMProtocol, ProtStreamingBase):
@@ -91,14 +92,12 @@ class ProtGoodClassesExtractor(EMProtocol, ProtStreamingBase):
         It should check its input and when ready conditions are met
         call the self._insertFunctionStep method.
         """
-        self._insertFunctionStep(self.closeOutputStep, wait=True)
         self.newDeps = []
 
         while not self.finish:
             if not self._newParticlesToProcess():
                  self.info('No new particles')
             else:
-                closeStep = self._getFirstJoinStep()
                 classSet = self._loadInputClassesSet()
                 self.isStreamClosed = classSet.getStreamState()
 
@@ -110,15 +109,12 @@ class ProtGoodClassesExtractor(EMProtocol, ProtStreamingBase):
                                                             prerequisites=self.selectStep)
 
                 self.newDeps.append(self.extractStep)
-                closeStep.addPrerequisites(*self.newDeps)
 
             if self.isStreamClosed == Set.STREAM_CLOSED:
-                print('Stream closed')
+                self.info('Stream closed')
                 # Finish everything and close output sets
-                outputStep = self._getFirstJoinStep()
-                if outputStep and outputStep.isWaiting():
-                    outputStep.setStatus(STATUS_NEW)
-                    self.finish = True
+                self._insertFunctionStep(self.closeOutputStep, prerequisites=self.newDeps)
+                self.finish = True
 
             sys.stdout.flush()
             time.sleep(15)
@@ -154,15 +150,16 @@ class ProtGoodClassesExtractor(EMProtocol, ProtStreamingBase):
 
         self.lastParticleId = max(self.particlesProcessed)
         self.lastBadParticlesId = max(self.badParticles)
-        print('Last particle input id', self.lastParticleId)
-        print('Size output %d and size discarded output %d' %(len(output), len(outputDiscarded)))
+        self.info('Last particle input id %d' %self.lastParticleId)
+        self.info('Size output %d and size discarded output %d' %(len(output), len(outputDiscarded)))
 
-        # Hace falta el lock o esta comprobacion?
+        # Hace falta el lock?
         if len(output)>0:
             self._updateOutputSet(OUTPUT_PARTICLES, output, self.isStreamClosed)
         if len(outputDiscarded)>0:
             self._updateOutputSet(OUTPUT_DISCARDED_PARTICLES, outputDiscarded, self.isStreamClosed)
 
+        self._writeLastDone(max( self.lastParticleId, self.lastBadParticlesId))
         self.createPlots()
 
     def selectGoodClasses(self):
@@ -228,19 +225,6 @@ class ProtGoodClassesExtractor(EMProtocol, ProtStreamingBase):
         self.lastCheck = now
         return newParticlesBool
 
-    def _getFirstJoinStepName(self):
-        # This function will be used for streaming, to check which is
-        # the first function that need to wait for all micrographs
-        # to have completed, this can be overriden in subclasses
-        # (e.g., in Xmipp 'sortPSDStep')
-        return 'closeOutputStep'
-
-    def _getFirstJoinStep(self):
-        for s in self._steps:
-            if s.funcName == self._getFirstJoinStepName():
-                return s
-        return None
-
     def _loadInputClassesSet(self):
         """ Returns te input set of particles"""
         classSet = self.inputClasses.get()
@@ -252,6 +236,17 @@ class ProtGoodClassesExtractor(EMProtocol, ProtStreamingBase):
         ids = self.inputGoodListIds.get().split(',')
         listIDs = [int(id) for id in ids]
         return listIDs
+
+    def _writeLastDone(self, particleId):
+        """ Write to a text file the last item done. """
+        with open(self._getExtraPath(LAST_DONE_FILE), 'w') as f:
+            f.write('%d\n' % particleId)
+
+    def _getLastDone(self):
+        # Open the file in read mode and read the number
+        with open(self._getExtraPath(LAST_DONE_FILE), "r") as file:
+            content = file.read()
+        return int(content)
 
     def createPlots(self):
         balancePlot(len(self.particlesProcessed), len(self.badParticles),
