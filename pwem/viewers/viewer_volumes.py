@@ -32,7 +32,7 @@ for input volumes.
 """
 
 import os
-from distutils.spawn import find_executable
+from shutil import which
 from tkinter.messagebox import showerror
 
 import pyworkflow.protocol.params as params
@@ -75,7 +75,7 @@ class viewerProtImportVolumes(EmProtocolViewer):
 
     def _validate(self):
         if (self.displayVol == VOLUME_CHIMERA
-                and find_executable(Chimera.getProgram()) is None):
+                and which(Chimera.getProgram()) is None):
             return ["chimera is not available. "
                     "Either install it or choose option 'slices'. "]
         return []

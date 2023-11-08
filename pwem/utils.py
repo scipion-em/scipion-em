@@ -41,7 +41,7 @@ def loadSetFromDb(dbName, dbPrefix=''):
 
 
 def runProgram(program, params):
-    """ Runs a em program setting its environment matching a prefix"""
+    """ Runs an em program setting its environment matching a prefix"""
     env = None
 
     # Allow passing absolute paths
@@ -65,6 +65,7 @@ def runProgram(program, params):
         print("eman/sparx command detected")
         eman2 = Domain.importFromPlugin('eman2', 'Plugin')
         env = eman2.getEnviron()
+        program = eman2.getProgram(programName)
     elif programName.startswith('b'):
         print("Bsoft command detected")
         bsoft = Domain.importFromPlugin('bsoft', 'Plugin')

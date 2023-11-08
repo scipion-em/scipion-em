@@ -600,6 +600,12 @@ class Image(EMObject):
         x, y, z, n = ImageHandler().getDimensions(self)
         return None if x is None else (x, y, z)
 
+    def getImage(self):
+        """ Returns the actual image this objects represents"""
+        from pwem.emlib.image import ImageHandler
+        ih = ImageHandler()
+        return ih.read(self)
+
     def getXDim(self):
         return self.getDim()[0] if self.getDim() is not None else 0
 
@@ -654,7 +660,10 @@ class Image(EMObject):
 
     def copyInfo(self, other):
         """ Copy basic information """
-        self.copyAttributes(other, '_samplingRate')
+        if type(self) is type(other):
+            self.copy(other, copyId=False)
+        else:
+            self.copyAttributes(other, '_samplingRate')
 
     def copyLocation(self, other):
         """ Copy location index and filename from other image. """
@@ -873,16 +882,26 @@ class Volume(Image):
     def hasHalfMaps(self):
         return not self._halfMapFilenames.isEmpty()
 
-    def getHalfMaps(self):
-        return self._halfMapFilenames.get()
+    def getHalfMaps(self, asList=False):
+        if asList:
+            return self._halfMapFilenames
+        else:
+            return self._halfMapFilenames.get()
 
     def setHalfMaps(self, listFileNames):
         return self._halfMapFilenames.set(listFileNames)
 
-    def fixMRCVolume(self):
-        """ Fixes the header of the mrc file pointed by this object """
-        from pwem.convert.headers import fixVolume
+    def fixMRCVolume(self, setSamplingRate=False):
+        """ Fixes the header of the mrc file pointed by this object
+
+        :param setSamplingRate: if true, it will set the header's sampling rate of the MRC file it refers
+
+        """
+        from pwem.convert.headers import fixVolume, setMRCSamplingRate
         fixVolume(self.getFileName())
+
+        if setSamplingRate:
+            setMRCSamplingRate(self.getFileName(), self.getSamplingRate())
 
     def __str__(self):
         """ returns string representation adding halves info to base image.__str__"""
@@ -1034,11 +1053,11 @@ class Sequence(EMObject):
         self._alphabet.set(Integer(seqDic['alphabet']))
         self._isAminoacids.set(Boolean(seqDic['isAminoacids']))
 
-    def exportToFile(self, seqFileName):
+    def exportToFile(self, seqFileName, doClean=True):
         '''Exports the sequence to the specified file'''
         import pwem.convert as emconv
         seqHandler = emconv.SequenceHandler(self.getSequence(),
-                                            self._alphabet.get())
+                                            self._alphabet.get(), doClean)
         # retrieving  args from scipion object
         seqID = self.getId() if self.getId() is not None else 'seqID'
         seqName = self.getSeqName() if self.getSeqName() is not None else 'seqName'
@@ -1049,13 +1068,13 @@ class Sequence(EMObject):
                             #seqFiP12345 USER_SEQ 
                             # Aspartate aminotransferase, mitochondrial
 
-    def appendToFile(self, seqFileName):
+    def appendToFile(self, seqFileName, doClean=True):
         '''Exports the sequence to the specified file. If it already exists,
         the sequence is appended to the ones in the file'''
         logger.info("Appending sequence to file: %s" % seqFileName)
         import pwem.convert as emconv
         seqHandler = emconv.SequenceHandler(self.getSequence(),
-                                            Alphabet.DUMMY_ALPHABET)
+                                            Alphabet.DUMMY_ALPHABET, doClean)
         # retrieving  args from scipion object
         seqID = self.getId() if self.getId() is not None else 'seqID'
         seqName = self.getSeqName() if self.getSeqName() is not None else 'seqName'
@@ -1096,7 +1115,7 @@ class AtomStruct(EMFile):
         return self._volume is not None
 
     def setVolume(self, volume):
-        if type(volume) is Volume:
+        if issubclass(type(volume), Volume):
             self._volume = volume
         else:
             raise Exception('TypeError', 'ERROR: SetVolume, This is not a '
@@ -1254,6 +1273,13 @@ class EMSet(Set, EMObject):
     def getFiles(self):
         return Set.getFiles(self)
 
+    @staticmethod
+    def isItemEnabled(item):
+        """ Returns if the item is enabled...to be used as a callback. In some other cases (new user subsets)
+         this method will be replaced"""
+
+        return item.isEnabled()
+
 
 class SetOfImages(EMSet):
     """ Represents a set of Images """
@@ -1351,15 +1377,18 @@ class SetOfImages(EMSet):
         """ Store dimensions when the first image is found.
         This function should be called only once, to avoid reading
         dimension from image file. """
-        if self._firstDim.isEmpty():
-            self._firstDim.set(image.getDim())
+        logger.info("Getting the dimensions for the first item: %s" % image.getFileName())
+        self._firstDim.set(image.getDim())
 
     def copyInfo(self, other):
         """ Copy basic information (sampling rate and ctf)
         from other set of images to current one"""
-        self.copyAttributes(other, '_samplingRate', '_isPhaseFlipped',
-                            '_isAmplitudeCorrected', '_alignment')
-        self._acquisition.copyInfo(other._acquisition)
+        if type(self) is type(other):
+            self.copy(other, copyId=False)
+        else:
+            self.copyAttributes(other, '_samplingRate', '_isPhaseFlipped',
+                                '_isAmplitudeCorrected', '_alignment')
+            self._acquisition.copyInfo(other._acquisition)
 
     def getFiles(self):
         filePaths = set()
@@ -1432,6 +1461,17 @@ class SetOfImages(EMSet):
 
     def __str__(self):
         """ String representation of a set of images. """
+        try:
+            s = "%s (%d items, %s, %s%s)" % \
+                (self.getClassName(), self.getSize(),
+                self._dimStr(), self._samplingRateStr(), self._appendStreamState())
+        except Exception as e:
+            s = "Couldn't convert the set to text."
+            logger.error(s, exc_info=e)
+
+        return s
+    def _samplingRateStr(self):
+        """ Returns how the sampling rate is presented in a 'str' context."""
         sampling = self.getSamplingRate()
 
         if not sampling:
@@ -1439,10 +1479,7 @@ class SetOfImages(EMSet):
                   % self.getName())
             sampling = -999.0
 
-        s = "%s (%d items, %s, %0.2f Å/px%s)" % \
-            (self.getClassName(), self.getSize(),
-             self._dimStr(), sampling, self._appendStreamState())
-        return s
+        return "%0.2f Å/px" % sampling
 
     def _dimStr(self):
         """ Return the string representing the dimensions. """
@@ -1460,20 +1497,32 @@ class SetOfImages(EMSet):
                 img.setAcquisition(self.getAcquisition())
             yield img
 
-    def appendFromImages(self, imagesSet):
+    def appendFromImages(self, imagesSet, itemSelectionCallback=None):
         """ Iterate over the images and append
         every image that is enabled.
+
+        :param imagesSet: Set to go copy items from
+        :param itemSelectionCallback: Optional, callback receiving an item and returning true if it has to be added
+
         """
+
+        if itemSelectionCallback is None:
+            itemSelectionCallback = SetOfImages.isItemEnabled
+
         for img in imagesSet:
-            if img.isEnabled():
+            if itemSelectionCallback(img):
                 self.append(img)
 
-    def appendFromClasses(self, classesSet):
+    def appendFromClasses(self, classesSet, filterClassFunc=None):
         """ Iterate over the classes and the element inside each
         class and append to the set all that are enabled.
         """
+
+        if filterClassFunc is None:
+            filterClassFunc = SetOfImages.isItemEnabled
+
         for cls in classesSet:
-            if cls.isEnabled() and cls.getSize() > 0:
+            if filterClassFunc(cls) and cls.getSize() > 0:
                 for img in cls:
                     if img.isEnabled():
                         self.append(img)
@@ -1650,6 +1699,12 @@ class SetOfAtomStructs(EMSet):
     # Hint to GUI components to expose internal items for direct selection
     EXPOSE_ITEMS = True
 
+    def getFiles(self):
+        files = []
+        for atomStruct in self.iterItems():
+            files.append(atomStruct.getFileName())
+
+        return files
 
 class SetOfPDBs(SetOfAtomStructs):
     """ Set containing PDB items. """
@@ -1824,10 +1879,14 @@ class SetOfCoordinates(EMSet):
         for coord in self.iterItems(where=coordWhere):
             yield coord
 
-    def getMicrographs(self):
+    def getMicrographs(self, asPointer=False):
         """ Returns the SetOfMicrographs associated with
         this SetOfCoordinates"""
-        return self._micrographsPointer.get()
+
+        if asPointer:
+            return self._micrographsPointer
+        else:
+            return self._micrographsPointer.get()
 
     def setMicrographs(self, micrographs):
         """ Set the micrographs associated with this set of coordinates.
@@ -1869,6 +1928,8 @@ class SetOfCoordinates(EMSet):
 
         # TODO: we might what here to copy the mics too, same as done with
         # acquisition in SetOfImages
+        if isinstance(other, SetOfCoordinates):
+            self.setMicrographs(other.getMicrographs(asPointer=True))
 
 
 class Matrix(Scalar):
@@ -1993,15 +2054,15 @@ class SetOfClasses(EMSet):
         return self._representatives.get()
 
     def getImages(self):
-        """ Return the SetOFImages used to create the SetOfClasses. """
+        """ Return the SetOfImages used to create the SetOfClasses. """
         return self._imagesPointer.get()
 
     def getImagesPointer(self):
-        """" Return the pointer to the SetOFImages used to create the SetOfClasses. """
+        """" Return the pointer to the SetOfImages used to create the SetOfClasses. """
         return self._imagesPointer
 
     def setImages(self, images):
-        """ Set the images (particles 2d associated with this set of classes.
+        """ Set the images (particles) 2d associated with this set of classes.
         Params:
             images: An indirect pointer (with extended) to a set of images.
         """
@@ -2068,12 +2129,22 @@ class SetOfClasses(EMSet):
 
                 yield rep
 
+    def getFiles(self):
+
+        files = []
+        for rep in self.iterRepresentatives():
+            files.append(rep.getFileName())
+        return files
+
     def getSamplingRate(self):
         return self.getImages().getSamplingRate()
 
     def appendFromClasses(self, classesSet, filterClassFunc=None, updateClassCallback=None):
         """ Iterate over the classes and the elements inside each
         class and append classes and items that are enabled.
+
+        :param classesSet: Set of classes to copy items from
+        :param filterClassFunc: Extra callback to exclude classes. Receives a class item, should return a boolean
         """
         if filterClassFunc is None:
             filterClassFunc = lambda cls: True
@@ -2116,6 +2187,15 @@ class SetOfClasses(EMSet):
         itemDataIter = itemDataIterator  # shortcut
 
         clsDict = {}  # Dictionary to store the (classId, classSet) pairs
+        if not self.isEmpty():
+            for item in self.iterItems():
+                # clone with a param to clone also mapper path?
+                clone = item.clone()
+                self._setItemMapperPath(clone)
+                # Maybe enableAppend of class based on enableAppend of set?
+                clone.enableAppend()
+                clsDict[item.getObjId()] = clone
+
         inputSet = self.getImages()
         iterParams = iterParams or {}
 

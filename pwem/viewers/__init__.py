@@ -36,8 +36,18 @@ from .viewer_localres import LocalResolutionViewer, ChimeraAttributeViewer
 from .viewer_vmd import Vmd, VmdView, VmdViewer
 from .viewer_fsc import FscViewer
 from .viewer_pdf import PDFReportViewer
-from .viewer_chimera import (Chimera, ChimeraView, ChimeraClientView,
-                             ChimeraDataView, ChimeraViewer, ChimeraAngDist)
+from .viewer_chimera import (Chimera, ChimeraView, ChimeraViewer, ChimeraAngDist)
 from .viewer_sequence import SequenceViewer
 from .viewer_volumes import viewerProtImportVolumes
+from .viewer_angular_dist import AngularDistributionViewer
+from .viewers_data import BasicMDViewer
+
+try:
+    from .mdviewer import MDViewer
+except Exception as e:
+    pass
+
 from .showj import *
+
+if emConfig.CHIMERA_OLD_BINARY_PATH:
+    from .viewer_chimera import ChimeraOldViewer

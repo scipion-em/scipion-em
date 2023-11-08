@@ -24,7 +24,7 @@
 # *
 # **************************************************************************
 """
-This modules contains classes related with EM
+This module contains classes related with EM
 """
 
 import os
@@ -32,7 +32,7 @@ from pkg_resources import parse_version
 
 import pyworkflow as pw
 from pyworkflow.protocol import Protocol
-from pyworkflow.utils import weakImport
+from pyworkflow.utils import  getSubclasses
 from pyworkflow.viewer import Viewer
 from pyworkflow.wizard import Wizard
 import pyworkflow.plugin
@@ -42,7 +42,7 @@ from .objects import EMObject
 from .tests import defineDatasets
 from .utils import *
 
-__version__ = '3.0.24'
+__version__ = '3.3.1'
 NO_VERSION_FOUND_STR = "0.0"
 CUDA_LIB_VAR = 'CUDA_LIB'
 
@@ -59,8 +59,8 @@ class Config(pw.Config):
     # Default XMIPP_HOME: needed here for ShowJ viewers
     XMIPP_HOME = _join(_get('XMIPP_HOME', os.path.join(EM_ROOT, 'xmipp')))
 
-    # Get java home, we might need to provide correct default value
-    JAVA_HOME = _get('JAVA_HOME', '')
+    # Get java home, we might need to provide correct default value. Use SCIPION_JAVA_HOME to force it when there is other JAVA_HOME you don't want/cant to change: e.g. pycharm debugging.
+    JAVA_HOME = _get('SCIPION_JAVA_HOME', _get('JAVA_HOME', ''))
     JAVA_MAX_MEMORY = _get('JAVA_MAX_MEMORY', '4')
 
     # MPI
@@ -72,6 +72,12 @@ class Config(pw.Config):
     CUDA_BIN = _get('CUDA_BIN', '/usr/local/cuda/bin')
     MAX_PREVIEW_FILE_SIZE = float(_get("MAX_PREVIEW_FILE_SIZE", DEFAULT_MAX_PREVIEW_FILE_SIZE))
 
+    # OLD CHIMERA variable
+    CHIMERA_OLD_BINARY_PATH = _get("CHIMERA_OLD_BINARY_PATH",'')
+
+    # Path to either ImageJ or Fiji binary program
+    IMAGEJ_BINARY_PATH = _get("IMAGEJ_BINARY_PATH",'')
+
 
 class Domain(pyworkflow.plugin.Domain):
     _name = __name__
@@ -79,7 +85,7 @@ class Domain(pyworkflow.plugin.Domain):
     _protocolClass = Protocol
     _viewerClass = Viewer
     _wizardClass = Wizard
-    _baseClasses = globals()
+    _baseClasses = getSubclasses(EMObject, globals())
 
 
 class Plugin(pyworkflow.plugin.Plugin):
@@ -118,11 +124,15 @@ class Plugin(pyworkflow.plugin.Plugin):
 
     @classmethod
     def _defineVariables(cls):
-        cls._defineVar(EM_ROOT_VAR, pwem.Config.EM_ROOT)
-        cls._defineEmVar(MAXIT_HOME, 'maxit-10.1')
+        # Avoid defining variables from children that does not define variables.
+        if cls == Plugin:
+            cls._defineVar(EM_ROOT_VAR, pwem.Config.EM_ROOT)
+            cls._defineEmVar(MAXIT_HOME, 'maxit-10.1')
 
-        # Take this initialization event to define own datasets
-        defineDatasets()
+            # Take this initialization event to define own datasets
+            defineDatasets()
+            # Register filehandlers too
+            cls._registerFileHandlers()
 
     @classmethod
     def defineBinaries(cls, env):
@@ -138,6 +148,7 @@ class Plugin(pyworkflow.plugin.Plugin):
             env.addPackage(MAXIT, version='10.1',
                            tar=MAXIT_TAR,
                            url=MAXIT_URL,
+                           neededProgs=['gcc', 'flex', 'make', 'bison', 'tcsh'],
                            commands=maxit_commands,
                            default=default)  # scipion installb maxit
             # requirements bison, flex, gcc
@@ -198,6 +209,29 @@ class Plugin(pyworkflow.plugin.Plugin):
             return parse_version(versionStr)
         else:
             return parse_version(default)
+    @classmethod
+    def _registerFileHandlers(cls):
+        # register file handlers to preview info in the Filebrowser....
+        from pyworkflow.gui.browser import FileTreeProvider, STANDARD_IMAGE_EXTENSIONS
+        from .viewers.filehandlers import MdFileHandler, ParticleFileHandler, VolFileHandler, StackHandler, ChimeraHandler, ImajeJFileHandler
+
+        register = FileTreeProvider.registerFileHandler
+        register(MdFileHandler(), '.xmd', '.star', '.pos', '.ctfparam', '.doc')
+        register(ParticleFileHandler(),
+                 '.xmp', '.tif', '.tiff', '.spi', '.mrc', '.map', '.raw',
+                 '.inf', '.dm3', '.em', '.pif', '.psd', '.spe', '.ser', '.img',
+                 '.hed', *STANDARD_IMAGE_EXTENSIONS)
+        register(VolFileHandler(), '.vol', '.hdf', '.rec')
+        register(StackHandler(), '.stk', '.mrcs', '.st', '.pif', '.dm4', '.ali')
+        register(ChimeraHandler(), '.bild', '.mrc', '.pdb', '.vol', '.hdf', '.cif', '.mmcif')
+
+        if Config.IMAGEJ_BINARY_PATH:
+            register(ImajeJFileHandler(), '.mrcs', '.mrc', '.st', '.ali', '.rec', '.tif', '.tiff', *STANDARD_IMAGE_EXTENSIONS)
+        else:
+            msg= "Optional: ImageJ of Fiji not configured can be configured to open files from the File Browser." \
+                 " Please add 'IMAGEJ_BINARY_PATH' to the config file (%s)" \
+                 "and point to the binary file that will open the files." % pw.Config.SCIPION_CONFIG
+            logger.info(msg)
 
 
 
@@ -222,21 +256,3 @@ def findFolderWithPattern(path, pattern):
     else:
         return findFolderWithPattern(previous, pattern)
 
-# NOTE: This should not happen in production since tifffile is in the requirements and end up in the package metadata
-# The case for this is the "devel installation", that is not using requirements.txt (maybe it should) but directly
-# running pip install -e path/to/scipion-em
-# This triggers the import of tifffile not yet installed, but about to do so.
-with weakImport("tifffile"):
-    # register file handlers to preview info in the Filebrowser....
-    from pyworkflow.gui.browser import FileTreeProvider, STANDARD_IMAGE_EXTENSIONS
-    from .viewers.filehandlers import *
-
-    register = FileTreeProvider.registerFileHandler
-    register(MdFileHandler(), '.xmd', '.star', '.pos', '.ctfparam', '.doc')
-    register(ParticleFileHandler(),
-             '.xmp', '.tif', '.tiff', '.spi', '.mrc', '.map', '.raw',
-             '.inf', '.dm3', '.em', '.pif', '.psd', '.spe', '.ser', '.img',
-             '.hed', *STANDARD_IMAGE_EXTENSIONS)
-    register(VolFileHandler(), '.vol', '.hdf')
-    register(StackHandler(), '.stk', '.mrcs', '.st', '.pif', '.dm4')
-    register(ChimeraHandler(), '.bild', '.mrc', '.pdb', '.vol', '.hdf', '.cif', '.mmcif')
