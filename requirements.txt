@@ -7,4 +7,4 @@ tifffile==2023.7.10; python_version == '3.8'
 tifffile==2023.9.26; python_version >= '3.9' # up to date on 11-2023
 emtable>=0.0.14 # up to date on 11-2023
 scipy<=1.10.0; python_version < '3.12' # matches scipion-em-xmipp on 11-2023
-scipy==1.11.1; python_version == '3.12' #  on 11-2023
+scipy==1.11.2; python_version == '3.12' #  up to date on 11-2023
