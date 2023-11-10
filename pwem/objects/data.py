@@ -1459,11 +1459,14 @@ class SetOfImages(EMSet):
         """Return first image dimensions as a tuple: (xdim, ydim, zdim)"""
         return self.getFirstItem().getDim()
 
+    def getClassNameStr(self):
+        return self.getClassName().replace("SetOf", '')
+
     def __str__(self):
         """ String representation of a set of images. """
         try:
             s = "%s (%d items, %s, %s%s)" % \
-                (self.getClassName(), self.getSize(),
+                (self.getClassNameStr(), self.getSize(),
                 self._dimStr(), self._samplingRateStr(), self._appendStreamState())
         except Exception as e:
             s = "Couldn't convert the set to text."
@@ -1583,7 +1586,13 @@ class SetOfParticles(SetOfImages):
     def __init__(self, **kwargs):
         SetOfImages.__init__(self, **kwargs)
         self._coordsPointer = Pointer()
+        self._isSubParticles = Boolean(False)
 
+    def getClassNameStr(self):
+        if self._isSubParticles.get():
+            return 'SubParticles'
+        else:
+            return super().getClassNameStr()
     def hasCoordinates(self):
         return self._coordsPointer.hasValue()
 
@@ -1591,6 +1600,10 @@ class SetOfParticles(SetOfImages):
         """ Returns the SetOfCoordinates associated with
         this SetOfParticles"""
         return self._coordsPointer.get()
+    def getIsSubparticles(self):
+        return self._isSubParticles
+    def setIsSubparticles(self, value):
+        self._isSubParticles = Boolean(value)
 
     def setCoordinates(self, coordinates):
         """ Set the SetOfCoordinates associates with

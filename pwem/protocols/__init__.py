@@ -46,6 +46,8 @@ from .protocol_alignment_assign import ProtAlignmentAssign
 from .protocol_alignment_invertHand import ProtAlignmentInvertHand
 from .protocol_batch import *
 from .protocol_extract_coordinates import ProtExtractCoords
+from .protocol_extract_subparticles_coordinates import ProtExtractSubparticlesCoords
+
 from .protocol_create_stream_data import ProtCreateStreamData
 from .parallel import ProtTestParallel
 from .protocol_create_stream_data import SET_OF_RANDOM_MICROGRAPHS
