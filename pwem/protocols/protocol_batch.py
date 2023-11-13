@@ -25,11 +25,6 @@
 # **************************************************************************
 
 import os
-try:
-    from itertools import izip
-except ImportError:
-    izip = zip
-
 from json import dumps, loads
 
 from pyworkflow.protocol.params import (PointerParam, FileParam, StringParam)
@@ -481,7 +476,7 @@ class ProtUserSubSet(BatchProtocol):
         outputT.copyInfo(inputT)
 
         # noinspection DuplicatedCode
-        for micPair, u, t in izip(modifiedSet, inputU, inputT):
+        for micPair, u, t in zip(modifiedSet, inputU, inputT):
             if micPair.isEnabled():
                 output.append(micPair)
                 outputU.append(u)
@@ -524,7 +519,7 @@ class ProtUserSubSet(BatchProtocol):
                                         prefix=self._dbPrefix)
 
         # noinspection DuplicatedCode
-        for pair, u, t in izip(modifiedSet, inputU, inputT):
+        for pair, u, t in zip(modifiedSet, inputU, inputT):
             if pair.isEnabled():
                 output.append(pair)
                 outputU.append(u)

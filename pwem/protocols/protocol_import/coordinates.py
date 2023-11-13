@@ -28,10 +28,6 @@
 
 from os.path import exists
 from glob import glob
-try:
-    from itertools import izip
-except ImportError:
-    izip = zip
 
 from pyworkflow.protocol.params import (IntParam, PointerParam, FloatParam,
                                         BooleanParam, PathParam, EnumParam,
@@ -412,7 +408,7 @@ class ProtImportCoordinatesPairs(ProtImportFiles):
         patterns = [self.patternUntilted.get(), self.patternTilted.get()]
         coords = []
 
-        for mic, pattern in izip(mics, patterns):
+        for mic, pattern in zip(mics, patterns):
             micFnBase = pwutils.removeBaseExt(mic.getFileName())
             for coordFn in self._iterFiles(pattern):
                 if coordFn not in coords:
@@ -469,7 +465,7 @@ class ProtImportCoordinatesPairs(ProtImportFiles):
         anglesSet = self._createSetOfAngles()
 
         def _importCoords(uCoordSet, tCoordSet):
-            for micU, micT in izip(uSet, tSet):
+            for micU, micT in zip(uSet, tSet):
                 coordFnU, coordFnT = self.getMatchingCoord(micU, micT)
                 if coordFnU and coordFnT:
 
@@ -536,7 +532,7 @@ class ProtImportCoordinatesPairs(ProtImportFiles):
             micTFn = pwutils.removeBaseExt(row.getValue(md.MDL_MICROGRAPH_TILTED))
             micFnDict[micUFn] = micTFn
 
-        for micU, micT in izip(uSet, tSet):
+        for micU, micT in zip(uSet, tSet):
             inputMicsDict[pwutils.removeBaseExt(micU.getFileName())] = pwutils.removeBaseExt(micT.getFileName())
 
         for micKey in inputMicsDict:
