@@ -236,10 +236,10 @@ class ProtBoxSizeCheckpoint(EMProtocol):
         if self.boolTimer.get():
             timeInSec = self.getTimeOutInSeconds(self.timeout.get())
             if timeInSec == 0:
-                message.append('Time format is wrong. A correct format is an '
-                               'integer number in seconds or the following syntax: '
-                               '{days}d {hours}h {minutes}m {seconds}s separated by'
-                               ' spaces e.g: 1d 2h 20m 15s,  10m 3s, 1h, 20s or 25.')
+                errors.append('Time format is wrong. A correct format is an '
+                              'integer number in seconds or the following syntax: '
+                              '{days}d {hours}h {minutes}m {seconds}s separated by'
+                              ' spaces e.g: 1d 2h 20m 15s,  10m 3s, 1h, 20s or 25.')
 
         return errors
 

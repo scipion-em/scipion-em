@@ -28,11 +28,11 @@ This module contains classes related with EM
 """
 
 import os
-from pkg_resources import parse_version
+from packaging import version
 
 import pyworkflow as pw
 from pyworkflow.protocol import Protocol
-from pyworkflow.utils import  getSubclasses
+from pyworkflow.utils import getSubclasses
 from pyworkflow.viewer import Viewer
 from pyworkflow.wizard import Wizard
 import pyworkflow.plugin
@@ -199,16 +199,16 @@ class Plugin(pyworkflow.plugin.Plugin):
         if pattern is not None:
             path = findFolderWithPattern(path, pattern)
             if path is None:
-                return parse_version(default)
+                return version.Version(default)
 
         parts = path.split(separator)
         if len(parts)>=2:
 
             # Version should be the last bit
             versionStr = parts[-1]
-            return parse_version(versionStr)
+            return version.Version(versionStr)
         else:
-            return parse_version(default)
+            return version.Version(default)
     @classmethod
     def _registerFileHandlers(cls):
         # register file handlers to preview info in the Filebrowser....
