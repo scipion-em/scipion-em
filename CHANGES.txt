@@ -1,8 +1,12 @@
 V3.4.0:
-   Designers:
+   Users:
+     - Improving performance of the metadataviewer.
+     - Metadataviewer integration with Chimera and ImageJ
+   Developers:
       - add attribute issubParticles to set OfParticles
-      - modify __str__ to print setOfSubPArticles when appropiate
-      - remove setOf in __str__
+      - modify __str__ to print SubParticles when appropiate
+      - remove setOf in SetOfImages.__str__
+
 V3.3.0:
    Users:
      - Fix: importing non cubic volumes could render 0 elements in dimensions. Now minimum is 1.
