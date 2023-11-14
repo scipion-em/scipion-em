@@ -27,16 +27,20 @@
 import os
 
 import numpy
-from PIL import Image
-from tifffile import TiffFile
 
 import pyworkflow.utils as pwutils
 import pwem.objects as emobj
 import pwem.constants as emcts
 from .. import lib
-
 import logging
 logger = logging.getLogger(__name__)
+
+try:
+    from .image_readers import ImageReadersRegistry
+except Exception as e:
+    logger.warning("Are you missing mrcfile ? Are you in devel mode ?. "
+                   "So, please run: scipion3 pip install mrcfile")
+
 
 class ImageHandler(object):
     """ Class to provide several Image manipulation utilities. """
@@ -579,110 +583,3 @@ class ImageHandler(object):
         resultImage.write(outputFile)
 
 
-class ImageReader:
-    @staticmethod
-    def getCompatibleExtensions()-> list:
-        """ Returns a list of the compatible extensions the reader can handle"""
-        pass
-    @staticmethod
-    def getDimensions(filePath):
-        """ Returns the dimensions [X,Y,Z,N] of the file"""
-        pass
-
-class PILImageReader(ImageReader):
-    """ PIL image reader"""
-    @staticmethod
-    def getCompatibleExtensions() -> list:
-        return ['png','jpg', 'jpeg']
-    @staticmethod
-    def getDimensions(filePath):
-        im = Image.open(filePath)
-        x, y = im.size  # (width,height) tuple
-        return x, y, 1, 1
-
-class TiffImageReader(ImageReader):
-    """ Tiff image reader"""
-    @staticmethod
-    def getCompatibleExtensions() -> list:
-        return ['tif','tiff', 'gain', 'eer']
-
-    @staticmethod
-    def getDimensions(filePath):
-
-        tif = TiffFile(filePath)
-        frames = len(tif.pages)  # number of pages in the file
-        page = tif.pages[0]  # get shape and dtype of the image in the first page
-        x, y = page.shape
-        return x, y, frames, 1
-
-class EMANImageReader(ImageReader):
-    """ Image reader for eman file formats"""
-    @staticmethod
-    def getCompatibleExtensions() -> list:
-        return ["img"]
-
-    @staticmethod
-    def getDimensions(filePath):
-
-        from pwem import Domain
-        getImageDimensions = Domain.importFromPlugin(
-            'eman2.convert', 'getImageDimensions',
-            doRaise=True)
-        return getImageDimensions(filePath)  # we are ignoring index here
-
-class XMIPPImageReader(ImageReader):
-    @staticmethod
-    def getCompatibleExtensions():
-        return emcts.ALL_MRC_EXTENSIONS + emcts.ALL_TIF_EXTENSIONS + ["hdf5", "dm4", "stk", "spi", "vol", "tif"]
-
-    @staticmethod
-    def getDimensions(filePath):
-        img = lib.Image()
-        img.read(filePath, lib.HEADER)
-        return img.getDimensions()
-
-class MRCImageReader(ImageReader):
-    """ Image reader for MRC files"""
-    @staticmethod
-    def getCompatibleExtensions() -> list:
-        return emcts.ALL_MRC_EXTENSIONS
-
-    @staticmethod
-    def getDimensions(filePath):
-        from pwem.convert import headers
-        header = headers.Ccp4Header(filePath, readHeader=True)
-        return header.getXYZN()
-
-class ImageReadersRegistry:
-    """ Class to register image readers to provide basic information about an image like dimensions or getting an image"""
-    _readers = dict() # Dictionary to hold the readers. The key is the extension
-
-    @classmethod
-    def addReader(cls, imageReader:ImageReader):
-
-        for ext in imageReader.getCompatibleExtensions():
-            ext_low=ext.lower()
-            logger.debug("Adding %s as image reader for %s" % (imageReader, ext_low))
-            cls._readers[ext_low]= imageReader
-
-    @classmethod
-    def getReader(cls, filePath):
-        """ Returns the reader or None able to deal with filePath based on the extension."""
-        ext = filePath.split(".")[-1].lower()
-        logger.debug("Getting ImageReader for %s (%s)" % (filePath, ext))
-
-        reader = cls._readers.get(ext, None)
-
-        # Fall back to XmippImage reader
-        if reader is None:
-            logger.info("Reader not registered for %s files. Falling back to XmippReader" % ext)
-            reader = XMIPPImageReader
-
-        return reader
-
-# Register reader in the registry. Latest registered will take priority.
-ImageReadersRegistry.addReader(XMIPPImageReader)
-ImageReadersRegistry.addReader(MRCImageReader)
-ImageReadersRegistry.addReader(EMANImageReader)
-ImageReadersRegistry.addReader(PILImageReader)
-ImageReadersRegistry.addReader(TiffImageReader)
