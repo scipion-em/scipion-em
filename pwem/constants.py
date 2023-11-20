@@ -204,8 +204,8 @@ RESIDUES1TO3 = {v: k for k, v in RESIDUES3TO1.items()}
 # File extensions
 # MRC
 EXT_MRC ="mrc"
-EXT_MRC_MRC="%s:%s" % (EXT_MRC,EXT_MRC)
 EXT_MRCS ="mrcs"
+EXT_MRC_MRC="%s:%s" % (EXT_MRC,EXT_MRC)
 EXT_MRC_MRCS="%s:%s" % (EXT_MRC,EXT_MRCS)
 EXT_MRCS_MRC="%s:%s" % (EXT_MRCS,EXT_MRC)
 EXT_MRCS_MRCS="%s:%s" % (EXT_MRCS,EXT_MRCS)
@@ -215,8 +215,10 @@ EXT_ALI = "ali"
 EXT_MAP = "map"
 EXT_EM = 'em'
 
+
 ALL_MRC_EXTENSIONS =[EXT_MRC, EXT_MRCS, EXT_MRC_MRC, EXT_MRC_MRCS,
                      EXT_ST, EXT_REC, EXT_ALI, EXT_MAP, EXT_EM, EXT_MRCS_MRC,
                      EXT_MRCS_MRCS]
+
 
 ALL_TIF_EXTENSIONS = ['tif','tiff', 'gain', 'eer']

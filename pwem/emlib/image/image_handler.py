@@ -581,5 +581,3 @@ class ImageHandler(object):
         else:
             resultImage = imageObj.applyWarpAffine(list(transformMatrix.flatten()), shape, doWrap, fillValue)
         resultImage.write(outputFile)
-
-
