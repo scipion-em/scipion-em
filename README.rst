@@ -1,5 +1,5 @@
 .. image:: https://img.shields.io/pypi/v/scipion-em.svg
-        :target: https://pypi.python.org/pypi/scipion-pyworkflow
+        :target: https://pypi.python.org/pypi/scipion-em
         :alt: PyPI release
 
 .. image:: https://sonarcloud.io/api/project_badges/measure?project=scipion-em_scipion-em&metric=alert_status
