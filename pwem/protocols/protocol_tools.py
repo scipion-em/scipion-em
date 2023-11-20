@@ -69,8 +69,8 @@ class ProtManualCheckpoint(EMProtocol):
                         self.waitingHasFinished())
 
     def getTimeOutInSeconds(self, timeOut):
-        timeOutFormatRegexList = {'\d+s':1, '\d+m':60, '\d+h':3600,
-                                  '\d+d':72000}
+        timeOutFormatRegexList = {r'\d+s': 1, r'\d+m': 60, r'\d+h': 3600,
+                                  r'\d+d': 72000}
         try:
             return int(timeOut)
         except Exception:
