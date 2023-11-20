@@ -228,14 +228,15 @@ class ImageHandler(object):
             for i, j in zip(range(firstImg, lastImg + 1), range(1, n + 1)):
                 self.convert((i, inputFn), (j, outputFn))
 
-    def getDimensions(self, locationObj):
+    @classmethod
+    def getDimensions(cls, locationObj):
         """ It will return a tuple with the images dimensions.
         The tuple will contains:
             (x, y, z, n) where x, y, z are image dimensions (z=1 for 2D) and 
             n is the number of elements if is a stack.
         """
-        if self.existsLocation(locationObj):
-            location = self._convertToLocation(locationObj)
+        if cls.existsLocation(locationObj):
+            location = cls._convertToLocation(locationObj)
             fn = location[1]
 
             # Dimensions based on Readers. Registered and defined in the bottom
