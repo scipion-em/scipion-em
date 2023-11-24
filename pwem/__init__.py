@@ -26,8 +26,10 @@
 """
 This module contains classes related with EM
 """
-
+import logging
+logger = logging.getLogger(__name__)
 import os
+import re
 from pkg_resources import parse_version
 
 import pyworkflow as pw
@@ -206,6 +208,8 @@ class Plugin(pyworkflow.plugin.Plugin):
 
             # Version should be the last bit
             versionStr = parts[-1]
+            versionStr = re.search("\d+\.\d+", versionStr)[0]
+            # Match only numbers
             return parse_version(versionStr)
         else:
             return parse_version(default)
