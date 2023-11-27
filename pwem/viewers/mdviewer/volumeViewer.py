@@ -248,7 +248,7 @@ class VolumeViewer(QMainWindow):
         """This method uses QFileDialog to open a volume file (.stk or .mrc)."""
         filepath, _ = QFileDialog.getOpenFileNames(self, 'Open volume or stack',
                                                    '', '(*.stk *.mrc)')
-        if os.path.exists(filepath[0]):
+        if filepath and os.path.exists(filepath[0]):
             self._filePath = filepath[0]
             self.loadVolume()
 
