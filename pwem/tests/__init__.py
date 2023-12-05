@@ -267,7 +267,7 @@ def defineDatasets():
 
     DataSet(name='model_building_tutorial', folder='model_building_tutorial',
             files={'vol1': 'volumes/1ake_4-5A.mrc',
-                   'pdb1': 'PDBs/1ake_start.pdb'})
+                   'pdb1': 'PDBx_mmCIF/1ake_start.pdb'})
 
     DataSet(name='eman', folder='eman',
             files={
