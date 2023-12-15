@@ -38,6 +38,7 @@ from pwem.objects import SetOfAtomStructs
 
 chimeraPdbTemplateFileName = "Atom_struct__%06d.cif"
 chimeraMapTemplateFileName = "Map__%06d.mrc"
+chimeraPythonFileName = "chimeraScript.py"
 chimeraScriptFileName = "chimeraScript.cxc"
 chimeraConfigFileName = "chimera.ini"
 sessionFile = "SESSION.cxs"
