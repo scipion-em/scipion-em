@@ -339,7 +339,6 @@ class ChimeraAttributeViewer(pwviewer.ProtocolViewer):
       _, _, bars = a.hist(attrValues, bins=bins, linewidth=1, label="Map", rwidth=0.9)
 
       colorSteps, colorList = self.getColors()
-      colorList.reverse()
       for bar, colorS, color in zip(bars, colorSteps, colorList):
           bar.set_facecolor(color)
 
@@ -354,14 +353,13 @@ class ChimeraAttributeViewer(pwviewer.ProtocolViewer):
             attrname = self.getEnumText('attrName')
             cifDic = AtomicStructHandler().readLowLevel(self.getAtomStructObject().getFileName())
             names, values = np.array(cifDic[NAME]), np.array(cifDic[VALUE])
-            recipient = cifDic[RECIP][0]
             attrValues = values[names == attrname]
             attrValues = list(map(float, attrValues))
             return min(attrValues), max(attrValues)
 
     def getColors(self):
       low, high = self.getValuesRange()
-      stepColors = splitRange(high, low, splitNum=self.intervals.get())
+      stepColors = splitRange(low, high, splitNum=self.intervals.get())
       colorList = plotter.getHexColorList(len(stepColors), self.colorMap.get())
       return stepColors, colorList
 
