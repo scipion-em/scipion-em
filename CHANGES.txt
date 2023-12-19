@@ -2,6 +2,7 @@ V3.5.0
   Users:
      - add wait protocol. This protocol wait N seconds and then ends.
        It is helpfull to schedule other protocols using the option "wait for"
+     - Fix: .em files are handled by xmipp (dimensions now are correct)
 V3.4.0:
    Users:
      - Fix: CTFTomoSeries manual subset should work
