@@ -296,6 +296,7 @@ class ChimeraAttributeViewer(pwviewer.ProtocolViewer):
               attrColorName = attrName
 
           stepColors, colorList = self.getColors()
+          colorList.reverse(), stepColors.reverse()
           scolorStr = ''
           for step, color in zip(stepColors, colorList):
             scolorStr += '%s,%s:' % (step, color)
