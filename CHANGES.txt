@@ -1,8 +1,9 @@
 V3.5.0
   Users:
      - add wait protocol. This protocol wait N seconds and then ends.
-       It is helpfull to schedule other protocols using the option "wait for"
+       It is helpful to schedule other protocols using the option "wait for"
      - Fix: .em files are handled by xmipp (dimensions now are correct)
+     - Adapted to new icons in Sprites
 V3.4.0:
    Users:
      - Fix: CTFTomoSeries manual subset should work
@@ -23,7 +24,7 @@ V3.3.0:
      - Fix: importing non cubic volumes could render 0 elements in dimensions. Now minimum is 1.
    Developers:
      - ImageHandler.getDimensions uses ImageReader registry and its readers (Xmipp, Tiff, Eman, ...) image
-     - tiff dimensions (gain, eer, tif, tiff) are swap. They originall  y were opposite to xmipp and others convention.
+     - tiff dimensions (gain, eer, tif, tiff) are swap. They original  y were opposite to xmipp and others convention.
      - User subset: ready for new metadata viewer using txt files with ids.
      - classifyItems method of SetOfClasses updates an existing output set than can be utilized for streaming protocols
      - New metadata viewer(BETA). To use it run 'scipion3 pip install metadata-viewer mrcfile'. Right click on outputs should show "Scipion metadata viewer"

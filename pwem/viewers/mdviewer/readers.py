@@ -311,7 +311,7 @@ Stack.setSlice(slice);
                                       openImageJCallback))
 
     def addImageViewer(self, renderer: ImageRenderer, imageExt: str):
-        icon = pw.findResource('file_vol.png')
+        icon = os.path.join(pw.getResourcesPath(),'file_vol.png')
 
         def openImageViewerCallback(imagePath):
             path = imagePath.split('@')[-1]
