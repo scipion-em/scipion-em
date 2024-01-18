@@ -26,8 +26,10 @@
 """
 This module contains classes related with EM
 """
-
+import logging
+logger = logging.getLogger(__name__)
 import os
+import re
 from pkg_resources import parse_version
 
 import pyworkflow as pw
@@ -42,7 +44,7 @@ from .objects import EMObject
 from .tests import defineDatasets
 from .utils import *
 
-__version__ = '3.4.0'
+__version__ = '3.5.0'
 NO_VERSION_FOUND_STR = "0.0"
 CUDA_LIB_VAR = 'CUDA_LIB'
 
@@ -206,6 +208,8 @@ class Plugin(pyworkflow.plugin.Plugin):
 
             # Version should be the last bit
             versionStr = parts[-1]
+            versionStr = re.search("\d+\.\d+", versionStr)[0]
+            # Match only numbers
             return parse_version(versionStr)
         else:
             return parse_version(default)

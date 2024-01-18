@@ -1,11 +1,22 @@
+V3.5.0
+  Users:
+     - add wait protocol. This protocol wait N seconds and then ends.
+       It is helpfull to schedule other protocols using the option "wait for"
+     - Fix: .em files are handled by xmipp (dimensions now are correct)
 V3.4.0:
    Users:
-     - Improving performance of the metadataviewer.
-     - Metadataviewer integration with Chimera and ImageJ
+     - Fix: CTFTomoSeries manual subset should work
+     - Windows' ChimeraX properly called from WSL installations
    Developers:
-      - add attribute issubParticles to set OfParticles
-      - modify __str__ to print SubParticles when appropiate
+      - add attribute isSubParticles to SetOfParticles
+      - modify __str__ to print SubParticles when appropriate
       - remove setOf in SetOfImages.__str__
+     - EMSet.copyItems and createCopy accepts "itemSelectedCallback" falling back to isEnabled.
+     - getVersionFromPath improved: works with cuda-11.4.safe (uses regex looking up for numbers)
+
+V3.3.1:
+     - Improving performance of the metadataviewer.
+     - Metadataviewer integration with Chimera and ImageJ     - Subsets: Tolerates missing properties in sqlite but present in run.db (CTFTomoseries without TS pointer)
 
 V3.3.0:
    Users:
