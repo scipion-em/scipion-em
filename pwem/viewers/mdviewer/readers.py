@@ -534,7 +534,7 @@ Stack.setSlice(slice);
             if tableName != OBJECT_TABLE:
                 path += tableName.split(OBJECT_TABLE)[0]
 
-        self.sendSubsetCreationMessage(path, objectType, subsetName)
+            self.sendSubsetCreationMessage(path, objectType, subsetName)
 
     def sendSubsetCreationMessage(self, selectionFile, outputClassName, label):
 
@@ -551,7 +551,7 @@ Stack.setSlice(slice);
         data = f"run protocol ProtUserSubSet inputObject={self.getScipionObjectId()} " \
                f"sqliteFile='{selectionFile}' outputClassName='{outputClassName}' other='' label='{label}'"
 
-        clientSocket.send(data.encode());
+        clientSocket.send(data.encode())
 
 
     def getScipionPort(self):

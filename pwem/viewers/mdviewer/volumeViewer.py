@@ -318,7 +318,7 @@ class VolumeViewer(QMainWindow):
             self.tableWidget.setRowHeight(currentValue + row, self.getZoom() + 5)
 
     def addSlice(self, sliceData, row, col, index):
-        """This method converts the volume slice to an PIL image and displays it in
+        """This method converts the volume slice to a PIL image and displays it in
         the table view using a custom widget (CustomWidget)"""
 
         # Convert the slice narray into PIL image
