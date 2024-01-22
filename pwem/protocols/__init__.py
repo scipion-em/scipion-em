@@ -69,4 +69,4 @@ from .protocol_boxsize_checkpoint import ProtBoxSizeCheckpoint
 from .protocol_mathematical_operator import ProtMathematicalOperator
 
 from .protocol_tools import *
-
+from .protocol_wait import ProtWait
