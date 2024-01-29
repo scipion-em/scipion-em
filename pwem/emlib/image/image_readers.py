@@ -3,7 +3,7 @@ from functools import lru_cache
 
 import numpy
 from PIL import Image
-from tifffile import TiffFile
+from tifffile import TiffFile, imread
 import mrcfile
 
 
@@ -49,6 +49,20 @@ class TiffImageReader(ImageReader):
         page = tif.pages[0]  # get shape and dtype of the image in the first page
         x, y = page.shape
         return x, y, frames, 1
+
+    @classmethod
+    def open(cls, path: str):
+
+        key = 0
+        if "@" in path:
+            key, path=path.split("@")
+
+        npImg = imread(path, key=key)
+        iMax = npImg.max()
+        iMin = npImg.min()
+        im255 = ((npImg - iMin) / (iMax - iMin) * 255).astype(numpy.uint8)
+        return Image.fromarray(im255)
+
 
 class EMANImageReader(ImageReader):
     """ Image reader for eman file formats"""

@@ -290,7 +290,10 @@ class SqliteFile(IDAO):
 
             def openImageJCallback(imagePath):
                 imageSplit = imagePath.split('@')
-                selectedSlice = int(imageSplit[0])
+                if len(imageSplit)>1:
+                    selectedSlice = int(imageSplit[0])
+                else:
+                    selectedSlice = 0
                 path = imageSplit[-1]
                 program = os.path.join(imageJPath)
                 macro = r"""
