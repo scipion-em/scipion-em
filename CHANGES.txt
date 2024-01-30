@@ -5,6 +5,8 @@ V3.5.0
      - Fix: .em files are handled by xmipp (dimensions now are correct)
      - Add symmetry option to export_DB protocol. This will produce the list 
        of symmetry matrices that PDBe asks for when deposition a new atomic structure
+  Developers:
+     - Add method setWrongDefocus to CTFModel (code centralization)
 V3.4.0:
    Users:
      - Fix: CTFTomoSeries manual subset should work
