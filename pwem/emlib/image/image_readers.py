@@ -68,7 +68,7 @@ class EMANImageReader(ImageReader):
 class XMIPPImageReader(ImageReader):
     @staticmethod
     def getCompatibleExtensions():
-        return emcts.ALL_MRC_EXTENSIONS + emcts.ALL_TIF_EXTENSIONS + ["hdf5", "dm4", "stk", "spi", "vol", "tif", "em"]
+        return emcts.ALL_MRC_EXTENSIONS + emcts.ALL_TIF_EXTENSIONS + ["hdf5", "dm4", "stk", "spi", "vol", "tif", "em", "map"]
 
     @staticmethod
     def getDimensions(filePath):
