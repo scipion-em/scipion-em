@@ -72,7 +72,7 @@ class ProtUserSubSet(BatchProtocol):
         form.addParam('outputClassName', StringParam, label="Output type")
 
     def _insertAllSteps(self):
-        self._insertFunctionStep('createSetStep')
+        self._insertFunctionStep(self.createSetStep)
 
     def createSetStep(self):
 
@@ -91,8 +91,14 @@ class ProtUserSubSet(BatchProtocol):
         # Once all Sets implement appendFromSet and the if below is gone we can remove this "if"
         if getattr(markedSet, "USE_CREATE_COPY_FOR_SUBSET", False):
             markedSet.loadAllProperties()
+
+            # Due to the fragile design fo the sets, properties could be stored as part of the protocol object in the
+            # run.db or project.sqlite but not persisted in the set sqlite (markedSet). In this case we have the
+            # chance to get the properties from the run.db (sourceSet)
+            markedSet.copy(sourceSet)
+
             newSet = markedSet.createCopy(self._getPath(),
-                                          copyInfo=True, copyItems=True)
+                                          copyInfo=True, copyItems=True, itemSelectedCallback=self._itemSelected)
 
             # Define outputs, may be use something more specific than "subset"
             self._defineOutputs(subset=newSet)

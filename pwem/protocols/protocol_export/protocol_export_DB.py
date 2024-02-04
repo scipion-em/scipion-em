@@ -40,7 +40,14 @@ from pwem.protocols import EMProtocol
 from pwem.objects import FSC
 from pyworkflow.utils.path import copyFile
 
+from pwem.constants import (SYM_I222, SYM_I222r, SYM_In25, SYM_In25r,
+                            SYM_I2n3, SYM_I2n3r, SYM_I2n5, SYM_I2n5r,
+                            SYM_DIHEDRAL_X, SYM_DIHEDRAL_Y, SYM_OCTAHEDRAL,
+                            SYM_TETRAHEDRAL_222, SYM_TETRAHEDRAL_Z3,
+                            SYM_TETRAHEDRAL_Z3R, SCIPION_SYM_NAME, SYM_CYCLIC
+                            )
 
+from pwem.convert.symmetry import SymmetryHelper
 class ProtExportDataBases(EMProtocol):
     """ generates files for elements to submit structures to EMDB/PDB.
         Since mmcif/pdb is only partially supported by some software
@@ -57,7 +64,27 @@ class ProtExportDataBases(EMProtocol):
     ADDITIONALVOLUMENAME = "map_%02d.mrc"
     MASKDIR = "masks"
     MASKNAME = "mask_%02d.mrc"
+    SYMNAMEORDER = "symmetry_%s_%d.txt"
+    SYMNAME = "symmetry_%s.txt"
     SYMPLIFIED_STRUCT = "symplified_atom_structure.cif"
+
+    SYM_CHOICES = {
+        SYM_CYCLIC: SCIPION_SYM_NAME[SYM_CYCLIC],
+        SYM_DIHEDRAL_X: SCIPION_SYM_NAME[SYM_DIHEDRAL_X],
+        SYM_DIHEDRAL_Y: SCIPION_SYM_NAME[SYM_DIHEDRAL_Y],
+        SYM_TETRAHEDRAL_222: SCIPION_SYM_NAME[SYM_TETRAHEDRAL_222],
+        SYM_TETRAHEDRAL_Z3: SCIPION_SYM_NAME[SYM_TETRAHEDRAL_Z3],
+        SYM_TETRAHEDRAL_Z3R: SCIPION_SYM_NAME[SYM_TETRAHEDRAL_Z3R],
+        SYM_OCTAHEDRAL: SCIPION_SYM_NAME[SYM_OCTAHEDRAL],
+        SYM_I222: SCIPION_SYM_NAME[SYM_I222],
+        SYM_I222r: SCIPION_SYM_NAME[SYM_I222r],
+        SYM_In25: SCIPION_SYM_NAME[SYM_In25],
+        SYM_In25r: SCIPION_SYM_NAME[SYM_In25r],
+        SYM_I2n3: SCIPION_SYM_NAME[SYM_I2n3],
+        SYM_I2n3r: SCIPION_SYM_NAME[SYM_I2n3r],
+        SYM_I2n5: SCIPION_SYM_NAME[SYM_I2n5],
+        SYM_I2n5r: SCIPION_SYM_NAME[SYM_I2n5r],
+        }
 
     # --------------------------- DEFINE param functions ----------------------
     def _defineParams(self, form):
@@ -102,6 +129,16 @@ class ProtExportDataBases(EMProtocol):
                       label="Image to export", allowsNull=True,
                       pointerClass='Image',
                       help='This image is mandatory for EMDB')
+        form.addParam("exportSymmetryGrp", params.EnumParam,
+                label="symmetry group",
+                choices=list(self.SYM_CHOICES.values()),
+                default=SYM_CYCLIC,
+                help='symmetry group of the map.'
+                )
+        form.addParam('symmetryOrder', params.IntParam, default=1,
+                condition='exportSymmetryGrp<=%d' % SYM_DIHEDRAL_X,
+                label='Symmetry Order',
+                help='Order of cyclic symmetry.')
         form.addParam('filesPath', params.PathParam, important=True,
                       label="Export to directory",
                       help="Directory where the files will be generated.")
@@ -122,6 +159,9 @@ class ProtExportDataBases(EMProtocol):
             self._insertFunctionStep('exportAtomStructStep')
         if self.exportPicture.get() is not None:
             self._insertFunctionStep('exportImageStep')
+        if self.exportSymmetryGrp.get() != SYM_CYCLIC or \
+                self.symmetryOrder.get() != 1:
+            self._insertFunctionStep('exportSymmetryStep')
 
     # --------------------------- STEPS functions -----------------------------
 
@@ -132,6 +172,40 @@ class ProtExportDataBases(EMProtocol):
             if not os.path.isdir(dirPath):
                 print("Can not create directory %s" % dirPath)
                 raise
+
+    def exportSymmetryStep(self):
+        """ Export symmetry information in a file """
+        # OUTPUT FILE NAME
+        order = self.symmetryOrder.get()
+        symGrp = self.exportSymmetryGrp.get()
+        if order != 1:
+            outSymFileName = os.path.join(self.dirName, self.SYMNAMEORDER % (SCIPION_SYM_NAME[symGrp], order))
+        else:
+            outSymFileName = os.path.join(self.dirName, self.SYMNAME % (SCIPION_SYM_NAME[symGrp]))
+        # get list of matrices
+        symHelper = SymmetryHelper()
+        (matrices, planes) = symHelper.getSymmetryMatricesAndPlanes(symGrp, order)
+        # write them t list
+        with open(outSymFileName, 'w') as f:
+            for matrix in matrices:
+                for line in matrix[:3]:
+                    f.write('%f %f %f %f\n' % (line[0], line[1], line[2], line[3]))
+                f.write('\n')
+        with open(outSymFileName.replace("txt", "pdb"), 'w') as f:
+            f.write("REMARK 350 APPLY THE FOLLOWING TO CHAINS: A, B place chains here\n")
+            f.write("REMARK 350                    AND CHAINS: ...\n")
+            for i, matrix in enumerate(matrices, 1):
+                for j, line in enumerate(matrix[:3], 1):
+                    f.write("REMARK 350   BIOMT%d  %2d  %.6f  %.6f  %.6f        %.6f\n" % (j, i, line[0], line[1], line[2], line[3]))
+
+            # REMARK 350 APPLY THE FOLLOWING TO CHAINS: A, B, C, D, E, F, G, H, I
+            # REMARK 350                    AND CHAINS: J, K, L, M, N, O, P
+            # REMARK 350   BIOMT1   1  1.000000  0.000000  0.000000        0.00000
+            # REMARK 350   BIOMT2   1  0.000000  1.000000  0.000000        0.00000
+            # REMARK 350   BIOMT3   1  0.000000  0.000000  1.000000        0.00000
+            # REMARK 350   BIOMT1   2  0.309017  0.500000 -0.809017        0.00000
+            # REMARK 350   BIOMT2   2  0.500000 -0.809017 -0.309017        0.00000
+            # REMARK 350   BIOMT3   2 -0.809017 -0.309017 -0.500000        0.00000
 
     def exportVolumeStep(self):
         inVolFileName = self.exportVolume.get().getFileName()

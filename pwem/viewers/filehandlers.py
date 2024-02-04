@@ -35,6 +35,7 @@ from pyworkflow import gui
 from pyworkflow.gui.browser import FileHandler, isStandardImage
 
 from pwem import emlib
+from pwem.emlib.image.image_handler import ImageHandler
 
 import logging
 logger = logging.getLogger(__name__)
@@ -47,7 +48,7 @@ class ImageFileHandler(FileHandler):
     def _getImageString(self, filename):
         if isStandardImage(filename):
             return "Image file."
-        x, y, z, n = emlib.getImageSize(filename)
+        x, y, z, n = ImageHandler.getDimensions(filename)
         objType = 'Image'
         objFileType = "link" if os.path.islink(filename) else "file"
         dimMsg = "*%(objType)s %(objFileType)s*\n  dimensions: %(x)d x %(y)d"

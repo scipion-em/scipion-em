@@ -65,7 +65,7 @@ class ProtFilterVolumes(ProtPreprocessVolumes):
 
 
 class ProtOperateVolumes(ProtPreprocessVolumes):
-    """ This is the base for the branch of filters,
+    """ This is the base for the branch of operations,
     between the ProtPreprocessParticles """
     def __init__(self, **args):
         ProtPreprocessVolumes.__init__(self, **args)

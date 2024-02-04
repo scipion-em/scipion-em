@@ -26,9 +26,11 @@
 """
 This module contains classes related with EM
 """
-
+import logging
+logger = logging.getLogger(__name__)
 import os
 from packaging import version
+import re
 
 import pyworkflow as pw
 from pyworkflow.protocol import Protocol
@@ -42,7 +44,7 @@ from .objects import EMObject
 from .tests import defineDatasets
 from .utils import *
 
-__version__ = '3.3.1'
+__version__ = '3.5.0'
 NO_VERSION_FOUND_STR = "0.0"
 CUDA_LIB_VAR = 'CUDA_LIB'
 

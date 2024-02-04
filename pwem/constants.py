@@ -212,9 +212,11 @@ EXT_MRCS_MRCS="%s:%s" % (EXT_MRCS,EXT_MRCS)
 EXT_ST ="st"
 EXT_REC = "rec"
 EXT_ALI = "ali"
-EXT_MAP = "map"
 
-ALL_MRC_EXTENSIONS =[EXT_MRC, EXT_MRCS, EXT_MRC_MRC, EXT_MRC_MRCS, EXT_MRCS_MRC, EXT_MRCS_MRCS,
-                     EXT_ST, EXT_REC, EXT_ALI, EXT_MAP]
+
+ALL_MRC_EXTENSIONS =[EXT_MRC, EXT_MRCS, EXT_MRC_MRC, EXT_MRC_MRCS,
+                     EXT_ST, EXT_REC, EXT_ALI, EXT_MRCS_MRC,
+                     EXT_MRCS_MRCS]
+
 
 ALL_TIF_EXTENSIONS = ['tif','tiff', 'gain', 'eer']
