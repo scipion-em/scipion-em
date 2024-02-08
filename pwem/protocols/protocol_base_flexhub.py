@@ -32,6 +32,7 @@ from pyworkflow.utils.properties import Message
 import pwem.objects.data_flexhub as pwobj
 
 
+# FIXME: Do not use this methods and remove in the future
 class ProtFlexBase:
     def _createSet(self, SetClass, template, suffix, **kwargs):
         """ Create a set and set the filename using the suffix.
