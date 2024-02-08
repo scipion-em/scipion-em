@@ -30,7 +30,7 @@ import numpy as np
 from pwem.objects import (SetOfParticles, Particle, SetOfClasses, Volume, Transform, SetOfImages,
                           AtomStruct, EMSet, SetOfAtomStructs, EMObject, NO_INDEX)
 
-from pyworkflow.object import String, CsvList
+from pyworkflow.object import String, CsvList, Float, Integer
 
 
 class ParticleFlex(Particle):
@@ -107,6 +107,24 @@ class FlexInfo(EMObject):
 
     def setProgName(self, progName):
         self._progName = String(progName)
+
+    def set(self, attrName, value):
+        if isinstance(value, float):
+            setattr(self, attrName, Float(value))
+        elif isinstance(value, int):
+            setattr(self, attrName, Integer(value))
+        elif isinstance(value, str):
+            setattr(self, attrName, String(value))
+        elif isinstance(value, list) or isinstance(value, np.ndarray):
+            csv = CsvList()
+            for c in value:
+                csv.append(c)
+            setattr(self, attrName, csv)
+        else:
+            setattr(self, attrName, value)
+
+    def get(self, attrName):
+        return getattr(self, attrName).get()
 
 
 class VolumeFlex(Volume):
