@@ -44,7 +44,7 @@ from .objects import EMObject
 from .tests import defineDatasets
 from .utils import *
 
-__version__ = '3.5.1'
+__version__ = '3.5.0'
 NO_VERSION_FOUND_STR = "0.0"
 CUDA_LIB_VAR = 'CUDA_LIB'
 
