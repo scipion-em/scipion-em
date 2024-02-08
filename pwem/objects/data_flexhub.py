@@ -108,7 +108,7 @@ class FlexInfo(EMObject):
     def setProgName(self, progName):
         self._progName = String(progName)
 
-    def set(self, attrName, value):
+    def setAttr(self, attrName, value):
         if isinstance(value, float):
             setattr(self, attrName, Float(value))
         elif isinstance(value, int):
@@ -123,7 +123,7 @@ class FlexInfo(EMObject):
         else:
             setattr(self, attrName, value)
 
-    def get(self, attrName):
+    def getAttr(self, attrName):
         return getattr(self, attrName).get()
 
 
