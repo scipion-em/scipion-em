@@ -149,7 +149,7 @@ class MainWindow:
                                     variable=self.sizeVar,  command=self.updateSize)
         self.sizeSlider.grid(row=0, column=1, padx=5, pady=5)
         self.sizeSlider.bind("<B1-Motion>", self.onBoxSizeSlider)  # Bind event for box size slider motion
-        self.sizeSlider.bind("<ButtonRelease-1>", self.onSliderRelease)
+        # self.sizeSlider.bind("<ButtonRelease-1>", self.onSliderRelease)
 
         self.sizeValueLabel = ttk.Label(toolbar, text=f"({int(self.sizeVar.get())})")
         self.sizeValueLabel.grid(row=0, column=2, padx=5, pady=5, sticky="w")
@@ -251,10 +251,17 @@ class MainWindow:
     def onBoxSizeSlider(self, event):
         """Handle box size slider motion"""
         self.boxSize = int(self.sizeVar.get())
+        self.resizeRadious()
+
+    def resizeRadious(self):
+        self.shapeRadius = self.boxSize / self.scale / 2 * self.zoomFactor
+        self.auxCoordinatesDict = dict()
+        for index, coord in self.shapes.items():
+            self.imageCanvas.coords(index, [coord[0] - self.shapeRadius, coord[1] - self.shapeRadius,
+                                            coord[0] + self.shapeRadius, coord[1] + self.shapeRadius])
 
     def onSliderRelease(self, event):
         """Handle box size slider release"""
-        self.boxSize = int(self.sizeVar.get())
         self.loadMicrograph()
 
     def showCircles(self):
@@ -353,6 +360,7 @@ class MainWindow:
             values = self.table.item(selected_item, "values")
             if len(values) > 1 and values[1] != self.micName:
                 self.micName = values[1]
+                self.zoomFactor = 1
                 self.loadMicrograph()
 
     def createImageFrame(self):
@@ -484,11 +492,22 @@ class MainWindow:
                         if distance < self.shapeRadius:
                             self.root.config(cursor='hand2')
                             self.moveShape = True
+                            coord = self.imageCanvas.coords(index)
+                            coord1 = self.imageCanvas.coords(index - 1)
+                            coord2 = self.imageCanvas.coords(index + 1)
+                            indexesToMove = [index]
+                            if coord == coord1:
+                                indexesToMove.append(index - 1)
+                            if coord == coord2:
+                                indexesToMove.append(index + 1)
+
                             newX = self.root.winfo_pointerx() - self.root.winfo_rootx() - self.coordX
                             newY = self.root.winfo_pointery() - self.root.winfo_rooty() - self.coordY
-                            self.shapes[index] = (self.shapes[index][0] + newX, self.shapes[index][1] + newY)
-                            # Move the shape to a new position
-                            self.imageCanvas.move(index, newX, newY)
+
+                            for idx in indexesToMove:
+                                self.shapes[idx] = (self.shapes[idx][0] + newX, self.shapes[idx][1] + newY)
+                                # Move the shape to a new position
+                                self.imageCanvas.move(idx, newX, newY)
 
                             # Update de coordinates
                             self.coordX = self.root.winfo_pointerx() - self.root.winfo_rootx()
@@ -496,6 +515,24 @@ class MainWindow:
                             coordXY = self.coordinatesDict[self.micName][index]
                             self.coordinatesDict[self.micName][index] = (coordXY[0] + newX * self.scale,
                                                                          coordXY[1] + newY * self.scale)
+
+                            if self.selectedCoordinate is not None:
+                                coord = self.imageCanvas.coords(self.selectedCoordinate)
+                                coord1 = self.imageCanvas.coords(self.selectedCoordinate - 1)
+                                coord2 = self.imageCanvas.coords(self.selectedCoordinate + 1)
+                                indexesToPaint = [self.selectedCoordinate]
+                                if coord == coord1:
+                                    indexesToPaint.append(self.selectedCoordinate - 1)
+                                if coord == coord2:
+                                    indexesToPaint.append(self.selectedCoordinate + 1)
+
+                                for idx in indexesToPaint:
+                                    self.imageCanvas.itemconfigure(idx, outline=self.selectedColor)
+
+                            self.selectedCoordinate = index
+
+                            for idx in indexesToMove:
+                                self.imageCanvas.itemconfigure(idx, outline='red')
 
                             self.hasChanges = True
                             break
@@ -613,21 +650,22 @@ class MainWindow:
 
     def histWindowSaveClose(self):
         """Save the new coordinates taking into account the sliders selected pixel range """
+        pass
         # Updating current micrograph
-        for i in range(2, len(self.shapes)):
-            currentState = self.imageCanvas.itemcget(i, "state")
-            if currentState == 'hidden':
-                self.shapes.pop(i)
-                self.imageCanvas.delete(i)
-                self.coordinatesDict[self.micName].pop(i)
-                self.totalCoordinates -= 1
+        # for i in range(2, len(self.shapes)):
+        #     currentState = self.imageCanvas.itemcget(i, "state")
+        #     if currentState == 'hidden':
+        #         self.shapes.pop(i)
+        #         self.imageCanvas.delete(i)
+        #         self.coordinatesDict[self.micName].pop(i)
+        #         self.totalCoordinates -= 1
 
         # Updating the rest of micrographs
         # for micName, coords in self.coordinatesDict.items():
         #     if micName != self.micName:
         #         pass
 
-        self.histWindowClose()
+        # self.histWindowClose()
 
     def filterCoordinates(self, value):
         slider1Value = self.powerSlider1.get()
@@ -635,17 +673,17 @@ class MainWindow:
         if slider1Value + 20 >= slider2Value:
             slider2Value += 1
             if slider2Value < 255:
-                self.powerSlider2.set(self.powerSlider2.get() + 1)
+                self.powerSlider2.set(slider2Value)
         if slider2Value - 20 <= slider1Value:
             slider1Value -= 1
             if slider1Value > 0:
-                self.powerSlider1.set(self.powerSlider1.get() - 1)
+                self.powerSlider1.set(slider1Value)
 
-        self.removeCoordinates()
+        self.removeCoordinates(slider1Value, slider2Value)
 
-    def removeCoordinates(self):
-        pixelRange = (round(float(self.powerSlider1.get())), round(float(self.powerSlider2.get())))
-        for index, coords in self.coordinatesDict[self.micName].items():
+    def removeCoordinates(self, value1, value2):
+        pixelRange = (round(float(value1)), round(float(value2)))
+        for index, coords in self.shapes.items():
             pixelValue = self.getPixelValue(coords[0], coords[1])
             new_state = "normal"
             if int(pixelValue) < pixelRange[0] or int(pixelValue) > pixelRange[1]:
