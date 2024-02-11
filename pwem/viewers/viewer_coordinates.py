@@ -33,7 +33,7 @@ import numpy as np
 import tkinter as tk
 import tkcolorpicker
 from tkinter import Menu, ttk
-from tkinter import filedialog
+from tkinter import filedialog, messagebox
 
 from PIL import ImageOps, ImageFilter, ImageEnhance, ImageTk
 import matplotlib.pyplot as plt
@@ -114,7 +114,12 @@ class MainWindow:
         # Tools menu
         self.toolsMenu = Menu(menubar, tearoff=0)
         menubar.add_cascade(label="Tools", menu=self.toolsMenu)
-        self.toolsMenu.add_command(label="Power histogram", command=self.applyPowerHistogram)
+        self.toolsMenu.add_command(label="Power histogram", command=self.applyPowerHistogram,
+                                   image=getImage(Icon.ACTION_STATS), compound=tk.LEFT)
+        self.toolsMenu.add_command(label="Reset micrograph", command=self.resetMicrograph,
+                                   image=getImage(Icon.BROOM),compound=tk.LEFT)
+        self.toolsMenu.add_command(label="Restore micrograph", command=self.restoreMicrograph,
+                                   image=getImage(Icon.BACKWARD), compound=tk.LEFT)
 
         # Main frame setup
         self.mainFrame = ttk.Frame(self.root)
@@ -361,6 +366,7 @@ class MainWindow:
             if len(values) > 1 and values[1] != self.micName:
                 self.micName = values[1]
                 self.zoomFactor = 1
+                self.selectedCoordinate = None
                 self.loadMicrograph()
 
     def createImageFrame(self):
@@ -454,8 +460,8 @@ class MainWindow:
                         distance = np.sqrt((x - coords[0]) ** 2 + (y - coords[1]) ** 2)
                         if distance < self.shapeRadius:
                             new_value = coordinate_count - 1
-                            self.table.set(self.table.selection(), column="Particles", value=new_value)
-                            self.table.set(self.table.selection(), column="Updated", value='Yes')
+                            self.table.set(self.table.selection(), column='Particles', value=new_value)
+                            self.table.set(self.table.selection(), column='Updated', value='Yes')
                             coord = self.imageCanvas.coords(index)
                             coord1 = self.imageCanvas.coords(index - 1)
                             coord2 = self.imageCanvas.coords(index + 1)
@@ -702,6 +708,32 @@ class MainWindow:
         ejes.plot(hist_power)
         ejes.set_xlabel("Pixel Value")
         ejes.set_ylabel("Frequency")
+
+    def resetMicrograph(self):
+        """Remove all coordinates from current micrograph"""
+        result = messagebox.askquestion("Confirmation", "Are you sure you want to reset the micrograph?",
+                                        icon='warning', **{'parent': self.root})
+        if result == 'yes':
+            self.totalCoordinates -= len(self.coordinatesDict[self.micName])
+            self.coordinatesDict[self.micName] = {}
+            self.totalPickButton.configure(text=f"Total picks: {self.totalCoordinates}")
+            self.table.set(self.table.selection(), column="Particles", value=0)
+            self.imageCanvas.delete("shape")
+            self.table.set(self.table.selection(), column='Updated', value='Yes')
+
+    def restoreMicrograph(self):
+        """Restore all removed coordinates from current micrograph"""
+        result = messagebox.askquestion("Confirmation", "Are you sure you want to restore the micrograph?",
+                                        icon='warning', **{'parent': self.root})
+        if result == 'yes':
+            self.totalCoordinates -= len(self.coordinatesDict[self.micName])
+            self.coordinatesDict[self.micName] = self.oldCoordinatesDict[self.micName]
+            self.totalCoordinates += len(self.coordinatesDict[self.micName])
+            self.totalPickButton.configure(text=f"Total picks: {self.totalCoordinates}")
+            self.imageCanvas.delete("shape")
+            self.table.set(self.table.selection(), column="Particles", value=len(self.coordinatesDict[self.micName]))
+            self.table.set(self.table.selection(), column='Updated', value='No')
+            self.drawCoordinates(self.micName)
 
     def onSliderMapMove(self, value):
         self.infoLabel.config(text=f"{float(value):.0f}")
