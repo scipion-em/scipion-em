@@ -24,11 +24,7 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-
-
 import os
-import threading
-
 import numpy as np
 import tkinter as tk
 import tkcolorpicker
@@ -65,10 +61,14 @@ class MainWindow:
         self.selectedColor = '#00FF00'
         self.circleButtonRelieve = tk.SUNKEN
         self.squareButtonRelieve = tk.GROOVE
+        self.zoomButtonRelieve = tk.GROOVE
+        self.dragButtonReliev = tk.GROOVE
         self.pointButtonRelieve = tk.GROOVE
         self.mousePress = False
         self.eraser = False
         self.picking = False
+        self.zoom = False
+        self.drag = False
         self.selectedCoordinate = None
         self.coordinatesDict = dict()
         self.oldCoordinatesDict = dict()
@@ -78,7 +78,7 @@ class MainWindow:
         self.drawCircles = True
         self.zoomFactor = 1
         self.moveShape = False
-        self.hasChanges = False
+        self.hasChanges = {}
         self.drag_data = {'x': 0, 'y': 0, 'item': None}
         self.xOffset = 0
         self.yOffset = 0
@@ -216,14 +216,46 @@ class MainWindow:
                                 relief=self.squareButtonRelieve)
         self.pickerAction.grid(row=0, column=9, padx=5, pady=5, sticky="e")
         tooltip = "Picker"
-        ToolTip(self.pickerAction, tooltip)
+        ToolTip(self.pickerAction, tooltip, delay=150)
 
         self.eraserAction = tk.Button(self.toolbar2, command=self.eraserActivate, width=25, height=25,
                                       image=getImage(Icon.BROOM),
                                       relief=self.squareButtonRelieve)
         self.eraserAction.grid(row=0, column=10, padx=5, pady=5, sticky="e")
         tooltip = "Eraser"
-        ToolTip(self.eraserAction, tooltip)
+        ToolTip(self.eraserAction, tooltip, delay=150)
+
+        separador = ttk.Separator(self.toolbar2, orient='vertical')
+        separador.grid(row=0, column=11, padx=10, sticky='ns')
+
+        # Image tools
+        imageToolsPanel = ttk.Frame(self.toolbar2)
+        imageToolsPanel.grid(row=0, column=12, padx=450, pady=0, sticky="e")
+
+        self.fitDisplay = tk.Button(imageToolsPanel, width=25, height=25, command=self.onFitActivate,
+                                    image=getImage(Icon.ACTION_EXPAND),
+                                    relief=self.squareButtonRelieve)
+        self.fitDisplay.grid(row=0, column=12, padx=0, pady=0, sticky="ns")
+        tooltip = "Fit to display area"
+        ToolTip(self.fitDisplay, tooltip, delay=150)
+
+        self.zoomOnScroll = tk.Button(imageToolsPanel, width=25, height=25, command=self.onZoomActivate,
+                                    image=getImage(Icon.ACTION_ZOOM),
+                                    relief=self.zoomButtonRelieve)
+        self.zoomOnScroll.grid(row=0, column=13, padx=0, pady=0, sticky="ns")
+        tooltip = "Zoom on scroll"
+        ToolTip(self.zoomOnScroll, tooltip, delay=150)
+
+        self.dragButton = tk.Button(imageToolsPanel, width=25, height=25, command=self.onDragActivate,
+                                      image=getImage(Icon.ACTION_HAND),
+                                      relief=self.squareButtonRelieve)
+        self.dragButton.grid(row=0, column=14, padx=0, pady=0, sticky="ns")
+        tooltip = "Click and drag to move"
+        ToolTip(self.dragButton, tooltip, delay=150)
+
+        # Label to display coordinates and pixel value
+        self.infoLabel = ttk.Label(imageToolsPanel, text="")
+        self.infoLabel.grid(row=0, column=17, sticky="w", padx=120)
 
         toolbar.grid(row=0, column=0, sticky="ew")
         self.toolbar2.grid(row=1, column=0, sticky="ew")
@@ -385,10 +417,6 @@ class MainWindow:
         self.imageCanvas.bind("<Button-4>", self.zoomerP)
         self.imageCanvas.bind("<Button-5>", self.zoomerM)
 
-        # Label to display coordinates and pixel value
-        self.infoLabel = ttk.Label(self.toolbar2, text="")
-        self.infoLabel.grid(row=0, column=12, sticky="w", padx=400)
-
         buttonsFrame = tk.Frame(self.imageFrame)
         buttonsFrame.grid(row=1, column=0, sticky="ns", padx=510)
 
@@ -406,6 +434,29 @@ class MainWindow:
         self.imageFrame.grid_rowconfigure(0, weight=1)
         self.imageFrame.grid_columnconfigure(0, weight=1)
 
+    def onFitActivate(self):
+        self.zoomFactor = 1
+        self.drag_data = {'x': 0, 'y': 0, 'item': None}
+        self.xOffset = 0
+        self.yOffset = 0
+        self.loadMicrograph()
+
+    def onZoomActivate(self):
+        if self.zoom:
+            self.zoomOnScroll.configure(relief=tk.GROOVE)
+            self.zoom = False
+        else:
+            self.zoomOnScroll.configure(relief=tk.SUNKEN)
+            self.zoom = True
+
+    def onDragActivate(self):
+        if self.drag:
+            self.dragButton.configure(relief=tk.GROOVE)
+            self.drag = False
+        else:
+            self.dragButton.configure(relief=tk.SUNKEN)
+            self.drag = True
+
     def zoomerP(self, event):
         """Increase size"""
         direction = 1
@@ -418,15 +469,16 @@ class MainWindow:
 
     def onZoomImage(self, direction, event):
         """Zoom action"""
-        self.zoomFactor += direction * 0.1
-        self.zoomFactor = max(0.1, min(3.0, self.zoomFactor))
-        self.xOffset = 0
-        self.yOffset = 0
+        if self.zoom:
+            self.zoomFactor += direction * 0.1
+            self.zoomFactor = max(0.1, min(3.0, self.zoomFactor))
+            self.xOffset = 0
+            self.yOffset = 0
 
-        if self.zoomFactor < 1:
-            self.zoomFactor = 1
+            if self.zoomFactor < 1:
+                self.zoomFactor = 1
 
-        self.updateImage()
+            self.updateImage()
 
     def onClickPress(self, event):
         self.mousePress = True
@@ -440,6 +492,18 @@ class MainWindow:
         self.mousePress = False
         self.root.config(cursor='')
         self.moveShape = False
+
+    def nearCoordinates(self, index):
+        coord = self.imageCanvas.coords(index)
+        coord1 = self.imageCanvas.coords(index - 1)
+        coord2 = self.imageCanvas.coords(index + 1)
+        nearIndex = [index]
+        if coord == coord1:
+            nearIndex.append(index - 1)
+        if coord == coord2:
+            nearIndex.append(index + 1)
+
+        return nearIndex
 
     def onPickerEraserAction(self, event):
         """Handle the eraser and picking action"""
@@ -462,15 +526,7 @@ class MainWindow:
                             new_value = coordinate_count - 1
                             self.table.set(self.table.selection(), column='Particles', value=new_value)
                             self.table.set(self.table.selection(), column='Updated', value='Yes')
-                            coord = self.imageCanvas.coords(index)
-                            coord1 = self.imageCanvas.coords(index - 1)
-                            coord2 = self.imageCanvas.coords(index + 1)
-                            indexesToDelete = [index]
-                            if coord == coord1:
-                                indexesToDelete.append(index - 1)
-                            if coord == coord2:
-                                indexesToDelete.append(index + 1)
-
+                            indexesToDelete = self.nearCoordinates(index)
                             for idx in indexesToDelete:
                                 self.imageCanvas.delete(idx)
                                 self.shapes.pop(idx)
@@ -480,7 +536,7 @@ class MainWindow:
 
                             self.totalCoordinates -= 1
                             self.totalPickButton.configure(text=f"Total picks: {self.totalCoordinates}")
-                            self.hasChanges = True
+                            self.hasChanges[self.micName] = True
                             break
                 elif self.picking:  # Picking action
                     self.addCoordinate(x * self.scale / self.zoomFactor, y * self.scale / self.zoomFactor)
@@ -490,23 +546,15 @@ class MainWindow:
                     self.coordinatesDict[self.micName][new_value] = (x * self.scale, y * self.scale)
                     self.totalCoordinates += 1
                     self.totalPickButton.configure(text=f"Total picks: {self.totalCoordinates}")
-                    self.hasChanges = True
+                    self.hasChanges[self.micName] = True
 
-                else:  # Move coordinate or drag all image
+                elif self.drag:  # Move coordinate or drag all image
                     for index, coords in self.shapes.items():
                         distance = np.sqrt((x - self.xOffset - coords[0]) ** 2 + (y - self.yOffset - coords[1]) ** 2)
                         if distance < self.shapeRadius:
                             self.root.config(cursor='hand2')
                             self.moveShape = True
-                            coord = self.imageCanvas.coords(index)
-                            coord1 = self.imageCanvas.coords(index - 1)
-                            coord2 = self.imageCanvas.coords(index + 1)
-                            indexesToMove = [index]
-                            if coord == coord1:
-                                indexesToMove.append(index - 1)
-                            if coord == coord2:
-                                indexesToMove.append(index + 1)
-
+                            indexesToMove = self.nearCoordinates(index)
                             newX = self.root.winfo_pointerx() - self.root.winfo_rootx() - self.coordX
                             newY = self.root.winfo_pointery() - self.root.winfo_rooty() - self.coordY
 
@@ -523,15 +571,7 @@ class MainWindow:
                                                                          coordXY[1] + newY * self.scale)
 
                             if self.selectedCoordinate is not None:
-                                coord = self.imageCanvas.coords(self.selectedCoordinate)
-                                coord1 = self.imageCanvas.coords(self.selectedCoordinate - 1)
-                                coord2 = self.imageCanvas.coords(self.selectedCoordinate + 1)
-                                indexesToPaint = [self.selectedCoordinate]
-                                if coord == coord1:
-                                    indexesToPaint.append(self.selectedCoordinate - 1)
-                                if coord == coord2:
-                                    indexesToPaint.append(self.selectedCoordinate + 1)
-
+                                indexesToPaint = self.nearCoordinates(self.selectedCoordinate)
                                 for idx in indexesToPaint:
                                     self.imageCanvas.itemconfigure(idx, outline=self.selectedColor)
 
@@ -540,13 +580,28 @@ class MainWindow:
                             for idx in indexesToMove:
                                 self.imageCanvas.itemconfigure(idx, outline='red')
 
-                            self.hasChanges = True
+                            if newX != 0 or newY != 0:
+                                self.table.set(self.table.selection(), column="Updated", value='Yes')
+                                self.hasChanges[self.micName] = True
                             break
 
                     if not self.moveShape:  # Drag the image and the shapes
                         self.root.config(cursor='fleur')
                         self.moveShape = False
                         self.onDrag(event)
+                else:  # simple click
+                    for index, coords in self.shapes.items():
+                        distance = np.sqrt((x - self.xOffset - coords[0]) ** 2 + (y - self.yOffset - coords[1]) ** 2)
+                        if distance < self.shapeRadius:
+                            indexesToPaint = self.nearCoordinates(index)
+                            if self.selectedCoordinate is not None:
+                                indexesToRestore = self.nearCoordinates(self.selectedCoordinate)
+                                for idx in indexesToRestore:
+                                    self.imageCanvas.itemconfigure(idx, outline=self.selectedColor)
+
+                            self.selectedCoordinate = index
+                            for idx in indexesToPaint:
+                                self.imageCanvas.itemconfigure(idx, outline='red')
         else:
             self.root.config(cursor='')
 
@@ -720,6 +775,7 @@ class MainWindow:
             self.table.set(self.table.selection(), column="Particles", value=0)
             self.imageCanvas.delete("shape")
             self.table.set(self.table.selection(), column='Updated', value='Yes')
+            self.hasChanges[self.micName] = True
 
     def restoreMicrograph(self):
         """Restore all removed coordinates from current micrograph"""
@@ -734,6 +790,7 @@ class MainWindow:
             self.table.set(self.table.selection(), column="Particles", value=len(self.coordinatesDict[self.micName]))
             self.table.set(self.table.selection(), column='Updated', value='No')
             self.drawCoordinates(self.micName)
+            self.hasChanges.pop(self.micName)
 
     def onSliderMapMove(self, value):
         self.infoLabel.config(text=f"{float(value):.0f}")
