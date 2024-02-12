@@ -61,14 +61,15 @@ class MainWindow:
         self.selectedColor = '#00FF00'
         self.circleButtonRelieve = tk.SUNKEN
         self.squareButtonRelieve = tk.GROOVE
-        self.zoomButtonRelieve = tk.GROOVE
-        self.dragButtonReliev = tk.GROOVE
+        self.zoomButtonRelieve = tk.SUNKEN
+        self.dragButtonReliev = tk.SUNKEN
         self.pointButtonRelieve = tk.GROOVE
         self.mousePress = False
         self.eraser = False
         self.picking = False
-        self.zoom = False
-        self.drag = False
+        self.filament = False
+        self.zoom = True
+        self.drag = True
         self.selectedCoordinate = None
         self.coordinatesDict = dict()
         self.oldCoordinatesDict = dict()
@@ -214,23 +215,30 @@ class MainWindow:
         self.pickerAction = tk.Button(self.toolbar2, command=self.pickingActivate, width=25, height=25,
                                 image=getImage(Icon.ACTION_PICKING),
                                 relief=self.squareButtonRelieve)
-        self.pickerAction.grid(row=0, column=9, padx=5, pady=5, sticky="e")
-        tooltip = "Picker"
+        self.pickerAction.grid(row=0, column=9, pady=5, sticky="e")
+        tooltip = "Particle picker"
         ToolTip(self.pickerAction, tooltip, delay=150)
 
         self.eraserAction = tk.Button(self.toolbar2, command=self.eraserActivate, width=25, height=25,
                                       image=getImage(Icon.BROOM),
                                       relief=self.squareButtonRelieve)
-        self.eraserAction.grid(row=0, column=10, padx=5, pady=5, sticky="e")
+        self.eraserAction.grid(row=0, column=10, pady=5, sticky="e")
         tooltip = "Eraser"
         ToolTip(self.eraserAction, tooltip, delay=150)
 
+        self.filamentPickerAction = tk.Button(self.toolbar2, command=self.filamentActivate, width=25, height=25,
+                                      image=getImage(Icon.ACTION_FILAMENT_PICKING),
+                                      relief=self.squareButtonRelieve)
+        self.filamentPickerAction.grid(row=0, column=11,  pady=5, sticky="e")
+        tooltip = "Filament picker"
+        ToolTip(self.filamentPickerAction, tooltip, delay=150)
+
         separador = ttk.Separator(self.toolbar2, orient='vertical')
-        separador.grid(row=0, column=11, padx=10, sticky='ns')
+        separador.grid(row=0, column=12, padx=10, sticky='ns')
 
         # Image tools
         imageToolsPanel = ttk.Frame(self.toolbar2)
-        imageToolsPanel.grid(row=0, column=12, padx=450, pady=0, sticky="e")
+        imageToolsPanel.grid(row=0, column=13, padx=450, pady=0, sticky="e")
 
         self.fitDisplay = tk.Button(imageToolsPanel, width=25, height=25, command=self.onFitActivate,
                                     image=getImage(Icon.ACTION_EXPAND),
@@ -242,14 +250,14 @@ class MainWindow:
         self.zoomOnScroll = tk.Button(imageToolsPanel, width=25, height=25, command=self.onZoomActivate,
                                     image=getImage(Icon.ACTION_ZOOM),
                                     relief=self.zoomButtonRelieve)
-        self.zoomOnScroll.grid(row=0, column=13, padx=0, pady=0, sticky="ns")
+        self.zoomOnScroll.grid(row=0, column=14, padx=0, pady=0, sticky="ns")
         tooltip = "Zoom on scroll"
         ToolTip(self.zoomOnScroll, tooltip, delay=150)
 
         self.dragButton = tk.Button(imageToolsPanel, width=25, height=25, command=self.onDragActivate,
                                       image=getImage(Icon.ACTION_HAND),
-                                      relief=self.squareButtonRelieve)
-        self.dragButton.grid(row=0, column=14, padx=0, pady=0, sticky="ns")
+                                      relief=self.dragButtonReliev)
+        self.dragButton.grid(row=0, column=13, padx=0, pady=0, sticky="ns")
         tooltip = "Click and drag to move"
         ToolTip(self.dragButton, tooltip, delay=150)
 
@@ -271,9 +279,13 @@ class MainWindow:
         else:
             self.pickerAction.configure(relief=tk.SUNKEN)
             self.eraserAction.configure(relief=tk.GROOVE)
+            self.dragButton.configure(relief=tk.GROOVE)
+            self.filamentPickerAction.configure(relief=tk.GROOVE)
             self.root.config(cursor='')
             self.picking = True
             self.eraser = False
+            self.filament = False
+            self.drag = False
 
     def eraserActivate(self):
         if self.eraser:
@@ -281,9 +293,24 @@ class MainWindow:
             self.eraser = False
         else:
             self.pickerAction.configure(relief=tk.GROOVE)
+            self.filamentPickerAction.configure(relief=tk.GROOVE)
             self.eraserAction.configure(relief=tk.SUNKEN)
             self.picking = False
+            self.filament = False
             self.eraser = True
+
+    def filamentActivate(self):
+        if self.filament:
+            self.filamentPickerAction.configure(relief=tk.GROOVE)
+            self.filament = False
+        else:
+            self.pickerAction.configure(relief=tk.GROOVE)
+            self.eraserAction.configure(relief=tk.GROOVE)
+            self.filamentPickerAction.configure(relief=tk.SUNKEN)
+            self.root.config(cursor='')
+            self.filament = True
+            self.picking = False
+            self.eraser = False
 
     def onBoxSizeSlider(self, event):
         """Handle box size slider motion"""
@@ -456,6 +483,10 @@ class MainWindow:
         else:
             self.dragButton.configure(relief=tk.SUNKEN)
             self.drag = True
+            self.filamentPickerAction.configure(relief=tk.GROOVE)
+            self.pickerAction.configure(relief=tk.GROOVE)
+            self.picking = False
+            self.filament = False
 
     def zoomerP(self, event):
         """Increase size"""
@@ -486,7 +517,43 @@ class MainWindow:
         self.coordY = self.root.winfo_pointery() - self.root.winfo_rooty()
         self.drag_data['x'] = event.x
         self.drag_data['y'] = event.y
-        self.onPickerEraserAction(event)
+        if self.picking:
+            pick = True
+            for index, coords in self.shapes.items():
+                distance = np.sqrt((event.x - self.xOffset - coords[0]) ** 2 + (event.y - self.yOffset - coords[1]) ** 2)
+                if distance < self.shapeRadius:
+                    pick = False
+                    break
+
+            if pick:
+                coordinate_count = int(self.table.item(self.table.selection(), "values")[2])
+                self.addCoordinate(event.x * self.scale / self.zoomFactor, event.y * self.scale / self.zoomFactor)
+                new_value = coordinate_count + 1
+                self.table.set(self.table.selection(), column="Particles", value=new_value)
+                self.table.set(self.table.selection(), column="Updated", value='Yes')
+                self.coordinatesDict[self.micName][new_value] = (event.x * self.scale, event.y * self.scale)
+                self.totalCoordinates += 1
+                self.totalPickButton.configure(text=f"Total picks: {self.totalCoordinates}")
+                self.hasChanges[self.micName] = True
+
+        findCoord = False
+        for index, coords in self.shapes.items():
+            distance = np.sqrt((event.x - self.xOffset - coords[0]) ** 2 + (event.y - self.yOffset - coords[1]) ** 2)
+            if distance < self.shapeRadius:
+                findCoord = True
+                indexesToPaint = self.nearCoordinates(index)
+                if self.selectedCoordinate is not None:
+                    indexesToRestore = self.nearCoordinates(self.selectedCoordinate)
+                    for idx in indexesToRestore:
+                        self.imageCanvas.itemconfigure(idx, outline=self.selectedColor)
+                self.selectedCoordinate = index
+                for idx in indexesToPaint:
+                    self.imageCanvas.itemconfigure(idx, outline='red')
+
+                if self.drag:
+                    self.root.config(cursor='hand2')
+        if not findCoord and self.drag:
+            self.root.config(cursor='fleur')
 
     def onClickRelease(self, event):
         self.mousePress = False
@@ -538,7 +605,7 @@ class MainWindow:
                             self.totalPickButton.configure(text=f"Total picks: {self.totalCoordinates}")
                             self.hasChanges[self.micName] = True
                             break
-                elif self.picking:  # Picking action
+                elif self.filament:  # Filament picking action
                     self.addCoordinate(x * self.scale / self.zoomFactor, y * self.scale / self.zoomFactor)
                     new_value = coordinate_count + 1
                     self.table.set(self.table.selection(), column="Particles", value=new_value)
@@ -567,8 +634,8 @@ class MainWindow:
                             self.coordX = self.root.winfo_pointerx() - self.root.winfo_rootx()
                             self.coordY = self.root.winfo_pointery() - self.root.winfo_rooty()
                             coordXY = self.coordinatesDict[self.micName][index]
-                            self.coordinatesDict[self.micName][index] = (coordXY[0] + newX * self.scale,
-                                                                         coordXY[1] + newY * self.scale)
+                            self.coordinatesDict[self.micName][index] = (coordXY[0] + newX * self.scale / self.zoomFactor,
+                                                                         coordXY[1] + newY * self.scale / self.zoomFactor)
 
                             if self.selectedCoordinate is not None:
                                 indexesToPaint = self.nearCoordinates(self.selectedCoordinate)
@@ -589,19 +656,6 @@ class MainWindow:
                         self.root.config(cursor='fleur')
                         self.moveShape = False
                         self.onDrag(event)
-                else:  # simple click
-                    for index, coords in self.shapes.items():
-                        distance = np.sqrt((x - self.xOffset - coords[0]) ** 2 + (y - self.yOffset - coords[1]) ** 2)
-                        if distance < self.shapeRadius:
-                            indexesToPaint = self.nearCoordinates(index)
-                            if self.selectedCoordinate is not None:
-                                indexesToRestore = self.nearCoordinates(self.selectedCoordinate)
-                                for idx in indexesToRestore:
-                                    self.imageCanvas.itemconfigure(idx, outline=self.selectedColor)
-
-                            self.selectedCoordinate = index
-                            for idx in indexesToPaint:
-                                self.imageCanvas.itemconfigure(idx, outline='red')
         else:
             self.root.config(cursor='')
 
