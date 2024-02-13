@@ -1,3 +1,27 @@
+V3.5.0
+  Users:
+     - add wait protocol. This protocol wait N seconds and then ends.
+       It is helpfull to schedule other protocols using the option "wait for"
+     - Fix: .em files are handled by xmipp (dimensions now are correct)
+     - Add symmetry option to export_DB protocol. This will produce the list 
+       of symmetry matrices that PDBe asks for when deposition a new atomic structure
+  Developers:
+     - Add method setWrongDefocus to CTFModel (code centralization)
+V3.4.0:
+   Users:
+     - Fix: CTFTomoSeries manual subset should work
+     - Windows' ChimeraX properly called from WSL installations
+   Developers:
+      - add attribute isSubParticles to SetOfParticles
+      - modify __str__ to print SubParticles when appropriate
+      - remove setOf in SetOfImages.__str__
+     - EMSet.copyItems and createCopy accepts "itemSelectedCallback" falling back to isEnabled.
+     - getVersionFromPath improved: works with cuda-11.4.safe (uses regex looking up for numbers)
+
+V3.3.1:
+     - Improving performance of the metadataviewer.
+     - Metadataviewer integration with Chimera and ImageJ     - Subsets: Tolerates missing properties in sqlite but present in run.db (CTFTomoseries without TS pointer)
+
 V3.3.0:
    Users:
      - Fix: importing non cubic volumes could render 0 elements in dimensions. Now minimum is 1.
@@ -5,6 +29,7 @@ V3.3.0:
      - ImageHandler.getDimensions uses ImageReader registry and its readers (Xmipp, Tiff, Eman, ...) image
      - tiff dimensions (gain, eer, tif, tiff) are swap. They originall  y were opposite to xmipp and others convention.
      - User subset: ready for new metadata viewer using txt files with ids.
+     - classifyItems method of SetOfClasses updates an existing output set than can be utilized for streaming protocols
      - New metadata viewer(BETA). To use it run 'scipion3 pip install metadata-viewer mrcfile'. Right click on outputs should show "Scipion metadata viewer"
 
 V3.2.2; Hotfix: buggy logline commented

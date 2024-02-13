@@ -20,6 +20,9 @@ class TestPluginCudaGuess(unittest.TestCase):
         v = Plugin.getVersionFromPath("/usr/local/cuda10.2")
         self.assertEqual(str(v), NO_VERSION_FOUND_STR, "Default value not working")
 
+        v = Plugin.getVersionFromPath("/usr/local/cuda-11.2.safe")
+        self.assertEqual(v.major, 11, ".safe suffix not working")
+
     def test_cuda_version_in_variable(self):
 
         with patch("os.path.realpath") as realpath_faked:
