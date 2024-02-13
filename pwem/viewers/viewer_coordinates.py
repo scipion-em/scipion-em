@@ -306,11 +306,13 @@ class MainWindow:
         else:
             self.pickerAction.configure(relief=tk.GROOVE)
             self.eraserAction.configure(relief=tk.GROOVE)
+            self.dragButton.configure(relief=tk.GROOVE)
             self.filamentPickerAction.configure(relief=tk.SUNKEN)
             self.root.config(cursor='')
             self.filament = True
             self.picking = False
             self.eraser = False
+            self.drag = False
 
     def onBoxSizeSlider(self, event):
         """Handle box size slider motion"""
@@ -463,10 +465,10 @@ class MainWindow:
 
     def onFitActivate(self):
         self.zoomFactor = 1
+        self.loadMicrograph()
         self.drag_data = {'x': 0, 'y': 0, 'item': None}
         self.xOffset = 0
         self.yOffset = 0
-        self.loadMicrograph()
 
     def onZoomActivate(self):
         if self.zoom:
@@ -527,11 +529,12 @@ class MainWindow:
 
             if pick:
                 coordinate_count = int(self.table.item(self.table.selection(), "values")[2])
-                self.addCoordinate(event.x * self.scale / self.zoomFactor, event.y * self.scale / self.zoomFactor)
+                shape = self.addCoordinate(event.x * self.scale / self.zoomFactor, event.y * self.scale / self.zoomFactor)
                 new_value = coordinate_count + 1
                 self.table.set(self.table.selection(), column="Particles", value=new_value)
                 self.table.set(self.table.selection(), column="Updated", value='Yes')
-                self.coordinatesDict[self.micName][new_value] = (event.x * self.scale, event.y * self.scale)
+                self.coordinatesDict[self.micName][shape] = ((event.x - self.xOffset) * self.scale / self.zoomFactor,
+                                                              (event.y - self.yOffset) * self.scale / self.zoomFactor)
                 self.totalCoordinates += 1
                 self.totalPickButton.configure(text=f"Total picks: {self.totalCoordinates}")
                 self.hasChanges[self.micName] = True
@@ -606,11 +609,12 @@ class MainWindow:
                             self.hasChanges[self.micName] = True
                             break
                 elif self.filament:  # Filament picking action
-                    self.addCoordinate(x * self.scale / self.zoomFactor, y * self.scale / self.zoomFactor)
+                    shape = self.addCoordinate(x * self.scale / self.zoomFactor, y * self.scale / self.zoomFactor)
                     new_value = coordinate_count + 1
                     self.table.set(self.table.selection(), column="Particles", value=new_value)
                     self.table.set(self.table.selection(), column="Updated", value='Yes')
-                    self.coordinatesDict[self.micName][new_value] = (x * self.scale, y * self.scale)
+                    self.coordinatesDict[self.micName][shape] = ((x - self.xOffset) * self.scale / self.zoomFactor,
+                                                                  (y - self.yOffset) * self.scale / self.zoomFactor)
                     self.totalCoordinates += 1
                     self.totalPickButton.configure(text=f"Total picks: {self.totalCoordinates}")
                     self.hasChanges[self.micName] = True
@@ -844,7 +848,8 @@ class MainWindow:
             self.table.set(self.table.selection(), column="Particles", value=len(self.coordinatesDict[self.micName]))
             self.table.set(self.table.selection(), column='Updated', value='No')
             self.drawCoordinates(self.micName)
-            self.hasChanges.pop(self.micName)
+            if self.micName in self.hasChanges:
+                self.hasChanges.pop(self.micName)
 
     def onSliderMapMove(self, value):
         self.infoLabel.config(text=f"{float(value):.0f}")
@@ -857,17 +862,20 @@ class MainWindow:
         self.auxCoordinatesDict = dict()
         for index, coord in coordinates.items():
             self.addCoordinate(coord[0], coord[1])
-        self.coordinatesDict[micName] = self.auxCoordinatesDict
+        if self.auxCoordinatesDict:
+            self.coordinatesDict[micName] = self.auxCoordinatesDict
 
     def addCoordinate(self, x, y):
         """Create a coordinate"""
         xTrans, yTrans = x / self.scale * self.zoomFactor, y / self.scale * self.zoomFactor
+        shape = None
         if self.drawCircles:
             circle = self.imageCanvas.create_oval(xTrans - self.shapeRadius, yTrans - self.shapeRadius,  xTrans + self.shapeRadius,
                                                   yTrans + self.shapeRadius, outline=self.selectedColor, width=1, fill="",
                                                   tags='shape')
             self.shapes[circle] = (xTrans, yTrans)
             self.auxCoordinatesDict[circle] = (x, y)
+            shape = circle
             # self.quadtree.insert(circle, (x, y))
 
         if self.drawSquares:
@@ -877,6 +885,8 @@ class MainWindow:
             self.shapes[square] = (xTrans, yTrans)
             if not self.drawCircles:
                 self.auxCoordinatesDict[square] = (x, y)
+                shape = square
+        return shape
 
     def openFile(self):
         """Open a file dialog to load an image"""
