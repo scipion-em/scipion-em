@@ -1,3 +1,13 @@
+V3.5.0
+  Users:
+     - add wait protocol. This protocol wait N seconds and then ends.
+       It is helpfull to schedule other protocols using the option "wait for"
+     - Fix: .em files are handled by xmipp (dimensions now are correct)
+     - Add symmetry option to export_DB protocol. This will produce the list 
+       of symmetry matrices that PDBe asks for when deposition a new atomic structure
+  Developers:
+     - Add method setWrongDefocus to CTFModel (code centralization)
+     - Add FlexHub model (objects and base methods)
 V3.4.0:
    Users:
      - Fix: CTFTomoSeries manual subset should work
