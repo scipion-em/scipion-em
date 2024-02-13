@@ -147,8 +147,8 @@ class MainWindow:
         toolbar = ttk.Frame(parent)
         toolbar.bind("<Enter>", self.recoveryPointer)
 
-        sizeLabel = ttk.Label(toolbar, text="Size(px):")
-        sizeLabel.grid(row=0, column=0, padx=5, pady=5, sticky="e")
+        sizeLabel = ttk.Label(toolbar, text="Box size(px):", image=getImage(Icon.FILE_VOL), compound=tk.LEFT)
+        sizeLabel.grid(row=0, column=0, padx=10, pady=5, sticky="e")
 
         self.sizeVar = tk.IntVar(parent, self.boxSize)
         self.sizeSlider = ttk.Scale(toolbar, from_=0, to=self.boxSize*2, orient=tk.HORIZONTAL, length=self.boxSize*2,
@@ -162,14 +162,14 @@ class MainWindow:
 
         self.totalMicrographButton = tk.Button(toolbar, bg='#CFE8CF', relief=tk.SUNKEN,
                                                activebackground='#CFE8CF', compound=tk.LEFT)
-        self.totalMicrographButton.grid(row=0, column=3, padx=5, pady=5, sticky="e")
+        self.totalMicrographButton.grid(row=0, column=3, padx=20, pady=5, sticky="e")
 
         self.totalCoordinates = self.setOfCoordinate.getSize()
         self.totalPickButton = tk.Button(toolbar, text=f"Total picks: {self.totalCoordinates}",
                                          bg='#C3D7DF', relief=tk.SUNKEN,
                                          activebackground='#C3D7DF', compound=tk.LEFT)
 
-        self.totalPickButton.grid(row=0, column=4, padx=5, pady=5, sticky="e")
+        self.totalPickButton.grid(row=0, column=4, padx=0, pady=5, sticky="e")
 
         self.toolbar2 = ttk.Frame(parent)
         self.toolbar2.bind("<Enter>", self.recoveryPointer)
@@ -219,19 +219,20 @@ class MainWindow:
         tooltip = "Particle picker"
         ToolTip(self.pickerAction, tooltip, delay=150)
 
-        self.eraserAction = tk.Button(self.toolbar2, command=self.eraserActivate, width=25, height=25,
-                                      image=getImage(Icon.BROOM),
-                                      relief=self.squareButtonRelieve)
-        self.eraserAction.grid(row=0, column=10, pady=5, sticky="e")
-        tooltip = "Eraser"
-        ToolTip(self.eraserAction, tooltip, delay=150)
 
         self.filamentPickerAction = tk.Button(self.toolbar2, command=self.filamentActivate, width=25, height=25,
                                       image=getImage(Icon.ACTION_FILAMENT_PICKING),
                                       relief=self.squareButtonRelieve)
-        self.filamentPickerAction.grid(row=0, column=11,  pady=5, sticky="e")
+        self.filamentPickerAction.grid(row=0, column=10,  pady=5, sticky="e")
         tooltip = "Filament picker"
         ToolTip(self.filamentPickerAction, tooltip, delay=150)
+
+        self.eraserAction = tk.Button(self.toolbar2, command=self.eraserActivate, width=25, height=25,
+                                      image=getImage(Icon.BROOM),
+                                      relief=self.squareButtonRelieve)
+        self.eraserAction.grid(row=0, column=11, pady=5, sticky="e")
+        tooltip = "Eraser"
+        ToolTip(self.eraserAction, tooltip, delay=150)
 
         separador = ttk.Separator(self.toolbar2, orient='vertical')
         separador.grid(row=0, column=12, padx=10, sticky='ns')
@@ -294,10 +295,12 @@ class MainWindow:
         else:
             self.pickerAction.configure(relief=tk.GROOVE)
             self.filamentPickerAction.configure(relief=tk.GROOVE)
+            self.dragButton.configure(relief=tk.GROOVE)
             self.eraserAction.configure(relief=tk.SUNKEN)
             self.picking = False
             self.filament = False
             self.eraser = True
+            self.drag = False
 
     def filamentActivate(self):
         if self.filament:
@@ -451,7 +454,7 @@ class MainWindow:
 
         # Button to close de application
         closeButton = tk.Button(buttonsFrame, text='Close', command=self.root.destroy, font=('Helvetica', 10, 'bold'),
-                                      image=getImage(Icon.ACTION_CLOSE), compound=tk.LEFT)
+                                      image=getImage(Icon.BUTTON_CANCEL), compound=tk.LEFT)
         closeButton.grid(row=0, column=0, sticky="w", padx=5)
 
         # Button to create a new set of Coordinates
@@ -487,6 +490,8 @@ class MainWindow:
             self.drag = True
             self.filamentPickerAction.configure(relief=tk.GROOVE)
             self.pickerAction.configure(relief=tk.GROOVE)
+            self.eraserAction.configure(relief=tk.GROOVE)
+            self.eraser = False
             self.picking = False
             self.filament = False
 
@@ -511,7 +516,7 @@ class MainWindow:
             if self.zoomFactor < 1:
                 self.zoomFactor = 1
 
-            self.updateImage()
+            self.updateImage(event)
 
     def onClickPress(self, event):
         self.mousePress = True
@@ -591,7 +596,7 @@ class MainWindow:
                 coordinate_count = int(self.table.item(self.table.selection(), "values")[2])
                 if self.eraser:  # Eraser action
                     for index, coords in self.shapes.items():
-                        distance = np.sqrt((x - coords[0]) ** 2 + (y - coords[1]) ** 2)
+                        distance = np.sqrt((x - self.xOffset - coords[0]) ** 2 + (y - self.yOffset - coords[1]) ** 2)
                         if distance < self.shapeRadius:
                             new_value = coordinate_count - 1
                             self.table.set(self.table.selection(), column='Particles', value=new_value)
@@ -614,7 +619,7 @@ class MainWindow:
                     self.table.set(self.table.selection(), column="Particles", value=new_value)
                     self.table.set(self.table.selection(), column="Updated", value='Yes')
                     self.coordinatesDict[self.micName][shape] = ((x - self.xOffset) * self.scale / self.zoomFactor,
-                                                                  (y - self.yOffset) * self.scale / self.zoomFactor)
+                                                                 (y - self.yOffset) * self.scale / self.zoomFactor)
                     self.totalCoordinates += 1
                     self.totalPickButton.configure(text=f"Total picks: {self.totalCoordinates}")
                     self.hasChanges[self.micName] = True
@@ -678,7 +683,7 @@ class MainWindow:
         value = self.imagePIL.getpixel((x, y))
         return str(value)
 
-    def updateImage(self):
+    def updateImage(self, event):
         """Update the image with new size"""
         self.imageCanvas.delete("all")
         width, height = self.imagePIL.size
@@ -687,8 +692,16 @@ class MainWindow:
         scaledImage = self.imagePIL.resize((int(new_width / self.scale), int(new_height / self.scale)))
         self.imageTk = ImageTk.PhotoImage(scaledImage)
         self.imageCanvas.config(scrollregion=self.imageCanvas.bbox("all"))
-        self.imageCanvas.create_image(0, 0, anchor=tk.NW, image=self.imageTk)
+        self.image = self.imageCanvas.create_image(0, 0, anchor=tk.NW, image=self.imageTk, tags='image')
         self.drawCoordinates(self.micName)
+        if self.zoomFactor != 1:
+            x, y = ((event.x - self.drag_data['x']) / self.scale * self.zoomFactor,
+                    (event.y - self.drag_data['y']) / self.scale * self.zoomFactor)
+            self.xOffset -= x
+            self.yOffset -= y
+            self.imageCanvas.move('all', -x, -y)
+            self.drag_data['x'] = event.x
+            self.drag_data['y'] = event.y
 
     def loadMicrograph(self):
         """Load and display the selected micrograph and coordinates"""
@@ -721,7 +734,7 @@ class MainWindow:
 
                 # self.quadtree = Index(bbox=[0, 0, self.imagePIL.size[0], self.imagePIL.size[1]])
                 self.imageCanvas.delete("all")
-                self.imageCanvas.create_image(0, 0, anchor=tk.NW, image=self.imageTk, tags='image')
+                self.image = self.imageCanvas.create_image(0, 0, anchor=tk.NW, image=self.imageTk, tags='image')
                 self.drawCoordinates(self.micName)
 
             except Exception as e:
@@ -752,7 +765,7 @@ class MainWindow:
 
         # Close button
         closeButton = tk.Button(buttonsFrame, text='Close', command=self.histWindowClose, font=('Helvetica', 10, 'bold'),
-                                image=getImage(Icon.ACTION_CLOSE), compound=tk.LEFT)
+                                image=getImage(Icon.BUTTON_CANCEL), compound=tk.LEFT)
         closeButton.grid(row=3, column=0, sticky="e", padx=5)
 
         # Save button
