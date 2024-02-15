@@ -1,3 +1,4 @@
+V3.5.1: hotfix tif reader dimensions
 V3.5.0
   Users:
      - add wait protocol. This protocol wait N seconds and then ends.
