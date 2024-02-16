@@ -52,7 +52,7 @@ class MainWindow:
         self.root = root
         self.setOfCoordinate = setOfCoordinate
         self.root.title("Scipion coordinates viewer")
-        # self.root.resizable(False, False)
+        self.root.resizable(False, False)
         self.initGui()
 
     def initGui(self):
@@ -74,13 +74,14 @@ class MainWindow:
         self.coordinatesDict = dict()
         self.oldCoordinatesDict = dict()
         self.micrographPathDict = dict()
+        self.imageCanvasSize = 780
         self.scale = 5
         self.drawSquares = False
         self.drawCircles = True
         self.zoomFactor = 1
         self.moveShape = False
         self.hasChanges = {}
-        self.drag_data = {'x': 0, 'y': 0, 'item': None}
+        self.dragData = {'x': 0, 'y': 0, 'item': None}
         self.xOffset = 0
         self.yOffset = 0
         self.particlesWindowVisible = False
@@ -215,9 +216,8 @@ class MainWindow:
         separador.grid(row=0, column=7, padx=10, sticky='ns')
 
         # Picker Tools
-        self.pickerLabel = ttk.Label(self.toolbar2, text="Picker tools:")
-        self.pickerLabel.grid(row=0, column=8, padx=5, pady=5, sticky="e")
-        self.pickerLabel.pack_forget()
+        pickerLabel = ttk.Label(self.toolbar2, text="Picker tools:")
+        pickerLabel.grid(row=0, column=8, padx=5, pady=5, sticky="e")
 
         self.pickerAction = tk.Button(self.toolbar2, command=self.pickingActivate, width=25, height=25,
                                 image=getImage(Icon.ACTION_PICKING),
@@ -245,33 +245,38 @@ class MainWindow:
         separador.grid(row=0, column=12, padx=10, sticky='ns')
 
         # Image tools
+
+        # Picker Tools
         imageToolsPanel = ttk.Frame(self.toolbar2)
-        imageToolsPanel.grid(row=0, column=13, padx=450, pady=0, sticky="e")
+        imageToolsPanel.grid(row=0, column=13, padx=5, pady=0, sticky="e")
+
+        pickerLabel = ttk.Label(imageToolsPanel, text="Navigate:")
+        pickerLabel.grid(row=0, column=0, padx=5, pady=5, sticky="e")
 
         self.fitDisplay = tk.Button(imageToolsPanel, width=25, height=25, command=self.onFitActivate,
                                     image=getImage(Icon.ACTION_EXPAND),
                                     relief=self.squareButtonRelieve)
-        self.fitDisplay.grid(row=0, column=12, padx=0, pady=0, sticky="ns")
+        self.fitDisplay.grid(row=0, column=1, padx=0, pady=0, sticky="ns")
         tooltip = "Fit to display area"
         ToolTip(self.fitDisplay, tooltip, delay=150)
 
         self.zoomOnScroll = tk.Button(imageToolsPanel, width=25, height=25, command=self.onZoomActivate,
                                     image=getImage(Icon.ACTION_ZOOM),
                                     relief=self.zoomButtonRelieve)
-        self.zoomOnScroll.grid(row=0, column=14, padx=0, pady=0, sticky="ns")
+        self.zoomOnScroll.grid(row=0, column=2, padx=0, pady=0, sticky="ns")
         tooltip = "Zoom on scroll"
         ToolTip(self.zoomOnScroll, tooltip, delay=150)
 
         self.dragButton = tk.Button(imageToolsPanel, width=25, height=25, command=self.onDragActivate,
                                       image=getImage(Icon.ACTION_HAND),
                                       relief=self.dragButtonReliev)
-        self.dragButton.grid(row=0, column=13, padx=0, pady=0, sticky="ns")
+        self.dragButton.grid(row=0, column=15, padx=0, pady=0, sticky="ns")
         tooltip = "Click and drag to move"
         ToolTip(self.dragButton, tooltip, delay=150)
 
         # Label to display coordinates and pixel value
         self.infoLabel = ttk.Label(imageToolsPanel, text="")
-        self.infoLabel.grid(row=0, column=17, sticky="w", padx=120)
+        self.infoLabel.grid(row=0, column=17, sticky="w", padx=250)
 
         toolbar.grid(row=0, column=0, sticky="ew")
         self.toolbar2.grid(row=1, column=0, sticky="ew")
@@ -338,7 +343,6 @@ class MainWindow:
 
     def onSliderRelease(self, event):
         """Handle box size slider release"""
-        self.loadMicrograph()
         if self.particlesWindowVisible:
             self.extractImages()
 
@@ -353,6 +357,8 @@ class MainWindow:
 
         self.circleShape.configure(relief=self.circleButtonRelieve)
         self.loadMicrograph()
+        if self.particlesWindowVisible:
+            self.extractImages()
 
     def showSquare(self):
         """Draw a square on the particle"""
@@ -457,7 +463,7 @@ class MainWindow:
         self.contentFrame.grid_rowconfigure(0, weight=1)
         self.contentFrame.grid_columnconfigure(1, weight=1)
 
-        self.imageCanvas = tk.Canvas(self.imageFrame, width=780, height=780)  #, borderwidth=5, highlightthickness=1, highlightbackground='red')
+        self.imageCanvas = tk.Canvas(self.imageFrame, width=self.imageCanvasSize, height=self.imageCanvasSize)  #, borderwidth=5, highlightthickness=1, highlightbackground='red')
         self.imageCanvas.grid(row=0, column=0, sticky="nw", pady=10)
         self.imageCanvas.bind("<Motion>", self.onPickerEraserAction)
         self.imageCanvas.bind("<B1-Motion>", self.onPickerEraserAction)
@@ -488,7 +494,7 @@ class MainWindow:
         self.loadMicrograph()
         if self.particlesWindowVisible:
             self.extractImages()
-        self.drag_data = {'x': 0, 'y': 0, 'item': None}
+        self.dragData = {'x': 0, 'y': 0, 'item': None}
         self.xOffset = 0
         self.yOffset = 0
 
@@ -543,8 +549,8 @@ class MainWindow:
         self.mousePress = True
         self.coordX = self.root.winfo_pointerx() - self.root.winfo_rootx()
         self.coordY = self.root.winfo_pointery() - self.root.winfo_rooty()
-        self.drag_data['x'] = event.x
-        self.drag_data['y'] = event.y
+        self.dragData['x'] = event.x
+        self.dragData['y'] = event.y
         if self.picking:
             pick = True
             for index, coords in self.shapes.items():
@@ -710,13 +716,13 @@ class MainWindow:
 
     def onDrag(self, event):
         """Move the image and shapes on drag"""
-        x = (event.x - self.drag_data['x'])
-        y = (event.y - self.drag_data['y'])
+        x = (event.x - self.dragData['x'])
+        y = (event.y - self.dragData['y'])
         self.xOffset += x
         self.yOffset += y
         self.imageCanvas.move('all', x, y)
-        self.drag_data['x'] = event.x
-        self.drag_data['y'] = event.y
+        self.dragData['x'] = event.x
+        self.dragData['y'] = event.y
 
     def getPixelValue(self, x, y):
         """Return the pixel value in the given x and y coordinates"""
@@ -736,13 +742,13 @@ class MainWindow:
         self.image = self.imageCanvas.create_image(0, 0, anchor=tk.NW, image=self.imageTk, tags='image')
         self.drawCoordinates(self.micName)
         if self.zoomFactor >= 1:
-            x, y = ((event.x - self.drag_data['x']) / self.scale * self.zoomFactor,
-                    (event.y - self.drag_data['y']) / self.scale * self.zoomFactor)
+            x, y = ((event.x - self.dragData['x']) / self.scale * self.zoomFactor,
+                    (event.y - self.dragData['y']) / self.scale * self.zoomFactor)
             self.xOffset -= x
             self.yOffset -= y
             self.imageCanvas.move('all', -x, -y)
-            self.drag_data['x'] = event.x
-            self.drag_data['y'] = event.y
+            self.dragData['x'] = event.x
+            self.dragData['y'] = event.y
 
     def loadMicrograph(self):
         """Load and display the selected micrograph and coordinates"""
@@ -755,6 +761,8 @@ class MainWindow:
                 imageReader = ImageReadersRegistry.getReader(imagePath)
                 self.imagePIL = imageReader.open(imagePath)
                 self.imageSize = self.imagePIL.size
+
+                self.scale = max(self.imageSize[0]/self.imageCanvasSize, self.imageSize[1]/self.imageCanvasSize)
                 dpiWidth = self.imageSize[0] / self.scale
                 dpiHeight = self.imageSize[1] / self.scale
                 self.imageCanvas.configure(width=dpiWidth, height=dpiHeight)
@@ -918,27 +926,28 @@ class MainWindow:
             if self.micName in self.hasChanges:
                 self.hasChanges.pop(self.micName)
 
-    def showParticles(self):
-        self.particlesWindow = tk.Toplevel(self.root)
-        self.particlesWindow.geometry("530x800")
-        self.particlesWindow.title('Particles')
-        self.particlesWindow.attributes('-topmost', True)
-        self.particlesWindowVisible = True
-        self.particlesWindow.protocol("WM_DELETE_WINDOW", self.onClosing)
+    def showParticles(self, geometry=None):
+        if not self.particlesWindowVisible:
+            self.particlesWindow = tk.Toplevel(self.root)
+            self.geometry = geometry if geometry is not None else "530x800"
+            self.particlesWindow.geometry(self.geometry)
+            self.particlesWindow.title('Particles')
+            self.particlesWindow.attributes('-topmost', True)
+            self.particlesWindowVisible = True
+            self.particlesWindow.protocol("WM_DELETE_WINDOW", self.onParticlesWindowClosing)
+            self.particlesCanvas = tk.Canvas(self.particlesWindow)
+            self.particlesCanvas.pack(side="left", fill="both", expand=True)
 
-        self.particlesCanvas = tk.Canvas(self.particlesWindow)
-        self.particlesCanvas.pack(side="left", fill="both", expand=True)
+            self.scrollbar = tk.Scrollbar(self.particlesWindow, orient="vertical", command=self.particlesCanvas.yview)
+            self.scrollbar.pack(side="right", fill="y")
 
-        self.scrollbar = tk.Scrollbar(self.particlesWindow, orient="vertical", command=self.particlesCanvas.yview)
-        self.scrollbar.pack(side="right", fill="y")
+            self.imageGrid = tk.Frame(self.particlesCanvas, bg='white')
+            self.particlesCanvas.create_window((0, 0), window=self.imageGrid, anchor="nw")
+            self.particlesCanvas.configure(yscrollcommand=self.scrollbar.set)
+            self.particlesCanvas.bind("<Configure>", lambda e: self.particlesCanvas.configure(scrollregion=self.particlesCanvas.bbox("all")))
 
-        self.imageGrid = tk.Frame(self.particlesCanvas, bg='white')
-        self.particlesCanvas.create_window((0, 0), window=self.imageGrid, anchor="nw")
-        self.particlesCanvas.configure(yscrollcommand=self.scrollbar.set)
-        self.particlesCanvas.bind("<Configure>", lambda e: self.particlesCanvas.configure(scrollregion=self.particlesCanvas.bbox("all")))
-
-        self.selectedParticle = None
-        self.extractImages()
+            self.selectedParticle = None
+            self.extractImages()
 
     def extractImages(self):
         self.clearImageGrid()
@@ -946,9 +955,7 @@ class MainWindow:
         self.particlesWidget = dict()
         self.image_references = []
         self.selectedParticle = None
-        row = 0
-        column = 0
-        count = 0
+        row = column = count = 0
         for index, coords in self.shapes.items():
             if index in self.coordinatesDict[self.micName]:
                 region = self.extractRegion(coords[0], coords[1])
@@ -973,10 +980,15 @@ class MainWindow:
                     column = 0
                 count += 1
 
+        self.particlesCanvas.update_idletasks()
+        scroll_height = self.particlesCanvas.bbox("all")[3]
+        self.scrollbar.set(0, 1)
+        self.particlesCanvas.config(scrollregion=(0, 0, 1, scroll_height))
+
     def clearImageGrid(self):
-        # self.particlesCanvas.delete("all")
         for widget in self.imageGrid.winfo_children():
             widget.destroy()
+        self.selectedParticle = None
 
     def selectCoordinate(self, event):
         index = self.particlesIndex[event.widget]
@@ -998,8 +1010,9 @@ class MainWindow:
 
         self.selectedParticle.config(highlightbackground='red', bg='red')
 
-    def onClosing(self):
+    def onParticlesWindowClosing(self):
         self.particlesWindowVisible = False
+        self.selectedParticle = None
         self.particlesWindow.destroy()
 
     def updateParticle(self, index):
@@ -1111,7 +1124,9 @@ class CoordinateView(View):
     def show(self):
         root = tk.Toplevel(self.root)
         app = MainWindow(root, self._emSet)
-        root.geometry("1315x915")
+        width = 570 + app.scaledImage.size[0]
+        height = 140 + app.scaledImage.size[1]
+        root.geometry(f"{width}x{height}")
         root.mainloop()
 
 
