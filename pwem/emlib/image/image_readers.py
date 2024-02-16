@@ -47,8 +47,9 @@ class TiffImageReader(ImageReader):
         tif = TiffFile(filePath)
         frames = len(tif.pages)  # number of pages in the file
         page = tif.pages[0]  # get shape and dtype of the image in the first page
-        x, y = page.shape
-        return x, y, frames, 1
+        x, y = page.imagewidth, page.imagelength  # IMPORTANT: to match xmipp convention
+
+        return x, y, 1, frames
 
 class EMANImageReader(ImageReader):
     """ Image reader for eman file formats"""
