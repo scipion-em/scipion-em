@@ -1820,7 +1820,8 @@ class Coordinate(EMObject):
         """ Set the micrograph to which this coordinate belongs. """
         self._micrographPointer.set(micrograph)
         self._micId.set(micrograph.getObjId())
-        self._micName.set(micrograph.getMicName())
+        if isinstance(micrograph, Micrograph):
+            self._micName.set(micrograph.getMicName())
 
     def copyInfo(self, coord):
         """ Copy information from other coordinate. """
@@ -1858,6 +1859,7 @@ class SetOfCoordinates(EMSet):
         EMSet.__init__(self, **kwargs)
         self._micrographsPointer = Pointer()
         self._boxSize = Integer()
+        self._micrographs = None
 
     def getBoxSize(self):
         """ Return the box size of the particles.
@@ -1899,7 +1901,34 @@ class SetOfCoordinates(EMSet):
         coordWhere = '1' if micId is None else '_micId=%d' % micId
 
         for coord in self.iterItems(where=coordWhere):
+            # Associate the micrograph
+            self._associateMicrograph(coord)
             yield coord
+
+    def _associateMicrograph(self, coord):
+        coord.setMicrograph(self._getMicrograph(coord.getMicId()))
+
+    def _getMicrograph(self, micId):
+        """ Returns  the micrograph from a micId"""
+        micrographs = self._getMicrographs()
+
+        if micId not in micrographs.keys():
+            mic = self.getMicrographs()[micId]
+            self._micrographs[micId] = mic
+            return mic
+        else:
+            return micrographs[micId]
+
+    def initMicrographs(self):
+        """ Initialize internal _micrographs to a dictionary if not done already"""
+        if self._micrographs is None:
+            self._micrographs = dict()
+
+    def _getMicrographs(self):
+        if self._micrographs is None:
+            self.initMicrographs()
+
+        return self._micrographs
 
     def getMicrographs(self, asPointer=False):
         """ Returns the SetOfMicrographs associated with

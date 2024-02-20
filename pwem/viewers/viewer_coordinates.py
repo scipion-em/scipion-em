@@ -37,7 +37,7 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 import logging
 from pwem.emlib.image.image_readers import ImageReadersRegistry
-from pwem.objects import EMSet, SetOfCoordinates
+from pwem.objects import EMSet, SetOfCoordinates, SetOfMicrographs
 from pyworkflow.gui import getImage, ToolTip
 from pyworkflow.utils import Icon
 from pyworkflow.viewer import View, Viewer
@@ -47,17 +47,18 @@ logger = logging.getLogger()
 
 class MainWindow:
     """Coordinate viewer"""
-    def __init__(self, root, setOfCoordinate):
+    def __init__(self, root, setOfCoordinate, protocol):
         # Initialize the main window
         self.root = root
         self.setOfCoordinate = setOfCoordinate
+        self.protocol = protocol
         self.root.title("Scipion coordinates viewer")
         self.root.resizable(False, False)
         self.initGui()
 
     def initGui(self):
-        self.micName = None
-        self.boxSize = self.setOfCoordinate.getBoxSize()
+        self.micId = None
+        self.boxSize = self.setOfCoordinate.getBoxSize() if self.setOfCoordinate.getBoxSize() else 100
         self.selectedColor = '#00FF00'
         self.circleButtonRelieve = tk.SUNKEN
         self.squareButtonRelieve = tk.GROOVE
@@ -74,6 +75,9 @@ class MainWindow:
         self.coordinatesDict = dict()
         self.oldCoordinatesDict = dict()
         self.micrographPathDict = dict()
+        self.deletedCoordinates = dict()
+        self.movedCoordinates = dict()
+        self.newCoordinates = dict()
         self.imageCanvasSize = 780
         self.scale = 5
         self.drawSquares = False
@@ -148,7 +152,8 @@ class MainWindow:
 
         # Micrograph on the right
         self.createImageFrame()
-        self.loadMicrograph()
+
+        self.onTableClick(None)
 
     def createToolbar(self, parent):
         """Create the toolbar with a slider for adjusting the box size"""
@@ -356,7 +361,7 @@ class MainWindow:
             self.drawCircles = False
 
         self.circleShape.configure(relief=self.circleButtonRelieve)
-        self.loadMicrograph()
+        self.showCoordinates()
         if self.particlesWindowVisible:
             self.extractImages()
 
@@ -370,7 +375,7 @@ class MainWindow:
             self.drawSquares = False
 
         self.squareShape.configure(relief=self.squareButtonRelieve)
-        self.loadMicrograph()
+        self.showCoordinates()
         if self.particlesWindowVisible:
             self.extractImages()
 
@@ -382,7 +387,7 @@ class MainWindow:
             self.pointButtonRelieve = tk.GROOVE
 
         self.pointShape.configure(relief=self.pointButtonRelieve)
-        self.loadMicrograph()
+        self.showCoordinates()
         if self.particlesWindowVisible:
             self.extractImages()
 
@@ -392,7 +397,7 @@ class MainWindow:
         if color.get_color():
             self.selectedColor = color.get_color()[2]
             self.paletteButton.configure(bg=self.selectedColor, activebackground=self.selectedColor)
-            self.loadMicrograph()
+            self.showCoordinates()
             if self.particlesWindowVisible:
                 self.extractImages()
 
@@ -403,20 +408,18 @@ class MainWindow:
 
         setOfMicrographs = self.setOfCoordinate.getMicrographs()
         for micrograph in setOfMicrographs.iterItems():
-            micBaseName = os.path.basename(micrograph.getFileName())
-            self.coordinatesDict[micBaseName] = {}
-            self.oldCoordinatesDict[micBaseName] = {}
-            self.micrographPathDict[micBaseName] = micrograph.getFileName()
+            micId = str(micrograph.getObjId())
+            self.coordinatesDict[micId] = {}
+            self.oldCoordinatesDict[micId] = {}
+            self.deletedCoordinates[micId] = {}
+            self.movedCoordinates[micId] = {}
+            self.newCoordinates[micId] = {}
+            self.micrographPathDict[micId] = (micrograph.getFileName(), micrograph.getObjId())
 
-        for index, coordinate in enumerate(self.setOfCoordinate.iterItems()):
-            micName = coordinate.getMicName()
-            if len(micName.split('.')) == 1:  # ensuring that it contains an extension
-                micName += '.mrc'
-            self.coordinatesDict[micName][index+2] = (coordinate.getX(), coordinate.getY())
-            self.oldCoordinatesDict[micName][index+2] = (coordinate.getX(), coordinate.getY())
-
-        for mic, micrograph in enumerate(self.coordinatesDict):
-            data.append((mic + 1, micrograph, len(self.coordinatesDict[micrograph]), 'No'))
+        label = '_micName' if isinstance(setOfMicrographs, SetOfMicrographs) else '_micId'
+        for micAgg in self.setOfCoordinate.aggregate(["count"], label, [label, "_micId"]):
+            micName = micAgg[label]
+            data.append((micAgg['_micId'], micName, micAgg['count'], 'No'))
 
         self.table = ttk.Treeview(self.contentFrame, columns=columns, show="headings")
         self.table.bind("<Enter>", self.recoveryPointer)
@@ -436,7 +439,6 @@ class MainWindow:
 
         firstItem = self.table.get_children()[0]
         self.table.selection_set(firstItem)  # Select the first item by default
-
         self.contentFrame.grid_rowconfigure(0, weight=1)
         self.contentFrame.grid_columnconfigure(0, weight=1)
 
@@ -445,16 +447,26 @@ class MainWindow:
     def onTableClick(self, event):
         """Handle the event when a row in the table is clicked to select a micrograph"""
         selected_item = self.table.selection()
-
         if selected_item:
-            values = self.table.item(selected_item, "values")
-            if len(values) > 1 and values[1] != self.micName:
-                self.micName = values[1]
+            micrograph = self.table.item(selected_item, "values")
+            if len(micrograph) > 1 and micrograph[0] != self.micId:
+                self.micId = micrograph[0]
                 self.zoomFactor = 1
+                self.xOffset = 0
+                self.yOffset = 0
+                self.dragData = {'x': 0, 'y': 0, 'item': None}
                 self.selectedCoordinate = None
-                self.loadMicrograph()
+                self.loadCoordinates(micrograph)
+                self.showCoordinates()
                 if self.particlesWindowVisible:
                     self.extractImages()
+
+    def loadCoordinates(self, micrograph):
+        micId = micrograph[0]
+        if not self.coordinatesDict[self.micId]:
+            for index, coordinate in enumerate(self.setOfCoordinate.iterCoordinates(int(micId))):
+                self.coordinatesDict[self.micId][index+2] = (coordinate.getX(), coordinate.getY(), coordinate.getObjId())
+                self.oldCoordinatesDict[self.micId][index+2] = (coordinate.getX(), coordinate.getY(), coordinate.getObjId())
 
     def createImageFrame(self):
         """Create the image frame on the right side to display micrographs and associated coordinates"""
@@ -474,6 +486,7 @@ class MainWindow:
 
         buttonsFrame = tk.Frame(self.imageFrame)
         buttonsFrame.grid(row=1, column=0, sticky="ns", padx=510)
+        buttonsFrame.bind("<Enter>", self.recoveryPointer)
 
         # Button to close de application
         closeButton = tk.Button(buttonsFrame, text='Close', command=self.root.destroy, font=('Helvetica', 10, 'bold'),
@@ -483,15 +496,46 @@ class MainWindow:
         # Button to create a new set of Coordinates
         coordinateButton = tk.Button(buttonsFrame, text='Coordinate', fg='white', font=('Helvetica', 10, 'bold'),
                                      image=getImage(Icon.ACTION_NEW), compound=tk.LEFT, bg='#B22A2A',
-                                     activebackground='#B22A2A')
+                                     activebackground='#B22A2A', command=self.createOutput)
         coordinateButton.grid(row=0, column=1, sticky="w", padx=5)
 
         self.imageFrame.grid_rowconfigure(0, weight=1)
         self.imageFrame.grid_columnconfigure(0, weight=1)
 
+    def createOutput(self):
+        result = messagebox.askquestion("Confirmation", "Are you going to generate a new set of coordinates with the new changes?",
+                                        icon='warning', **{'parent': self.root})
+        if result == messagebox.YES:
+            micSet = self.setOfCoordinate.getMicrographs()
+            coordSet = self.protocol._createSetOfCoordinates(micSet, suffix=str(self.protocol.getOutputsSize()))
+            coordSet.copyInfo(self.setOfCoordinate)
+            coordSet.setBoxSize(self.boxSize-1)
+            coordSet.copyItems(self.setOfCoordinate, updateItemCallback=self._removeCoordinate)
+
+            for micName, coord in self.newCoordinates.items():
+                for newCoord in self.newCoordinates[micName].values():
+                    newCoordinate = self.setOfCoordinate.getFirstItem().clone()
+                    newCoordinate.setObjId(None)
+                    micrographs = self.setOfCoordinate.getMicrographs()
+                    newCoordinate.setMicrograph(micrographs[self.micrographPathDict[micName][1]])
+                    newCoordinate.setPosition(newCoord[0], newCoord[1])
+                    coordSet.append(newCoordinate)
+
+            coordSet.write()
+            self.protocol._defineOutputs(**{'outputCoordinates_' + str(self.protocol.getOutputsSize()+1): coordSet})
+            self.protocol._defineSourceRelation(micSet, coordSet)
+
+    def _removeCoordinate(self, item, row):
+        for micName, coord in self.newCoordinates.items():
+            if item.getObjId() in self.deletedCoordinates[micName]:
+                setattr(item, "_appendItem", False)
+            if item.getObjId() in self.movedCoordinates[micName]:
+                item.setX(self.movedCoordinates[micName][item.getObjId()][0])
+                item.setY(self.movedCoordinates[micName][item.getObjId()][1])
+
     def onFitActivate(self):
         self.zoomFactor = 1
-        self.loadMicrograph()
+        self.showCoordinates()
         if self.particlesWindowVisible:
             self.extractImages()
         self.dragData = {'x': 0, 'y': 0, 'item': None}
@@ -565,42 +609,47 @@ class MainWindow:
                 new_value = coordinate_count + 1
                 self.table.set(self.table.selection(), column="Particles", value=new_value)
                 self.table.set(self.table.selection(), column="Updated", value='Yes')
-                self.coordinatesDict[self.micName][shape] = ((event.x - self.xOffset) * self.scale / self.zoomFactor,
-                                                              (event.y - self.yOffset) * self.scale / self.zoomFactor)
+                self.coordinatesDict[self.micId][shape] = ((event.x - self.xOffset) * self.scale / self.zoomFactor,
+                                                             (event.y - self.yOffset) * self.scale / self.zoomFactor,
+                                                             None)
+                self.newCoordinates[self.micId][shape] = self.coordinatesDict[self.micId][shape]
                 self.totalCoordinates += 1
                 self.totalPickButton.configure(text=f"Total picks: {self.totalCoordinates}")
-                self.hasChanges[self.micName] = True
+                self.hasChanges[self.micId] = True
                 if self.particlesWindowVisible:
                     self.extractImages()
 
         findCoord = False
-        for index, coords in self.shapes.items():
-            distance = np.sqrt((event.x - self.xOffset - coords[0]) ** 2 + (event.y - self.yOffset - coords[1]) ** 2)
-            if distance < self.shapeRadius:
-                findCoord = True
-                indexesToPaint = self.nearCoordinates(index)
-                if self.selectedCoordinate is not None:
-                    indexesToRestore = self.nearCoordinates(self.selectedCoordinate)
-                    for idx in indexesToRestore:
-                        self.imageCanvas.itemconfigure(idx, outline=self.selectedColor)
-                self.selectedCoordinate = index
-                for idx in indexesToPaint:
-                    self.imageCanvas.itemconfigure(idx, outline='red')
-                if self.drag:
-                    self.root.config(cursor='hand2')
+        if not self.eraser:
+            for index, coords in self.shapes.items():
+                distance = np.sqrt((event.x - self.xOffset - coords[0]) ** 2 + (event.y - self.yOffset - coords[1]) ** 2)
+                if distance < self.shapeRadius:
+                    findCoord = True
+                    indexesToPaint = self.nearCoordinates(index)
+                    if self.selectedCoordinate is not None:
+                        indexesToRestore = self.nearCoordinates(self.selectedCoordinate)
+                        for idx in indexesToRestore:
+                            self.imageCanvas.itemconfigure(idx, outline=self.selectedColor)
+                    self.selectedCoordinate = index
+                    for idx in indexesToPaint:
+                        self.imageCanvas.itemconfigure(idx, outline='red')
+                    if self.drag:
+                        self.root.config(cursor='hand2')
 
-                if self.particlesWindowVisible:
-                    self.updateParticle(index)
+                    if self.particlesWindowVisible:
+                        self.updateParticle(index)
 
-        if not findCoord and self.drag:
-            self.root.config(cursor='fleur')
+            if not findCoord and self.drag:
+                self.root.config(cursor='fleur')
+        else:
+            self.onPickerEraserAction(event)
 
     def onClickRelease(self, event):
         self.mousePress = False
         self.root.config(cursor='')
         self.moveShape = False
-        # if self.particlesWindowVisible:
-        #     self.extractImages()
+        if self.particlesWindowVisible and self.eraser:
+            self.extractImages()
 
     def nearCoordinates(self, index):
         coord = self.imageCanvas.coords(index)
@@ -640,12 +689,14 @@ class MainWindow:
                                 self.imageCanvas.delete(idx)
                                 self.shapes.pop(idx)
 
-                            if index in self.coordinatesDict[self.micName]:
-                                self.coordinatesDict[self.micName].pop(index)
+                            if index in self.coordinatesDict[self.micId]:
+                                coordObjId = self.coordinatesDict[self.micId][index][2]
+                                self.deletedCoordinates[self.micId][coordObjId] = True
+                                self.coordinatesDict[self.micId].pop(index)
 
                             self.totalCoordinates -= 1
                             self.totalPickButton.configure(text=f"Total picks: {self.totalCoordinates}")
-                            self.hasChanges[self.micName] = True
+                            self.hasChanges[self.micId] = True
                             break
 
                 elif self.filament:  # Filament picking action
@@ -653,11 +704,13 @@ class MainWindow:
                     new_value = coordinate_count + 1
                     self.table.set(self.table.selection(), column="Particles", value=new_value)
                     self.table.set(self.table.selection(), column="Updated", value='Yes')
-                    self.coordinatesDict[self.micName][shape] = ((x - self.xOffset) * self.scale / self.zoomFactor,
-                                                                 (y - self.yOffset) * self.scale / self.zoomFactor)
+                    self.coordinatesDict[self.micId][shape] = ((x - self.xOffset) * self.scale / self.zoomFactor,
+                                                                 (y - self.yOffset) * self.scale / self.zoomFactor,
+                                                                 None)
+                    self.newCoordinates[self.micId][shape] = self.coordinatesDict[self.micId][shape]
                     self.totalCoordinates += 1
                     self.totalPickButton.configure(text=f"Total picks: {self.totalCoordinates}")
-                    self.hasChanges[self.micName] = True
+                    self.hasChanges[self.micId] = True
 
                 elif self.drag:  # Move coordinate or drag all image
                     for index, coords in self.shapes.items():
@@ -679,9 +732,11 @@ class MainWindow:
                                 # Update de coordinates
                                 self.coordX = self.root.winfo_pointerx() - self.root.winfo_rootx()
                                 self.coordY = self.root.winfo_pointery() - self.root.winfo_rooty()
-                                coordXY = self.coordinatesDict[self.micName][index]
-                                self.coordinatesDict[self.micName][index] = (coordXY[0] + newX * self.scale / self.zoomFactor,
-                                                                             coordXY[1] + newY * self.scale / self.zoomFactor)
+                                coordXY = self.coordinatesDict[self.micId][index]
+                                self.coordinatesDict[self.micId][index] = (coordXY[0] + newX * self.scale / self.zoomFactor,
+                                                                             coordXY[1] + newY * self.scale / self.zoomFactor,
+                                                                             coordXY[2])
+                                self.movedCoordinates[self.micId][coordXY[2]] = self.coordinatesDict[self.micId][index]
 
                                 if self.selectedCoordinate is not None:
                                     indexesToPaint = self.nearCoordinates(self.selectedCoordinate)
@@ -698,7 +753,7 @@ class MainWindow:
 
                                 if newX != 0 or newY != 0:
                                     self.table.set(self.table.selection(), column="Updated", value='Yes')
-                                    self.hasChanges[self.micName] = True
+                                    self.hasChanges[self.micId] = True
 
                             break
 
@@ -740,7 +795,7 @@ class MainWindow:
         self.imageCanvas.delete("all")
         self.imageCanvas.config(scrollregion=self.imageCanvas.bbox("all"))
         self.image = self.imageCanvas.create_image(0, 0, anchor=tk.NW, image=self.imageTk, tags='image')
-        self.drawCoordinates(self.micName)
+        self.drawCoordinates(self.micId)
         if self.zoomFactor >= 1:
             x, y = ((event.x - self.dragData['x']) / self.scale * self.zoomFactor,
                     (event.y - self.dragData['y']) / self.scale * self.zoomFactor)
@@ -750,12 +805,9 @@ class MainWindow:
             self.dragData['x'] = event.x
             self.dragData['y'] = event.y
 
-    def loadMicrograph(self):
+    def showCoordinates(self):
         """Load and display the selected micrograph and coordinates"""
-        if self.micName is None:
-            self.micName = next(iter(self.coordinatesDict.keys()))
-
-        imagePath = os.path.abspath(self.micrographPathDict[self.micName])
+        imagePath = os.path.abspath(self.micrographPathDict[self.micId][0])
         if imagePath:
             try:
                 imageReader = ImageReadersRegistry.getReader(imagePath)
@@ -783,10 +835,10 @@ class MainWindow:
                 # self.quadtree = Index(bbox=[0, 0, self.imagePIL.size[0], self.imagePIL.size[1]])
                 self.imageCanvas.delete("all")
                 self.image = self.imageCanvas.create_image(0, 0, anchor=tk.NW, image=self.imageTk, tags='image')
-                self.drawCoordinates(self.micName)
+                self.drawCoordinates(self.micId)
 
             except Exception as e:
-                logger.error(f"Error loading image '{self.micName}': {e}")
+                logger.error(f"Error loading image '{self.micId}': {e}")
         else:
             logger.error("Unable to upload the file %s. Make sure the path is correct." % imagePath)
 
@@ -824,9 +876,9 @@ class MainWindow:
 
     def histWindowClose(self):
         self.histWindow.destroy()
-        self.loadMicrograph()
+        self.showCoordinates()
         self.totalPickButton.configure(text=f"Total picks: {self.totalCoordinates}")
-        self.table.set(self.table.selection(), column="Particles", value=len(self.coordinatesDict[self.micName]))
+        self.table.set(self.table.selection(), column="Particles", value=len(self.coordinatesDict[self.micId]))
 
     def histWindowSaveClose(self):
         """Save the new coordinates taking into account the sliders selected pixel range """
@@ -837,7 +889,7 @@ class MainWindow:
             if currentState == 'hidden':
                 shapeToDelete.append(index)
                 self.imageCanvas.delete(index)
-                self.coordinatesDict[self.micName].pop(index)
+                self.coordinatesDict[self.micId].pop(index)
                 self.totalCoordinates -= 1
 
         # for i in shapeToDelete:
@@ -901,30 +953,33 @@ class MainWindow:
         """Remove all coordinates from current micrograph"""
         result = messagebox.askquestion("Confirmation", "Are you sure you want to reset the micrograph?",
                                         icon='warning', **{'parent': self.root})
-        if result == 'yes':
-            self.totalCoordinates -= len(self.coordinatesDict[self.micName])
-            self.coordinatesDict[self.micName] = {}
+        if result == messagebox.YES:
+            self.totalCoordinates -= len(self.coordinatesDict[self.micId])
+            self.coordinatesDict[self.micId] = {}
             self.totalPickButton.configure(text=f"Total picks: {self.totalCoordinates}")
             self.table.set(self.table.selection(), column="Particles", value=0)
             self.imageCanvas.delete("shape")
             self.table.set(self.table.selection(), column='Updated', value='Yes')
-            self.hasChanges[self.micName] = True
+            self.hasChanges[self.micId] = True
 
     def restoreMicrograph(self):
         """Restore all removed coordinates from current micrograph"""
         result = messagebox.askquestion("Confirmation", "Are you sure you want to restore the micrograph?",
                                         icon='warning', **{'parent': self.root})
-        if result == 'yes':
-            self.totalCoordinates -= len(self.coordinatesDict[self.micName])
-            self.coordinatesDict[self.micName] = self.oldCoordinatesDict[self.micName]
-            self.totalCoordinates += len(self.coordinatesDict[self.micName])
+        if result == messagebox.YES:
+            self.totalCoordinates -= len(self.coordinatesDict[self.micId])
+            self.coordinatesDict[self.micId] = self.oldCoordinatesDict[self.micId]
+            self.deletedCoordinates[self.micId] = {}
+            self.newCoordinates[self.micId] = {}
+            self.movedCoordinates[self.micId] = {}
+            self.totalCoordinates += len(self.coordinatesDict[self.micId])
             self.totalPickButton.configure(text=f"Total picks: {self.totalCoordinates}")
             self.imageCanvas.delete("shape")
-            self.table.set(self.table.selection(), column="Particles", value=len(self.coordinatesDict[self.micName]))
+            self.table.set(self.table.selection(), column="Particles", value=len(self.coordinatesDict[self.micId]))
             self.table.set(self.table.selection(), column='Updated', value='No')
-            self.drawCoordinates(self.micName)
-            if self.micName in self.hasChanges:
-                self.hasChanges.pop(self.micName)
+            self.drawCoordinates(self.micId)
+            if self.micId in self.hasChanges:
+                self.hasChanges.pop(self.micId)
 
     def showParticles(self, geometry=None):
         if not self.particlesWindowVisible:
@@ -957,7 +1012,7 @@ class MainWindow:
         self.selectedParticle = None
         row = column = count = 0
         for index, coords in self.shapes.items():
-            if index in self.coordinatesDict[self.micName]:
+            if index in self.coordinatesDict[self.micId]:
                 region = self.extractRegion(coords[0], coords[1])
                 scaledImage = region.resize((self.boxSize, self.boxSize))
                 contrast = ImageEnhance.Contrast(scaledImage)
@@ -1048,11 +1103,11 @@ class MainWindow:
         self.shapeRadius = self.boxSize / self.scale / 2 * self.zoomFactor
         self.auxCoordinatesDict = dict()
         for index, coord in coordinates.items():
-            self.addCoordinate(coord[0], coord[1])
+            self.addCoordinate(coord[0], coord[1], coord[2])
         if self.auxCoordinatesDict:
             self.coordinatesDict[micName] = self.auxCoordinatesDict
 
-    def addCoordinate(self, x, y):
+    def addCoordinate(self, x, y, coordId=None):
         """Create a coordinate"""
         xTrans, yTrans = x / self.scale * self.zoomFactor, y / self.scale * self.zoomFactor
         shape = None
@@ -1061,7 +1116,7 @@ class MainWindow:
                                                   yTrans + self.shapeRadius, outline=self.selectedColor, width=1, fill="",
                                                   tags='shape')
             self.shapes[circle] = (xTrans, yTrans)
-            self.auxCoordinatesDict[circle] = (x, y)
+            self.auxCoordinatesDict[circle] = (x, y, coordId)
             shape = circle
             # self.quadtree.insert(circle, (x, y))
 
@@ -1071,7 +1126,7 @@ class MainWindow:
                                                        tags='shape')
             self.shapes[square] = (xTrans, yTrans)
             if not self.drawCircles:
-                self.auxCoordinatesDict[square] = (x, y)
+                self.auxCoordinatesDict[square] = (x, y, coordId)
                 shape = square
         return shape
 
@@ -1091,7 +1146,7 @@ class MainWindow:
             self.filterMenu.entryconfigure(0, image=getImage(Icon.CHECKED))
         else:
             self.filterMenu.entryconfigure(0, image=getImage(Icon.UNCHECKED))
-        self.loadMicrograph()
+        self.showCoordinates()
 
     def applyGaussianBlur(self):
         self.gaussianBlurVar.set(not self.gaussianBlurVar.get())
@@ -1099,7 +1154,7 @@ class MainWindow:
             self.filterMenu.entryconfigure(1, image=getImage(Icon.CHECKED))
         else:
             self.filterMenu.entryconfigure(1, image=getImage(Icon.UNCHECKED))
-        self.loadMicrograph()
+        self.showCoordinates()
 
     def applyInvertContrast(self):
         self.invertContrastVar.set(not self.invertContrastVar.get())
@@ -1107,11 +1162,11 @@ class MainWindow:
             self.filterMenu.entryconfigure(2, image=getImage(Icon.CHECKED))
         else:
             self.filterMenu.entryconfigure(2, image=getImage(Icon.UNCHECKED))
-        self.loadMicrograph()
+        self.showCoordinates()
 
     def applyBandpassFilter(self):
         self.bandpassFilterVar = not self.bandpassFilterVar
-        self.loadMicrograph()
+        self.showCoordinates()
 
 
 class CoordinateView(View):
@@ -1123,7 +1178,7 @@ class CoordinateView(View):
 
     def show(self):
         root = tk.Toplevel(self.root)
-        app = MainWindow(root, self._emSet)
+        app = MainWindow(root, self._emSet, self.protocol)
         width = 570 + app.scaledImage.size[0]
         height = 140 + app.scaledImage.size[1]
         root.geometry(f"{width}x{height}")

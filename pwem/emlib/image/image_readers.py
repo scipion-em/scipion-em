@@ -153,9 +153,9 @@ class STKImageReader(ImageReader):
     @classmethod
     def open(cls, path):
         stk = path.split('@')
-        if len(stk) > 1:
-            image = cls.read(stk[-1], int(stk[0]))
-            return image
+        id = int(stk[0]) if len(stk) > 1 else 1
+        image = cls.read(stk[-1], id)
+        return image
 
     @classmethod
     def read(cls, filename, id):
