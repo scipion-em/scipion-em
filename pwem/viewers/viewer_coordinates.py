@@ -54,16 +54,16 @@ class MainWindow:
         self.protocol = protocol
         self.root.title("Scipion coordinates viewer")
         self.root.resizable(False, False)
-        self.initGui()
+        self._initGui()
 
-    def initGui(self):
+    def _initGui(self):
         self.micId = None
         self.boxSize = self.setOfCoordinate.getBoxSize() if self.setOfCoordinate.getBoxSize() else 100
         self.selectedColor = '#00FF00'
         self.circleButtonRelieve = tk.SUNKEN
         self.squareButtonRelieve = tk.GROOVE
         self.zoomButtonRelieve = tk.SUNKEN
-        self.dragButtonReliev = tk.SUNKEN
+        self.dragButtonRelieve = tk.SUNKEN
         self.pointButtonRelieve = tk.GROOVE
         self.mousePress = False
         self.eraser = False
@@ -141,50 +141,50 @@ class MainWindow:
         self.root.grid_columnconfigure(0, weight=1)
 
         # Toolbar setup
-        self.createToolbar(self.mainFrame)
+        self._createToolbar(self.mainFrame)
 
         # Frame divided in two
         self.contentFrame = ttk.Frame(self.mainFrame)
         self.contentFrame.grid(row=2, column=0, sticky="news")
 
         # Table on the left
-        self.createTable()
+        self._createTable()
 
         # Micrograph on the right
-        self.createImageFrame()
+        self._createImageFrame()
 
         self.onTableClick(None)
 
-    def createToolbar(self, parent):
+    def _createToolbar(self, parent):
         """Create the toolbar with a slider for adjusting the box size"""
-        toolbar = ttk.Frame(parent)
-        toolbar.bind("<Enter>", self.recoveryPointer)
+        self.toolbar = ttk.Frame(parent, relief=tk.SUNKEN)
+        self.toolbar.bind("<Enter>", self.recoveryPointer)
 
-        sizeLabel = ttk.Label(toolbar, text="Box size(px):", image=getImage(Icon.FILE_VOL), compound=tk.LEFT)
+        sizeLabel = ttk.Label(self.toolbar, text="Box size(px):", image=getImage(Icon.FILE_VOL), compound=tk.LEFT)
         sizeLabel.grid(row=0, column=0, padx=10, pady=5, sticky="e")
 
         self.sizeVar = tk.IntVar(parent, self.boxSize)
-        self.sizeSlider = ttk.Scale(toolbar, from_=0, to=self.boxSize*2, orient=tk.HORIZONTAL, length=self.boxSize*2,
+        self.sizeSlider = ttk.Scale(self.toolbar, from_=0, to=self.boxSize*2, orient=tk.HORIZONTAL, length=320,
                                     variable=self.sizeVar,  command=self.updateSize)
         self.sizeSlider.grid(row=0, column=1, padx=5, pady=5)
         self.sizeSlider.bind("<B1-Motion>", self.onBoxSizeSlider)  # Bind event for box size slider motion
         self.sizeSlider.bind("<ButtonRelease-1>", self.onSliderRelease)
 
-        self.sizeValueLabel = ttk.Label(toolbar, text=f"({int(self.sizeVar.get())})")
+        self.sizeValueLabel = ttk.Label(self.toolbar, text=f"({int(self.sizeVar.get())})")
         self.sizeValueLabel.grid(row=0, column=2, padx=5, pady=5, sticky="w")
 
-        self.totalMicrographButton = tk.Button(toolbar, bg='#CFE8CF', relief=tk.SUNKEN,
+        self.totalMicrographButton = tk.Button(self.toolbar, bg='#CFE8CF', relief=tk.SUNKEN,
                                                activebackground='#CFE8CF', compound=tk.LEFT)
         self.totalMicrographButton.grid(row=0, column=3, padx=20, pady=5, sticky="e")
 
         self.totalCoordinates = self.setOfCoordinate.getSize()
-        self.totalPickButton = tk.Button(toolbar, text=f"Total picks: {self.totalCoordinates}",
+        self.totalPickButton = tk.Button(self.toolbar, text=f"Total picks: {self.totalCoordinates}",
                                          bg='#C3D7DF', relief=tk.SUNKEN,
                                          activebackground='#C3D7DF', compound=tk.LEFT)
 
         self.totalPickButton.grid(row=0, column=4, padx=0, pady=5, sticky="e")
 
-        self.toolbar2 = ttk.Frame(parent)
+        self.toolbar2 = ttk.Frame(parent, relief=tk.SUNKEN)
         self.toolbar2.bind("<Enter>", self.recoveryPointer)
         # Shapes
         shapeLabel = ttk.Label(self.toolbar2, text="Shape:")
@@ -274,7 +274,7 @@ class MainWindow:
 
         self.dragButton = tk.Button(imageToolsPanel, width=25, height=25, command=self.onDragActivate,
                                       image=getImage(Icon.ACTION_HAND),
-                                      relief=self.dragButtonReliev)
+                                      relief=self.dragButtonRelieve)
         self.dragButton.grid(row=0, column=15, padx=0, pady=0, sticky="ns")
         tooltip = "Click and drag to move"
         ToolTip(self.dragButton, tooltip, delay=150)
@@ -283,7 +283,7 @@ class MainWindow:
         self.infoLabel = ttk.Label(imageToolsPanel, text="")
         self.infoLabel.grid(row=0, column=17, sticky="w", padx=250)
 
-        toolbar.grid(row=0, column=0, sticky="ew")
+        self.toolbar.grid(row=0, column=0, sticky="ew")
         self.toolbar2.grid(row=1, column=0, sticky="ew")
 
     def recoveryPointer(self, event):
@@ -343,8 +343,10 @@ class MainWindow:
         self.shapeRadius = self.boxSize / self.scale / 2 * self.zoomFactor
         self.auxCoordinatesDict = dict()
         for index, coord in self.shapes.items():
-            self.imageCanvas.coords(index, [coord[0] + self.xOffset - self.shapeRadius, coord[1] + self.yOffset - self.shapeRadius,
-                                            coord[0] + self.xOffset + self.shapeRadius, coord[1] + self.yOffset + self.shapeRadius])
+            self.imageCanvas.coords(index, [coord[0] + self.xOffset - self.shapeRadius,
+                                            coord[1] + self.yOffset - self.shapeRadius,
+                                            coord[0] + self.xOffset + self.shapeRadius,
+                                            coord[1] + self.yOffset + self.shapeRadius])
 
     def onSliderRelease(self, event):
         """Handle box size slider release"""
@@ -401,7 +403,7 @@ class MainWindow:
             if self.particlesWindowVisible:
                 self.extractImages()
 
-    def createTable(self):
+    def _createTable(self):
         """Create a table on the left side to display information"""
         columns = ('Index', 'File', 'Particles', 'Updated')
         data = []
@@ -468,7 +470,7 @@ class MainWindow:
                 self.coordinatesDict[self.micId][index+2] = (coordinate.getX(), coordinate.getY(), coordinate.getObjId())
                 self.oldCoordinatesDict[self.micId][index+2] = (coordinate.getX(), coordinate.getY(), coordinate.getObjId())
 
-    def createImageFrame(self):
+    def _createImageFrame(self):
         """Create the image frame on the right side to display micrographs and associated coordinates"""
         self.imageFrame = ttk.Frame(self.contentFrame)
         self.imageFrame.grid(row=0, column=2, sticky="nw")
@@ -496,13 +498,13 @@ class MainWindow:
         # Button to create a new set of Coordinates
         coordinateButton = tk.Button(buttonsFrame, text='Coordinate', fg='white', font=('Helvetica', 10, 'bold'),
                                      image=getImage(Icon.ACTION_NEW), compound=tk.LEFT, bg='#B22A2A',
-                                     activebackground='#B22A2A', command=self.createOutput)
+                                     activebackground='#B22A2A', command=self._createOutput)
         coordinateButton.grid(row=0, column=1, sticky="w", padx=5)
 
         self.imageFrame.grid_rowconfigure(0, weight=1)
         self.imageFrame.grid_columnconfigure(0, weight=1)
 
-    def createOutput(self):
+    def _createOutput(self):
         result = messagebox.askquestion("Confirmation", "Are you going to generate a new set of coordinates with the new changes?",
                                         icon='warning', **{'parent': self.root})
         if result == messagebox.YES:
@@ -705,8 +707,8 @@ class MainWindow:
                     self.table.set(self.table.selection(), column="Particles", value=new_value)
                     self.table.set(self.table.selection(), column="Updated", value='Yes')
                     self.coordinatesDict[self.micId][shape] = ((x - self.xOffset) * self.scale / self.zoomFactor,
-                                                                 (y - self.yOffset) * self.scale / self.zoomFactor,
-                                                                 None)
+                                                               (y - self.yOffset) * self.scale / self.zoomFactor,
+                                                               None)
                     self.newCoordinates[self.micId][shape] = self.coordinatesDict[self.micId][shape]
                     self.totalCoordinates += 1
                     self.totalPickButton.configure(text=f"Total picks: {self.totalCoordinates}")
@@ -734,8 +736,8 @@ class MainWindow:
                                 self.coordY = self.root.winfo_pointery() - self.root.winfo_rooty()
                                 coordXY = self.coordinatesDict[self.micId][index]
                                 self.coordinatesDict[self.micId][index] = (coordXY[0] + newX * self.scale / self.zoomFactor,
-                                                                             coordXY[1] + newY * self.scale / self.zoomFactor,
-                                                                             coordXY[2])
+                                                                           coordXY[1] + newY * self.scale / self.zoomFactor,
+                                                                           coordXY[2])
                                 self.movedCoordinates[self.micId][coordXY[2]] = self.coordinatesDict[self.micId][index]
 
                                 if self.selectedCoordinate is not None:
@@ -889,11 +891,13 @@ class MainWindow:
             if currentState == 'hidden':
                 shapeToDelete.append(index)
                 self.imageCanvas.delete(index)
+                coordObjId = self.coordinatesDict[self.micId][index][2]
+                self.deletedCoordinates[self.micId][coordObjId] = True
                 self.coordinatesDict[self.micId].pop(index)
                 self.totalCoordinates -= 1
 
-        # for i in shapeToDelete:
-
+        for i in range(len(shapeToDelete)):
+            self.shapes.pop(shapeToDelete[i])
 
         self.histWindowClose()
 
@@ -1020,8 +1024,8 @@ class MainWindow:
                 imageTk = ImageTk.PhotoImage(scaledImage)
                 self.image_references.append(imageTk)
 
-                label = tk.Label(self.imageGrid, image=self.image_references[count], width=self.boxSize + 5, height=self.boxSize + 5,
-                                 borderwidth=1, highlightthickness=1, highlightbackground='blue')
+                label = tk.Label(self.imageGrid, image=self.image_references[count], width=self.boxSize + 5,
+                                 height=self.boxSize + 5, borderwidth=1, highlightthickness=1, highlightbackground='blue')
                 label.image = self.image_references[count]
                 label.bind("<Button-1>", self.selectCoordinate)
                 self.particlesIndex[label] = index
@@ -1030,7 +1034,7 @@ class MainWindow:
                 label.image = self.image_references[count]
                 label.grid(row=row, column=column, padx=3)
                 column += 1
-                if column % 3 == 0:
+                if column % 3 == 0:  # always display 3 columns
                     row += 1
                     column = 0
                 count += 1
@@ -1112,18 +1116,22 @@ class MainWindow:
         xTrans, yTrans = x / self.scale * self.zoomFactor, y / self.scale * self.zoomFactor
         shape = None
         if self.drawCircles:
-            circle = self.imageCanvas.create_oval(xTrans - self.shapeRadius, yTrans - self.shapeRadius,  xTrans + self.shapeRadius,
-                                                  yTrans + self.shapeRadius, outline=self.selectedColor, width=1, fill="",
-                                                  tags='shape')
+            circle = self.imageCanvas.create_oval(xTrans - self.shapeRadius,
+                                                  yTrans - self.shapeRadius,
+                                                  xTrans + self.shapeRadius,
+                                                  yTrans + self.shapeRadius,
+                                                  outline=self.selectedColor, width=1, fill="", tags='shape')
             self.shapes[circle] = (xTrans, yTrans)
             self.auxCoordinatesDict[circle] = (x, y, coordId)
             shape = circle
             # self.quadtree.insert(circle, (x, y))
 
         if self.drawSquares:
-            square = self.imageCanvas.create_rectangle(xTrans - self.shapeRadius, yTrans - self.shapeRadius,  xTrans + self.shapeRadius,
-                                                       yTrans + self.shapeRadius, outline=self.selectedColor, width=1, fill="",
-                                                       tags='shape')
+            square = self.imageCanvas.create_rectangle(xTrans - self.shapeRadius,
+                                                       yTrans - self.shapeRadius,
+                                                       xTrans + self.shapeRadius,
+                                                       yTrans + self.shapeRadius,
+                                                       outline=self.selectedColor, width=1, fill="", tags='shape')
             self.shapes[square] = (xTrans, yTrans)
             if not self.drawCircles:
                 self.auxCoordinatesDict[square] = (x, y, coordId)
