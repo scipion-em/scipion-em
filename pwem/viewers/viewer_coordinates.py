@@ -214,7 +214,7 @@ class MainWindow:
         colorLabel = ttk.Label(self.toolbar2, text="Color:")
         colorLabel.grid(row=0, column=5, padx=5, pady=5, sticky="e")
         self.paletteButton = tk.Button(self.toolbar2,  command=self.showPalette, bg=self.selectedColor,
-                                  relief=tk.SUNKEN, activebackground=self.selectedColor)
+                                       relief=tk.SUNKEN, activebackground=self.selectedColor)
         self.paletteButton.grid(row=0, column=6, padx=5, pady=5, sticky="e")
 
         separador = ttk.Separator(self.toolbar2, orient='vertical')
@@ -225,16 +225,15 @@ class MainWindow:
         pickerLabel.grid(row=0, column=8, padx=5, pady=5, sticky="e")
 
         self.pickerAction = tk.Button(self.toolbar2, command=self.pickingActivate, width=25, height=25,
-                                image=getImage(Icon.ACTION_PICKING),
-                                relief=self.squareButtonRelieve)
+                                      image=getImage(Icon.ACTION_PICKING),
+                                      relief=self.squareButtonRelieve)
         self.pickerAction.grid(row=0, column=9, pady=5, sticky="e")
         tooltip = "Particle picker"
         ToolTip(self.pickerAction, tooltip, delay=150)
 
-
         self.filamentPickerAction = tk.Button(self.toolbar2, command=self.filamentActivate, width=25, height=25,
-                                      image=getImage(Icon.ACTION_FILAMENT_PICKING),
-                                      relief=self.squareButtonRelieve)
+                                              image=getImage(Icon.ACTION_FILAMENT_PICKING),
+                                              relief=self.squareButtonRelieve)
         self.filamentPickerAction.grid(row=0, column=10,  pady=5, sticky="e")
         tooltip = "Filament picker"
         ToolTip(self.filamentPickerAction, tooltip, delay=150)
@@ -287,10 +286,12 @@ class MainWindow:
         self.toolbar2.grid(row=1, column=0, sticky="ew")
 
     def recoveryPointer(self, event):
+        """Restoring the default cursor"""
         self.root.config(cursor='')
         self.infoLabel.config(text='')
 
     def pickingActivate(self):
+        """ Recovering some actions when picking button is pressed """
         if self.picking:
             self.pickerAction.configure(relief=tk.GROOVE)
             self.picking = False
@@ -306,6 +307,7 @@ class MainWindow:
             self.drag = False
 
     def eraserActivate(self):
+        """ Recovering some actions when eraser button is pressed """
         if self.eraser:
             self.eraserAction.configure(relief=tk.GROOVE)
             self.eraser = False
@@ -320,6 +322,7 @@ class MainWindow:
             self.drag = False
 
     def filamentActivate(self):
+        """ Recovering some actions when filament button is pressed """
         if self.filament:
             self.filamentPickerAction.configure(relief=tk.GROOVE)
             self.filament = False
@@ -340,6 +343,7 @@ class MainWindow:
         self.resizeRadious()
 
     def resizeRadious(self):
+        """Calculate the shape radius taking into account the box size value"""
         self.shapeRadius = self.boxSize / self.scale / 2 * self.zoomFactor
         self.auxCoordinatesDict = dict()
         for index, coord in self.shapes.items():
@@ -394,6 +398,7 @@ class MainWindow:
             self.extractImages()
 
     def showPalette(self):
+        """Color picker dialog"""
         color = tkcolorpicker.ColorPicker(self.root)
         self.root.wait_window(color)
         if color.get_color():
@@ -464,6 +469,7 @@ class MainWindow:
                     self.extractImages()
 
     def loadCoordinates(self, micrograph):
+        """Load the coordinate for a given micrograph """
         micId = micrograph[0]
         if not self.coordinatesDict[self.micId]:
             for index, coordinate in enumerate(self.setOfCoordinate.iterCoordinates(int(micId))):
@@ -505,6 +511,7 @@ class MainWindow:
         self.imageFrame.grid_columnconfigure(0, weight=1)
 
     def _createOutput(self):
+        """Create a new set of coordinates"""
         result = messagebox.askquestion("Confirmation", "Are you going to generate a new set of coordinates with the new changes?",
                                         icon='warning', **{'parent': self.root})
         if result == messagebox.YES:
@@ -528,6 +535,7 @@ class MainWindow:
             self.protocol._defineSourceRelation(micSet, coordSet)
 
     def _removeCoordinate(self, item, row):
+        """Remove the deleted coordinate"""
         for micName, coord in self.newCoordinates.items():
             if item.getObjId() in self.deletedCoordinates[micName]:
                 setattr(item, "_appendItem", False)
@@ -536,6 +544,7 @@ class MainWindow:
                 item.setY(self.movedCoordinates[micName][item.getObjId()][1])
 
     def onFitActivate(self):
+        """Fit to display area and reset all parameters"""
         self.zoomFactor = 1
         self.showCoordinates()
         if self.particlesWindowVisible:
@@ -545,6 +554,7 @@ class MainWindow:
         self.yOffset = 0
 
     def onZoomActivate(self):
+        """Allow zoom on scroll"""
         if self.zoom:
             self.zoomOnScroll.configure(relief=tk.GROOVE)
             self.zoom = False
@@ -553,6 +563,7 @@ class MainWindow:
             self.zoom = True
 
     def onDragActivate(self):
+        """Allow drag to move"""
         if self.drag:
             self.dragButton.configure(relief=tk.GROOVE)
             self.drag = False
@@ -592,6 +603,7 @@ class MainWindow:
                 self.zoomFactor = 1
 
     def onClickPress(self, event):
+        """Actions when the mouse left-click is pressed """
         self.mousePress = True
         self.coordX = self.root.winfo_pointerx() - self.root.winfo_rootx()
         self.coordY = self.root.winfo_pointery() - self.root.winfo_rooty()
@@ -647,6 +659,7 @@ class MainWindow:
             self.onMotion(event)
 
     def onClickRelease(self, event):
+        """Actions when the mouse left-click is released """
         self.mousePress = False
         self.root.config(cursor='')
         self.moveShape = False
@@ -654,6 +667,7 @@ class MainWindow:
             self.extractImages()
 
     def nearCoordinates(self, index):
+        """Calculate the near coordinates to a given coordinate"""
         coord = self.imageCanvas.coords(index)
         nearIndex = [index]
         if self.imageCanvas.coords(index):
@@ -668,7 +682,7 @@ class MainWindow:
         return nearIndex
 
     def onMotion(self, event):
-        """Handle the eraser and picking action"""
+        """Handle the eraser, picking filament and drag actions"""
         x, y = int(event.x) if event.x else None, int(event.y) if event.y else None
         if x is not None and y is not None:
             cursor_target = self.eraser and 'target' or ''
@@ -763,6 +777,7 @@ class MainWindow:
             self.root.config(cursor='')
 
     def canPick(self, event):
+        """Returns true if picking outside of any coordinate"""
         canPick = True
         for index, coords in self.shapes.items():
             distance = np.sqrt((event.x - self.xOffset - coords[0]) ** 2 + (event.y - self.yOffset - coords[1]) ** 2)
@@ -917,6 +932,7 @@ class MainWindow:
         self.histWindowClose()
 
     def filterCoordinates(self, value):
+        """Handle the range of pixel values that will be removed """
         slider1Value = self.powerSlider1.get()
         slider2Value = self.powerSlider2.get()
         if slider1Value + 20 >= slider2Value:
@@ -952,6 +968,7 @@ class MainWindow:
         return averagePixel
 
     def extractRegion(self, x, y):
+        """Take the particle region"""
         return self.scaledImage.crop((x - self.shapeRadius,  y - self.shapeRadius,
                                      x + self.shapeRadius, y + self.shapeRadius))
 
@@ -1005,6 +1022,7 @@ class MainWindow:
                 self.extractImages()
 
     def showParticles(self, geometry=None):
+        """Create the particles window"""
         if not self.particlesWindowVisible:
             self.particlesWindow = tk.Toplevel(self.root)
             self.particlesWindow.title('Particles')
@@ -1026,6 +1044,7 @@ class MainWindow:
             self.extractImages()
 
     def extractImages(self):
+        """Show the particles"""
         self.clearImageGrid()
         self.particlesIndex = dict()
         self.particlesWidget = dict()
@@ -1088,6 +1107,7 @@ class MainWindow:
         self.selectedParticle.config(highlightbackground='red', bg='red')
 
     def onParticlesWindowClosing(self):
+        """Close the particles window"""
         self.particlesWindowVisible = False
         self.selectedParticle = None
         self.particlesWindow.destroy()
@@ -1177,6 +1197,7 @@ class MainWindow:
             self.extractImages()
 
     def applyGaussianBlur(self):
+        """Apply the gaussian blur image filter"""
         self.gaussianBlurVar.set(not self.gaussianBlurVar.get())
         if self.gaussianBlurVar.get():
             self.filterMenu.entryconfigure(1, image=getImage(Icon.CHECKED))
@@ -1187,6 +1208,7 @@ class MainWindow:
             self.extractImages()
 
     def applyInvertContrast(self):
+        """Invert the image contrast"""
         self.invertContrastVar.set(not self.invertContrastVar.get())
         if self.invertContrastVar.get():
             self.filterMenu.entryconfigure(2, image=getImage(Icon.CHECKED))
@@ -1197,6 +1219,7 @@ class MainWindow:
             self.extractImages()
 
     def applyBandpassFilter(self):
+        """Apply the bandpass image filter"""
         self.bandpassFilterVar = not self.bandpassFilterVar
         self.showCoordinates()
         if self.particlesWindowVisible:
