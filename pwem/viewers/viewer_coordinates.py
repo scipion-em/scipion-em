@@ -164,7 +164,7 @@ class MainWindow:
         sizeLabel.grid(row=0, column=0, padx=10, pady=5, sticky="e")
 
         self.sizeVar = tk.IntVar(parent, self.boxSize)
-        self.sizeSlider = ttk.Scale(self.toolbar, from_=0, to=self.boxSize*2, orient=tk.HORIZONTAL, length=320,
+        self.sizeSlider = ttk.Scale(self.toolbar, from_=0, to=self.boxSize*4, orient=tk.HORIZONTAL, length=320,
                                     variable=self.sizeVar,  command=self.updateSize)
         self.sizeSlider.grid(row=0, column=1, padx=5, pady=5)
         self.sizeSlider.bind("<B1-Motion>", self.onBoxSizeSlider)  # Bind event for box size slider motion
@@ -853,18 +853,28 @@ class MainWindow:
         """ Create the histogram and the plot"""
         self.histWindow = tk.Toplevel(self.root)
         self.histWindow.title('Power histogram')
+        self.histWindow.resizable(False, False)
         figure, axes = plt.subplots(figsize=(6, 4))
         self.plotHistogram(axes)
         histCanvas = FigureCanvasTkAgg(figure, master=self.histWindow)
         histCanvasWidget = histCanvas.get_tk_widget()
         histCanvasWidget.grid(row=0, column=0, sticky="news", padx=10, pady=10)
-        # Create the slider
-        self.powerSlider1 = ttk.Scale(self.histWindow, from_=0, to=255, length=410,
+
+        # Create the sliders
+        sliderFrame = tk.Frame(self.histWindow)
+        sliderFrame.grid(row=2, column=0, sticky="w", pady=10)
+
+        lowerValueLabel = ttk.Label(sliderFrame, text="Lower value:")
+        lowerValueLabel.grid(row=0, column=0, padx=10, pady=5, sticky="w")
+        self.powerSlider1 = ttk.Scale(sliderFrame, from_=0, to=255, length=430,
                                       orient=tk.HORIZONTAL, command=self.filterCoordinates)
-        self.powerSlider1.grid(row=1, column=0, sticky="ns", padx=5, pady=5)
-        self.powerSlider2 = ttk.Scale(self.histWindow, from_=0, to=255, length=410,
+        self.powerSlider1.grid(row=0, column=1, sticky="e", padx=5, pady=5)
+
+        upperValueLabel = ttk.Label(sliderFrame, text="Upper value:")
+        upperValueLabel.grid(row=1, column=0, padx=10, pady=5, sticky="w")
+        self.powerSlider2 = ttk.Scale(sliderFrame, from_=0, to=255, length=430,
                                       orient=tk.HORIZONTAL, command=self.filterCoordinates)
-        self.powerSlider2.grid(row=2, column=0, sticky="ns", padx=5, pady=5)
+        self.powerSlider2.grid(row=1, column=1, sticky="e", padx=5, pady=5)
         self.powerSlider2.set(self.powerSlider2['to'])
 
         buttonsFrame = tk.Frame(self.histWindow)
@@ -970,6 +980,8 @@ class MainWindow:
             self.imageCanvas.delete("shape")
             self.table.set(self.table.selection(), column='Updated', value='Yes')
             self.hasChanges[self.micId] = True
+            if self.particlesWindowVisible:
+                self.onParticlesWindowClosing()
 
     def restoreMicrograph(self):
         """Restore all removed coordinates from current micrograph"""
@@ -989,6 +1001,8 @@ class MainWindow:
             self.drawCoordinates(self.micId)
             if self.micId in self.hasChanges:
                 self.hasChanges.pop(self.micId)
+            if self.particlesWindowVisible:
+                self.extractImages()
 
     def showParticles(self, geometry=None):
         if not self.particlesWindowVisible:
@@ -1159,6 +1173,8 @@ class MainWindow:
         else:
             self.filterMenu.entryconfigure(0, image=getImage(Icon.UNCHECKED))
         self.showCoordinates()
+        if self.particlesWindowVisible:
+            self.extractImages()
 
     def applyGaussianBlur(self):
         self.gaussianBlurVar.set(not self.gaussianBlurVar.get())
@@ -1167,6 +1183,8 @@ class MainWindow:
         else:
             self.filterMenu.entryconfigure(1, image=getImage(Icon.UNCHECKED))
         self.showCoordinates()
+        if self.particlesWindowVisible:
+            self.extractImages()
 
     def applyInvertContrast(self):
         self.invertContrastVar.set(not self.invertContrastVar.get())
@@ -1175,10 +1193,14 @@ class MainWindow:
         else:
             self.filterMenu.entryconfigure(2, image=getImage(Icon.UNCHECKED))
         self.showCoordinates()
+        if self.particlesWindowVisible:
+            self.extractImages()
 
     def applyBandpassFilter(self):
         self.bandpassFilterVar = not self.bandpassFilterVar
         self.showCoordinates()
+        if self.particlesWindowVisible:
+            self.extractImages()
 
 
 class CoordinateView(View):
