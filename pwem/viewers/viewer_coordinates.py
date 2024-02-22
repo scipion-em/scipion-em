@@ -597,29 +597,21 @@ class MainWindow:
         self.coordY = self.root.winfo_pointery() - self.root.winfo_rooty()
         self.dragData['x'] = event.x
         self.dragData['y'] = event.y
-        if self.picking:
-            pick = True
-            for index, coords in self.shapes.items():
-                distance = np.sqrt((event.x - self.xOffset - coords[0]) ** 2 + (event.y - self.yOffset - coords[1]) ** 2)
-                if distance < self.shapeRadius:
-                    pick = False
-                    break
-
-            if pick:
-                coordinate_count = int(self.table.item(self.table.selection(), "values")[2])
-                shape = self.addCoordinate(event.x * self.scale / self.zoomFactor, event.y * self.scale / self.zoomFactor)
-                new_value = coordinate_count + 1
-                self.table.set(self.table.selection(), column="Particles", value=new_value)
-                self.table.set(self.table.selection(), column="Updated", value='Yes')
-                self.coordinatesDict[self.micId][shape] = ((event.x - self.xOffset) * self.scale / self.zoomFactor,
-                                                             (event.y - self.yOffset) * self.scale / self.zoomFactor,
-                                                             None)
-                self.newCoordinates[self.micId][shape] = self.coordinatesDict[self.micId][shape]
-                self.totalCoordinates += 1
-                self.totalPickButton.configure(text=f"Total picks: {self.totalCoordinates}")
-                self.hasChanges[self.micId] = True
-                if self.particlesWindowVisible:
-                    self.extractImages()
+        if self.picking and self.canPick(event):
+            coordinate_count = int(self.table.item(self.table.selection(), "values")[2])
+            shape = self.addCoordinate(event.x * self.scale / self.zoomFactor, event.y * self.scale / self.zoomFactor)
+            new_value = coordinate_count + 1
+            self.table.set(self.table.selection(), column="Particles", value=new_value)
+            self.table.set(self.table.selection(), column="Updated", value='Yes')
+            self.coordinatesDict[self.micId][shape] = ((event.x - self.xOffset) * self.scale / self.zoomFactor,
+                                                         (event.y - self.yOffset) * self.scale / self.zoomFactor,
+                                                         None)
+            self.newCoordinates[self.micId][shape] = self.coordinatesDict[self.micId][shape]
+            self.totalCoordinates += 1
+            self.totalPickButton.configure(text=f"Total picks: {self.totalCoordinates}")
+            self.hasChanges[self.micId] = True
+            if self.particlesWindowVisible:
+                self.extractImages()
 
         findCoord = False
         if not self.eraser:
@@ -711,7 +703,7 @@ class MainWindow:
                             self.hasChanges[self.micId] = True
                             break
 
-                elif self.filament:  # Filament picking action
+                elif self.filament and self.canPick(event):  # Filament picking action
                     shape = self.addCoordinate(x * self.scale / self.zoomFactor, y * self.scale / self.zoomFactor)
                     new_value = coordinateCount + 1
                     self.table.set(self.table.selection(), column="Particles", value=new_value)
@@ -769,6 +761,15 @@ class MainWindow:
                         self.onDrag(event)
         else:
             self.root.config(cursor='')
+
+    def canPick(self, event):
+        canPick = True
+        for index, coords in self.shapes.items():
+            distance = np.sqrt((event.x - self.xOffset - coords[0]) ** 2 + (event.y - self.yOffset - coords[1]) ** 2)
+            if distance < self.shapeRadius:
+                canPick = False
+                break
+        return canPick
 
     def isMoveIn(self, x, y):
         if 0 < x < self.imageSize[0] / self.scale * self.zoomFactor and 0 < y < self.imageSize[1] / self.scale * self.zoomFactor:
