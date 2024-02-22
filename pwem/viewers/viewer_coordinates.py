@@ -663,7 +663,7 @@ class MainWindow:
         self.mousePress = False
         self.root.config(cursor='')
         self.moveShape = False
-        if self.particlesWindowVisible and self.eraser:
+        if self.particlesWindowVisible and self.eraser or self.filament:
             self.extractImages()
 
     def nearCoordinates(self, index):
