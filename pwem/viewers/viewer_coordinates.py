@@ -479,8 +479,8 @@ class MainWindow:
 
         self.imageCanvas = tk.Canvas(self.imageFrame, width=self.imageCanvasSize, height=self.imageCanvasSize)  #, borderwidth=5, highlightthickness=1, highlightbackground='red')
         self.imageCanvas.grid(row=0, column=0, sticky="nw", pady=10)
-        self.imageCanvas.bind("<Motion>", self.onPickerEraserAction)
-        self.imageCanvas.bind("<B1-Motion>", self.onPickerEraserAction)
+        self.imageCanvas.bind("<Motion>", self.onMotion)
+        self.imageCanvas.bind("<B1-Motion>", self.onMotion)
         self.imageCanvas.bind("<Button-1>", self.onClickPress)
         self.imageCanvas.bind('<ButtonRelease-1>', self.onClickRelease)
         self.imageCanvas.bind("<Button-4>", self.zoomerP)
@@ -632,9 +632,12 @@ class MainWindow:
                         indexesToRestore = self.nearCoordinates(self.selectedCoordinate)
                         for idx in indexesToRestore:
                             self.imageCanvas.itemconfigure(idx, outline=self.selectedColor)
-                    self.selectedCoordinate = index
+
                     for idx in indexesToPaint:
                         self.imageCanvas.itemconfigure(idx, outline='red')
+                        if idx in self.coordinatesDict[self.micId]:
+                            self.selectedCoordinate = idx
+
                     if self.drag:
                         self.root.config(cursor='hand2')
 
@@ -642,9 +645,14 @@ class MainWindow:
                         self.updateParticle(index)
 
             if not findCoord and self.drag:
+                if self.selectedCoordinate is not None:
+                    indexesToRestore = self.nearCoordinates(self.selectedCoordinate)
+                    for idx in indexesToRestore:
+                        self.imageCanvas.itemconfigure(idx, outline=self.selectedColor)
+                    self.selectedCoordinate = None
                 self.root.config(cursor='fleur')
         else:
-            self.onPickerEraserAction(event)
+            self.onMotion(event)
 
     def onClickRelease(self, event):
         self.mousePress = False
@@ -655,17 +663,19 @@ class MainWindow:
 
     def nearCoordinates(self, index):
         coord = self.imageCanvas.coords(index)
-        coord1 = self.imageCanvas.coords(index - 1)
-        coord2 = self.imageCanvas.coords(index + 1)
         nearIndex = [index]
-        if coord == coord1:
-            nearIndex.append(index - 1)
-        if coord == coord2:
-            nearIndex.append(index + 1)
+        if self.imageCanvas.coords(index):
+            coord1 = self.imageCanvas.coords(index - 1)
+            if coord == coord1:
+                nearIndex.append(index - 1)
+        if self.imageCanvas.coords(index+1):
+            coord2 = self.imageCanvas.coords(index + 1)
+            if coord == coord2:
+                nearIndex.append(index + 1)
 
         return nearIndex
 
-    def onPickerEraserAction(self, event):
+    def onMotion(self, event):
         """Handle the eraser and picking action"""
         x, y = int(event.x) if event.x else None, int(event.y) if event.y else None
         if x is not None and y is not None:
@@ -678,12 +688,12 @@ class MainWindow:
                                            f"y={int(y * self.scale / self.zoomFactor)} : {pixel_value}")
 
             if self.mousePress:
-                coordinate_count = int(self.table.item(self.table.selection(), "values")[2])
+                coordinateCount = int(self.table.item(self.table.selection(), "values")[2])
                 if self.eraser:  # Eraser action
                     for index, coords in self.shapes.items():
                         distance = np.sqrt((x - self.xOffset - coords[0]) ** 2 + (y - self.yOffset - coords[1]) ** 2)
                         if distance < self.shapeRadius:
-                            new_value = coordinate_count - 1
+                            new_value = coordinateCount - 1
                             self.table.set(self.table.selection(), column='Particles', value=new_value)
                             self.table.set(self.table.selection(), column='Updated', value='Yes')
                             indexesToDelete = self.nearCoordinates(index)
@@ -703,7 +713,7 @@ class MainWindow:
 
                 elif self.filament:  # Filament picking action
                     shape = self.addCoordinate(x * self.scale / self.zoomFactor, y * self.scale / self.zoomFactor)
-                    new_value = coordinate_count + 1
+                    new_value = coordinateCount + 1
                     self.table.set(self.table.selection(), column="Particles", value=new_value)
                     self.table.set(self.table.selection(), column="Updated", value='Yes')
                     self.coordinatesDict[self.micId][shape] = ((x - self.xOffset) * self.scale / self.zoomFactor,
@@ -715,49 +725,43 @@ class MainWindow:
                     self.hasChanges[self.micId] = True
 
                 elif self.drag:  # Move coordinate or drag all image
-                    for index, coords in self.shapes.items():
-                        distance = np.sqrt((x - self.xOffset - coords[0]) ** 2 + (y - self.yOffset - coords[1]) ** 2)
-                        if distance < self.shapeRadius:
-                            self.root.config(cursor='hand2')
+                    if self.selectedCoordinate:
+                        index, coords = self.selectedCoordinate, self.shapes[self.selectedCoordinate]
+                        self.root.config(cursor='hand2')
+                        indexesToMove = self.nearCoordinates(index)
+                        newX = self.root.winfo_pointerx() - self.root.winfo_rootx() - self.coordX
+                        newY = self.root.winfo_pointery() - self.root.winfo_rooty() - self.coordY
 
-                            indexesToMove = self.nearCoordinates(index)
-                            newX = self.root.winfo_pointerx() - self.root.winfo_rootx() - self.coordX
-                            newY = self.root.winfo_pointery() - self.root.winfo_rooty() - self.coordY
+                        if self.isMoveIn(coords[0] + newX, coords[1] + newY):
+                            self.moveShape = True
+                            for idx in indexesToMove:
+                                self.shapes[idx] = (self.shapes[idx][0] + newX, self.shapes[idx][1] + newY)
+                                # Move the shape to a new position
+                                self.imageCanvas.move(idx, newX, newY)
 
-                            if self.isMoveIn(coords[0] + newX, coords[1] + newY):
-                                self.moveShape = True
-                                for idx in indexesToMove:
-                                    self.shapes[idx] = (self.shapes[idx][0] + newX, self.shapes[idx][1] + newY)
-                                    # Move the shape to a new position
-                                    self.imageCanvas.move(idx, newX, newY)
+                            # Update de coordinates
+                            self.coordX += newX
+                            self.coordY += newY
+                            coordXY = self.coordinatesDict[self.micId][self.selectedCoordinate]
+                            self.coordinatesDict[self.micId][self.selectedCoordinate] = (coordXY[0] + newX * self.scale / self.zoomFactor,
+                                                                                         coordXY[1] + newY * self.scale / self.zoomFactor,
+                                                                                         coordXY[2])
+                            self.movedCoordinates[self.micId][coordXY[2]] = self.coordinatesDict[self.micId][self.selectedCoordinate]
 
-                                # Update de coordinates
-                                self.coordX = self.root.winfo_pointerx() - self.root.winfo_rootx()
-                                self.coordY = self.root.winfo_pointery() - self.root.winfo_rooty()
-                                coordXY = self.coordinatesDict[self.micId][index]
-                                self.coordinatesDict[self.micId][index] = (coordXY[0] + newX * self.scale / self.zoomFactor,
-                                                                           coordXY[1] + newY * self.scale / self.zoomFactor,
-                                                                           coordXY[2])
-                                self.movedCoordinates[self.micId][coordXY[2]] = self.coordinatesDict[self.micId][index]
+                            if self.selectedCoordinate is not None:
+                                indexesToPaint = self.nearCoordinates(self.selectedCoordinate)
+                                for idx in indexesToPaint:
+                                    self.imageCanvas.itemconfigure(idx, outline=self.selectedColor)
 
-                                if self.selectedCoordinate is not None:
-                                    indexesToPaint = self.nearCoordinates(self.selectedCoordinate)
-                                    for idx in indexesToPaint:
-                                        self.imageCanvas.itemconfigure(idx, outline=self.selectedColor)
+                            if self.particlesWindowVisible:
+                                self.moveParticle(index)
 
-                                self.selectedCoordinate = index
+                            for idx in indexesToMove:
+                                self.imageCanvas.itemconfigure(idx, outline='red')
 
-                                if self.particlesWindowVisible:
-                                    self.moveParticle(index)
-
-                                for idx in indexesToMove:
-                                    self.imageCanvas.itemconfigure(idx, outline='red')
-
-                                if newX != 0 or newY != 0:
-                                    self.table.set(self.table.selection(), column="Updated", value='Yes')
-                                    self.hasChanges[self.micId] = True
-
-                            break
+                            if newX != 0 or newY != 0:
+                                self.table.set(self.table.selection(), column="Updated", value='Yes')
+                                self.hasChanges[self.micId] = True
 
                     if not self.moveShape:  # Drag the image and the shapes
                         self.root.config(cursor='fleur')
@@ -988,8 +992,6 @@ class MainWindow:
     def showParticles(self, geometry=None):
         if not self.particlesWindowVisible:
             self.particlesWindow = tk.Toplevel(self.root)
-            self.geometry = geometry if geometry is not None else "530x800"
-            self.particlesWindow.geometry(self.geometry)
             self.particlesWindow.title('Particles')
             self.particlesWindow.attributes('-topmost', True)
             self.particlesWindowVisible = True
@@ -1014,6 +1016,7 @@ class MainWindow:
         self.particlesWidget = dict()
         self.image_references = []
         self.selectedParticle = None
+        self.particlesWindow.geometry("%sx800" % str(3*self.boxSize + 60))
         row = column = count = 0
         for index, coords in self.shapes.items():
             if index in self.coordinatesDict[self.micId]:
