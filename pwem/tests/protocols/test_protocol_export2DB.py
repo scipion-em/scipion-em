@@ -34,7 +34,9 @@ import pwem.protocols as emprot
 import pwem.constants as emcts
 from .test_protocols_import_volumes import createFeatVolume
 
+from pwem.constants import SYM_I222r, SCIPION_SYM_NAME
 
+                            
 class TestExport2DataBases(pwtest.BaseTest):
     @classmethod
     def runImportVolumes(cls, pattern, samplingRate, label):
@@ -307,3 +309,21 @@ class TestExport2DataBases(pwtest.BaseTest):
         self.assertTrue(os.path.exists(nameFsc))
         self.assertTrue(os.path.exists(nameAtomStruct))
         # assert results
+
+    def test_symmetry(self):
+        """ If the input is a 3D map with half volumes associated
+            Save them to the output directory
+            Also create a mask and export it
+        """
+        protExp = self.newProtocol(emprot.ProtExportDataBases)
+        protExp.setObjLabel("export to DB\nsymmetry")
+        protExp.exportSymmetryGrp.set(SYM_I222r)
+        # protExp.symmetryOrder.set(self._importAtomStructCIF())
+
+        protExp.filesPath.set(os.getcwd() + "/dir4")
+        self.launchProtocol(protExp)
+
+        dirName = protExp.filesPath.get()
+        nameSymmetryMatrices = os.path.join(dirName, protExp.SYMNAME % SCIPION_SYM_NAME[SYM_I222r])
+        self.assertTrue(os.path.exists(nameSymmetryMatrices))
+

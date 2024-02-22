@@ -1,57 +1,135 @@
 import os
 import time
 
-from pwem.objects import SetOfMovies
+from pwem.objects import SetOfMovies, SetOfCoordinates, SetOfMicrographs
 from pwem.protocols import EMProtocol
 from pyworkflow import BETA
 from pyworkflow.protocol import params
 import pyworkflow.utils as pwutils
+from pwem.objects.data import Movie
+from copy import deepcopy
+from pyworkflow.utils import ProgressBar
 
 class ProtMovieEraser(EMProtocol):
-    """ It will REMOVE movies that already have been aligned into micrographs.
-    WARNING: There is no way back. Be sure you understand the consequences."""
+    """ 
+    Protocol for removing movies based on different conditions:
+    - If the input is SetOfMicrographs, it removes movies already aligned into micrographs.
+    - If the input is SetOfCoordinates, it removes movies with unselected particles.
+    WARNING: There is no way back. Be sure you understand the consequences.
+    """
     _label = "movie eraser"
     _devStatus = BETA
+    
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.deletedMovies = []
 
     def _defineParams(self, form):
 
         form.addSection(label='Input')
-        form.addParam('inputMicrographs', params.PointerParam,
-                      pointerClass='SetOfMicrographs',
-                      label=pwutils.Message.LABEL_INPUT_MIC, important=True,
-                      help='Select the SetOfMicrographs to drive the movie DELETION process.')
-
+        form.addParam('sourceSet', params.PointerParam,
+                      pointerClass='SetOfMicrographs, SetOfCoordinates',
+                      label="Input set", important=True,
+                      help='Select the SetOfMicrographs or Coordinates to drive the movie DELETION process.')
+        # TODO: ADD SetOFCoordinates
         form.addParam('movieSet', params.PointerParam,
                       pointerClass='SetOfMovies',
                       label="Movies source", important=True,
                       help='Select the SetOfMovies to locate the movie files. Match will be done by ids!.')
 
-        form.addParam("dryMode", params.BooleanParam, label="Dry mode", default=True, expertLevel=params.LEVEL_ADVANCED)
+        form.addParam("dryMode", params.BooleanParam, label="Dry mode",
+                      default=True, expertLevel=params.LEVEL_ADVANCED)
 
     # -------------------------- STEP methods ---------------------------------
     def _insertAllSteps(self):
-
+        # Insert different steps based on the input type
+        sourceSet = self.sourceSet.get()
+        if isinstance(sourceSet, SetOfMicrographs):
+            self._insertFunctionStep(self.deleteMoviesMicStep)
+            state = False
+        elif isinstance(sourceSet, SetOfCoordinates):
+            self._insertFunctionStep(self.deleteMoviesCoorStep)
+            state = True
+        else:
+            raise NotImplementedError(
+                "Only SetOfMicrographs or SetOfCoordinates are supported")
         self._insertFunctionStep(self.deleteMoviesStep)
+        
+        # Initialize a dictionary to keep track of movies and
+        # their deletion status
+        self.movMicNameList = {}
+        self.movieSet = self.movieSet.get()
+        self.coordSet = self.sourceSet.get()
+        for mov in self.movieSet:
+            newMovie = Movie()
+            newMovie = deepcopy(mov)
+            self.movMicNameList[mov.getMicName()] =\
+               {'mov': newMovie,
+                'deletethis' : state}
 
-    def deleteMoviesStep(self):
+    def deleteMoviesMicStep(self):
         """ Delete all movies origin of the micset until set is closed"""
         lastMicId = 0
-        while not self._isAllDone():
-            # For each mic not done yet
-            for mic in self._getMicSet().iterItems(where="id > %s" % lastMicId):
-                self._deleteMovieFromMic(mic)
-                lastMicId = mic.getObjId()
+        # create an auxiliary list with micNames so we
+        # do not need to make a search in the databse for each mic
 
-            # wait some time
-            time.sleep(30)
+        # For each mic 
+        micSet = self.sourceSet.get()
+        for mic in micSet:
+            self.movMicNameList[mic.getMicName()]['deletethis'] = True
 
+    def deleteMoviesCoorStep(self):
+        """ Delete movies that are not related with the coordinate set"""
+        movieSetWithCoordinates = self.coordSet.getUniqueValues("_micName")
 
-    def _deleteMovieFromMic(self, mic):
-        """ Deletes the movie source of the mic object"""
-        movieFile = self._getMovieFileFromMic(mic)
+        for micName in movieSetWithCoordinates:
+            self.movMicNameList[micName]['deletethis'] = False
+
+    def deleteMoviesStep(self):
+        """ Delete movies using the movMicNameList"""
+        deletedMovies = self._createSetOfMovies(suffix="deleted")
+        keptMovies = self._createSetOfMovies(suffix="kept")
+        deletedMovies.copyInfo(self.movieSet )
+        keptMovies.copyInfo(self.movieSet )
+        try: ## PHN: for security
+            deletedMovies.setGain(self.movieSet.getGain())
+            deletedMovies.setDark(self.movieSet.getDark())
+            deletedMovies.setFramesRange(self.movieSet.getFramesRange())
+            deletedMovies._firstFramesRange = self.movieSet._firstFramesRange
+            keptMovies.setGain(self.movieSet.getGain())
+            keptMovies.setDark(self.movieSet.getDark())
+            keptMovies.setFramesRange(self.movieSet.getFramesRange())
+            keptMovies._firstFramesRange = self.movieSet._firstFramesRange
+        except Exception as e:
+            raise AttributeError(f"Missing parameter {e}")
+
+        # Iterate through movies, delete and update sets
+        progress = ProgressBar(total=len(self.movieSet), fmt=ProgressBar.NOBAR)
+        progress.start()
+        step = max(100, len(self.movieSet) // 100)
+
+        for i, mov in enumerate(self.movMicNameList.values()):
+            if i % step == 0:
+                progress.update(i+1)
+            newMovie = Movie()
+            oldMovie = mov['mov']
+            newMovie.copyInfo(oldMovie)
+            if mov['deletethis']:
+                deletedMovies.append(newMovie)
+                self._deleteMovie(oldMovie.getFileName())
+            else:
+                keptMovies.append(newMovie)
+
+        progress.finish()
+
+        outputArgs = {"deletedMovies": deletedMovies,
+                      "keptMovies": keptMovies}
+        self._defineOutputs(**outputArgs)    
+        self._defineSourceRelation(self.movieSet, deletedMovies)
+        self._defineSourceRelation(self.movieSet, keptMovies)
+         
+
+    def _deleteMovie(self, movieFile):
+        """ Deletes the movie named movieFile"""
 
         # Check existence
         if not os.path.exists(movieFile):
@@ -63,59 +141,16 @@ class ProtMovieEraser(EMProtocol):
 
         # Delete!!!
         else:
-            # Delete the move
-            os.remove(movieFile)
-            print("%s deleted." % movieFile, flush=True)
+            # Delete the movie
+            if os.path.islink(movieFile):
+                movieFile2 = os.path.realpath(movieFile)
+            else:
+                movieFile2 = movieFile
 
-        # Annotate it
-        self.deletedMovies.append(movieFile)
+            os.remove(movieFile2)
+            # print("%s deleted." % movieFile, movieFile2, flush=True)
 
-    def _getMovieFileFromMic(self, mic):
-        """ Returns the movie path that was used in the micrograph movie alignment"""
-        movieSet = self._getMovieSet()
 
-        # To match the movie use the ID:
-        # movie alignment protocols are copying the movie id to the mic --> mic.copyObjId(movie)
-        movie = movieSet[mic.getObjId()]
-
-        movieFile = movie.getFileName()
-
-        if os.path.islink(movieFile):
-            movieFile = os.path.realpath(movieFile)
-
-        return movieFile
-
-    def _getMovieSet(self):
-        """ Returns the SetOFMovies related to the input set of micrographs"""
-        # This is not possible since the relations are stored in the run.db of the input protocol
-        # and there is no easy way to get them from this run
-        # parents= self.getProject().getSourceParents(self._getMicSet())
-        #
-        # # Get the parent protocols
-        # for parent in parents:
-        #     # We need to update them taking the most recent data form its own run.db
-        #     self.getProject()._updateProtocol(parent)
-        #     for attr, output in parent.iterOutputAttributes():
-        #         if isinstance(output, SetOfMovies):
-        #             return output
-        #
-        # return None
-        return self.movieSet.get()
-
-    def _getMicSet(self):
-        """ Returns te input set of micrographs"""
-        mics = self.inputMicrographs.get()
-        mics.loadAllProperties()
-        return mics
-
-    def _isAllDone(self):
-        """ Returns True if all work is done. All movies deleted """
-        mics = self._getMicSet()
-        return mics.isStreamClosed() and mics.getSize() == len(self.deletedMovies)
-
-    @classmethod
-    def worksInStreaming(cls):
-        return True
     # -------------------------- INFO functions -------------------------------
     def _warnings(self):
         if not self.dryMode.get():
