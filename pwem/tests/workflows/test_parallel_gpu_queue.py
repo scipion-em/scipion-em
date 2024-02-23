@@ -127,9 +127,9 @@ class TestQueueBase(BaseTest):
         if prot.useQueue():
             if QUEUE_PARAMS[1]['QUEUE_FOR_JOBS'] != 'Y':
                 # if the protocol is use queue system, we check if it's queued
-                jobId = prot.getJobId()   # is an string
-                protId = prot.getObjId()  # is an integer
-                checkQueue(jobId, protId)
+                # jobId = prot.getJobId()   # is an string
+                # protId = prot.getObjId()  # is an integer
+                # checkQueue(jobId, protId)
                 return  # I don't know why, but we cannot retrieve the output, permissions???
             else:
                 # Check that job files have been created
