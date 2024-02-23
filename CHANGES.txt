@@ -1,11 +1,14 @@
+V3.6.0:
+  Users:
+     - Adapted to Sprites
+
 V3.5.1: hotfix tif reader dimensions
 V3.5.0
   Users:
      - add wait protocol. This protocol wait N seconds and then ends.
        It is helpful to schedule other protocols using the option "wait for"
      - Fix: .em files are handled by xmipp (dimensions now are correct)
-     - Adapted to new icons in Sprites
-     - Add symmetry option to export_DB protocol. This will produce the list 
+     - Add symmetry option to export_DB protocol. This will produce the list
        of symmetry matrices that PDBe asks for when deposition a new atomic structure
   Developers:
      - Add method setWrongDefocus to CTFModel (code centralization)
