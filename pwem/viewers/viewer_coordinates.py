@@ -518,30 +518,30 @@ class MainWindow:
             micSet = self.setOfCoordinate.getMicrographs()
             coordSet = self.protocol._createSetOfCoordinates(micSet, suffix=str(self.protocol.getOutputsSize()))
             coordSet.copyInfo(self.setOfCoordinate)
-            coordSet.setBoxSize(self.boxSize-1)
+            coordSet.setBoxSize(self.boxSize)
             coordSet.copyItems(self.setOfCoordinate, updateItemCallback=self._removeCoordinate)
 
-            for micName, coord in self.newCoordinates.items():
-                for newCoord in self.newCoordinates[micName].values():
+            for micId, coord in self.newCoordinates.items():
+                for newCoord in self.newCoordinates[micId].values():
                     newCoordinate = self.setOfCoordinate.getFirstItem().clone()
                     newCoordinate.setObjId(None)
                     micrographs = self.setOfCoordinate.getMicrographs()
-                    newCoordinate.setMicrograph(micrographs[self.micrographPathDict[micName][1]])
+                    newCoordinate.setMicrograph(micrographs[self.micrographPathDict[micId][1]])
                     newCoordinate.setPosition(newCoord[0], newCoord[1])
                     coordSet.append(newCoordinate)
 
             coordSet.write()
-            self.protocol._defineOutputs(**{'outputCoordinates_' + str(self.protocol.getOutputsSize()+1): coordSet})
+            self.protocol._defineOutputs(**{'coordinates_' + str(self.protocol.getOutputsSize()+1): coordSet})
             self.protocol._defineSourceRelation(micSet, coordSet)
 
     def _removeCoordinate(self, item, row):
         """Remove the deleted coordinate"""
-        for micName, coord in self.newCoordinates.items():
-            if item.getObjId() in self.deletedCoordinates[micName]:
+        for micId, coord in self.newCoordinates.items():
+            if item.getObjId() in self.deletedCoordinates[micId]:
                 setattr(item, "_appendItem", False)
-            if item.getObjId() in self.movedCoordinates[micName]:
-                item.setX(self.movedCoordinates[micName][item.getObjId()][0])
-                item.setY(self.movedCoordinates[micName][item.getObjId()][1])
+            if item.getObjId() in self.movedCoordinates[micId]:
+                item.setX(self.movedCoordinates[micId][item.getObjId()][0])
+                item.setY(self.movedCoordinates[micId][item.getObjId()][1])
 
     def onFitActivate(self):
         """Fit to display area and reset all parameters"""
@@ -616,8 +616,8 @@ class MainWindow:
             self.table.set(self.table.selection(), column="Particles", value=new_value)
             self.table.set(self.table.selection(), column="Updated", value='Yes')
             self.coordinatesDict[self.micId][shape] = ((event.x - self.xOffset) * self.scale / self.zoomFactor,
-                                                         (event.y - self.yOffset) * self.scale / self.zoomFactor,
-                                                         None)
+                                                       (event.y - self.yOffset) * self.scale / self.zoomFactor,
+                                                       None)
             self.newCoordinates[self.micId][shape] = self.coordinatesDict[self.micId][shape]
             self.totalCoordinates += 1
             self.totalPickButton.configure(text=f"Total picks: {self.totalCoordinates}")
@@ -1138,16 +1138,16 @@ class MainWindow:
     def onSliderMapMove(self, value):
         self.infoLabel.config(text=f"{float(value):.0f}")
 
-    def drawCoordinates(self, micName):
+    def drawCoordinates(self, micId):
         """Draw the coordinates over the micrograph"""
         self.shapes = {}
-        coordinates = self.coordinatesDict[micName]
+        coordinates = self.coordinatesDict[micId]
         self.shapeRadius = self.boxSize / self.scale / 2 * self.zoomFactor
         self.auxCoordinatesDict = dict()
         for index, coord in coordinates.items():
             self.addCoordinate(coord[0], coord[1], coord[2])
         if self.auxCoordinatesDict:
-            self.coordinatesDict[micName] = self.auxCoordinatesDict
+            self.coordinatesDict[micId] = self.auxCoordinatesDict
 
     def addCoordinate(self, x, y, coordId=None):
         """Create a coordinate"""
