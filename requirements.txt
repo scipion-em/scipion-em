@@ -1,4 +1,4 @@
-scipion-pyworkflow>=3.3.1
+scipion-pyworkflow>=3.4.0
 biopython==1.79
 tifffile<=2021.11.2
 emtable

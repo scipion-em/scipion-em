@@ -100,18 +100,18 @@ class ImageFileHandler(FileHandler):
 
 class ParticleFileHandler(ImageFileHandler):
     def getFileIcon(self, objFile):
-        return 'file_image.gif' if not objFile.isLink() else 'file_image_link.gif'
+        return pwutils.Icon.FILE_IMAGE if not objFile.isLink() else pwutils.Icon.FILE_IMAGE_LINK
 
 
 class VolFileHandler(ImageFileHandler):
     def getFileIcon(self, objFile):
-        return 'file_vol.gif'
+        return pwutils.Icon.FILE_VOL
 
 class StackHandler(ImageFileHandler):
     _index = '1@'
 
     def getFileIcon(self, objFile):
-        return 'file_stack.gif' if not objFile.isLink() else 'file_stack_link.gif'
+        return pwutils.Icon.FILE_STACK if not objFile.isLink() else pwutils.Icon.FILE_STACK_LINK
 
 class ImajeJFileHandler(FileHandler):
 
@@ -139,15 +139,15 @@ class ChimeraHandler(FileHandler):
                  pwutils.Icon.ACTION_VISUALIZE)]
 
     def getFileIcon(self, objFile):
-        return 'file_text.gif'
+        return pwutils.Icon.TXT_FILE
 
 
 class MdFileHandler(ImageFileHandler):
     def getFileIcon(self, objFile):
         if objFile.isLink():
-            return 'file_md_link.gif'
+            return pwutils.Icon.FILE_METADATA_LINK
         else:
-            return 'file_md.gif'
+            return pwutils.Icon.FILE_METADATA
 
     def _getImgPath(self, mdFn, imgFn):
         """ Get ups and ups until finding the relative location to images. """
