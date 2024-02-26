@@ -402,6 +402,14 @@ class CTFModel(EMObject):
                 self._defocusAngle == other._defocusAngle
                 )
 
+    def setWrongDefocus(self):
+        """ Set parameters if results parsing has failed.
+        :param ctfModel: the model to be updated
+        """
+        self.setDefocusU(-999)
+        self.setDefocusV(-1)
+        self.setDefocusAngle(-999)
+
 
 class DefocusGroup(EMObject):
     """ Groups CTFs by defocus"""

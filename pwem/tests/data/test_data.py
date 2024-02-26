@@ -241,9 +241,15 @@ class TestImageHandler(unittest.TestCase):
         tifffileLogger.disabled = True
 
         eerFile = self.dsFormat.getFile("eer")
-        logger.info("Reading dimension for %s" % eerFile )
+        logger.info("Reading dimension for %s" % eerFile)
         X, Y, Z, N = ih.getDimensions(eerFile)
         self.assertEqual([X, Y, Z, N], [4096, 4096, 1, 567])
+
+        # tif format
+        tifFile = self.dsFormat.getFile("c3-adp-se-xyz-0228_200.tif")
+        logger.info("Reading dimension for %s" % tifFile)
+        X, Y, Z, N = ih.getDimensions(tifFile)
+        self.assertEqual([X, Y, Z, N], [7676, 7420, 1, 38])
 
     def test_convertMicrographs(self):
         """ Convert micrographs to different formats.

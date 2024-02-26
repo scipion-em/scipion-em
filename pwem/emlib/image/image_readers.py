@@ -2,7 +2,7 @@ from functools import lru_cache
 
 import numpy
 from PIL import Image
-from tifffile import TiffFile
+from tifffile import TiffFile, imread
 import mrcfile
 
 import pwem.constants as emcts
@@ -51,8 +51,23 @@ class TiffImageReader(ImageReader):
         tif = TiffFile(filePath)
         frames = len(tif.pages)  # number of pages in the file
         page = tif.pages[0]  # get shape and dtype of the image in the first page
-        x, y = page.shape
-        return x, y, frames, 1
+        x, y = page.imagewidth, page.imagelength  # IMPORTANT: to match xmipp convention
+
+        return x, y, 1, frames
+
+    @classmethod
+    def open(cls, path: str):
+
+        key = 0
+        if "@" in path:
+            key, path=path.split("@")
+
+        npImg = imread(path, key=key)
+        iMax = npImg.max()
+        iMin = npImg.min()
+        im255 = ((npImg - iMin) / (iMax - iMin) * 255).astype(numpy.uint8)
+        return Image.fromarray(im255)
+
 
 
 class EMANImageReader(ImageReader):
@@ -74,7 +89,7 @@ class EMANImageReader(ImageReader):
 class XMIPPImageReader(ImageReader):
     @staticmethod
     def getCompatibleExtensions():
-        return emcts.ALL_MRC_EXTENSIONS + emcts.ALL_TIF_EXTENSIONS + ["hdf5", "dm4", "stk", "spi", "vol", "tif", "em"]
+        return emcts.ALL_MRC_EXTENSIONS + emcts.ALL_TIF_EXTENSIONS + ["hdf5", "dm4", "stk", "spi", "vol", "tif", "em", "map"]
 
     @staticmethod
     def getDimensions(filePath):

@@ -27,3 +27,4 @@
 
 from .data import *
 from .data_tiltpairs import *
+from .data_flexhub import *

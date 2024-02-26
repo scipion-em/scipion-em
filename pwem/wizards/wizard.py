@@ -41,13 +41,14 @@ import pyworkflow.gui.dialog as dialog
 from matplotlib import cm
 from pwem import convertPixToLength, splitRange
 from pyworkflow.gui.plotter import getHexColorList
-from pyworkflow.gui.tree import BoundTree, ListTreeProvider, ListTreeProviderString, AttributesTreeProvider
+from pyworkflow.gui.tree import BoundTree, ListTreeProvider, AttributesTreeProvider
 from pyworkflow.gui.widgets import LabelSlider, ExplanationText
 
 import pwem.constants as emcts
 import pwem.objects as emobj
 from pwem import emlib
 from pyworkflow.protocol import IntParam, StringParam, FloatParam, LEVEL_ADVANCED
+from pyworkflow.utils import Icon
 
 # Color map wizard constants
 HIGHEST_ATTR = 'highest'
@@ -566,7 +567,7 @@ class ImagePreviewDialog(PreviewDialog):
             self.Z = self.image.getData()
         except Exception as e:
             from pyworkflow.gui.matplotlib_image import getPngData
-            self.Z = getPngData(pw.findResource('no-image.gif'))
+            self.Z = getPngData(pw.getResourcesPath(Icon.NO_IMAGE_128))
             dialog.showError("Input particles", "Error reading image <%s>"
                              % filename, self)
         self.preview.updateData(self.Z)
