@@ -1828,7 +1828,8 @@ class Coordinate(EMObject):
         """ Set the micrograph to which this coordinate belongs. """
         self._micrographPointer.set(micrograph)
         self._micId.set(micrograph.getObjId())
-        self._micName.set(micrograph.getMicName())
+        if isinstance(micrograph, Micrograph):
+            self._micName.set(micrograph.getMicName())
 
     def copyInfo(self, coord):
         """ Copy information from other coordinate. """
@@ -1866,6 +1867,7 @@ class SetOfCoordinates(EMSet):
         EMSet.__init__(self, **kwargs)
         self._micrographsPointer = Pointer()
         self._boxSize = Integer()
+        self._micrographs = None
 
     def getBoxSize(self):
         """ Return the box size of the particles.
@@ -1907,7 +1909,34 @@ class SetOfCoordinates(EMSet):
         coordWhere = '1' if micId is None else '_micId=%d' % micId
 
         for coord in self.iterItems(where=coordWhere):
+            # Associate the micrograph
+            self._associateMicrograph(coord)
             yield coord
+
+    def _associateMicrograph(self, coord):
+        coord.setMicrograph(self._getMicrograph(coord.getMicId()))
+
+    def _getMicrograph(self, micId):
+        """ Returns  the micrograph from a micId"""
+        micrographs = self._getMicrographs()
+
+        if micId not in micrographs.keys():
+            mic = self.getMicrographs()[micId]
+            self._micrographs[micId] = mic
+            return mic
+        else:
+            return micrographs[micId]
+
+    def initMicrographs(self):
+        """ Initialize internal _micrographs to a dictionary if not done already"""
+        if self._micrographs is None:
+            self._micrographs = dict()
+
+    def _getMicrographs(self):
+        if self._micrographs is None:
+            self.initMicrographs()
+
+        return self._micrographs
 
     def getMicrographs(self, asPointer=False):
         """ Returns the SetOfMicrographs associated with
@@ -2198,7 +2227,8 @@ class SetOfClasses(EMSet):
                       itemDataIterator=None,
                       classifyDisabled=False,
                       iterParams=None,
-                      doClone=True):
+                      doClone=True,
+                      raiseOnNextFailure=True):
         """ Classify items from the self.getImages() and add the needed classes.
         This function iterates over each item in the images and call
         the updateItemCallback to register the information coming from
@@ -2208,11 +2238,17 @@ class SetOfClasses(EMSet):
 
         :param updateItemCallback: callback to be invoked on each item's loop (e.g.: 2d image in a 2d classification)
         :param updateClassCallback: callback to be invoked when a item.getClassId() changes
-        :param itemDataIterator: an iterator (usually on metadata files, star, xmd,..) that will be called on each loop.
+        :param itemDataIterator: an iterator (usually on metadata files, star, xmd,...) that will be called on each loop.
         usually has that same lines as items and iteration is kept in sync
-        :param classifyDisabled: classify disabled items. By default they are skipped.
+        :param classifyDisabled: classify disabled items. By default, they are skipped.
         :param iterParams: Parameters for self.getImages() to leave oot images/filter
         :param doClone: Make a clone of the item (defaults to true)
+        :param raiseOnNextFailure: A boolean flag indicating whether to raise an exception if there is a failure while
+                                   attempting to retrieve the next element from itemDataIterator. If set to True(default),
+                                   an exception will be raised; if set to False, the loop will be terminated in case
+                                   of failure. Pass False when itemDataIterator is a subset of the inputSet.
+                                   Important: Pass the right iterParams to make sure the iteration on the inputSet
+                                              matches the iteration of the itemDataIterator
         """
         itemDataIter = itemDataIterator  # shortcut
 
@@ -2234,7 +2270,13 @@ class SetOfClasses(EMSet):
             if classifyDisabled or item.isEnabled():
                 newItem = item.clone() if doClone else item
                 if updateItemCallback:
-                    row = None if itemDataIter is None else next(itemDataIter)
+                    try:
+                        row = None if itemDataIter is None else next(itemDataIter)
+                    except Exception as ex:
+                        if raiseOnNextFailure:
+                            raise ex
+                        else:
+                            break
                     updateItemCallback(newItem, row)
                     # If updateCallBack function returns attribute
                     # _appendItem to False do not append the item

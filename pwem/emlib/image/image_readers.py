@@ -1,4 +1,3 @@
-
 from functools import lru_cache
 
 import numpy
@@ -6,44 +5,49 @@ from PIL import Image
 from tifffile import TiffFile, imread
 import mrcfile
 
-
 import pwem.constants as emcts
 from .. import lib
 
 import logging
+
 logger = logging.getLogger(__name__)
 
 
 class ImageReader:
     @staticmethod
-    def getCompatibleExtensions()-> list:
+    def getCompatibleExtensions() -> list:
         """ Returns a list of the compatible extensions the reader can handle"""
         pass
+
     @staticmethod
     def getDimensions(filePath):
         """ Returns the dimensions [X,Y,Z,N] of the file"""
         pass
 
+
 class PILImageReader(ImageReader):
     """ PIL image reader"""
+
     @staticmethod
     def getCompatibleExtensions() -> list:
-        return ['png','jpg', 'jpeg']
+        return ['png', 'jpg', 'jpeg']
+
     @staticmethod
     def getDimensions(filePath):
         im = Image.open(filePath)
         x, y = im.size  # (width,height) tuple
         return x, y, 1, 1
 
+
 class TiffImageReader(ImageReader):
     """ Tiff image reader"""
+
     @staticmethod
     def getCompatibleExtensions() -> list:
-        return ['tif','tiff', 'gain', 'eer']
+        return ['tif', 'tiff', 'gain', 'eer']
 
     @staticmethod
     def getDimensions(filePath):
-
         tif = TiffFile(filePath)
         frames = len(tif.pages)  # number of pages in the file
         page = tif.pages[0]  # get shape and dtype of the image in the first page
@@ -65,20 +69,22 @@ class TiffImageReader(ImageReader):
         return Image.fromarray(im255)
 
 
+
 class EMANImageReader(ImageReader):
     """ Image reader for eman file formats"""
+
     @staticmethod
     def getCompatibleExtensions() -> list:
         return ["img"]
 
     @staticmethod
     def getDimensions(filePath):
-
         from pwem import Domain
         getImageDimensions = Domain.importFromPlugin(
             'eman2.convert', 'getImageDimensions',
             doRaise=True)
         return getImageDimensions(filePath)  # we are ignoring index here
+
 
 class XMIPPImageReader(ImageReader):
     @staticmethod
@@ -94,6 +100,7 @@ class XMIPPImageReader(ImageReader):
 
 class MRCImageReader(ImageReader):
     """ Image reader for MRC files"""
+
     @staticmethod
     def getCompatibleExtensions() -> list:
         return emcts.ALL_MRC_EXTENSIONS
@@ -135,7 +142,7 @@ class MRCImageReader(ImageReader):
     @lru_cache
     def getMrcImage(cls, fileName):
         logger.info("Reading %s" % fileName)
-        return mrcfile.mmap(fileName, mode='r+')
+        return mrcfile.mmap(fileName, mode='r+', permissive=True)
 
     @classmethod
     def getArray(cls, filename):
@@ -161,9 +168,9 @@ class STKImageReader(ImageReader):
     @classmethod
     def open(cls, path):
         stk = path.split('@')
-        if len(stk) > 1:
-            image = cls.read(stk[-1], int(stk[0]))
-            return image
+        id = int(stk[0]) if len(stk) > 1 else 1
+        image = cls.read(stk[-1], id)
+        return image
 
     @classmethod
     def read(cls, filename, id):
@@ -276,10 +283,10 @@ class ImageReadersRegistry:
     _readers = dict()  # Dictionary to hold the readers. The key is the extension
 
     @classmethod
-    def addReader(cls, imageReader:ImageReader):
+    def addReader(cls, imageReader: ImageReader):
 
         for ext in imageReader.getCompatibleExtensions():
-            ext_low=ext.lower()
+            ext_low = ext.lower()
             logger.debug("Adding %s as image reader for %s" % (imageReader, ext_low))
             cls._readers[ext_low] = imageReader
 

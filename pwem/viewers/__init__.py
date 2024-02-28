@@ -41,6 +41,7 @@ from .viewer_sequence import SequenceViewer
 from .viewer_volumes import viewerProtImportVolumes
 from .viewer_angular_dist import AngularDistributionViewer
 from .viewers_data import BasicMDViewer
+from .viewer_coordinates import CoordinateViewer
 
 try:
     from .mdviewer import MDViewer

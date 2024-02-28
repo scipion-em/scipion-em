@@ -1,6 +1,11 @@
 V3.6.0:
   Users:
      - Adapted to Sprites
+     - Add a new 2D coordinate viewer
+
+  Developers:
+     - Add a new parameter in the classifyItems method(raiseOnNextFailure). This parameter is a boolean flag indicating
+       whether to raise an exception if there is a failure while attempting to retrieve the next element from itemDataIterator.
 
 V3.5.1: hotfix tif reader dimensions
 V3.5.0
