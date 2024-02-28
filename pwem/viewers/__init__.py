@@ -46,7 +46,6 @@ from .viewer_coordinates import CoordinateViewer
 try:
     from .mdviewer import MDViewer
 except Exception as e:
-    print(e)
     pass
 
 from .showj import *
