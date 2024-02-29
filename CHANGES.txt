@@ -1,7 +1,21 @@
+V3.3.0:
+   Users:
+     - Fix: importing non cubic volumes could render 0 elements in dimensions. Now minimum is 1.
+   Developers:
+     - ImageHandler.getDimensions uses ImageReader registry and its readers (Xmipp, Tiff, Eman, ...) image
+     - tiff dimensions (gain, eer, tif, tiff) are swap. They originall  y were opposite to xmipp and others convention.
+     - User subset: ready for new metadata viewer using txt files with ids.
+     - classifyItems method of SetOfClasses updates an existing output set than can be utilized for streaming protocols
+     - New metadata viewer(BETA). To use it run 'scipion3 pip install metadata-viewer mrcfile'. Right click on outputs should show "Scipion metadata viewer"
+
+V3.2.2; Hotfix: buggy logline commented
+
+V3.2.1: Hotfix: set dimensions are updated upon set creation
+
 V3.2.0:
  Users:
    - New viewer: "Basic MD viewer" to allow doing manual subsets on those sets where before it wasn't possible (Coordinates2D, FSCs)
-   - ImajeJ filehandler: Set IMAGEJ_BINARY_PATH to the ImageJ or Fiji binary.
+   - ImageJ filehandler: Set IMAGEJ_BINARY_PATH to the ImageJ or Fiji binary.
    Developers:
      - SetOfCoordinates tweaks: better use of micrographs pointer
 
