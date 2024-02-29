@@ -114,10 +114,11 @@ class MRCImageReader(ImageReader):
     @classmethod
     def open(cls, path: str):
         isVol = path.endswith(":mrc")
-
+        forceIndex = False
         path = path.replace(":mrc", "")
         if not "@" in path:
             path = "1@" + path
+            forceIndex = True
         filePath = path.split('@')
 
         index = int(filePath[0])
@@ -125,7 +126,7 @@ class MRCImageReader(ImageReader):
         mrcImg = cls.getMrcImage(fileName)
         if mrcImg.is_volume() or isVol:
             dim = mrcImg.data.shape
-            x = int(dim[0] / 2)
+            x = int(dim[0] / 2) if forceIndex else index
             imfloat = mrcImg.data[x, :, :]
         elif mrcImg.is_image_stack():
             imfloat = mrcImg.data[index - 1]
