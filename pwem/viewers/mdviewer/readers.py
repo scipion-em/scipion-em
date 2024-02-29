@@ -5,7 +5,6 @@ from functools import lru_cache
 from subprocess import Popen
 
 from pwem.emlib.image.image_handler import ImageReadersRegistry
-from pwem.viewers.mdviewer.volumeViewer import launchViewer
 
 logger = logging.getLogger(__name__)
 from datetime import datetime

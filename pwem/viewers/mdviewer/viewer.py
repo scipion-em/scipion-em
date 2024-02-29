@@ -60,7 +60,7 @@ class MDView(View):
 
 
 class MDViewer(Viewer):
-    _name = 'Scipion metadata viewer'
+    _name = 'Scipion'
     _targets = [EMSet]
 
     def _visualize(self, obj, **kwargs):
