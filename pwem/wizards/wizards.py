@@ -499,8 +499,7 @@ class SelectAttributeWizard(VariableWizard):
         showError('Input error', 'Input needs to be defined in the form for the wizard be used', form.root)
 
 class ColorScaleWizardRMSD(ColorScaleWizardBase):
-    _targets = ColorScaleWizardBase.defineTargets(emview.ChimeraAttributeViewer)
-
+    _targets = ColorScaleWizardBase.defineTargets(emview.ChimeraAttributeViewer) + ColorScaleWizardBase.defineTargets(emview.AngularDistributionViewer)
 
 #Defining target for the SelectAttributeWizard
 SelectAttributeWizard().addTarget(protocol=emprot.ProtSetFilter,
