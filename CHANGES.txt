@@ -2,6 +2,7 @@ V3.6.0:
   Users:
      - Adapted to Sprites
      - Add a new 2D coordinate viewer
+     - 2 level sets (like tilt series) copy enable flag in subitems when subsetting.
 
   Developers:
      - Add a new parameter in the classifyItems method(raiseOnNextFailure). This parameter is a boolean flag indicating

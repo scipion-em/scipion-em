@@ -58,7 +58,8 @@ class ProtSets(EMProtocol):
         if isinstance(item, EMSet):
             for subElem in sourceItem.iterItems():
                 # We need to create a clone because all items have a same _objId
-                subElemList.append(subElem.clone())
+                clon = subElem.clone(copyEnable=True)
+                subElemList.append(clon)
 
         outputSet.append(item)
         if subElemList:
@@ -188,7 +189,7 @@ class ProtUnionSet(ProtSets):
         if warnings:
             self.info(warnings)
 
-        # Always ingnore non common attributtes
+        # Always ignore non-common attributes
         ignoreExtraAttributes = True
 
         # Get the 1st level attributes to be used for the copyAttributes
@@ -210,7 +211,7 @@ class ProtUnionSet(ProtSets):
                         if objId in idsList:
                             continue
                         idsList[objId] =objId
-                    # This is always TRUE, if stable we could remove the if and the else.
+                    # This is always TRUE, if stable we could remove the "if" and the "else".
                     if ignoreExtraAttributes:
                         newObj = itemSet.get().ITEM_TYPE()
                         newObj.copyAttributes(obj, *copyAttrs)
@@ -438,7 +439,7 @@ class ProtSplitSet(ProtSets):
 
     # -------------------------- INSERT steps functions -----------------------
     def _insertAllSteps(self):
-        self._insertFunctionStep('createOutputStep')
+        self._insertFunctionStep(self.createOutputStep)
 
     # -------------------------- STEPS functions ------------------------------
     def createOutputStep(self):
