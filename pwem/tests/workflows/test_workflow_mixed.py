@@ -42,10 +42,6 @@ class TestMixedBPV(TestWorkflow):
         cls.vol1 = cls.dataset.getFile('vol1')
 
     def test_workflow(self):
-        try:
-            from itertools import izip
-        except ImportError:
-            izip = zip
         # First, import a set of micrographs
         protImport = self.newProtocol(emprot.ProtImportMicrographs,
                                       filesPath=self.micsFn,
@@ -90,7 +86,7 @@ class TestMixedBPV(TestWorkflow):
                              "There was a problem with the CTF estimation")
 
         valuesList = [[24000, 24000], [22548, 22518], [23058, 23029]]
-        for ctfModel, values in izip(protCTF.outputCTF, valuesList):
+        for ctfModel, values in zip(protCTF.outputCTF, valuesList):
             self.assertAlmostEquals(ctfModel.getDefocusU(), values[0], delta=1000)
             self.assertAlmostEquals(ctfModel.getDefocusV(), values[1], delta=1000)
             self.assertAlmostEquals(ctfModel.getMicrograph().getSamplingRate(),
