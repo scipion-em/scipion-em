@@ -23,44 +23,76 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-from pyworkflow.gui import showInfo
-from pwem.viewers import EmPlotter
-from pyworkflow.viewer import Viewer
-import pwem.objects as emobj
+from matplotlib import cm
 
-class AngularDistributionViewer(Viewer):
-    """ Visualize the output of protocol reconstruct swarm """
-    _label = 'Score transformation viewer'
+from pwem.viewers import EmPlotter
+from pyworkflow.viewer import ProtocolViewer
+import pwem.objects as emobj
+from  pyworkflow.protocol.params import LabelParam
+from pwem.viewers.plotter import PLOT_PROJ_ANGLES, PLOT_PROJ_DIR, PLOT_EULER_ANGLES
+
+
+class AngularDistributionViewer(ProtocolViewer):
+    """ Visualize particles, subtomograms with orientation information """
+    _label = "Angular distribution viewer"
     _targets = [emobj.SetOfParticles, emobj.SetOfVolumes]
 
+
+    def _defineParams(self, form):
+
+        form.addSection(label='Visualization')
+
+        form.addParam(self.getParamName(self.doShowHeatMap), LabelParam,
+                      label="Show heatmap")
+
+        form.addParam(self.getParamName(self.doShow2DPolar), LabelParam,
+                      label="Show 2D polar plot")
+
+        form.addParam(self.getParamName(self.doShow3DPlot), LabelParam,
+                      label="Show 3D plot")
+
+        from pwem.wizards import ColorScaleWizardBase
+        ColorScaleWizardBase.defineColorScaleParams(form, defaultHighest=20,
+                                                    defaultLowest=0, defaultColorMap="Blues")
+
+    def getParamName(self, method):
+        return method.__name__ + "P"
+
+    def _getVisualizeDict(self):
+
+        return {self.getParamName(self.doShowHeatMap): self.doShowHeatMap,
+                self.getParamName(self.doShow2DPolar): self.doShow2DPolar,
+                self.getParamName(self.doShow3DPlot): self.doShow3DPlot,
+                }
+
+    def getColorMap(self):
+        cmap = cm.get_cmap(self.colorMap.get())
+        if cmap is None:
+            cmap = cm.jet
+        return cmap
+
     @staticmethod
-    def plotAngularDistribution(emSet:emobj.EMSet, histogram=False):
+    def plotAngularDistribution(emSet:emobj.EMSet, colormap, type):
 
-        plotter = EmPlotter(x=1, y=1, windowTitle='Angular distribution')
-
-        plotter.plotAngularDistributionFromSet(emSet, "Angular distribution", histogram=histogram)
-
-        return plotter
-
-    def _visualize(self, outputSet: emobj.EMSet, **kwargs):
-        # Keep input object in case we need to launch
-        # a new protocol and set dependencies
-
-        views =[]
-
-        # Weird plot. Not sure if used at all:
-        # views.append(self.plotAngularDistribution(outputSet, histogram=True))
-
-        firstItem = outputSet.getFirstItem()
-
-        if not firstItem.hasTransform():
-            showInfo("Missing alignment information", "This set does not have alignment information.")
-            return
-
-        views.append(self.plotAngularDistribution(outputSet))
-
-        return views
+        plotter = EmPlotter(x=1, y=1, windowTitle='Projection direction distribution')
 
 
+        subtitle = "Color based on count of particles."
 
+        if type == PLOT_PROJ_ANGLES:
+            subtitle += "\nRadius = polar angle, rotation = azimuthal angle."
+        elif type == PLOT_PROJ_DIR:
+            subtitle += "\nRed line marks origin of coordinates."
+        plotter.plotAngularDistributionFromSet(emSet, "Projection direction distribution", type=type,
+                                               colormap=colormap, subtitle=subtitle)
 
+        return [plotter]
+
+    def doShowHeatMap(self, e):
+        return self.plotAngularDistribution(self.protocol, self.getColorMap(), PLOT_EULER_ANGLES)
+
+    def doShow2DPolar(self,e):
+        return self.plotAngularDistribution(self.protocol, self.getColorMap(), PLOT_PROJ_ANGLES)
+
+    def doShow3DPlot(self,e):
+        return self.plotAngularDistribution(self.protocol, self.getColorMap(), PLOT_PROJ_DIR)
