@@ -993,6 +993,7 @@ class MainWindow:
         if result == messagebox.YES:
             self.totalCoordinates -= len(self.coordinatesDict[self.micId])
             self.coordinatesDict[self.micId] = {}
+            self.shapes.clear()
             self.totalPickButton.configure(text=f"Total picks: {self.totalCoordinates}")
             self.table.set(self.table.selection(), column="Particles", value=0)
             self.imageCanvas.delete("shape")
