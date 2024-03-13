@@ -471,7 +471,7 @@ class MainWindow:
     def loadCoordinates(self, micrograph):
         """Load the coordinate for a given micrograph """
         micId = micrograph[0]
-        if not self.coordinatesDict[self.micId]:
+        if not self.coordinatesDict[self.micId] and micrograph[2] != 0:
             for index, coordinate in enumerate(self.setOfCoordinate.iterCoordinates(int(micId))):
                 self.coordinatesDict[self.micId][index+2] = (coordinate.getX(), coordinate.getY(), coordinate.getObjId())
                 self.oldCoordinatesDict[self.micId][index+2] = (coordinate.getX(), coordinate.getY(), coordinate.getObjId())
@@ -857,6 +857,7 @@ class MainWindow:
                 # self.quadtree = Index(bbox=[0, 0, self.imagePIL.size[0], self.imagePIL.size[1]])
                 self.imageCanvas.delete("all")
                 self.image = self.imageCanvas.create_image(0, 0, anchor=tk.NW, image=self.imageTk, tags='image')
+                self.zoomFactor = 1
                 self.drawCoordinates(self.micId)
 
             except Exception as e:
