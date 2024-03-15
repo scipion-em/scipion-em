@@ -25,16 +25,13 @@
 # *
 # **************************************************************************
 
-import os
 import numpy as np
 
 import pyworkflow.viewer as pwviewer
 import pyworkflow.protocol.params as params
 import pyworkflow.gui.plotter as plotter
-import pyworkflow.gui.dialog as dialog
 
 import pwem.constants as emcts
-import pwem.protocols as emprot
 from pwem import emlib, splitRange
 from pwem.objects import AtomStruct, SetOfAtomStructs
 from pwem.viewers.viewer_chimera import mapVolsWithColorkey, Chimera, ChimeraView, generateColorLegend

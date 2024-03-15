@@ -38,10 +38,11 @@ from pwem.constants import (SYM_I222, SYM_I222r, SYM_In25, SYM_In25r,
                             SYM_I2n3, SYM_I2n3r, SYM_I2n5, SYM_I2n5r,
                             SYM_DIHEDRAL_X, SYM_DIHEDRAL_Y,
                             SYM_TETRAHEDRAL_222, SYM_TETRAHEDRAL_Z3,
-                            SYM_TETRAHEDRAL_Z3R, SCIPION_SYM_NAME
+                            SYM_TETRAHEDRAL_Z3R, SCIPION_SYM_NAME, SYM_CYCLIC
                             )
 
 
+# noinspection SqlDialectInspection
 class ProtProjectionEditor(EMProtocol):
     """
     This protocol edits the projection directions of all the items of a set of particles using
@@ -49,7 +50,7 @@ class ProtProjectionEditor(EMProtocol):
     particles.
 
     Several predefined operation are offered such as
-    * apply the rotation matrix define by a origin vector and a target vector
+    * apply the rotation matrix define by an origin vector and a target vector
     * rotate the projection vector around a given vector by  A degrees
     * convert between icosahedral symmetries
     * convert between dihedral symmetries
@@ -61,12 +62,14 @@ class ProtProjectionEditor(EMProtocol):
     CHOICE_ICOSAHEDRAL = 2
     CHOICE_DIHEDRAL = 3
     CHOICE_TETRAHEDRAL = 4
+    CHOICE_MOVE_UC =5
     CHOICE_LABEL = {
         CHOICE_MOVE_VECTOR: 'move source vector to target vector',
         CHOICE_ROTATE_VECTOR: 'rotate around vector',
         CHOICE_ICOSAHEDRAL: 'convert between icosahedral symmetries',
         CHOICE_DIHEDRAL: 'convert between dihedral symmetries',
         CHOICE_TETRAHEDRAL: 'convert between tetrahedral symmetries',
+        CHOICE_MOVE_UC: 'move to unit cell'
         }
     ICOSAHEDRAL_SYM_NAME = {
         SYM_I222: SCIPION_SYM_NAME[SYM_I222],
@@ -108,6 +111,7 @@ class ProtProjectionEditor(EMProtocol):
                      self.CHOICE_LABEL[self.CHOICE_ICOSAHEDRAL],
                      self.CHOICE_LABEL[self.CHOICE_DIHEDRAL],
                      self.CHOICE_LABEL[self.CHOICE_TETRAHEDRAL],
+                     self.CHOICE_LABEL[self.CHOICE_MOVE_UC]
                      ],
             default=self.CHOICE_ICOSAHEDRAL,
             label="Select operation",
@@ -248,18 +252,58 @@ class ProtProjectionEditor(EMProtocol):
             default=SYM_TETRAHEDRAL_222 - SYM_TETRAHEDRAL_222,
             )
 
+        # Move to UC
+        line = form.addLine(
+            'Move to Unit cell',
+            condition="operation==%d" % self.CHOICE_MOVE_UC,
+            help='Move particles to a symmetry unit cell'
+        )
+        line.addParam(
+            "targetSymmetryToMove", params.EnumParam,
+            condition="operation==%d" % self.CHOICE_MOVE_UC,
+            label="Symmetry",
+            help="Symmetry type to use.",
+            choices=list(SCIPION_SYM_NAME.values()),
+            default=SYM_CYCLIC,
+        )
+        line.addParam(
+            "symmetryOrderToMove", params.IntParam,
+            condition="operation==%d" % self.CHOICE_MOVE_UC,
+            label="Order",
+            help="Order of the symmetry: 6 for C6, ...",
+            default=6,
+        )
+
     def _insertAllSteps(self):
         operation = self.operation.get()
         if operation == self.CHOICE_MOVE_VECTOR:
-            self._insertFunctionStep('rotateStep')
+            self._insertFunctionStep(self.rotateStep)
         elif operation == self.CHOICE_ROTATE_VECTOR:
-            self._insertFunctionStep('rotateVectorStep')
+            self._insertFunctionStep(self.rotateVectorStep)
         elif operation == self.CHOICE_ICOSAHEDRAL:
-            self._insertFunctionStep('rotateIcosaStep')
+            self._insertFunctionStep(self.rotateIcosahedralStep)
         elif operation == self.CHOICE_DIHEDRAL:
-            self._insertFunctionStep('rotateDiStep')
+            self._insertFunctionStep(self.rotateDiStep)
         elif operation == self.CHOICE_TETRAHEDRAL:
-            self._insertFunctionStep('rotateTetraStep')
+            self._insertFunctionStep(self.rotateTetraStep)
+        elif operation == self.CHOICE_MOVE_UC:
+            self._insertFunctionStep(self.moveToUCStep)
+
+    def moveToUCStep(self):
+        """ Moves the particle alignment information to the same unit cell based on the symmetry specified."""
+        from pwem.convert import SymmetryHelper
+        self.info("Moving particle orientation to %s%s" % (self.targetSymmetryToMove.get(),self.symmetryOrderToMove.get()))
+
+        inputSet = self.inputSet.get()
+        modifiedSet = inputSet.createCopy(self._getExtraPath(), copyInfo=True)
+
+        for sourceItem in inputSet.iterItems():
+            item = sourceItem.clone()
+
+            SymmetryHelper.moveParticleInsideUnitCell(item, symmetry=self.targetSymmetryToMove.get(), symmetryOrder=self.symmetryOrderToMove.get())
+            modifiedSet.append(item)
+
+        self.createOutput(self.inputSet, modifiedSet)
 
     def rotateTetraStep(self):
         """ Compute rotation matrix between tetrahedral symmetries
@@ -268,8 +312,8 @@ class ProtProjectionEditor(EMProtocol):
         from pwem.convert.symmetry import Tetrahedral
         origSym = self.originSymmetryGroupT.get() + SYM_TETRAHEDRAL_222
         targetSym = self.targetSymmetryGroupT.get() + SYM_TETRAHEDRAL_222
-        print("origSym", origSym)
-        print("targetSym", targetSym)
+        self.info("Rotating Tetrahedral symmetry from %s to %s." %(origSym, targetSym))
+
         tetrahedral = Tetrahedral(sym=origSym)
         matrix = tetrahedral.coordinateSystemTransform(origSym, targetSym)
 
@@ -278,14 +322,7 @@ class ProtProjectionEditor(EMProtocol):
         matrix = np.array(matrix)
         matrix = np.append(matrix, [[0, 0, 0, 1]], axis=0)
 
-        inputSet = self.inputSet.get()
-        modifiedSet = inputSet.createCopy(self._getExtraPath(), copyInfo=True)
-        for sourceItem in inputSet.iterItems():
-            item = sourceItem.clone()
-            transformation = item.getTransform()
-            transformation.composeTransform(matrix)
-            modifiedSet.append(item)
-        self.createOutput(self.inputSet, modifiedSet)
+        self.applyMatrix(matrix)
 
     def rotateDiStep(self):
         """ Compute rotation matrix from one dihedral
@@ -303,16 +340,9 @@ class ProtProjectionEditor(EMProtocol):
         matrix = np.array(matrix)
         matrix = np.append(matrix, [[0, 0, 0, 1]], axis=0)
 
-        inputSet = self.inputSet.get()
-        modifiedSet = inputSet.createCopy(self._getExtraPath(), copyInfo=True)
-        for sourceItem in inputSet.iterItems():
-            item = sourceItem.clone()
-            transformation = item.getTransform()
-            transformation.composeTransform(matrix)
-            modifiedSet.append(item)
-        self.createOutput(self.inputSet, modifiedSet)
+        self.applyMatrix(matrix)
 
-    def rotateIcosaStep(self):
+    def rotateIcosahedralStep(self):
         """
         Compute rotation matrix from one icosahedral
         symmetry to another and apply it
@@ -330,14 +360,7 @@ class ProtProjectionEditor(EMProtocol):
         matrix = np.array(matrix)
         matrix = np.append(matrix, [[0, 0, 0, 1]], axis=0)
 
-        inputSet = self.inputSet.get()
-        modifiedSet = inputSet.createCopy(self._getExtraPath(), copyInfo=True)
-        for sourceItem in inputSet.iterItems():
-            item = sourceItem.clone()
-            transformation = item.getTransform()
-            transformation.composeTransform(matrix)
-            modifiedSet.append(item)
-        self.createOutput(self.inputSet, modifiedSet)
+        self.applyMatrix(matrix)
 
     def createOutput(self, inputSet, modifiedSet):
         outputArgs = {inputSet.getExtended(): modifiedSet}
@@ -356,7 +379,12 @@ class ProtProjectionEditor(EMProtocol):
         v_target = v_target / np.linalg.norm(v_target)
         matrix = rotation_matrix(angle_between_vectors(v_source, v_target),
                                  vector_product(v_source, v_target))
-        print("rotateStep:matrix", matrix)
+        self.info("rotateStep:matrix %s" % matrix)
+        self.applyMatrix(matrix)
+
+    def applyMatrix(self, matrix):
+        """ Applies the matrix the to whole input set and creates the output"""
+
         inputSet = self.inputSet.get()
         modifiedSet = inputSet.createCopy(self._getExtraPath(), copyInfo=True)
         for sourceItem in inputSet.iterItems():
@@ -364,7 +392,6 @@ class ProtProjectionEditor(EMProtocol):
             transformation = item.getTransform()
             transformation.composeTransform(matrix)
             modifiedSet.append(item)
-
         self.createOutput(self.inputSet, modifiedSet)
 
     def rotateVectorStep(self):
@@ -377,16 +404,8 @@ class ProtProjectionEditor(EMProtocol):
         v_source = v_source / np.linalg.norm(v_source)
         angle = np.radians(self.angle.get())
         matrix = rotation_matrix(angle, v_source)
-        print("matrix_rot_vector", matrix)
-        inputSet = self.inputSet.get()
-        modifiedSet = inputSet.createCopy(self._getExtraPath(), copyInfo=True)
-        for sourceItem in inputSet.iterItems():
-            item = sourceItem.clone()
-            transformation = item.getTransform()
-            transformation.composeTransform(matrix)
-            modifiedSet.append(item)
-
-        self.createOutput(self.inputSet, modifiedSet)
+        self.info("matrix_rot_vector: %s" % matrix)
+        self.applyMatrix(matrix)
 
     def _validate(self):
         errors = []

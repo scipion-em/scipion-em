@@ -5,7 +5,6 @@ from functools import lru_cache
 from subprocess import Popen
 
 from pwem.emlib.image.image_handler import ImageReadersRegistry
-from pwem.viewers.mdviewer.volumeViewer import launchViewer
 
 logger = logging.getLogger(__name__)
 from datetime import datetime
@@ -167,7 +166,7 @@ class SqliteFile(IDAO):
     def findColbyName(self, colNames, colName):
         """Return a column index given a column name"""
         for i, col in enumerate(colNames):
-            if colName == col:
+            if colName.lower() == col.lower():
                 return i
         return None
 
@@ -185,8 +184,7 @@ class SqliteFile(IDAO):
             self._extendedColumn = indexCol, fileNameCol
         else:
             indexCol = self.findColbyName(colNames, '_representative._index')
-            fileNameCol = self.findColbyName(colNames,
-                                                   '_representative._filename')
+            fileNameCol = self.findColbyName(colNames, '_representative._filename')
             if indexCol and fileNameCol:
                 logger.debug("The columns _representative._index and "
                              "_representative._filename have been found. "
@@ -248,9 +246,9 @@ class SqliteFile(IDAO):
             if isFileNameCol:
                 logger.debug("Creating an extended column: %s" % EXTENDED_COLUMN_NAME)
                 imageExt = str(values[index]).split('.')[-1]
-                if values[index] is not None:
+                if values[index] is not None and ImageRenderer().getImageReader(values[index]) is not None:
                     renderer = ImageRenderer()
-                self.addExternalProgram(renderer, imageExt)
+                    self.addExternalProgram(renderer, imageExt)
                 extraCol = Column(colName, renderer)
                 extraCol.setIsVisible(newCol.isVisible())
                 extraCol.setIsSorteable(False)
@@ -290,7 +288,10 @@ class SqliteFile(IDAO):
 
             def openImageJCallback(imagePath):
                 imageSplit = imagePath.split('@')
-                selectedSlice = int(imageSplit[0])
+                if len(imageSplit)>1:
+                    selectedSlice = int(imageSplit[0])
+                else:
+                    selectedSlice = 0
                 path = imageSplit[-1]
                 program = os.path.join(imageJPath)
                 macro = r"""
@@ -311,7 +312,7 @@ Stack.setSlice(slice);
                                       openImageJCallback))
 
     def addImageViewer(self, renderer: ImageRenderer, imageExt: str):
-        icon = pw.findResource('file_vol.png')
+        icon = os.path.join(pw.getResourcesPath(),'file_vol.png')
 
         def openImageViewerCallback(imagePath):
             path = imagePath.split('@')[-1]
@@ -531,11 +532,11 @@ Stack.setSlice(slice);
             timestamp = now.strftime(format)
             path = 'Logs/selection_%s.txt' % timestamp
             self.writeSelection(table, path)
-            path +="," # Always add a comma, it is expected by the user subset protocol
+            path += ","  # Always add a comma, it is expected by the user subset protocol
             if tableName != OBJECT_TABLE:
                 path += tableName.split(OBJECT_TABLE)[0]
 
-        self.sendSubsetCreationMessage(path, objectType, subsetName)
+            self.sendSubsetCreationMessage(path, objectType, subsetName)
 
     def sendSubsetCreationMessage(self, selectionFile, outputClassName, label):
 
@@ -552,7 +553,7 @@ Stack.setSlice(slice);
         data = f"run protocol ProtUserSubSet inputObject={self.getScipionObjectId()} " \
                f"sqliteFile='{selectionFile}' outputClassName='{outputClassName}' other='' label='{label}'"
 
-        clientSocket.send(data.encode());
+        clientSocket.send(data.encode())
 
 
     def getScipionPort(self):
