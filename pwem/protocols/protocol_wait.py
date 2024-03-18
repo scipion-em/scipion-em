@@ -1,7 +1,6 @@
 # **************************************************************************
 # *
-# * Authors: Yunior C. Fonseca Reyna    (cfonseca@cnb.csic.es)
-# *
+# * Authors:     Roberto Marabini(roberto@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -25,6 +24,30 @@
 # *
 # **************************************************************************
 
-from .data import *
-from .data_tiltpairs import *
-from .data_flexhub import *
+import pyworkflow.protocol.params as params
+from pwem.protocols import EMProtocol
+import time
+
+class ProtWait(EMProtocol):
+    """
+    Auxiliary protocol, it just waits "seconds" seconds and then exits
+    """
+    _label = 'wait'
+
+    def _defineParams(self, form):
+        """
+        Defines the parameters the protocol form will show and its behaviour
+        :param form:
+        """
+        form.addSection(label='Input')
+        form.addParam('seconds', params.IntParam,
+                      label='wait(seconds)',
+                      help='Number of seconds the protocol waits untill it exits.')
+
+    def _insertAllSteps(self):
+        self._insertFunctionStep('createOutput')
+
+    def createOutput(self):
+        """ Save the output set."""
+        time.sleep(self.seconds.get())
+

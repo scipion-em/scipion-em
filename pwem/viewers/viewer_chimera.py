@@ -35,9 +35,11 @@ import pwem.objects as emobj
 from pwem import emlib
 from pwem import Config as emConfig
 from pwem.objects import SetOfAtomStructs
+from pyworkflow.utils import OS
 
 chimeraPdbTemplateFileName = "Atom_struct__%06d.cif"
 chimeraMapTemplateFileName = "Map__%06d.mrc"
+chimeraPythonFileName = "chimeraScript.py"
 chimeraScriptFileName = "chimeraScript.cxc"
 chimeraConfigFileName = "chimera.ini"
 sessionFile = "SESSION.cxs"
@@ -110,7 +112,13 @@ class Chimera:
         home = cls.getHome()
         if home is None:
             return None
-        return os.path.join(home, 'bin', os.path.basename(progName))
+        path = os.path.join(home, 'bin', os.path.basename(progName))
+
+        if OS.isWSL():
+            path +=".exe"
+
+        return path
+
 
     @classmethod
     def runProgram(cls, program=None, args="", cwd=None):
@@ -294,11 +302,18 @@ class ChimeraView(pwviewer.CommandView):
         if isinstance(inputFiles,str):
             inputFiles = [inputFiles]
 
-        program = self.getProgram()
+        # If WLS we need to adapt the paths to windows style
+        if OS.isWSL():
+            for i, file in enumerate(inputFiles):
+
+                inputFiles[i] =OS.WLSfile2Windows(file)
 
         # Join files
         filesStr = '" "'.join(inputFiles)
         filesStr = filesStr.replace(":mrc", "")
+
+        program = self.getProgram()
+
         pwviewer.CommandView.__init__(self, '%s "%s" &' % (program, filesStr),
                                       env=self.getEnviron(), **kwargs)
 

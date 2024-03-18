@@ -402,6 +402,14 @@ class CTFModel(EMObject):
                 self._defocusAngle == other._defocusAngle
                 )
 
+    def setWrongDefocus(self):
+        """ Set parameters if results parsing has failed.
+        :param ctfModel: the model to be updated
+        """
+        self.setDefocusU(-999)
+        self.setDefocusV(-1)
+        self.setDefocusAngle(-999)
+
 
 class DefocusGroup(EMObject):
     """ Groups CTFs by defocus"""
@@ -1176,7 +1184,8 @@ class EMSet(Set, EMObject):
                   updateItemCallback=None,
                   itemDataIterator=None,
                   copyDisabled=False,
-                  doClone=True):
+                  doClone=True,
+                  itemSelectedCallback=None):
         """ Copy items from another set, allowing to update items information
         based on another source of data, paired with each item.
 
@@ -1197,12 +1206,18 @@ class EMSet(Set, EMObject):
                 of the input item. By using doClone=False, the same input item
                 will be passed to the callback and added to the set. This will
                 avoid the clone operation and the related overhead.
+            itemSelectedCallback: Optional, callback receiving an item and
+                returning true if it has to be copied
         """
+        
+        if itemSelectedCallback is None:
+            itemSelectedCallback = EMSet.isItemEnabled
+            
         itemDataIter = itemDataIterator  # shortcut
 
         for item in otherSet:
             # copy items if enabled or copyDisabled=True
-            if copyDisabled or item.isEnabled():
+            if copyDisabled or itemSelectedCallback(item):
                 newItem = item.clone() if doClone else item
                 if updateItemCallback:
                     row = None if itemDataIter is None else next(itemDataIter)
@@ -1244,18 +1259,27 @@ class EMSet(Set, EMObject):
 
     def createCopy(self, outputPath,
                    prefix=None, suffix=None, ext=None,
-                   copyInfo=False, copyItems=False):
+                   copyInfo=False, copyItems=False,
+                   itemSelectedCallback=None):
         """ Make a copy of the current set to another location (e.g file).
         Params:
             outputPath: where the output file will be written.
+
             prefix: prefix of the created file, if None, it will be deduced
                 from the ClassName.
+
             suffix: additional suffix that will be added to the prefix with a
                 "_" in between.
+
             ext: extension of the output file, be default will use the same
                 extension of this set filename.
+
             copyInfo: if True the copyInfo will be called after set creation.
+
             copyItems: if True the copyItems function will be called.
+
+            itemSelectedCallback: Optional, callback receiving an item and returning
+                true if it has to be copied
         """
         setObj = self.create(outputPath,
                              prefix=prefix,
@@ -1266,19 +1290,12 @@ class EMSet(Set, EMObject):
             setObj.copyInfo(self)
 
         if copyItems:
-            setObj.copyItems(self)
+            setObj.copyItems(self, itemSelectedCallback=itemSelectedCallback)
 
         return setObj
 
     def getFiles(self):
         return Set.getFiles(self)
-
-    @staticmethod
-    def isItemEnabled(item):
-        """ Returns if the item is enabled...to be used as a callback. In some other cases (new user subsets)
-         this method will be replaced"""
-
-        return item.isEnabled()
 
 
 class SetOfImages(EMSet):
@@ -1459,11 +1476,14 @@ class SetOfImages(EMSet):
         """Return first image dimensions as a tuple: (xdim, ydim, zdim)"""
         return self.getFirstItem().getDim()
 
+    def getClassNameStr(self):
+        return self.getClassName().replace("SetOf", '')
+
     def __str__(self):
         """ String representation of a set of images. """
         try:
             s = "%s (%d items, %s, %s%s)" % \
-                (self.getClassName(), self.getSize(),
+                (self.getClassNameStr(), self.getSize(),
                 self._dimStr(), self._samplingRateStr(), self._appendStreamState())
         except Exception as e:
             s = "Couldn't convert the set to text."
@@ -1497,20 +1517,20 @@ class SetOfImages(EMSet):
                 img.setAcquisition(self.getAcquisition())
             yield img
 
-    def appendFromImages(self, imagesSet, itemSelectionCallback=None):
+    def appendFromImages(self, imagesSet, itemSelectedCallback=None):
         """ Iterate over the images and append
         every image that is enabled.
 
         :param imagesSet: Set to go copy items from
-        :param itemSelectionCallback: Optional, callback receiving an item and returning true if it has to be added
+        :param itemSelectedCallback: Optional, callback receiving an item and returning true if it has to be added
 
         """
 
-        if itemSelectionCallback is None:
-            itemSelectionCallback = SetOfImages.isItemEnabled
+        if itemSelectedCallback is None:
+            itemSelectedCallback = SetOfImages.isItemEnabled
 
         for img in imagesSet:
-            if itemSelectionCallback(img):
+            if itemSelectedCallback(img):
                 self.append(img)
 
     def appendFromClasses(self, classesSet, filterClassFunc=None):
@@ -1583,7 +1603,13 @@ class SetOfParticles(SetOfImages):
     def __init__(self, **kwargs):
         SetOfImages.__init__(self, **kwargs)
         self._coordsPointer = Pointer()
+        self._isSubParticles = Boolean(False)
 
+    def getClassNameStr(self):
+        if self._isSubParticles.get():
+            return 'SubParticles'
+        else:
+            return super().getClassNameStr()
     def hasCoordinates(self):
         return self._coordsPointer.hasValue()
 
@@ -1591,6 +1617,10 @@ class SetOfParticles(SetOfImages):
         """ Returns the SetOfCoordinates associated with
         this SetOfParticles"""
         return self._coordsPointer.get()
+    def getIsSubparticles(self):
+        return self._isSubParticles
+    def setIsSubparticles(self, value):
+        self._isSubParticles = Boolean(value)
 
     def setCoordinates(self, coordinates):
         """ Set the SetOfCoordinates associates with
@@ -1798,7 +1828,8 @@ class Coordinate(EMObject):
         """ Set the micrograph to which this coordinate belongs. """
         self._micrographPointer.set(micrograph)
         self._micId.set(micrograph.getObjId())
-        self._micName.set(micrograph.getMicName())
+        if isinstance(micrograph, Micrograph):
+            self._micName.set(micrograph.getMicName())
 
     def copyInfo(self, coord):
         """ Copy information from other coordinate. """
@@ -1836,6 +1867,7 @@ class SetOfCoordinates(EMSet):
         EMSet.__init__(self, **kwargs)
         self._micrographsPointer = Pointer()
         self._boxSize = Integer()
+        self._micrographs = None
 
     def getBoxSize(self):
         """ Return the box size of the particles.
@@ -1877,7 +1909,34 @@ class SetOfCoordinates(EMSet):
         coordWhere = '1' if micId is None else '_micId=%d' % micId
 
         for coord in self.iterItems(where=coordWhere):
+            # Associate the micrograph
+            self._associateMicrograph(coord)
             yield coord
+
+    def _associateMicrograph(self, coord):
+        coord.setMicrograph(self._getMicrograph(coord.getMicId()))
+
+    def _getMicrograph(self, micId):
+        """ Returns  the micrograph from a micId"""
+        micrographs = self._getMicrographs()
+
+        if micId not in micrographs.keys():
+            mic = self.getMicrographs()[micId]
+            self._micrographs[micId] = mic
+            return mic
+        else:
+            return micrographs[micId]
+
+    def initMicrographs(self):
+        """ Initialize internal _micrographs to a dictionary if not done already"""
+        if self._micrographs is None:
+            self._micrographs = dict()
+
+    def _getMicrographs(self):
+        if self._micrographs is None:
+            self.initMicrographs()
+
+        return self._micrographs
 
     def getMicrographs(self, asPointer=False):
         """ Returns the SetOfMicrographs associated with
@@ -2168,7 +2227,8 @@ class SetOfClasses(EMSet):
                       itemDataIterator=None,
                       classifyDisabled=False,
                       iterParams=None,
-                      doClone=True):
+                      doClone=True,
+                      raiseOnNextFailure=True):
         """ Classify items from the self.getImages() and add the needed classes.
         This function iterates over each item in the images and call
         the updateItemCallback to register the information coming from
@@ -2178,11 +2238,17 @@ class SetOfClasses(EMSet):
 
         :param updateItemCallback: callback to be invoked on each item's loop (e.g.: 2d image in a 2d classification)
         :param updateClassCallback: callback to be invoked when a item.getClassId() changes
-        :param itemDataIterator: an iterator (usually on metadata files, star, xmd,..) that will be called on each loop.
+        :param itemDataIterator: an iterator (usually on metadata files, star, xmd,...) that will be called on each loop.
         usually has that same lines as items and iteration is kept in sync
-        :param classifyDisabled: classify disabled items. By default they are skipped.
+        :param classifyDisabled: classify disabled items. By default, they are skipped.
         :param iterParams: Parameters for self.getImages() to leave oot images/filter
         :param doClone: Make a clone of the item (defaults to true)
+        :param raiseOnNextFailure: A boolean flag indicating whether to raise an exception if there is a failure while
+                                   attempting to retrieve the next element from itemDataIterator. If set to True(default),
+                                   an exception will be raised; if set to False, the loop will be terminated in case
+                                   of failure. Pass False when itemDataIterator is a subset of the inputSet.
+                                   Important: Pass the right iterParams to make sure the iteration on the inputSet
+                                              matches the iteration of the itemDataIterator
         """
         itemDataIter = itemDataIterator  # shortcut
 
@@ -2204,7 +2270,13 @@ class SetOfClasses(EMSet):
             if classifyDisabled or item.isEnabled():
                 newItem = item.clone() if doClone else item
                 if updateItemCallback:
-                    row = None if itemDataIter is None else next(itemDataIter)
+                    try:
+                        row = None if itemDataIter is None else next(itemDataIter)
+                    except Exception as ex:
+                        if raiseOnNextFailure:
+                            raise ex
+                        else:
+                            break
                     updateItemCallback(newItem, row)
                     # If updateCallBack function returns attribute
                     # _appendItem to False do not append the item

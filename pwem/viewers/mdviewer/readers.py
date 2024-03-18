@@ -1,168 +1,41 @@
 import logging
 import os
+import sys
+from functools import lru_cache
 from subprocess import Popen
+
+from pwem.emlib.image.image_handler import ImageReadersRegistry
 
 logger = logging.getLogger(__name__)
 from datetime import datetime
 
 import sqlite3
+import tempfile
+import time
+
 import pyworkflow as pw
 import metadataviewer
 from metadataviewer.dao.model import IDAO
 from metadataviewer.model import Table, Column, BoolRenderer, ImageRenderer, StrRenderer
-from metadataviewer.model.renderers import ImageReader, ExternalProgram
-
-from functools import lru_cache
-
-
-from PIL import Image
-import mrcfile
-import numpy as np
+from metadataviewer.model.renderers import ImageReader, Action
 
 
 SCIPION_OBJECT_ID = "SCIPION_OBJECT_ID"
 SCIPION_PORT = "SCIPION_PORT"
 
 
-class MRCImageReader(ImageReader):
+class ScipionImageReader(ImageReader):
     @classmethod
-    def open(cls, path:str):
-        isVol = path.endswith(":mrc")
-
-        path = path.replace(":mrc", "")
-        if not "@" in path:
-            path ="1@"+path
-        filePath = path.split('@')
-
-        index = int(filePath[0])
-        fileName = filePath[-1]
-        mrcImg = cls.getMrcImage(fileName)
-        if mrcImg.is_volume() or isVol:
-            dim = mrcImg.data.shape
-            x = int(dim[0] /2)
-            imfloat = mrcImg.data[x,:,:]
-        elif mrcImg.is_image_stack():
-            imfloat = mrcImg.data[index-1]
-        else:
-            imfloat = mrcImg.data
-
-        iMax = imfloat.max()
-        iMin = imfloat.min()
-        im255 = ((imfloat - iMin) / (iMax - iMin) * 255).astype(np.uint8)
-        img = Image.fromarray(im255)
-        return img
+    def getCompatibleFileTypes(cls) -> list:
+        return list(ImageReadersRegistry._readers.keys())
 
 
     @classmethod
     @lru_cache
-    def getMrcImage(cls, fileName):
-        logger.info("Reading %s" % fileName)
-        return  mrcfile.mmap(fileName, mode='r+')
-
-    @classmethod
-    def getCompatibleFileTypes(cls) -> list:
-        return ['mrc', 'mrc:mrc', 'mrcs', 'em', 'rec', 'ali', 'st', 'mrcs:mrc',
-                'mrcs:mrcs', 'mrc:mrcs']
-
-
-class STKImageReader(ImageReader):
-    IMG_BYTES = None
-    stk_handler = None
-    header_info = None
-    HEADER_OFFSET = 1024
-    FLOAT32_BYTES = 4
-    TYPE = None
-
-    @classmethod
     def open(cls, path):
-        stk = path.split('@')
-        if len(stk) > 1:
-            image = cls.read(stk[-1], int(stk[0]))
-            return image
-
-    @classmethod
-    def read(cls, filename, id):
-        """
-        Reads a given image
-           :param filename (str) --> Image to be read
-        """
-        cls.stk_handler = open(filename, "rb")
-        cls.header_info = cls.readHeader()
-        cls.IMG_BYTES = cls.FLOAT32_BYTES * cls.header_info["n_columns"] ** 2
-        image = cls.readImage(id - 1)
-        iMax = image.max()
-        iMin = image.min()
-        image = ((image - iMin) / (iMax - iMin) * 255).astype('uint8')
-        image = Image.fromarray(image)
-        return image
-
-    @classmethod
-    def readHeader(cls):
-        """
-        Reads the header of the current file as a dictionary
-            :returns The current header as a dictionary
-        """
-        header = cls.readNumpy(0, cls.HEADER_OFFSET)
-
-        header = dict(img_size=int(header[1]), n_images=int(header[25]),
-                      offset=int(header[21]),
-                      n_rows=int(header[1]), n_columns=int(header[11]),
-                      n_slices=int(header[0]),
-                      sr=float(header[20]))
-
-        cls.TYPE = "stack" if header["n_images"] > 1 else "volume"
-
-        return header
-
-    @classmethod
-    def readNumpy(cls, start, end):
-        """
-        Read bytes between start and end as a Numpy array
-            :param start (int) --> Start byte
-            :param end (int) --> End byte
-            :returns decoded bytes as Numpy array
-        """
-        return np.frombuffer(cls.readBinary(start, end), dtype=np.float32)
-
-    @classmethod
-    def readBinary(cls, start, end):
-        """
-        Read bytes between start and end
-            :param start (int) --> Start byte
-            :param end (int) --> End byte
-            :returns the bytes read
-        """
-        cls.seek(start)
-        return cls.stk_handler.read(end)
-
-    @classmethod
-    def readImage(cls, iid):
-        """
-        Reads a given image in the stack according to its ID
-            :param iid (int) --> Image id to be read
-            :returns Image as Numpy array
-        """
-
-        if cls.TYPE == "stack":
-            start = 2 * cls.header_info["offset"] + iid * (
-                    cls.IMG_BYTES + cls.header_info["offset"])
-        else:
-            start = cls.header_info["offset"] + iid * cls.IMG_BYTES
-
-        img_size = cls.header_info["n_columns"]
-        return cls.readNumpy(start, cls.IMG_BYTES).reshape([img_size, img_size])
-
-    @classmethod
-    def seek(cls, pos):
-        """
-        Move file pointer to a given position
-            :param pos (int) --> Byte to move the pointer to
-        """
-        cls.stk_handler.seek(pos)
-
-    @classmethod
-    def getCompatibleFileTypes(cls) -> list:
-        return ['stk', 'vol']
+        ext = path.split('.')[-1]
+        imageReader = ImageReadersRegistry._readers[ext]
+        return imageReader.open(path)
 
 
 ALLOWED_COLUMNS_TYPES = ['String', 'Float', 'Integer', 'Boolean', 'Matrix',
@@ -260,6 +133,7 @@ class SqliteFile(IDAO):
 
     def getTableNames(self):
         """ Return all the table names found in the database. """
+        initTime = time.time()
         if not self._names:
             self._tables = {OBJECT_TABLE: 'classes'}
             self._names = [OBJECT_TABLE]
@@ -276,7 +150,6 @@ class SqliteFile(IDAO):
                 self._aliases[tableName] = alias
 
                 labelsTypes = []
-                self._tableCount[tableName] = self.getRowsCount(tableName)
                 for key, value in firstRow.items():
                     if key not in EXCLUDED_COLUMNS:
                         labelsTypes.append(_guessType(value))
@@ -286,12 +159,14 @@ class SqliteFile(IDAO):
 
         if len(self._tables) > 2: # Assuming that there are more tables than just Object and Properties
             self._tableWithAdditionalInfo = OBJECT_TABLE
+        endTime = time.time()
+        logging.info("GetTableNames: %f" % (endTime - initTime))
         return self._names
 
     def findColbyName(self, colNames, colName):
         """Return a column index given a column name"""
         for i, col in enumerate(colNames):
-            if colName == col:
+            if colName.lower() == col.lower():
                 return i
         return None
 
@@ -309,8 +184,7 @@ class SqliteFile(IDAO):
             self._extendedColumn = indexCol, fileNameCol
         else:
             indexCol = self.findColbyName(colNames, '_representative._index')
-            fileNameCol = self.findColbyName(colNames,
-                                                   '_representative._filename')
+            fileNameCol = self.findColbyName(colNames, '_representative._filename')
             if indexCol and fileNameCol:
                 logger.debug("The columns _representative._index and "
                              "_representative._filename have been found. "
@@ -340,6 +214,7 @@ class SqliteFile(IDAO):
 
     def fillTable(self, table, objectManager):
         """Create the table structure (columns) and set the table alias"""
+        initTime = time.time()
         tableName = table.getName()
         colNames = self._labels[tableName]
         self.updateExtendColumn(table)
@@ -371,8 +246,10 @@ class SqliteFile(IDAO):
             if isFileNameCol:
                 logger.debug("Creating an extended column: %s" % EXTENDED_COLUMN_NAME)
                 imageExt = str(values[index]).split('.')[-1]
-                self.addExternalProgram(ImageRenderer(), imageExt)
-                extraCol = Column(colName, ImageRenderer())
+                if values[index] is not None and ImageRenderer().getImageReader(values[index]) is not None:
+                    renderer = ImageRenderer()
+                    self.addExternalProgram(renderer, imageExt)
+                extraCol = Column(colName, renderer)
                 extraCol.setIsVisible(newCol.isVisible())
                 extraCol.setIsSorteable(False)
                 table.addColumn(extraCol)
@@ -381,26 +258,79 @@ class SqliteFile(IDAO):
 
         table.setAlias(self._aliases[tableName])
         self.generateTableActions(table, objectManager)
+        endTime = time.time()
+        logging.info("Create the table structure: %f" % (endTime - initTime))
 
     def addExternalProgram(self, renderer: ImageRenderer, imageExt: str):
         self.addChimera(renderer, imageExt)
+        self.addImageJ(renderer)
+        self.addImageViewer(renderer, imageExt)
 
     def addChimera(self, renderer: ImageRenderer, imageExt: str):
         chimeraPath = os.environ.get('CHIMERA_HOME', None)
         if chimeraPath is not None:
-            if imageExt not in ['st', 'stk']:
+            if imageExt not in ['st', 'stk', 'mrcs']:
                 icon = pw.findResource('chimera.png')
-                def openChimeraCallback(path):
+
+                def openChimeraCallback(imagePath):
+                    path = imagePath.split('@')[-1]
                     program = os.path.join(chimeraPath, 'bin', 'ChimeraX')
                     cmd = program + ' "%s"' % path
                     Popen(cmd, shell=True, cwd=os.getcwd())
 
-                renderer.addProgram(ExternalProgram('ChX', icon, 'ChimeraX', openChimeraCallback))
+                renderer.addAction(Action('ChX', icon, 'Open with ChimeraX',
+                                          openChimeraCallback))
+
+    def addImageJ(self, renderer: ImageRenderer):
+        imageJPath = os.environ.get('IMAGEJ_BINARY_PATH', None)
+        if imageJPath is not None:
+            icon = pw.findResource('Imagej.png')
+
+            def openImageJCallback(imagePath):
+                imageSplit = imagePath.split('@')
+                if len(imageSplit)>1:
+                    selectedSlice = int(imageSplit[0])
+                else:
+                    selectedSlice = 0
+                path = imageSplit[-1]
+                program = os.path.join(imageJPath)
+                macro = r"""
+path = "%s";
+open(path);
+slice = %d; 
+Stack.setSlice(slice);
+                """ % (os.path.abspath(path), selectedSlice)
+
+                with tempfile.NamedTemporaryFile(delete=False) as tempFile:
+                    tempFile.write(macro.encode('utf-8'))
+                    macroPath = tempFile.name
+
+                cmd = program + ' -macro %s' % macroPath
+                Popen(cmd, shell=True, cwd=os.getcwd())
+
+            renderer.addAction(Action('IJ', icon, 'Open with ImageJ',
+                                      openImageJCallback))
+
+    def addImageViewer(self, renderer: ImageRenderer, imageExt: str):
+        icon = os.path.join(pw.getResourcesPath(),'file_vol.png')
+
+        def openImageViewerCallback(imagePath):
+            path = imagePath.split('@')[-1]
+
+            pythonPath = sys.executable
+            program = '%s -m pwem.viewers.mdviewer.volumeViewer' % pythonPath
+            cmd = program + ' "%s"' % path
+            Popen(cmd, shell=True, cwd=os.getcwd())
+
+        if imageExt in ['mrc', 'stk']:
+            renderer.addAction(Action('IV', icon, 'Open with ImageViewer',
+                                      openImageViewerCallback))
 
     def fillPage(self, page, actualColumn=0, orderAsc=True):
         """
         Read the given table from the sqlite and fill the page(add rows)
         """
+        initTime = time.time()
         tableName = page.getTable().getName()
         # moving to the first row of the page
         pageNumber = page.getPageNumber()
@@ -424,16 +354,30 @@ class SqliteFile(IDAO):
 
                 # Checking if exists an extended column
                 if self.hasExtendedColumn() and tableName != PROPERTIES_TABLE:
-                    values.insert(self._extendedColumn[1] + 1,
-                                  str(values[self._extendedColumn[0]]) + '@' + values[self._extendedColumn[1]])
+                    if values[self._extendedColumn[1]] is not None:
+                        values.insert(self._extendedColumn[1] + 1,
+                                      str(values[self._extendedColumn[0]]) + '@' + values[self._extendedColumn[1]])
+                    else:
+                        values.insert(self._extendedColumn[1] + 1, None)
+
                 page.addRow((int(id), values))
+        endTime = time.time()
+        logging.info("Fill the page: %f" % (endTime - initTime))
 
     def getRowsCount(self, tableName):
         """ Return the number of elements in the given table. """
         logger.debug("Reading the table %s" %tableName)
+        if tableName == OBJECT_TABLE:
+            size = int(self._con.execute(f"SELECT * FROM {PROPERTIES_TABLE} WHERE key='_size'").fetchall()[0]['value'])
+            return size
         return self._con.execute(f"SELECT COUNT(*) FROM {tableName}").fetchone()['COUNT(*)']
 
     def getTableRowCount(self, tableName):
+        if tableName not in self._tableCount:
+            initTime = time.time()
+            self._tableCount[tableName] = self.getRowsCount(tableName)
+            endTime = time.time()
+            logging.info("Table count: %f" % (endTime - initTime))
         return self._tableCount[tableName]
 
     def getSelectedRangeRowsIds(self, tableName, startRow, numberOfRows, column, reverse=True):
@@ -489,7 +433,7 @@ class SqliteFile(IDAO):
             if pos > 0:
                 for colName in columns:
                     col = self._getColumnMap(tableName, colName) or colName
-                    columnsValues[colName].append(int(value[col]))
+                    columnsValues[colName].append((value[col]))
 
         return columnsValues
 
@@ -588,11 +532,11 @@ class SqliteFile(IDAO):
             timestamp = now.strftime(format)
             path = 'Logs/selection_%s.txt' % timestamp
             self.writeSelection(table, path)
-            path +="," # Always add a comma, it is expected by the user subset protocol
+            path += ","  # Always add a comma, it is expected by the user subset protocol
             if tableName != OBJECT_TABLE:
                 path += tableName.split(OBJECT_TABLE)[0]
 
-        self.sendSubsetCreationMessage(path, objectType, subsetName)
+            self.sendSubsetCreationMessage(path, objectType, subsetName)
 
     def sendSubsetCreationMessage(self, selectionFile, outputClassName, label):
 
@@ -609,7 +553,7 @@ class SqliteFile(IDAO):
         data = f"run protocol ProtUserSubSet inputObject={self.getScipionObjectId()} " \
                f"sqliteFile='{selectionFile}' outputClassName='{outputClassName}' other='' label='{label}'"
 
-        clientSocket.send(data.encode());
+        clientSocket.send(data.encode())
 
 
     def getScipionPort(self):
@@ -672,9 +616,7 @@ def _guessType(strValue):
             return str
 
 
-
 def extendMDViewer(om:metadataviewer.model.ObjectManager):
     """ Function to extend the object manager with DAOs and readers"""
     om.registerDAO(SqliteFile)
-    om.registerReader(MRCImageReader)
-    om.registerReader(STKImageReader)
+    om.registerReader(ScipionImageReader)
