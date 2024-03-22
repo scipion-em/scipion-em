@@ -37,6 +37,7 @@ import glob
 
 import pyworkflow.utils as pwutils
 import pyworkflow.protocol.params as params
+import pyworkflow.protocol.constants as const
 import pwem.objects as emobj
 import pwem.convert as emconv
 from pwem import emlib
@@ -138,19 +139,32 @@ class ProtImportVolumes(ProtImportImages):
                       label="y", help="offset along y axis (Angstroms)")
         form.addParam('z', params.FloatParam, condition='setOrigCoord',
                       label="z", help="offset along z axis (Angstroms)")
+        form.addParam('selectVolume', params.IntParam, 
+                      label="Select volume (integer)", allowsNull=True,
+                      expertLevel=const.LEVEL_ADVANCED, 
+                      help="Select an specific volumen to import from a "
+                            "file containing a set of volumes.\n"
+                            "The value of the integer should be the index "
+                            "(starting from 1) and point to the "
+                            "position of the volumen of interest within "
+                            "the set of volumes.\n"
+                            "For those cases in which several files are "
+                            "imported, the same index is used for all the "
+                            "files")
 
     def _insertAllSteps(self):
         if self.importFrom == self.IMPORT_FROM_FILES:
             self._insertFunctionStep(self.importFromFileStep,
                                  self.getPattern(),
                                  self.samplingRate.get(),
+                                 self.selectVolume.get(),
                                  self.setOrigCoord.get())
         else:
-            self._insertFunctionStep(self.importFromEMDBStep)
+            self._insertFunctionStep(self.importFromEMDBStep) #añadir aqui tb self.selectVolume.get(),?
 
     # --------------------------- STEPS functions -----------------------------
 
-    def importFromFileStep(self, pattern, samplingRate, setOrigCoord=False):
+    def importFromFileStep(self, pattern, samplingRate, selectVolume, setOrigCoord=False):
         """ Copy images matching the filename pattern
         Register other parameters.
         """
@@ -226,11 +240,17 @@ class ProtImportVolumes(ProtImportImages):
                 vol.setObjComment(vol.getBaseName())
                 volSet.append(vol)
             else:
-                for index in range(1, n + 1):
+                if selectVolume:
                     vol.cleanObjId()
-                    vol.setLocation(index, newFileName)
-                    vol.setObjComment("%s@%s" % (index, vol.getBaseName()))
-                    volSet.append(vol)
+                    vol.setLocation(newFileName)
+                    vol.setObjComment("%s@%s" % (selectVolume, vol.getBaseName()))
+                    volSet.append(vol)                    
+                else:
+                    for index in range(1, n + 1):
+                        vol.cleanObjId()
+                        vol.setLocation(index, newFileName)
+                        vol.setObjComment("%s@%s" % (index, vol.getBaseName()))
+                        volSet.append(vol)
 
         if volSet.getSize() > 1:
             self._defineOutputs(**{ImportVolumeOutputs.outputVolumes.name:volSet})
@@ -241,6 +261,7 @@ class ProtImportVolumes(ProtImportImages):
         """ Copy images matching the filename pattern
         Register other parameters.
         """
+        volSet = self._createSetOfVolumes()
         vol = emobj.Volume()
 
         self.info("Downloading map with ID = %s" % self.emdbId)
@@ -250,17 +271,36 @@ class ProtImportVolumes(ProtImportImages):
                            self._getExtraPath(),
                            self._getTmpPath())
 
+        vol.setSamplingRate(sampling)
+        volSet.setSamplingRate(sampling)
+
+        imgh = emlib.image.ImageHandler()
+        x, y, z, n = imgh.getDimensions(localFileName)
+
         # open volume and fill sampling and origin
         self.samplingRate.set(sampling)
         self._store(self.samplingRate)
         vol.setSamplingRate(sampling)
+        volSet.setSamplingRate(sampling)
         vol.setFileName(localFileName)
         from pwem.objects.data import Transform
         originMat = Transform()
         originMat.setShifts(origin[0], origin[1], origin[2])
         vol.setOrigin(originMat)
 
-        self._defineOutputs(**{ImportVolumeOutputs.outputVolume.name:vol})
+        for index in range(1, n + 1):
+            vol.cleanObjId()
+            vol.setLocation(index, localFileName)
+            vol.setObjComment("%s@%s" % (index, vol.getBaseName()))
+            volSet.append(vol)
+    
+
+        if volSet.getSize() > 1:
+            self._defineOutputs(**{ImportVolumeOutputs.outputVolumes.name:volSet})
+        else:
+            self._defineOutputs(**{ImportVolumeOutputs.outputVolume.name:vol})
+
+        
 
 
     # --------------------------- INFO functions ------------------------------
@@ -306,7 +346,20 @@ class ProtImportVolumes(ProtImportImages):
         if (not self.filesPattern.empty()) and self.setHalfMaps.get():
             errors.append("You can not use the options 'Pattern' "
                           "and 'Set half maps' simultaneously")
-
+            
+        if self.selectVolume.get() != None:
+            imgh = emlib.image.ImageHandler()
+            for fileName, fileId in self.iterFiles():
+                x, y, z, n = imgh.getDimensions(fileName)
+                if self.selectVolume.get() not in range(1, n+1):
+                    if n == 1:
+                        errors.append("Index %d introduced in 'Select volume' parameter is out of " \
+                                "dimensions for file %s. \nThis file contains %s volumes. Index must be 1" \
+                                % (self.selectVolume.get(), fileName, n))
+                    else:
+                        errors.append("Index %d introduced in 'Select volume' parameter is out of " \
+                                "dimensions for file %s. \nThis file contains %s volumes. Index must range from " \
+                                "1 to  %d (both included)." % (self.selectVolume.get(), fileName, n, n))
         return errors
 
 
