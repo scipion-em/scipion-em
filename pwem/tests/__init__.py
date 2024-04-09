@@ -74,7 +74,10 @@ def defineDatasets():
             files={'pdb': 'pdb/AK.pdb'})
 
     DataSet(name='relion_tutorial', folder='relion_tutorial',
-            files={'allMics': 'micrographs/*.mrc'})
+            files={'allMics': 'micrographs/*.mrc',
+                   'boxingDir': 'pickingEman',
+                   'posAllDir': 'pickingXmipp',
+                   'volume': 'volumes/reference.mrc'})
 
     DataSet(name='relion30_tutorial', folder='relion30_tutorial', files={})
 
