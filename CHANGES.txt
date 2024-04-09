@@ -1,3 +1,7 @@
+V3.6.1:
+Users:
+     - Allowing drag and drop a coordinate when picking
+
 V3.6.0:
   Users:
      - Adapted to Sprites

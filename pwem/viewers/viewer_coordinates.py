@@ -304,7 +304,7 @@ class MainWindow:
             self.picking = True
             self.eraser = False
             self.filament = False
-            self.drag = False
+            self.drag = True
 
     def eraserActivate(self):
         """ Recovering some actions when eraser button is pressed """
@@ -319,7 +319,7 @@ class MainWindow:
             self.picking = False
             self.filament = False
             self.eraser = True
-            self.drag = False
+            self.drag = True
 
     def filamentActivate(self):
         """ Recovering some actions when filament button is pressed """
@@ -730,7 +730,7 @@ class MainWindow:
                     self.totalPickButton.configure(text=f"Total picks: {self.totalCoordinates}")
                     self.hasChanges[self.micId] = True
 
-                elif self.drag:  # Move coordinate or drag all image
+                elif self.drag or (self.picking and not self.canPick(event)):  # Move coordinate or drag all image
                     if self.selectedCoordinate:
                         index, coords = self.selectedCoordinate, self.shapes[self.selectedCoordinate]
                         self.root.config(cursor='hand2')
