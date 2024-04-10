@@ -36,6 +36,9 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 import logging
+
+from matplotlib.widgets import RangeSlider
+
 from pwem.emlib.image.image_readers import ImageReadersRegistry
 from pwem.objects import EMSet, SetOfCoordinates, SetOfMicrographs
 from pyworkflow.gui import getImage, ToolTip
@@ -870,32 +873,26 @@ class MainWindow:
         self.histWindow = tk.Toplevel(self.root)
         self.histWindow.title('Power histogram')
         self.histWindow.resizable(False, False)
-        figure, axes = plt.subplots(figsize=(6, 4))
-        self.plotHistogram(axes)
-        histCanvas = FigureCanvasTkAgg(figure, master=self.histWindow)
+        self.figure, self.axes = plt.subplots(figsize=(6, 4))
+        self.plotHistogram(self.axes)
+        histCanvas = FigureCanvasTkAgg(self.figure, master=self.histWindow)
         histCanvasWidget = histCanvas.get_tk_widget()
         histCanvasWidget.grid(row=0, column=0, sticky="news", padx=10, pady=10)
 
-        # Create the sliders
-        sliderFrame = tk.Frame(self.histWindow)
-        sliderFrame.grid(row=2, column=0, sticky="w", pady=10)
+        def update(val):
+            minValue, maxValue = self.rangeSlider.val
+            self.drawRangeLines(self.axes, minValue, maxValue)
+            plt.draw()
+            self.removeCoordinates(minValue, maxValue)
 
-        lowerValueLabel = ttk.Label(sliderFrame, text="Lower value:")
-        lowerValueLabel.grid(row=0, column=0, padx=10, pady=5, sticky="w")
-        self.powerSlider1 = ttk.Scale(sliderFrame, from_=0, to=255, length=430,
-                                      orient=tk.HORIZONTAL, command=self.filterCoordinates)
-        self.powerSlider1.grid(row=0, column=1, sticky="e", padx=5, pady=5)
+        self.rangeLines = []
+        ax_slider = plt.axes([0.2, 0.05, 0.65, 0.03], facecolor='lightgoldenrodyellow')
+        self.rangeSlider = RangeSlider(ax_slider, '', 0, 256, valinit=(0, 256), valstep=1, valfmt='%d')
 
-        upperValueLabel = ttk.Label(sliderFrame, text="Upper value:")
-        upperValueLabel.grid(row=1, column=0, padx=10, pady=5, sticky="w")
-        self.powerSlider2 = ttk.Scale(sliderFrame, from_=0, to=255, length=430,
-                                      orient=tk.HORIZONTAL, command=self.filterCoordinates)
-        self.powerSlider2.grid(row=1, column=1, sticky="e", padx=5, pady=5)
-        self.powerSlider2.set(self.powerSlider2['to'])
+        self.rangeSlider.on_changed(update)
 
         buttonsFrame = tk.Frame(self.histWindow)
         buttonsFrame.grid(row=3, column=0, sticky="e", pady=10)
-
         # Close button
         closeButton = tk.Button(buttonsFrame, text='Close', command=self.histWindowClose, font=('Helvetica', 10, 'bold'),
                                 image=getImage(Icon.BUTTON_CANCEL), compound=tk.LEFT)
@@ -932,21 +929,6 @@ class MainWindow:
 
         self.histWindowClose()
 
-    def filterCoordinates(self, value):
-        """Handle the range of pixel values that will be removed """
-        slider1Value = self.powerSlider1.get()
-        slider2Value = self.powerSlider2.get()
-        if slider1Value + 20 >= slider2Value:
-            slider2Value += 1
-            if slider2Value < 255:
-                self.powerSlider2.set(slider2Value)
-        if slider2Value - 20 <= slider1Value:
-            slider1Value -= 1
-            if slider1Value > 0:
-                self.powerSlider1.set(slider1Value)
-
-        self.removeCoordinates(slider1Value, slider2Value)
-
     def removeCoordinates(self, value1, value2):
         """Remove the coordinate taking into account the pixel values"""
         pixelRange = (round(float(value1)), round(float(value2)))
@@ -973,7 +955,7 @@ class MainWindow:
         return self.scaledImage.crop((x - self.shapeRadius,  y - self.shapeRadius,
                                      x + self.shapeRadius, y + self.shapeRadius))
 
-    def plotHistogram(self, ejes):
+    def plotHistogram(self, axes):
         """Plot the micrograph histogram"""
         img_array = np.array(self.imagePIL)
         # Apply the power transformation
@@ -981,10 +963,22 @@ class MainWindow:
         hist_power, bins_power = np.histogram(img_power.flatten(), bins=256, range=[0, 256])
 
         # Plot histogram
-        ejes.clear()
-        ejes.plot(hist_power)
-        ejes.set_xlabel("Pixel Value")
-        ejes.set_ylabel("Frequency")
+        axes.clear()
+        axes.plot(hist_power)
+        axes.set_xlabel("Pixel Value")
+        axes.set_ylabel("Frequency")
+        plt.subplots_adjust(bottom=0.2)
+
+    def drawRangeLines(self, ax, minVal, maxVal):
+        """Draw vertical lines to represent the selected range"""
+        # Remove old lines
+        for line in self.rangeLines:
+            line.remove()
+        # Draw the new vertical lines
+        lineMin = ax.axvline(minVal, color='red', linestyle='--', linewidth=1)
+        lineMax = ax.axvline(maxVal, color='red', linestyle='--', linewidth=1)
+        # Store the new vertical lines
+        self.rangeLines = [lineMin, lineMax]
 
     def resetMicrograph(self):
         """Remove all coordinates from current micrograph"""
