@@ -1623,7 +1623,7 @@ class SetOfParticles(SetOfImages):
         self._isSubParticles = Boolean(value)
 
     def setCoordinates(self, coordinates):
-        """ Set the SetOfCoordinates associates with
+        """ Set the SetOfCoordinates associated with
         this set of particles.
          """
         if coordinates.isPointer():

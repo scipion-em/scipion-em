@@ -391,7 +391,7 @@ class ProtUnionSet(ProtSets):
         if len(warnings):
             warnings.append("Your input sets have different attributes. "
                             "We will keep only the common ones. This may "
-                            "cause the lost of important data like CFT, "
+                            "cause the lost of important data like CTF, "
                             "alignment information,...")
 
         return  warnings
