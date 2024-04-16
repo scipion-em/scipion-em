@@ -28,28 +28,26 @@ import os
 import time
 import sys
 import matplotlib.pyplot as plt
-
 from pyworkflow.utils import prettyTime
 import pyworkflow.protocol.params as params
 from pyworkflow.object import Set
-from pyworkflow.protocol.constants import LEVEL_ADVANCED, STATUS_NEW
 from pyworkflow.protocol import ProtStreamingBase, STEPS_PARALLEL
 from pwem.protocols import EMProtocol
 from pwem.objects import SetOfParticles
-import logging
-logger = logging.getLogger(__file__)
+#import logging
+#logger = logging.getLogger(__file__)
 
 
 OUTPUT_PARTICLES = "outputParticles"
-OUTPUT_DISCARDED_PARTICLES = "outputDiscardedParticles"
+OUTPUT_DISCARDED_PARTICLES = "outputParticlesDiscarded"
 LAST_DONE_FILE = "last_done.txt"
 
 
 class ProtGoodClassesExtractor(EMProtocol, ProtStreamingBase):
-    """ Extracts items from a SetOfClasses based on the IDs of the given good averages/classes
+    """ Extracts items from a SetOfClasses based on a list of IDs or a set of given good averages/classes
     """
 
-    _label = "good classes selector"
+    _label = "good classes extractor"
     outputsToDefine = {}
     _possibleOutputs = {OUTPUT_PARTICLES: SetOfParticles,
                         OUTPUT_DISCARDED_PARTICLES: SetOfParticles}
@@ -60,7 +58,6 @@ class ProtGoodClassesExtractor(EMProtocol, ProtStreamingBase):
     def __init__(self, **args):
         EMProtocol.__init__(self, **args)
         self.stepsExecutionMode = STEPS_PARALLEL
-        self._initialStep()
 
     def _defineParams(self, form):
         form.addSection(label='Input')
@@ -77,11 +74,12 @@ class ProtGoodClassesExtractor(EMProtocol, ProtStreamingBase):
                       pointerClass='SetOfClasses2D, SetOfAverages',
                       label='Good references',
                       condition="mode==%d" % self.LIST_CLASSES,
-                      help='Set of good reference to stay with from the inputClasses.')
+                      help='Set of good reference to extract particles from the inputClasses.')
         form.addParam('inputGoodListIds', params.StringParam,
                       label='Good references',
                       condition="mode==%d" % self.LIST_IDS,
-                      help='List of good reference IDs, separated by commas, to retain from the inputClasses.')
+                      help='List of good reference IDs, separated by commas, '
+                           'to extract particles from the inputClasses.')
 
         form.addParallelSection(threads=3, mpi=1)
 
@@ -93,91 +91,115 @@ class ProtGoodClassesExtractor(EMProtocol, ProtStreamingBase):
         call the self._insertFunctionStep method.
         """
         self.newDeps = []
+        self.initialStep()
 
         while not self.finish:
             if not self._newParticlesToProcess():
                  self.info('No new particles')
             else:
-                classSet = self._loadInputClassesSet()
+                with self._lock:
+                    classSet = self._loadInputClassesSet()
+
                 self.isStreamClosed = classSet.getStreamState()
 
-                if self.selectGood:
-                    self.selectStep = self._insertFunctionStep(self.selectGoodClasses,
-                                                               prerequisites=[])
+                if self.selectGood:  # Only happens once
+                    selectStep = self._insertFunctionStep(self.selectGoodClasses,
+                                                          prerequisites=[])
 
-                self.extractStep = self._insertFunctionStep(self.extractElements, classSet,
-                                                            prerequisites=self.selectStep)
+                extractStep = self._insertFunctionStep(self.extractElements, classSet,
+                                                       prerequisites=selectStep)
 
-                self.newDeps.append(self.extractStep)
+                self.newDeps.append(extractStep)
 
             if self.isStreamClosed == Set.STREAM_CLOSED:
                 self.info('Stream closed')
                 # Finish everything and close output sets
-                self._insertFunctionStep(self.closeOutputStep, prerequisites=self.newDeps)
+                self._insertFunctionStep(self.closeOutputStep,
+                                         prerequisites=self.newDeps)
                 self.finish = True
 
             sys.stdout.flush()
-            time.sleep(15)
+            time.sleep(60)
 
     # --------------------------- STEPS functions -------------------------------
-    def _initialStep(self):
+    def initialStep(self):
         self.finish = False
         self.selectGood = True
-        self.lastParticleId = -1
-        self.lastBadParticlesId = -1
         self.isStreamClosed = False
-        self.particlesProcessed = []
-        self.particlesDistribution = {'good': [], 'bad': []}
+        self.goodParticles = []
         self.badParticles = []
+        self.particlesDistribution = {'good': [], 'bad': []}
         self.goodClassesIDs = []
+        self.dictsTimes = {}
 
     def extractElements(self, inputClasses):
-        # For each class (order by number of items)
+        """
+        Method to extract the particles from the selected classes, this method generates two output sets:
+            - accepted particles
+            - discarded particles
+        """
         output = self._loadOutputSet(OUTPUT_PARTICLES, "")
         outputDiscarded = self._loadOutputSet(OUTPUT_DISCARDED_PARTICLES, "discarded")
-        for clazz in inputClasses.iterItems(orderBy="_size", direction="DESC"):
-            with self._lock:  # Hace falta?
-                if clazz.getObjId() in self.goodClassesIDs:
-                    for image in clazz.iterItems(where="id > %s" % self.lastParticleId):
+
+        with self._lock:
+            # For each class (order by number of items)
+            for clazz in inputClasses.iterItems(orderBy="_size", direction="DESC"):
+                # Make the query to load only the new particles
+                where = None
+                if str(clazz.getObjId()) in self.dictsTimes:
+                    lastTime = str(self.dictsTimes[str(clazz.getObjId())])
+                    where = 'creation>"' + lastTime + '"'
+                    self.debug('Last creation time in class %d: %s'
+                               % (clazz.getObjId(), lastTime))
+
+                # Two sets of particles:
+                if clazz.getObjId() in self.goodClassesIDs:  # Accepted particles
+                    for image in clazz.iterItems(orderBy='creation', direction='ASC', where=where):
+                        tmp_accepted = image.getObjCreation()
                         newImage = image.clone()
                         output.append(newImage)
-                        self.particlesProcessed.append(image.getObjId())
-                else:
-                    for image in clazz.iterItems(where="id > %s" % self.lastBadParticlesId):
+                        self.goodParticles.append(image.getObjId())
+                    self.dictsTimes[str(clazz.getObjId())] = tmp_accepted  # Store the latest time
+                else:  # Discarded particles
+                    for image in clazz.iterItems(orderBy='creation', direction='ASC', where=where):
+                        tmp_discarded = image.getObjCreation()
                         newImageDiscarded = image.clone()
                         outputDiscarded.append(newImageDiscarded)
                         self.badParticles.append(image.getObjId())
+                    self.dictsTimes[str(clazz.getObjId())] = tmp_discarded  # Store the latest time
 
-        self.lastParticleId = max(self.particlesProcessed)
-        self.lastBadParticlesId = max(self.badParticles)
-        self.info('Last particle input id %d' %self.lastParticleId)
-        self.info('Size output %d and size discarded output %d' %(len(output), len(outputDiscarded)))
+        self.info('Size output %d and size discarded output %d' % (len(output), len(outputDiscarded)))
+        self.debug(str(self.dictsTimes))
 
-        # Hace falta el lock?
-        if len(output)>0:
+        if len(output) > 0:
             self._updateOutputSet(OUTPUT_PARTICLES, output, self.isStreamClosed)
-        if len(outputDiscarded)>0:
+        if len(outputDiscarded) > 0:
             self._updateOutputSet(OUTPUT_DISCARDED_PARTICLES, outputDiscarded, self.isStreamClosed)
 
-        self._writeLastDone(max( self.lastParticleId, self.lastBadParticlesId))
-        self.createPlots()
+        self._writeLastDone(self.dictsTimes)
+        self._createPlots()
 
     def selectGoodClasses(self):
-        """ Select only the good Classes from the Averages
+        """
+        Select only the good Classes from the Averages or from the IDs list
         """
         if self.mode == self.LIST_CLASSES:
             self.goodClassesIDs = self.inputGoodClasses.get().getIdSet()
         else:
-            self.goodClassesIDs = self.getGoodIds()
+            self.goodClassesIDs = self._getGoodIds()
 
         self.info('Good classes IDs:')
         self.info(self.goodClassesIDs)
         self.selectGood = False
-        # Change to list of filenames
-        # print(set(self.inputGoodClasses.get().getUniqueValues('filename')))
-        # print(clazz.getRepresentative()._filename)
-        # self.info("Class filename selected: %s" % clazz.getObjName())
+        # Change to list of filenames? For the moment it matched so not needed
+        # inputGoodClasses.get().getUniqueValues('filename'), clazz.getRepresentative()._filename, clazz.getObjName()
 
+    def closeOutputStep(self):
+        self.info("Size of good particles output: %d" % len(self.goodParticles))
+        self.info("Size of bad particles rejected: %d" % len(self.badParticles))
+        self._closeOutputSet()
+
+# --------------------------- UTILS functions -----------------------------
     def _loadOutputSet(self, outputName, suffix):
         """
         Load the output set if it exists or create a new one.
@@ -193,20 +215,6 @@ class ProtGoodClassesExtractor(EMProtocol, ProtStreamingBase):
 
         return outputSet
 
-    def closeOutputStep(self):
-        self.info("Size of good particles output: %d" % len(self.particlesProcessed))
-        self.info("Size of bad particles rejected: %d" % len(self.badParticles))
-        self._closeOutputSet()
-
-    def _summary(self):
-        summary = []
-        return summary
-
-    def _validate(self):
-        errors = []
-        return errors
-
-# --------------------------- UTILS functions -----------------------------
     def _newParticlesToProcess(self):
         classesFile = self.inputClasses.get().getFileName()
         now = datetime.now()
@@ -217,7 +225,7 @@ class ProtGoodClassesExtractor(EMProtocol, ProtStreamingBase):
                       prettyTime(mTime)))
         # If the input have not changed since our last check,
         # it does not make sense to check for new input data
-        if self.lastCheck > mTime and self.lastParticleId > 0:
+        if self.lastCheck > mTime and self.dictsTimes:
             newParticlesBool = False
         else:
             newParticlesBool = True
@@ -232,31 +240,52 @@ class ProtGoodClassesExtractor(EMProtocol, ProtStreamingBase):
 
         return classSet
 
-    def getGoodIds(self):
+    def _getGoodIds(self):
         ids = self.inputGoodListIds.get().split(',')
         listIDs = [int(id) for id in ids]
         return listIDs
 
-    def _writeLastDone(self, particleId):
-        """ Write to a text file the last item done. """
+    def _writeLastDone(self, creationTimeDict):
+        """ Write to a text file the last item creation time done. """
+        dictStr = str(creationTimeDict)
+
         with open(self._getExtraPath(LAST_DONE_FILE), 'w') as f:
-            f.write('%d\n' % particleId)
+            f.write(dictStr)
 
     def _getLastDone(self):
         # Open the file in read mode and read the number
         with open(self._getExtraPath(LAST_DONE_FILE), "r") as file:
             content = file.read()
-        return int(content)
+        dictTimes = eval(content)
 
-    def createPlots(self):
-        balancePlot(len(self.particlesProcessed), len(self.badParticles),
+        return dictTimes
+
+    def _createPlots(self):
+        balancePlot(len(self.goodParticles), len(self.badParticles),
                     self._getExtraPath('particle_distribution.png'))
-        self.particlesDistribution['good'].append(len(self.particlesProcessed))
+        self.particlesDistribution['good'].append(len(self.goodParticles))
         self.particlesDistribution['bad'].append(len(self.badParticles))
         if len(self.particlesDistribution['good']) >= 3:
             balanceOverTimePlot(self.particlesDistribution['good'], self.particlesDistribution['bad'],
                                 self._getExtraPath('cumulative_distribution.png'))
 
+    def getDistributionPlot(self):
+        return self._getExtraPath('particle_distribution.png')
+
+    def getDistributionTimePlot(self):
+        return self._getExtraPath('cumulative_distribution.png')
+
+# --------------------------- INFO functions --------------------------------
+    def _summary(self):
+        summary = []
+        return summary
+
+    def _validate(self):
+        errors = []
+        return errors
+
+
+# --------------------------- EXTRA functions --------------------------------
 def balancePlot(good_particles, bad_particles, fileName):
     # Labels for the classes
     classes = ['Good', 'Bad']

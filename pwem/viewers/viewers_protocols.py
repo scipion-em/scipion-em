@@ -30,20 +30,100 @@ import pwem.protocols as emprot
 
 from .views import DataView
 
+from pyworkflow.protocol.params import LabelParam
+import matplotlib.pyplot as plt
+import os
+from .views import ObjectView
+from pwem.viewers import EmProtocolViewer
 
-class ViewerClassesConsensus(pwviewer.Viewer):
+# class ViewerClassesConsensus(pwviewer.Viewer):
+#     _environments = [pwviewer.DESKTOP_TKINTER, pwviewer.WEB_DJANGO]
+#     _targets = [emprot.ProtClassesConsensus]
+#
+#     def _visualize(self, obj, **kwargs):
+#         labels = ('class1.id class1._representative._filename class2.id '
+#                   'class2._representative._filename jaccard intersection union')
+#         return [DataView(obj.outputConsensus.getFileName(),
+#                          viewParams={'order': labels, 'mode': 'metadata',
+#                                      'visible': labels,
+#                                      'render': 'class1._representative._filename class2._representative._filename'
+#                                      })
+#                 ]
+#
+#     def visualize(self, obj, **kwargs):
+#         self._visualize(obj, **kwargs)[0].show()
+
+
+class ViewerGoodClassesExtractor(EmProtocolViewer):
+    _label = 'viewer Good Classes Extractor'
     _environments = [pwviewer.DESKTOP_TKINTER, pwviewer.WEB_DJANGO]
-    _targets = [emprot.ProtClassesConsensus]
+    _targets = [emprot.ProtGoodClassesExtractor]
 
-    def _visualize(self, obj, **kwargs):
-        labels = ('class1.id class1._representative._filename class2.id '
-                  'class2._representative._filename jaccard intersection union')
-        return [DataView(obj.outputConsensus.getFileName(),
-                         viewParams={'order': labels, 'mode': 'metadata',
-                                     'visible': labels,
-                                     'render': 'class1._representative._filename class2._representative._filename'
-                                     })
-                ]
+    def _defineParams(self, form):
+        form.addSection(label='Visualization')
+        form.addParam('visualizeParticles', LabelParam,
+                      label="Visualize accepted particles",
+                      help="Visualize particles that come from good 2D classes.")
+        form.addParam('visualizeDiscardedParticles', LabelParam,
+                      label="Visualize discarded particles",
+                      help="Visualize particles that come from bad 2D classes.")
+        form.addParam('visualizeDistribution', LabelParam,
+                      label="Visualize particles distribution",
+                      help="Visualize plot that shows the particles distribution in good and bad classes.")
+        form.addParam('visualizeDistributionVsTime', LabelParam,
+                      label="Visualize particles distribution vs Time",
+                      help="Visualize plot particles distribution vs time.")
 
-    def visualize(self, obj, **kwargs):
-        self._visualize(obj, **kwargs)[0].show()
+    def _getVisualizeDict(self):
+        return {
+                 'visualizeParticles': self._visualizeParticlesF,
+                 'visualizeDiscardedParticles': self._visualizeDiscardedParticlesF,
+                 'visualizeDistribution': self._visualizeDistribution,
+                 'visualizeDistributionVsTime': self._visualizeDistributionTime
+                }
+
+    def _visualizeParticlesF(self, e=None):
+        return self._visualizeParticles("outputParticles")
+
+    def _visualizeDiscardedParticlesF(self, e=None):
+        return self._visualizeParticles("outputParticlesDiscarded")
+
+    def _visualizeDistribution(self, e=None):
+        if os.path.exists(self.protocol.getDistributionPlot()):
+            image = plt.imread(self.protocol.getDistributionPlot())
+            plt.figure()
+            fig = plt.imshow(image)
+            fig.axes.get_xaxis().set_visible(False)
+            fig.axes.get_yaxis().set_visible(False)
+            plt.show()
+
+    def _visualizeDistributionTime(self, e=None):
+        if os.path.exists(self.protocol.getDistributionTimePlot()):
+            image = plt.imread(self.protocol.getDistributionTimePlot())
+            plt.figure()
+            fig = plt.imshow(image)
+            fig.axes.get_xaxis().set_visible(False)
+            fig.axes.get_yaxis().set_visible(False)
+            plt.show()
+
+    def _visualizeParticles(self, objName):
+        views = []
+
+        labels = 'id _filename _samplingRate _acquisition._dosePerFrame ' \
+                 '_acquisition._doseInitial _MEAN_DOSE_PER_ANGSTROM2 _STD_DOSE_PER_ANGSTROM2 ' \
+                 '_DIFF_TO_DOSE_PER_ANGSTROM2 '
+
+        if self.protocol.hasAttribute(objName):
+            setParticles = getattr(self.protocol, objName)
+            views.append(ObjectView(
+                self._project, setParticles.getObjId(), setParticles.getFileName()))
+                #viewParams={'mode': MODE_MD, 'order': labels, 'visible': labels}))
+        else:
+            self.infoMessage('%s does not have %s%s'
+                             % (self.protocol.getObjLabel(), objName,
+                                getStringIfActive(self.protocol)),
+                             title='Info message').show()
+        return views
+
+def getStringIfActive(prot):
+    return ', yet.' if prot.isActive() else '.'

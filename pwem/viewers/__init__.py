@@ -42,6 +42,7 @@ from .viewer_volumes import viewerProtImportVolumes
 from .viewer_angular_dist import AngularDistributionViewer
 from .viewers_data import BasicMDViewer
 from .viewer_coordinates import CoordinateViewer
+from .viewers_protocols import ViewerGoodClassesExtractor
 
 try:
     from .mdviewer import MDViewer
