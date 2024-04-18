@@ -442,6 +442,7 @@ def mapVolsWithColorkey(displayVolFileName,
     and the color in colorList. """
     scriptFile = scriptFileName
     fhCmd = open(scriptFile, 'w')
+    fhCmd.write("# -*- coding: utf-8 -*-\n")
     fhCmd.write("from chimerax.core.commands import run\n")
     fhCmd.write("run(session, 'set bgColor %s')\n" % bgColorImage)
 
@@ -451,8 +452,15 @@ def mapVolsWithColorkey(displayVolFileName,
     Chimera.createCoordinateAxisFile(voldim[0],
                                      bildFileName=bildFileName,
                                      sampling=sampling)
+
+    # Convert paths to WSL is apply:
+    if OS.isWSL():
+        bildFileName=OS.WLSfile2Windows(bildFileName)
+        mapVolFileName=OS.WLSfile2Windows(mapVolFileName)
+        displayVolFileName=OS.WLSfile2Windows(displayVolFileName)
+
     # axis
-    fhCmd.write("run(session, 'open %s')\n" % bildFileName)
+    fhCmd.write("run(session, r'open %s')\n" % bildFileName)
     if not showAxis:
         fhCmd.write("run(session, 'hide #1')\n")
 
@@ -472,7 +480,7 @@ def mapVolsWithColorkey(displayVolFileName,
         y = volOrigin[1]
         z = volOrigin[2]
 
-    fhCmd.write("run(session, 'open %s')\n" % displayVolFileName)
+    fhCmd.write("run(session, r'open %s')\n" % displayVolFileName)
     if step == -1:
         fhCmd.write("run(session, 'volume #%d voxelSize %s')\n" %
                     (chimeraVolId, str(sampling)))
@@ -483,7 +491,7 @@ def mapVolsWithColorkey(displayVolFileName,
                 % (chimeraVolId, x, y, z))
     # second volume
     chimeraVolId += 1
-    fhCmd.write("run(session, 'open %s')\n" % mapVolFileName)
+    fhCmd.write("run(session, r'open %s')\n" % mapVolFileName)
     # TODO: Why no step here?
     fhCmd.write("run(session, 'volume #%d voxelSize %f')\n" % (chimeraVolId, sampling))
     fhCmd.write("run(session, 'volume #%d origin %0.2f,%0.2f,%0.2f')\n"

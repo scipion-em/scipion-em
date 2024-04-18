@@ -1,3 +1,10 @@
+V3.7.0:
+  Users:
+     - Crossed subset protocol: Creates a subset of the main set based on a matching field in another set.
+     - ChimeraX resolution viewer compatible with WSL.
+     - Fix: Wizard for choosing a Mask radius returns integer.
+     - Describes better and register variables for the new GUI to edit variables
+
 V3.6.0:
   Users:
      - Adapted to Sprites
