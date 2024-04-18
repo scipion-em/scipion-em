@@ -1,6 +1,11 @@
 V3.6.1:
 Users:
      - Allowing drag and drop a coordinate when picking
+     - Allowing to create subsets from the selection in the metadataviewer plotter
+
+Developers:
+     - Fixing an error creating subset through new metadataviewer
+
 
 V3.6.0:
   Users:
