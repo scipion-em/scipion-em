@@ -1,9 +1,12 @@
 V3.7.0:
   Users:
+     - Allowing drag and drop a coordinate when picking
      - Crossed subset protocol: Creates a subset of the main set based on a matching field in another set.
      - ChimeraX resolution viewer compatible with WSL.
      - Fix: Wizard for choosing a Mask radius returns integer.
      - Describes better and register variables for the new GUI to edit variables
+  Developers:
+     - Plugin._defineVar and _defineEmVar offers  description(str) and  varType(VarTypes) as optional arguments to better describe the variable
 
 V3.6.0:
   Users:
