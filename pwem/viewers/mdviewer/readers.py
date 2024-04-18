@@ -380,7 +380,7 @@ Stack.setSlice(slice);
             logging.info("Table count: %f" % (endTime - initTime))
         return self._tableCount[tableName]
 
-    def getSelectedRangeRowsIds(self, tableName, startRow, numberOfRows, column, reverse=True):
+    def getSelectedRangeRowsIds(self, tableName, startRow, numberOfRows, column, reverse=True, remove=False):
         """Return a range of rows starting at 'startRow' an amount
            of 'numberOfRows' """
 
@@ -390,6 +390,17 @@ Stack.setSlice(slice);
         if col == None:
             col = column
         query = "SELECT id FROM %s ORDER BY %s %s LIMIT %d , %d" % (tableName, col, mode, startRow - 1, numberOfRows + 1)
+        rowsList = self._con.execute(query).fetchall()
+        rowsIds = [row['id'] for row in rowsList]
+        return rowsIds
+
+    def getRowsIds(self, tableName, minValue, maxValue, column, reverse=True, remove=False):
+        """Return a range of rows where the column values are between minValue, maxValue"""
+        logger.debug("Reading the table %s and selected a range of rows where %s between %d and %d" % (tableName, column, minValue, maxValue))
+        col = self._getColumnMap(tableName, column)
+        if col == None:
+            col = column
+        query = "SELECT id FROM %s WHERE %s BETWEEN %d AND %d" % (tableName, col, minValue, maxValue)
         rowsList = self._con.execute(query).fetchall()
         rowsIds = [row['id'] for row in rowsList]
         return rowsIds
@@ -406,7 +417,9 @@ Stack.setSlice(slice);
         for column in cols:
             col = self._getColumnMap(tableName, column) or column
             columnNames.append(col)
-
+        if 'id' not in cols:
+            columnNames.append('id')  # Always retrieve the id values to create subsets
+            columns.append('id')
         columnNames = ", ".join(columnNames)
 
         col = self._getColumnMap(tableName, xAxis)
@@ -525,6 +538,9 @@ Stack.setSlice(slice);
         elementsCount = len(selection)
         if not elementsCount:
             elementsCount = self._tableCount[tableName]
+            objectManager.getSelectedRangeRowsIds(tableName,
+                                                  1, self._tableCount[tableName],
+                                                  'id', 'ASC')
         subsetName = objectManager.getGui().getSubsetName(objectType, elementsCount)
         if subsetName:
             format = '%Y%m%d%H%M%S'
@@ -534,7 +550,7 @@ Stack.setSlice(slice);
             self.writeSelection(table, path)
             path += ","  # Always add a comma, it is expected by the user subset protocol
             if tableName != OBJECT_TABLE:
-                path += tableName.split(OBJECT_TABLE)[0]
+                path += tableName.split('_Objects')[0]
 
             self.sendSubsetCreationMessage(path, objectType, subsetName)
 
