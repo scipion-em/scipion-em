@@ -76,7 +76,9 @@ class Config(pw.Config):
     # CUDA
     CUDA_LIB = _get(CUDA_LIB_VAR, '/usr/local/cuda/lib64')
     CUDA_BIN = _get('CUDA_BIN', '/usr/local/cuda/bin')
-    MAX_PREVIEW_FILE_SIZE = float(_get("MAX_PREVIEW_FILE_SIZE", DEFAULT_MAX_PREVIEW_FILE_SIZE))
+
+
+    MAX_PREVIEW_FILE_SIZE = float(_get("MAX_PREVIEW_FILE_SIZE", DEFAULT_MAX_PREVIEW_FILE_SIZE, description="Maximum size (MB) of files to visualize in the file browser preview."))
 
     # OLD CHIMERA variable
     CHIMERA_OLD_BINARY_PATH = _get("CHIMERA_OLD_BINARY_PATH",'',description="Path to the Chimera OLD binary program (not the folder). Will only be used a viewer. None of the chimera scripts will work.", var_type=VarTypes.PATH, source="pwem")
@@ -98,7 +100,7 @@ class Plugin(pyworkflow.plugin.Plugin):
     _url = URL
 
     @classmethod
-    def _defineEmVar(cls, varName, defaultValue, description="Missing", varType:VarTypes=None):
+    def _defineEmVar(cls, varName, defaultValue, description="Missing", var_type:VarTypes=None):
         """ Shortcut method to define variables prepending EM_ROOT if variable is not absolute"""
 
         # Get the value, either whatever is in the environment or a join of EM_ROOT + defaultValue
@@ -132,7 +134,7 @@ class Plugin(pyworkflow.plugin.Plugin):
         else:
             defaultValue=value
 
-        cls._addVar(varName, value, defaultValue, description=description, var_type=varType)
+        cls._addVar(varName, value, defaultValue, description=description, var_type=var_type)
 
     @classmethod
     def getMaxitHome(cls):
