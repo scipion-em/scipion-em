@@ -35,7 +35,6 @@ import random
 import sys
 
 import pyworkflow.protocol as pwprot
-import pyworkflow.object as pwobj
 
 import pwem.objects as emobj
 from pwem.protocols import EMProtocol
@@ -919,11 +918,18 @@ class ProtCrossSubSet(ProtSets):
 
         # Get unique values of secfield in secset
         uniqueValuesinSec = secSet.getUniqueValues(secSetField)
+        uniqueValuesinSec ={value:None for value in uniqueValuesinSec}
+
+        pb = ProgressBar(mainSet.getSize(), fmt=ProgressBar.FULL)
+        pb.start()
 
         for item in mainSet:
             valueInMain=getattr(item,self.getMainSetField(pythonName=True))
-            if valueInMain in uniqueValuesinSec:
+            if valueInMain.get() in uniqueValuesinSec:
                 self._append(outputSet,item)
+            pb.increase()
+
+        pb.finish()
 
         self._defineOutputs(subset=outputSet)
         self._defineTransformRelation(mainSet, outputSet)
