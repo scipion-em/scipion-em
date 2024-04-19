@@ -149,7 +149,7 @@ class Plugin(pyworkflow.plugin.Plugin):
         # Avoid defining variables from children that does not define variables.
         if cls == Plugin:
             cls._defineVar(EM_ROOT_VAR, pwem.Config.EM_ROOT)
-            cls._defineEmVar(MAXIT_HOME, 'maxit-10.1', description="Path where maxit is installed.", varType=VarTypes.FOLDER)
+            cls._defineEmVar(MAXIT_HOME, 'maxit-10.1', description="Path where maxit is installed.", var_type=VarTypes.FOLDER)
 
             # Take this initialization event to define own datasets
             defineDatasets()
