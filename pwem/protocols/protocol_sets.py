@@ -35,7 +35,6 @@ import random
 import sys
 
 import pyworkflow.protocol as pwprot
-import pyworkflow.object as pwobj
 
 import pwem.objects as emobj
 from pwem.protocols import EMProtocol
@@ -870,3 +869,104 @@ class ProtSubSetByCoord(ProtSets):
                                         self.inputParticles.get().getSize())]
         return summary
 
+class ProtCrossSubSet(ProtSets):
+    """
+    Create a subset of the main set based on a matching field in another set. e.g.: Use _micName field (in both fields)
+    to select micrographs (main set) present in a set of coordinates (secondary set)
+    """
+    _label = 'Crossed subset'
+
+    # --------------------------- DEFINE param functions ----------------------
+    def _defineParams(self, form):
+        form.addSection(label='Input')
+
+        add = form.addParam  # short notation
+        add('mainSet', pwprot.params.PointerParam,
+            pointerClass='EMSet', label="Main set",
+            help='Set to be reduced')
+
+        add('mainSetField', pwprot.params.StringParam,
+            label='Main field', default="id",
+            help='Field in the main set that contains the values in common with the secondary set. Use any of the metadata viewers to find the field name.')
+
+        add('secSet', pwprot.params.PointerParam,
+            pointerClass='EMSet', label="Secondary set",
+            help='Set holding the matching field. e.g: Set of Coordinates hold the micName that can be used to filter a set of micrographs (main set)')
+
+        add('secSetField', pwprot.params.StringParam,
+            label='Secondary field', default="id",
+            help='Field in the secondary set that contains the values in common with the main set. Use any of the metadata viewers to find the field name.')
+
+
+    # --------------------------- INSERT steps functions ----------------------
+    def _insertAllSteps(self):
+        # These arguments are mainly for skipping the step if they are the same in the resume execution.
+        self._insertFunctionStep(self.createOutputStep,
+                                 self.mainSet.getObjId(),
+                                 self.secSet.getObjId(),
+                                 self.mainSetField.get(),
+                                 self.secSetField.get())
+
+    # --------------------------- STEPS functions -----------------------------
+    def createOutputStep(self, mainId, secId, mainSetField, secSetField):
+        mainSet = self.mainSet.get()
+        secSet = self.secSet.get()
+
+        # Instantiate and copy main properties
+        outputSet = mainSet.create(self.getPath())
+        outputSet.copyInfo(mainSet)
+
+        # Get unique values of secfield in secset
+        uniqueValuesinSec = secSet.getUniqueValues(secSetField)
+        uniqueValuesinSec ={value:None for value in uniqueValuesinSec}
+
+        pb = ProgressBar(mainSet.getSize(), fmt=ProgressBar.FULL)
+        pb.start()
+
+        for item in mainSet:
+            valueInMain=getattr(item,self.getMainSetField(pythonName=True))
+            if valueInMain.get() in uniqueValuesinSec:
+                self._append(outputSet,item)
+            pb.increase()
+
+        pb.finish()
+
+        self._defineOutputs(subset=outputSet)
+        self._defineTransformRelation(mainSet, outputSet)
+
+    def getMainSetField(self, pythonName=False):
+        if pythonName:
+            return self._normalizeSpecialFields(self.mainSetField.get())
+        else:
+            return self.mainSetField.get()
+
+    def getSecSetField(self, pythonName=False):
+        if pythonName:
+            return self._normalizeSpecialFields(self.secSetField.get())
+        else:
+            return self.secSetField.get()
+
+    def _normalizeSpecialFields(self, field):
+        if field == "id":
+            return "_objId"
+        else:
+            return field
+    # --------------------------- INFO functions ------------------------------
+    def _validate(self):
+        """Make sure the input data make sense"""
+        errors=[]
+        if not hasattr(self.mainSet.get().getFirstItem(), self.getMainSetField(pythonName=True)):
+            errors.append('The main set does not have the field %s' % self.mainSetField.get())
+
+        if not hasattr(self.secSet.get().getFirstItem(), self.getSecSetField(pythonName=True)):
+            errors.append('The secondary set does not have the field %s' % self.secSetField.get())
+
+        return errors
+    def _summary(self):
+
+        summary = ["Items in the main set where %s=%s of items in the secondary set where selected." % (self.mainSetField.get(), self.secSetField.get())]
+
+        if hasattr(self, "subset"):
+            summary.append('*%d* items matched the criteria' % self.subset.getSize())
+
+        return summary
