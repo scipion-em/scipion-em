@@ -198,7 +198,7 @@ class StarFile(IDAO):
                            reverse=not sortAsc)
         self._tableData[tableName] = orderList
 
-    def getSelectedRangeRowsIds(self, tableName, startRow, numberOfRows, column, reverse=True, remove=False):
+    def getSelectedRangeRowsIds(self, tableName, startRow, numberOfRows, column, reverse=True):
         """Return a range of rows starting at 'startRow' an amount of
            'numberOfRows' """
         logger.debug("Reading the table %s and selected a range of rows %d - %d" % (tableName, startRow+1, numberOfRows + 1))
@@ -210,9 +210,6 @@ class StarFile(IDAO):
         table = self._tableData[tableName]
         rowsIds = [int(table[row][col]) for row in range(startRow-1, startRow+numberOfRows)]
         return rowsIds
-
-    def getRowsIds(self, tableName, startRow, numberOfRows, column, reverse=True, remove=False):
-        pass
 
     def getTableWithAdditionalInfo(self):
         """Return a tuple with the table that need to show additional info and

@@ -380,7 +380,7 @@ Stack.setSlice(slice);
             logging.info("Table count: %f" % (endTime - initTime))
         return self._tableCount[tableName]
 
-    def getSelectedRangeRowsIds(self, tableName, startRow, numberOfRows, column, reverse=True, remove=False):
+    def getSelectedRangeRowsIds(self, tableName, startRow, numberOfRows, column, reverse=True):
         """Return a range of rows starting at 'startRow' an amount
            of 'numberOfRows' """
 
@@ -394,23 +394,12 @@ Stack.setSlice(slice);
         rowsIds = [row['id'] for row in rowsList]
         return rowsIds
 
-    def getRowsIds(self, tableName, minValue, maxValue, column, reverse=True, remove=False):
-        """Return a range of rows where the column values are between minValue, maxValue"""
-        logger.debug("Reading the table %s and selected a range of rows where %s between %d and %d" % (tableName, column, minValue, maxValue))
-        col = self._getColumnMap(tableName, column)
-        if col == None:
-            col = column
-        query = "SELECT id FROM %s WHERE %s BETWEEN %d AND %d" % (tableName, col, minValue, maxValue)
-        rowsList = self._con.execute(query).fetchall()
-        rowsIds = [row['id'] for row in rowsList]
-        return rowsIds
-
     def getColumnsValues(self, tableName, columns, xAxis, selection, limit,
                          useSelection, reverse=True):
         """Get the values of the selected columns in order to plot them"""
 
         logger.debug("Reading the table %s and selected some columns values...")
-        cols = columns
+        cols = [colName for colName in columns]
         if xAxis and xAxis not in cols:
             cols.append(xAxis)
         columnNames = []
@@ -419,7 +408,7 @@ Stack.setSlice(slice);
             columnNames.append(col)
         if 'id' not in cols:
             columnNames.append('id')  # Always retrieve the id values to create subsets
-            columns.append('id')
+            cols.append('id')
         columnNames = ", ".join(columnNames)
 
         col = self._getColumnMap(tableName, xAxis)
@@ -438,13 +427,13 @@ Stack.setSlice(slice);
         columnsValues = {}
 
         firstValue = selectedColumns[0]
-        for colName in columns:
+        for colName in cols:
             col = self._getColumnMap(tableName, colName) or colName
             columnsValues[colName] = [firstValue[col]]
 
         for pos, value in enumerate(selectedColumns):
             if pos > 0:
-                for colName in columns:
+                for colName in cols:
                     col = self._getColumnMap(tableName, colName) or colName
                     columnsValues[colName].append((value[col]))
 
