@@ -56,6 +56,7 @@ class ProtImportCoordinates(ProtImportFiles, ProtParticlePicking):
     IMPORT_FROM_EMAN = 3
     IMPORT_FROM_DOGPICKER = 4
     IMPORT_FROM_SCIPION = 5
+    IMPORT_FROM_CRYOSPARC = 6
 
     OUTPUT_NAME='outputCoordinates'
 
@@ -64,7 +65,7 @@ class ProtImportCoordinates(ProtImportFiles, ProtParticlePicking):
         from which the import can be done.
         (usually packages formats such as: xmipp3, eman2, relion...etc.
         """
-        return ['auto', 'xmipp', 'relion', 'eman', 'dogpicker', 'scipion']
+        return ['auto', 'xmipp', 'relion', 'eman', 'dogpicker', 'scipion', 'cryosparc']
 
     def _getDefaultChoice(self):
         return self.IMPORT_FROM_AUTO
@@ -104,8 +105,7 @@ class ProtImportCoordinates(ProtImportFiles, ProtParticlePicking):
 
     # ------------------- INSERT steps functions ------------------------------
     def _insertAllSteps(self):
-        importFrom = self.importFrom.get()
-        self._insertFunctionStep('createOutputStep', importFrom,
+        self._insertFunctionStep(self.createOutputStep, self.getImportFrom(),
                                  self.filesPath.get())
 
     # ------------------ STEPS functions --------------------------------------
@@ -118,6 +118,14 @@ class ProtImportCoordinates(ProtImportFiles, ProtParticlePicking):
             sImport = ScipionImport(self, self.importFilePath)
             # this function defines outputs and relations
             sImport.importCoordinates(self.inputMicrographs)
+
+        elif importFrom == self.IMPORT_FROM_CRYOSPARC:
+            ci = self.getImportClass()
+            coordsSet = ci.importCoordinates()
+            coordsSet.setBoxSize(self.boxSize.get())
+            self._defineOutputs(**{self.OUTPUT_NAME: coordsSet})
+            self._defineSourceRelation(self.inputMicrographs, coordsSet)
+
         else:
             # Pass the pointer with extended.
             coordsSet = self._createSetOfCoordinates(self.inputMicrographs)
@@ -193,6 +201,13 @@ class ProtImportCoordinates(ProtImportFiles, ProtParticlePicking):
                                                       doRaise=True)
             return DogpickerImport(self)
 
+        elif importFrom == self.IMPORT_FROM_CRYOSPARC:
+            cryoSPARCImport = Domain.importFromPlugin('cryosparc2.convert', 'cryoSPARCImport',
+                                                      'cryoSPARC is needed to import .cs files',
+                                                      doRaise=True)
+            self.importFilePath = self.filesPath.get('').strip()
+            return cryoSPARCImport(self, self.importFilePath)
+
         else:
             self.importFilePath = ''
             return None
@@ -211,6 +226,8 @@ class ProtImportCoordinates(ProtImportFiles, ProtParticlePicking):
                 return self.IMPORT_FROM_RELION
             if coordFile.endswith('.json') or coordFile.endswith('.box'):
                 return self.IMPORT_FROM_EMAN
+            if coordFile.endswith('.cs'):
+                return self.IMPORT_FROM_CRYOSPARC
         return -1
 
     def getInputMicrographs(self):
