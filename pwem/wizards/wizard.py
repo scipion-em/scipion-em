@@ -251,7 +251,7 @@ class MaskRadiusWizard(EmWizard):
                 if units == emcts.UNIT_ANGSTROM:
                     value = round(d.getRadiusAngstroms(d.radiusSlider))  # Must be an integer
                 else:
-                    value = d.getRadius(d.radiusSlider)
+                    value = int(d.getRadius(d.radiusSlider))
                 self.setVar(form, label, value)
         else:
             dialog.showWarning("Empty input", "Select elements first", form.root)
@@ -277,8 +277,8 @@ class MaskRadiiWizard(EmWizard):
                     form.setVar(label[0], d.getRadiusAngstroms(d.radiusSliderIn))
                     form.setVar(label[1], d.getRadiusAngstroms(d.radiusSliderOut))
                 else:
-                    form.setVar(label[0], d.getRadius(d.radiusSliderIn))
-                    form.setVar(label[1], d.getRadius(d.radiusSliderOut))
+                    form.setVar(label[0], int(d.getRadius(d.radiusSliderIn)))
+                    form.setVar(label[1], int(d.getRadius(d.radiusSliderOut)))
         else:
             dialog.showWarning("Empty input", "Select elements first", form.root)
 

@@ -399,14 +399,16 @@ Stack.setSlice(slice);
         """Get the values of the selected columns in order to plot them"""
 
         logger.debug("Reading the table %s and selected some columns values...")
-        cols = columns
+        cols = [colName for colName in columns]
         if xAxis and xAxis not in cols:
             cols.append(xAxis)
         columnNames = []
         for column in cols:
             col = self._getColumnMap(tableName, column) or column
             columnNames.append(col)
-
+        if 'id' not in cols:
+            columnNames.append('id')  # Always retrieve the id values to create subsets
+            cols.append('id')
         columnNames = ", ".join(columnNames)
 
         col = self._getColumnMap(tableName, xAxis)
@@ -425,13 +427,13 @@ Stack.setSlice(slice);
         columnsValues = {}
 
         firstValue = selectedColumns[0]
-        for colName in columns:
+        for colName in cols:
             col = self._getColumnMap(tableName, colName) or colName
             columnsValues[colName] = [firstValue[col]]
 
         for pos, value in enumerate(selectedColumns):
             if pos > 0:
-                for colName in columns:
+                for colName in cols:
                     col = self._getColumnMap(tableName, colName) or colName
                     columnsValues[colName].append((value[col]))
 
@@ -525,6 +527,9 @@ Stack.setSlice(slice);
         elementsCount = len(selection)
         if not elementsCount:
             elementsCount = self._tableCount[tableName]
+            objectManager.getSelectedRangeRowsIds(tableName,
+                                                  1, self._tableCount[tableName],
+                                                  'id', 'ASC')
         subsetName = objectManager.getGui().getSubsetName(objectType, elementsCount)
         if subsetName:
             format = '%Y%m%d%H%M%S'
@@ -534,7 +539,7 @@ Stack.setSlice(slice);
             self.writeSelection(table, path)
             path += ","  # Always add a comma, it is expected by the user subset protocol
             if tableName != OBJECT_TABLE:
-                path += tableName.split(OBJECT_TABLE)[0]
+                path += tableName.split('_Objects')[0]
 
             self.sendSubsetCreationMessage(path, objectType, subsetName)
 
