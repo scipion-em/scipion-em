@@ -7,6 +7,8 @@ V3.7.0:
      - ChimeraX resolution viewer compatible with WSL.
      - Fix: Wizard for choosing a Mask radius returns integer.
      - Describes better and register variables for the new GUI to edit variables
+     - Importing coordinates from cryoSPARC
+     - Fix: The coordinate viewer shows the complete list of micrographs when a subset has been generated and there are only coordinates for some micrographs in this subset
 
 Developers:
      - Plugin._defineVar and _defineEmVar offers  description(str) and  varType(VarTypes) as optional arguments to better describe the variable devel
