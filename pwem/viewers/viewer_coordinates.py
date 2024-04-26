@@ -427,9 +427,15 @@ class MainWindow:
             self.micrographPathDict[micId] = (micrograph.getFileName(), micrograph.getObjId())
 
         label = '_micName' if isinstance(setOfMicrographs, SetOfMicrographs) else '_micId'
+        micIdList = []
         for micAgg in self.setOfCoordinate.aggregate(["count"], label, [label, "_micId"]):
             micName = micAgg[label]
+            micIdList.append(micAgg['_micId'])
             data.append((micAgg['_micId'], micName, micAgg['count'], 'No'))
+
+        for micrograph in setOfMicrographs.iterItems():
+            if micrograph.getObjId() not in micIdList:
+                data.append((micrograph.getObjId(), micrograph.getMicName(), 0, 'No'))
 
         self.table = ttk.Treeview(self.contentFrame, columns=columns, show="headings")
         self.table.bind("<Enter>", self.recoveryPointer)
