@@ -2680,3 +2680,7 @@ class FSC(EMObject):
 class SetOfFSCs(EMSet):
     """Represents a set of FSCs"""
     ITEM_TYPE = FSC
+
+class SetOfStats(EMSet):
+    """Represents lines of data elements"""
+    ITEM_TYPE = Object
