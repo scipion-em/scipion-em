@@ -414,7 +414,7 @@ class MainWindow:
     def _createTable(self):
         """Create a table on the left side to display information"""
         columns = ('Index', 'File', 'Particles', 'Updated')
-        data = []
+        data = {}
 
         setOfMicrographs = self.setOfCoordinate.getMicrographs()
         for micrograph in setOfMicrographs.iterItems():
@@ -425,17 +425,12 @@ class MainWindow:
             self.movedCoordinates[micId] = {}
             self.newCoordinates[micId] = {}
             self.micrographPathDict[micId] = (micrograph.getFileName(), micrograph.getObjId())
+            data[micId] = (micrograph.getObjId(), micrograph.getMicName(), 0, 'No')
 
         label = '_micName' if isinstance(setOfMicrographs, SetOfMicrographs) else '_micId'
-        micIdList = []
         for micAgg in self.setOfCoordinate.aggregate(["count"], label, [label, "_micId"]):
             micName = micAgg[label]
-            micIdList.append(micAgg['_micId'])
-            data.append((micAgg['_micId'], micName, micAgg['count'], 'No'))
-
-        for micrograph in setOfMicrographs.iterItems():
-            if micrograph.getObjId() not in micIdList:
-                data.append((micrograph.getObjId(), micrograph.getMicName(), 0, 'No'))
+            data[str(micAgg['_micId'])] = (micAgg['_micId'], micName, micAgg['count'], 'No')
 
         self.table = ttk.Treeview(self.contentFrame, columns=columns, show="headings")
         self.table.bind("<Enter>", self.recoveryPointer)
@@ -444,7 +439,7 @@ class MainWindow:
             self.table.heading(col, text=col, anchor="center")
             self.table.column(col, anchor="center", width=width)
 
-        for row in data:
+        for row in data.values():
             self.table.insert("", tk.END, values=row)
 
         y_scrollbar = ttk.Scrollbar(self.contentFrame, orient="vertical", command=self.table.yview)
