@@ -8,6 +8,8 @@ V3.7.0:
      - Fix: Wizard for choosing a Mask radius returns integer.
      - Describes better and register variables for the new GUI to edit variables
      - NEW PROTOCOL - data summary: Aggregates (COUNT, MAX, MIN, AVG) any set data based on its fields
+     - Importing coordinates from cryoSPARC
+     - Fix: The coordinate viewer shows the complete list of micrographs when a subset has been generated and there are only coordinates for some micrographs in this subset
 
 Developers:
      - Plugin._defineVar and _defineEmVar offers  description(str) and  varType(VarTypes) as optional arguments to better describe the variable devel
