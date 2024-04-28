@@ -105,7 +105,8 @@ class ProtImportCoordinates(ProtImportFiles, ProtParticlePicking):
 
     # ------------------- INSERT steps functions ------------------------------
     def _insertAllSteps(self):
-        self._insertFunctionStep(self.createOutputStep, self.getImportFrom(),
+        self._insertFunctionStep(self.createOutputStep,
+                                 self.getImportFrom(),
                                  self.filesPath.get())
 
     # ------------------ STEPS functions --------------------------------------
@@ -119,7 +120,8 @@ class ProtImportCoordinates(ProtImportFiles, ProtParticlePicking):
             # this function defines outputs and relations
             sImport.importCoordinates(self.inputMicrographs)
 
-        elif importFrom == self.IMPORT_FROM_CRYOSPARC:
+        elif importFrom in [self.IMPORT_FROM_CRYOSPARC,
+                            self.IMPORT_FROM_RELION]:
             ci = self.getImportClass()
             coordsSet = ci.importCoordinates()
             coordsSet.setBoxSize(self.boxSize.get())
