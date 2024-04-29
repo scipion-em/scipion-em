@@ -1,3 +1,10 @@
+v3.8.0
+  Users:
+    - Allows to run the whole workflow until 3D processing with trigger points
+
+   Developers
+    - Modify the finishing condition of the parent protocol "extract particles". Now, it checks if the input coords are closed and if all mics and CTFs have been processed.
+
 V3.7.0:
   Users:
      - Allowing drag and drop a coordinate when picking
