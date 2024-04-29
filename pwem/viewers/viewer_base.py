@@ -113,9 +113,7 @@ class EmProtocolViewer(pwviewer.ProtocolViewer):
                 return None
 
             weight = 1. / numberOfParticles
-            print("RELION-ROT\tRELION-TILT")
             for angleRot, angleTilt in itemDataIterator:
-                print("%s\t%s" % (angleRot, angleTilt))
                 projection = getCloseProjection(angleRot, angleTilt)
                 if projection is None:
                     projectionList.append([angleRot, angleTilt, weight])
