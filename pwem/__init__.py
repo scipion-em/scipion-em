@@ -104,12 +104,12 @@ class Plugin(pyworkflow.plugin.Plugin):
         """ Shortcut method to define variables prepending EM_ROOT if variable is not absolute"""
 
         # Get the value, either whatever is in the environment or a join of EM_ROOT + defaultValue
-        value = os.environ.get(varName, defaultValue)
+        defaultValueWithEM= os.path.join(Config.EM_ROOT,defaultValue)
+
+        value = os.environ.get(varName, defaultValueWithEM)
 
         def expand(value):
 
-            # We join with EM_ROOT. This will work for not absolute paths
-            value = os.path.join(Config.EM_ROOT, value)
 
             # CASE-1 : Users might have used ~ and that has to be expanded
             value = os.path.expanduser(value)
@@ -130,7 +130,7 @@ class Plugin(pyworkflow.plugin.Plugin):
         value=expand(value)
 
         if varName in os.environ:
-            defaultValue= expand(defaultValue)
+            defaultValue= expand(defaultValueWithEM)
         else:
             defaultValue=value
 
