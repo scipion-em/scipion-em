@@ -30,6 +30,8 @@ import os
 from os.path import join, basename
 import re
 from datetime import timedelta, datetime
+import logging
+logger = logging.getLogger(__name__)
 
 import pyworkflow.utils as pwutils
 import pyworkflow.protocol.params as params
@@ -558,17 +560,25 @@ class ProtImportMovies(ProtImportMicBase):
                           "You must set to Yes *Create movie stacks?* "
                           "parameter.")
 
-        if not self.gainFile.empty() and not os.path.exists(self.gainFile.get()):
-            errors.append("Gain file not found in " + str(self.gainFile.get()))
-        if not self.darkFile.empty() and not os.path.exists(self.darkFile.get()):
-            errors.append("Dark file not found in " + str(self.gainFile.get()))
+        #  Using getMatchFile to find a file that matches with the given pattern.In case it is empty, the
+        #  validation fails, otherwise the first file that matches is returned.
+        if not self.gainFile.empty() and not self.getMatchFiles(self.gainFile.get()):
+            errors.append("There is no file that corresponds to the gain file " + str(self.gainFile.get()))
+        else:
+            logger.info("It has been used as a gain file: %s" % self.getMatchFiles(self.gainFile.get())[0])
+
+        if not self.darkFile.empty() and not self.getMatchFiles(self.darkFile.get()):
+            errors.append("There is no file that corresponds to the dark file " + str(self.darkFile.get()))
+        else:
+            logger.info("It has been used as a dark file: %s" % self.getMatchFiles(self.darkFile.get())[0])
+
         return errors
 
     # --------------------------- UTILS functions ------------------------------
     def setSamplingRate(self, movieSet):
         ProtImportMicBase.setSamplingRate(self, movieSet)
-        movieSet.setGain(self.gainFile.get())
-        movieSet.setDark(self.darkFile.get())
+        movieSet.setGain(self.getMatchFiles(self.gainFile.get())[0])
+        movieSet.setDark(self.getMatchFiles(self.darkFile.get())[0])
         acq = movieSet.getAcquisition()
         acq.setDoseInitial(self.doseInitial.get())
         acq.setDosePerFrame(self.dosePerFrame.get())
