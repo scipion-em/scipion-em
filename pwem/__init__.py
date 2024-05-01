@@ -62,7 +62,10 @@ class Config(pw.Config):
     EM_ROOT = _join(_get(EM_ROOT_VAR, _join(pw.Config.SCIPION_SOFTWARE, 'em')))
 
     # Default XMIPP_HOME: needed here for ShowJ viewers
-    XMIPP_HOME = _get('XMIPP_HOME', _join(EM_ROOT, 'xmipp'),description="Path where XMIPP is installed.", var_type=VarTypes.FOLDER, source="pwem")
+    XMIPP_HOME = _join(_get('XMIPP_HOME', _join(EM_ROOT, 'xmipp'),
+                            description="Path where XMIPP is installed.",
+                            var_type=VarTypes.FOLDER,
+                            source="pwem"))
 
     # Get java home, we might need to provide correct default value. Use SCIPION_JAVA_HOME to force it when there is other JAVA_HOME you don't want/cant to change: e.g. pycharm debugging.
     JAVA_HOME = _get('SCIPION_JAVA_HOME', _get('JAVA_HOME', ''),
@@ -104,12 +107,12 @@ class Plugin(pyworkflow.plugin.Plugin):
         """ Shortcut method to define variables prepending EM_ROOT if variable is not absolute"""
 
         # Get the value, either whatever is in the environment or a join of EM_ROOT + defaultValue
-        value = os.environ.get(varName, defaultValue)
+        defaultValueWithEM= os.path.join(Config.EM_ROOT,defaultValue)
+
+        value = os.environ.get(varName, defaultValueWithEM)
 
         def expand(value):
 
-            # We join with EM_ROOT. This will work for not absolute paths
-            value = os.path.join(Config.EM_ROOT, value)
 
             # CASE-1 : Users might have used ~ and that has to be expanded
             value = os.path.expanduser(value)
@@ -130,7 +133,7 @@ class Plugin(pyworkflow.plugin.Plugin):
         value=expand(value)
 
         if varName in os.environ:
-            defaultValue= expand(defaultValue)
+            defaultValue= expand(defaultValueWithEM)
         else:
             defaultValue=value
 

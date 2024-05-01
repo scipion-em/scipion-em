@@ -3,10 +3,14 @@ V3.7.0:
      - Allowing drag and drop a coordinate when picking
      - Allowing to create subsets from the selection in the metadataviewer plotter
      - Fixing an error creating subset through new metadataviewer
-     - Crossed subset protocol: Creates a subset of the main set based on a matching field in another set.
+     - NEW PROTOCOL - Crossed subset protocol: Creates a subset of the main set based on a matching field in another set.
      - ChimeraX resolution viewer compatible with WSL.
      - Fix: Wizard for choosing a Mask radius returns integer.
      - Describes better and register variables for the new GUI to edit variables
+     - NEW PROTOCOL - data summary: Aggregates (COUNT, MAX, MIN, AVG) any set data based on its fields
+     - Importing coordinates from cryoSPARC
+     - Fix: The coordinate viewer shows the complete list of micrographs when a subset has been generated and there are only coordinates for some micrographs in this subset
+     - Allowing the use of a pattern for the import of the gain file.
 
 Developers:
      - Plugin._defineVar and _defineEmVar offers  description(str) and  varType(VarTypes) as optional arguments to better describe the variable devel
