@@ -24,6 +24,7 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
+from glob import glob
 from os.path import join, dirname, basename
 import logging
 logger = logging.getLogger(__name__)
@@ -108,6 +109,7 @@ def splitRange(minValue, maxValue, splitNum=10, roundTo=2):
 
 PROBLEMATIC_SHELL_CHARS = ";<>?\"()|*\\'&"
 
+
 def cleanFileName(fn, warn=True):
     """ Cleans any character that later on might cause shell parsing errors like "(", ")", " "
     and warns about it if warn is true.
@@ -127,6 +129,7 @@ def cleanFileName(fn, warn=True):
 
     return fn, cleaned
 
+
 def round_to_nearest(number, base):
     """ Rounds number to the nearest integer: E.g: pass base=5 to round to the nearest
      number multiple of 5
@@ -136,4 +139,11 @@ def round_to_nearest(number, base):
     """
 
     return base * round(number/base)
+
+
+def getMatchingFiles(path, sort=False):
+    filePaths = glob(path)
+    if sort:
+        filePaths.sort()
+    return filePaths
 
