@@ -599,8 +599,6 @@ class ProtImportMovies(ProtImportMicBase):
 
     # --------------------------- UTILS functions ------------------------------
     def setSamplingRate(self, movieSet):
-        import time
-        time.sleep(10)
         ProtImportMicBase.setSamplingRate(self, movieSet)
         movieSet.setGain(self.getGain())
         movieSet.setDark(self.getDark())
