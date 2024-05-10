@@ -62,7 +62,10 @@ class Config(pw.Config):
     EM_ROOT = _join(_get(EM_ROOT_VAR, _join(pw.Config.SCIPION_SOFTWARE, 'em')))
 
     # Default XMIPP_HOME: needed here for ShowJ viewers
-    XMIPP_HOME = _get('XMIPP_HOME', _join(EM_ROOT, 'xmipp'),description="Path where XMIPP is installed.", var_type=VarTypes.FOLDER, source="pwem")
+    XMIPP_HOME = _join(_get('XMIPP_HOME', _join(EM_ROOT, 'xmipp'),
+                            description="Path where XMIPP is installed.",
+                            var_type=VarTypes.FOLDER,
+                            source="pwem"))
 
     # Get java home, we might need to provide correct default value. Use SCIPION_JAVA_HOME to force it when there is other JAVA_HOME you don't want/cant to change: e.g. pycharm debugging.
     JAVA_HOME = _get('SCIPION_JAVA_HOME', _get('JAVA_HOME', ''),
