@@ -19,7 +19,6 @@ from metadataviewer.dao.model import IDAO
 from metadataviewer.model import Table, Column, BoolRenderer, ImageRenderer, StrRenderer
 from metadataviewer.model.renderers import ImageReader, Action
 
-
 SCIPION_OBJECT_ID = "SCIPION_OBJECT_ID"
 SCIPION_PORT = "SCIPION_PORT"
 
@@ -28,7 +27,6 @@ class ScipionImageReader(ImageReader):
     @classmethod
     def getCompatibleFileTypes(cls) -> list:
         return list(ImageReadersRegistry._readers.keys())
-
 
     @classmethod
     @lru_cache
@@ -124,7 +122,7 @@ class SqliteFile(IDAO):
                 tableSplit = tableName.split('_')
                 lenTableSplit = len(tableSplit)
                 if lenTableSplit > 1:
-                    alias = tableName.replace(tableSplit[-1],'') + className
+                    alias = tableName.replace(tableSplit[-1], '') + className
             else:
                 alias = className
         else:
@@ -157,7 +155,7 @@ class SqliteFile(IDAO):
 
             self.composeObjectType()
 
-        if len(self._tables) > 2: # Assuming that there are more tables than just Object and Properties
+        if len(self._tables) > 2:  # Assuming that there are more tables than just Object and Properties
             self._tableWithAdditionalInfo = OBJECT_TABLE
         endTime = time.time()
         logging.info("GetTableNames: %f" % (endTime - initTime))
@@ -204,13 +202,17 @@ class SqliteFile(IDAO):
                 table.addAction(labels[0], lambda: self.createSubsetCallback(table, objectTypes[0], objectManager))
                 table.addAction(labels[1], lambda: self.createSubsetCallback(table, objectTypes[1], objectManager))
                 if alias == 'Class2D':
-                    table.addAction('Averages', lambda: self.createSubsetCallback(table, 'SetOfAverages', objectManager))
+                    table.addAction('Averages',
+                                    lambda: self.createSubsetCallback(table, 'SetOfAverages', objectManager))
                 else:
-                    table.addAction('Volumes', lambda: self.createSubsetCallback(table, 'SetOfVolumes',  objectManager))
+                    table.addAction('Volumes', lambda: self.createSubsetCallback(table, 'SetOfVolumes', objectManager))
             elif alias.startswith('Class'):
-                    table.addAction(aliasSplit[1], lambda: self.createSubsetCallback(table, self._objectsType[aliasSplit[1]], objectManager))
+                table.addAction(aliasSplit[1],
+                                lambda: self.createSubsetCallback(table, self._objectsType[aliasSplit[1]],
+                                                                  objectManager))
             elif alias in self._objectsType and self._objectsType[alias].startswith('SetOf'):
-                table.addAction(alias, lambda: self.createSubsetCallback(table, self._objectsType[alias], objectManager))
+                table.addAction(alias,
+                                lambda: self.createSubsetCallback(table, self._objectsType[alias], objectManager))
 
     def fillTable(self, table, objectManager):
         """Create the table structure (columns) and set the table alias"""
@@ -240,7 +242,10 @@ class SqliteFile(IDAO):
 
             newCol = Column(colName, renderer)
             newCol.setIsSorteable(True)
-            newCol.setIsVisible(objectManager.isLabelVisible(colName))
+            if (tableName == OBJECT_TABLE):
+                newCol.setIsVisible(objectManager.isLabelVisible(colName))
+            else:
+                newCol.setIsVisible(True)
             table.addColumn(newCol)
 
             if isFileNameCol:
@@ -288,7 +293,7 @@ class SqliteFile(IDAO):
 
             def openImageJCallback(imagePath):
                 imageSplit = imagePath.split('@')
-                if len(imageSplit)>1:
+                if len(imageSplit) > 1:
                     selectedSlice = int(imageSplit[0])
                 else:
                     selectedSlice = 0
@@ -312,7 +317,7 @@ Stack.setSlice(slice);
                                       openImageJCallback))
 
     def addImageViewer(self, renderer: ImageRenderer, imageExt: str):
-        icon = os.path.join(pw.getResourcesPath(),'file_vol.png')
+        icon = os.path.join(pw.getResourcesPath(), 'file_vol.png')
 
         def openImageViewerCallback(imagePath):
             path = imagePath.split('@')[-1]
@@ -343,8 +348,8 @@ Stack.setSlice(slice);
         self.updateExtendColumn(page.getTable())
 
         for rowcount, row in enumerate(self.iterTable(tableName, start=firstRow, limit=limit,
-                                       classes=self._tables[tableName],
-                                       orderBy=column, mode=mode)):
+                                                      classes=self._tables[tableName],
+                                                      orderBy=column, mode=mode)):
             if row:
                 values = [value for key, value in row.items() if key not in EXCLUDED_COLUMNS]
                 if 'id' in row.keys():
@@ -366,7 +371,7 @@ Stack.setSlice(slice);
 
     def getRowsCount(self, tableName):
         """ Return the number of elements in the given table. """
-        logger.debug("Reading the table %s" %tableName)
+        logger.debug("Reading the table %s" % tableName)
         if tableName == OBJECT_TABLE:
             size = int(self._con.execute(f"SELECT * FROM {PROPERTIES_TABLE} WHERE key='_size'").fetchall()[0]['value'])
             return size
@@ -384,12 +389,14 @@ Stack.setSlice(slice);
         """Return a range of rows starting at 'startRow' an amount
            of 'numberOfRows' """
 
-        logger.debug("Reading the table %s and selected a range of rows %d - %d" % (tableName,startRow, numberOfRows + 1))
+        logger.debug(
+            "Reading the table %s and selected a range of rows %d - %d" % (tableName, startRow, numberOfRows + 1))
         mode = 'ASC' if reverse else 'DESC'
         col = self._getColumnMap(tableName, column)
         if col == None:
             col = column
-        query = "SELECT id FROM %s ORDER BY %s %s LIMIT %d , %d" % (tableName, col, mode, startRow - 1, numberOfRows + 1)
+        query = "SELECT id FROM %s ORDER BY %s %s LIMIT %d , %d" % (
+        tableName, col, mode, startRow - 1, numberOfRows + 1)
         rowsList = self._con.execute(query).fetchall()
         rowsIds = [row['id'] for row in rowsList]
         return rowsIds
@@ -421,7 +428,7 @@ Stack.setSlice(slice);
         where = f" WHERE id in ({', '.join(map(str, selection.getSelection().keys()))})" if selection.getCount() > 1 and useSelection else ''
 
         query = "SELECT %s FROM %s %s %s %s" % (columnNames, tableName, where,
-                                                 orderBy, limit)
+                                                orderBy, limit)
         selectedColumns = self._con.execute(query).fetchall()
 
         columnsValues = {}
@@ -479,13 +486,16 @@ Stack.setSlice(slice);
                 yield row
         else:  # Mapping the column names and  including only the allowed columns
             self._columnsMap[tableName] = {row['column_name']: row['label_property']
-                          for row in self.iterTable(kwargs['classes']) if row['class_name'] in ALLOWED_COLUMNS_TYPES}
+                                           for row in self.iterTable(kwargs['classes']) if
+                                           row['class_name'] in ALLOWED_COLUMNS_TYPES}
             self._excludedColumns = {row['column_name']: row['label_property']
-                          for row in self.iterTable(kwargs['classes']) if row['class_name'] not in ALLOWED_COLUMNS_TYPES}
+                                     for row in self.iterTable(kwargs['classes']) if
+                                     row['class_name'] not in ALLOWED_COLUMNS_TYPES}
 
             def _row_factory(cursor, row):
                 fields = [column[0] for column in cursor.description]
-                rowFact = {self._columnsMap[tableName].get(k, k): v for k, v in zip(fields, row) if k not in self._excludedColumns}
+                rowFact = {self._columnsMap[tableName].get(k, k): v for k, v in zip(fields, row) if
+                           k not in self._excludedColumns}
                 return rowFact
 
             # Modify row factory to modify column names
@@ -560,7 +570,6 @@ Stack.setSlice(slice);
 
         clientSocket.send(data.encode())
 
-
     def getScipionPort(self):
         """ Returns Scipion port or None if not in the environment"""
         return os.getenv(SCIPION_PORT, '1300')
@@ -574,7 +583,7 @@ Stack.setSlice(slice);
         tableName = table.getName()
         rowsIds = table.getSelection().getSelection().keys()
         if not rowsIds:
-            rowsIds = [i+1 for i in range(self._tableCount[tableName])]
+            rowsIds = [i + 1 for i in range(self._tableCount[tableName])]
         try:
             with open(path, 'w') as file:
                 for rowId in rowsIds:
@@ -621,7 +630,7 @@ def _guessType(strValue):
             return str
 
 
-def extendMDViewer(om:metadataviewer.model.ObjectManager):
+def extendMDViewer(om: metadataviewer.model.ObjectManager):
     """ Function to extend the object manager with DAOs and readers"""
     om.registerDAO(SqliteFile)
     om.registerReader(ScipionImageReader)
