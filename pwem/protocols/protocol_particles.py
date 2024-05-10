@@ -315,7 +315,7 @@ class ProtExtractParticles(ProtParticles):
     def _isStreamClosed(self):
         return self.coordsClosed
 
-    def _isAllMicsProcessed(self):
+    def _areAllMicsProcessed(self):
         """
         This condition determines if the processing is complete when all the micrographs associated
         with the input coordinates have been processed.
@@ -528,7 +528,7 @@ class ProtExtractParticles(ProtParticles):
         # We have finished when there is not more input mics (stream closed)
         # and the number of processed mics is equal to the number of inputs
         streamClosed = self._isStreamClosed()
-        allMicsProcessed = self._isAllMicsProcessed()
+        allMicsProcessed = self._areAllMicsProcessed()
         self.finished = streamClosed and allDone == inputLen and allMicsProcessed
         self.debug(' is finished? %s ' % self.finished)
         self.debug(' is stream closed? %s ' % streamClosed)
