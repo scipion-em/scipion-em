@@ -10,10 +10,12 @@ V3.7.0:
      - NEW PROTOCOL - data summary: Aggregates (COUNT, MAX, MIN, AVG) any set data based on its fields
      - Importing coordinates from cryoSPARC
      - Fix: The coordinate viewer shows the complete list of micrographs when a subset has been generated and there are only coordinates for some micrographs in this subset
+     - Allows to run the whole workflow until 3D processing with trigger points
      - Allowing the use of a pattern for the import of the gain file.
 
 Developers:
      - Plugin._defineVar and _defineEmVar offers  description(str) and  varType(VarTypes) as optional arguments to better describe the variable devel
+     - Modify the finishing condition of the parent protocol "extract particles". Now, it checks if the input coords are closed and if all mics and CTFs have been processed.
 
 V3.6.0:
   Users:
