@@ -45,8 +45,7 @@ class MDView(View):
         env = os.environ
         env[SCIPION_PORT] = str(self.port)
         env[SCIPION_OBJECT_ID] = str(self._emSet.getObjId())
-        config = self.getVisibleAndOrderLabels()
-        visibleLabels, orderLabels = config[0], config[1]
+        visibleLabels, orderLabels = self.getVisibleAndOrderLabels()
         subprocess.Popen(
             [PYTHON, "-m", "metadataviewer", "--extensionpath", os.path.join(os.path.dirname(__file__), "readers.py"),
             self._emSet.getFileName(), "--visiblelabels", visibleLabels, "--orderlabels", orderLabels])
