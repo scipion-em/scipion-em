@@ -1,3 +1,6 @@
+V3.7.1:
+    - Hot-fix: SetOf3DClasses and other sets without visualization config can be shown in the metadataviewer
+
 V3.7.0:
   Users:
      - Allowing drag and drop a coordinate when picking
