@@ -54,8 +54,8 @@ class MDView(View):
     def getVisibleAndOrderLabels(self):
         from pwem.viewers import VISIBLE, ORDER
         config = RegistryViewerConfig.getConfig(type(self._emSet))
-        visible = config[VISIBLE] if VISIBLE in config else ''
-        order = config[ORDER] if ORDER in config else ''
+        visible = config[VISIBLE] if config and VISIBLE in config else ''
+        order = config[ORDER] if config and ORDER in config else ''
         return visible, order
 
 
