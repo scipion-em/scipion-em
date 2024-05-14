@@ -30,11 +30,13 @@ import os
 from os.path import join, basename
 import re
 from datetime import timedelta, datetime
+import logging
+logger = logging.getLogger(__name__)
 
 import pyworkflow.utils as pwutils
 import pyworkflow.protocol.params as params
 
-from pwem import Domain
+from pwem import Domain, getMatchingFiles
 from pwem.emlib.image import ImageHandler
 import pwem.constants as emcts
 
@@ -446,6 +448,8 @@ class ProtImportMovies(ProtImportMicBase):
         ProtImportMicBase.__init__(self, **kwargs)
         self.serverSocket = None
         self.connectionList = None
+        self.gain = -1
+        self.dark = -1
 
     def _getBlacklistSetClass(self):
         """ Returns the class to be blacklisted by this protocol.
@@ -558,17 +562,46 @@ class ProtImportMovies(ProtImportMicBase):
                           "You must set to Yes *Create movie stacks?* "
                           "parameter.")
 
-        if not self.gainFile.empty() and not os.path.exists(self.gainFile.get()):
-            errors.append("Gain file not found in " + str(self.gainFile.get()))
-        if not self.darkFile.empty() and not os.path.exists(self.darkFile.get()):
-            errors.append("Dark file not found in " + str(self.gainFile.get()))
+        #  Using getMatchFile to find a file that matches with the given pattern.In case it is empty, the
+        #  validation fails, otherwise the first file that matches is returned.
+        if not self.gainFile.empty():
+            if not self.getGain():
+                errors.append("There is no file that corresponds to the gain file " + str(self.gainFile.get()))
+            else:
+                logger.info("It has been used as a gain file: %s" % self.getGain())
+
+        if not self.darkFile.empty():
+
+            if not self.getDark():
+                errors.append("There is no file that corresponds to the dark file " + str(self.darkFile.get()))
+            else:
+               logger.info("It has been used as a dark file: %s" % self.getDark())
+
         return errors
+
+    def getGain(self):
+        if self.gain == -1:
+            self.gain = self.getGainOrDark(self.gainFile)
+        return self.gain
+
+    def getDark(self):
+        if self.dark == -1:
+            self.dark = self.getGainOrDark(self.darkFile)
+        return self.dark
+
+    def getGainOrDark(self, path):
+        if path.empty():
+            return None
+        matchinFiles = getMatchingFiles(path.get())
+        if not matchinFiles:
+            return None
+        return matchinFiles[0]
 
     # --------------------------- UTILS functions ------------------------------
     def setSamplingRate(self, movieSet):
         ProtImportMicBase.setSamplingRate(self, movieSet)
-        movieSet.setGain(self.gainFile.get())
-        movieSet.setDark(self.darkFile.get())
+        movieSet.setGain(self.getGain())
+        movieSet.setDark(self.getDark())
         acq = movieSet.getAcquisition()
         acq.setDoseInitial(self.doseInitial.get())
         acq.setDosePerFrame(self.dosePerFrame.get())

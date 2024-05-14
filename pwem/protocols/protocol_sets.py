@@ -35,11 +35,10 @@ import random
 import sys
 
 import pyworkflow.protocol as pwprot
-import pyworkflow.object as pwobj
+from pyworkflow.object import Object,Float, Integer, String
 
-import pwem.objects as emobj
 from pwem.protocols import EMProtocol
-from pwem.objects import Volume, EMSet
+from pwem.objects import Volume, EMSet, SetOfClasses, SetOfStats
 from pyworkflow.utils import ProgressBar, getListFromRangeString
 
 
@@ -317,7 +316,7 @@ class ProtUnionSet(ProtSets):
         if len(classes) > 1:
             return ["All objects should have the same type.",
                     "Types of objects found: %s" % ", ".join(classes)]
-        if issubclass(type(self.inputSets[0].get()), emobj.SetOfClasses):
+        if issubclass(type(self.inputSets[0].get()), SetOfClasses):
             return ["Is not possible to join different sets of classes.\n"
                     "If you want to join different representative, extract them "
                     "with the viewer and them run this protocol with the "
@@ -391,7 +390,7 @@ class ProtUnionSet(ProtSets):
         if len(warnings):
             warnings.append("Your input sets have different attributes. "
                             "We will keep only the common ones. This may "
-                            "cause the lost of important data like CFT, "
+                            "cause the lost of important data like CTF, "
                             "alignment information,...")
 
         return  warnings
@@ -869,4 +868,203 @@ class ProtSubSetByCoord(ProtSets):
                        ' particles.' % (self.outputParticles.getSize(),
                                         self.inputParticles.get().getSize())]
         return summary
+
+class ProtCrossSubSet(ProtSets):
+    """
+    Create a subset of the main set based on a matching field in another set. e.g.: Use _micName field (in both fields)
+    to select micrographs (main set) present in a set of coordinates (secondary set)
+    """
+    _label = 'Crossed subset'
+
+    # --------------------------- DEFINE param functions ----------------------
+    def _defineParams(self, form):
+        form.addSection(label='Input')
+
+        add = form.addParam  # short notation
+        add('mainSet', pwprot.params.PointerParam,
+            pointerClass='EMSet', label="Main set",
+            help='Set to be reduced')
+
+        add('mainSetField', pwprot.params.StringParam,
+            label='Main field', default="id",
+            help='Field in the main set that contains the values in common with the secondary set. Use any of the metadata viewers to find the field name.')
+
+        add('secSet', pwprot.params.PointerParam,
+            pointerClass='EMSet', label="Secondary set",
+            help='Set holding the matching field. e.g: Set of Coordinates hold the micName that can be used to filter a set of micrographs (main set)')
+
+        add('secSetField', pwprot.params.StringParam,
+            label='Secondary field', default="id",
+            help='Field in the secondary set that contains the values in common with the main set. Use any of the metadata viewers to find the field name.')
+
+
+    # --------------------------- INSERT steps functions ----------------------
+    def _insertAllSteps(self):
+        # These arguments are mainly for skipping the step if they are the same in the resume execution.
+        self._insertFunctionStep(self.createOutputStep,
+                                 self.mainSet.getObjId(),
+                                 self.secSet.getObjId(),
+                                 self.mainSetField.get(),
+                                 self.secSetField.get())
+
+    # --------------------------- STEPS functions -----------------------------
+    def createOutputStep(self, mainId, secId, mainSetField, secSetField):
+        mainSet = self.mainSet.get()
+        secSet = self.secSet.get()
+
+        # Instantiate and copy main properties
+        outputSet = mainSet.create(self.getPath())
+        outputSet.copyInfo(mainSet)
+
+        # Get unique values of secfield in secset
+        uniqueValuesinSec = secSet.getUniqueValues(secSetField)
+        uniqueValuesinSec ={value:None for value in uniqueValuesinSec}
+
+        pb = ProgressBar(mainSet.getSize(), fmt=ProgressBar.FULL)
+        pb.start()
+
+        for item in mainSet:
+            valueInMain=getattr(item,self.getMainSetField(pythonName=True))
+            if valueInMain.get() in uniqueValuesinSec:
+                self._append(outputSet,item)
+            pb.increase()
+
+        pb.finish()
+
+        self._defineOutputs(subset=outputSet)
+        self._defineTransformRelation(mainSet, outputSet)
+
+    def getMainSetField(self, pythonName=False):
+        if pythonName:
+            return self._normalizeSpecialFields(self.mainSetField.get())
+        else:
+            return self.mainSetField.get()
+
+    def getSecSetField(self, pythonName=False):
+        if pythonName:
+            return self._normalizeSpecialFields(self.secSetField.get())
+        else:
+            return self.secSetField.get()
+
+    def _normalizeSpecialFields(self, field):
+        if field == "id":
+            return "_objId"
+        else:
+            return field
+    # --------------------------- INFO functions ------------------------------
+    def _validate(self):
+        """Make sure the input data make sense"""
+        errors=[]
+        if not hasattr(self.mainSet.get().getFirstItem(), self.getMainSetField(pythonName=True)):
+            errors.append('The main set does not have the field %s' % self.mainSetField.get())
+
+        if not hasattr(self.secSet.get().getFirstItem(), self.getSecSetField(pythonName=True)):
+            errors.append('The secondary set does not have the field %s' % self.secSetField.get())
+
+        return errors
+    def _summary(self):
+
+        summary = ["Items in the main set where %s=%s of items in the secondary set where selected." % (self.mainSetField.get(), self.secSetField.get())]
+
+        if hasattr(self, "subset"):
+            summary.append('*%d* items matched the criteria' % self.subset.getSize())
+
+        return summary
+
+
+class ProtSetAggregate(EMProtocol):
+    """ Aggregates any set data based on its fields"""
+    _label = "data summary"
+    def _defineParams(self, form):
+        form.addSection(label='Input')
+
+        add = form.addParam  # short notation
+        add('inputSet', pwprot.params.PointerParam,
+            pointerClass='EMSet', label="Any set",
+            help='Set with the dta to be aggregated')
+
+        add('operations', pwprot.params.StringParam,
+            label='Summary operations',default="COUNT",
+            help='Summary operations to apply to all fields in Fields parameter. e.g: MIN MAX AVG. Possible values are MIN, MAX, COUNT, '
+                 'AVG, SUM, TOTAL, GROUP_CONCAT. For more technical information see: https://www.sqlite.org/lang_aggfunc.html')
+
+        add('fields', pwprot.params.StringParam,
+            label='Fields', default="id",
+            help='Fields to apply operations on. Fields can be found in the metadata viewers.'
+                  ' The header of the columns are valid names. e.g: _samplingRate id. Fields listed here should '
+                 'support the operations specified: DO NOT add literal fields.',
+            )
+
+        add('groupby', pwprot.params.StringParam,
+            label='Group by',
+            help='Fields to make the group. An empty value will summarize the whole dataset.',
+            )
+
+    def _insertAllSteps(self):
+        self._insertFunctionStep(self.aggregateSet, self.operations.get(), self.fields.get(), self.groupby.get())
+
+    def aggregateSet(self, *args):
+
+        mainSet = self.inputSet.get()
+
+        # Instantiate and copy main properties
+        outputSet = SetOfStats.create(self.getPath())
+
+        # Run the aggregation method
+        operations = self.operations.getListFromValues(caster=str)
+        self.info("Operations: %s" % operations)
+
+        fields = self.fields.getListFromValues(caster=str)
+        self.info("Fields: %s" % fields)
+
+
+        if self.groupby.get():
+            groupBy = self.groupby.getListFromValues(caster=str)
+            self.info("Grouping by: %s" % groupBy)
+        else:
+            groupBy = None
+            self.info("No grouping fields.")
+
+
+        result = mainSet.aggregate(operations,
+                                   fields, groupBy)
+
+        pb = ProgressBar(len(result), fmt=ProgressBar.FULL)
+        pb.start()
+
+        # Dictionary to hold the scipion data type based on the key
+        scipionTypes ={}
+
+        def getScipionType(fieldName:str):
+
+            if fieldName not in scipionTypes:
+
+                if fieldName.startswith("COUNT"):
+                    scipionType=Integer
+                elif fieldName.startswith(("MIN","MAX","AVG", "SUM","TOTAL")):
+                    scipionType=Float
+                else:
+                    scipionType=String
+
+                self.info("Scipion type for %s is %s" %(key, scipionType.getClassName()))
+                scipionTypes[key] = scipionType
+            return scipionTypes[key]
+
+        # Fill the set
+        for line in result:
+            newItem = Object()
+            for key in line.keys():
+                scipionType = getScipionType(key)
+                value =line[key]
+                setattr(newItem, key, scipionType(value))
+
+            outputSet.append(newItem)
+            pb.increase()
+
+        pb.finish()
+
+        self._defineOutputs(aggregate=outputSet)
+        self._defineTransformRelation(mainSet, outputSet)
+
+
 
