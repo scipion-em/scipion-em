@@ -1,3 +1,5 @@
+V3.8.0:
+    - Durations like timeouts in streaming can be specified as "1h 24m 36s"
 V3.7.1:
     - Hot-fix: SetOf3DClasses and other sets without visualization config can be shown in the metadataviewer
 

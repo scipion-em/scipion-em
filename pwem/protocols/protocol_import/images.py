@@ -229,8 +229,8 @@ class ProtImportImages(ProtImportFiles):
 
         # Ignore the timeout variables if we are not really in streaming mode
         if self.dataStreaming:
-            timeout = timedelta(seconds=self.timeout.get())
-            fileTimeout = timedelta(seconds=self.fileTimeout.get())
+            timeout = timedelta(seconds=self.timeout.toSeconds())
+            fileTimeout = timedelta(seconds=self.fileTimeout.toSeconds())
         else:
             timeout = timedelta(seconds=5)
             fileTimeout = timedelta(seconds=5)
