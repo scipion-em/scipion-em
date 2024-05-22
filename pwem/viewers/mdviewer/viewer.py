@@ -36,19 +36,25 @@ from pwem.viewers.mdviewer.readers import SCIPION_PORT, SCIPION_OBJECT_ID
 
 class MDView(View):
 
-    def __init__(self, emSet: EMSet, protocol, port):
+    def __init__(self, emSet: EMSet, protocol=None, port=None):
         self._emSet = emSet
         self.protocol = protocol
         self.port = port
 
     def show(self):
         env = os.environ
-        env[SCIPION_PORT] = str(self.port)
-        env[SCIPION_OBJECT_ID] = str(self._emSet.getObjId())
-        visibleLabels, orderLabels = self.getVisibleAndOrderLabels()
+        if self.port:
+            env[SCIPION_PORT] = str(self.port)
+            env[SCIPION_OBJECT_ID] = str(self._emSet.getObjId())
+            visibleLabels, orderLabels = self.getVisibleAndOrderLabels()
+            fn = self._emSet.getFileName()
+        else:
+            visibleLabels = orderLabels = ""
+            fn = self._emSet
+
         subprocess.Popen(
             [PYTHON, "-m", "metadataviewer", "--extensionpath", os.path.join(os.path.dirname(__file__), "readers.py"),
-            self._emSet.getFileName(), "--visiblelabels", visibleLabels, "--orderlabels", orderLabels])
+            fn, "--visiblelabels", visibleLabels, "--orderlabels", orderLabels])
 
     def getVisibleAndOrderLabels(self):
         from pwem.viewers import VISIBLE, ORDER
