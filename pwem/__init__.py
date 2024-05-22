@@ -255,6 +255,11 @@ class Plugin(pyworkflow.plugin.Plugin):
         if Config.IMAGEJ_BINARY_PATH:
             register(ImajeJFileHandler(), '.mrcs', '.mrc', '.st', '.ali', '.rec', '.tif', '.tiff', *STANDARD_IMAGE_EXTENSIONS)
 
+        with pwutils.weakImport("metadataviewer"):
+            from .viewers.filehandlers import MetadataFileHandler
+            register(MetadataFileHandler(), *MetadataFileHandler._compatibleExtensions)
+
+
 
 def findFolderWithPattern(path, pattern):
     """

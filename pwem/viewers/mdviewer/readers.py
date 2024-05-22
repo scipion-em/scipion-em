@@ -4,6 +4,8 @@ import sys
 from functools import lru_cache
 from subprocess import Popen
 
+import numpy
+
 from pwem.emlib.image.image_handler import ImageReadersRegistry
 
 logger = logging.getLogger(__name__)
@@ -16,8 +18,9 @@ import time
 import pyworkflow as pw
 import metadataviewer
 from metadataviewer.dao.model import IDAO
-from metadataviewer.model import Table, Column, BoolRenderer, ImageRenderer, StrRenderer
+from metadataviewer.model import Table, Column, BoolRenderer, ImageRenderer, StrRenderer, IntRenderer, FloatRenderer,Page
 from metadataviewer.model.renderers import ImageReader, Action
+from pwem.viewers.mdviewer.star_dao import StarFile
 
 SCIPION_OBJECT_ID = "SCIPION_OBJECT_ID"
 SCIPION_PORT = "SCIPION_PORT"
@@ -367,7 +370,7 @@ Stack.setSlice(slice);
 
                 page.addRow((int(id), values))
         endTime = time.time()
-        logging.info("Fill the page: %f" % (endTime - initTime))
+        logger.debug("Page filled in %f seconds." % (endTime - initTime))
 
     def getRowsCount(self, tableName):
         """ Return the number of elements in the given table. """
@@ -382,7 +385,7 @@ Stack.setSlice(slice);
             initTime = time.time()
             self._tableCount[tableName] = self.getRowsCount(tableName)
             endTime = time.time()
-            logging.info("Table count: %f" % (endTime - initTime))
+            logger.debug("Table count: %f" % (endTime - initTime))
         return self._tableCount[tableName]
 
     def getSelectedRangeRowsIds(self, tableName, startRow, numberOfRows, column, reverse=True):
@@ -572,7 +575,7 @@ Stack.setSlice(slice);
 
     def getScipionPort(self):
         """ Returns Scipion port or None if not in the environment"""
-        return os.getenv(SCIPION_PORT, '1300')
+        return os.getenv(SCIPION_PORT, None)
 
     def getScipionObjectId(self):
         """ Returns Scipion object id"""
@@ -615,6 +618,80 @@ Stack.setSlice(slice);
         self.close()
 
 
+class NumpyDao(IDAO):
+    """ DAO for the metadata viewer to read numpy files """
+    def __init__(self, filename: str):
+        self.file = filename
+        self._data = None
+
+    def getData(self)-> numpy.ndarray:
+        if self._data is None:
+            self._data = numpy.load(self.file)
+
+        return self._data
+
+    def fillPage(self, page: Page, actualColumn: int, orderAsc: bool) -> None:
+
+        # moving to the first row of the page
+        pageNumber = page.getPageNumber()
+        pageSize = page.getPageSize()
+        firstRow = pageNumber * pageSize - pageSize
+        data = self.getData()
+        limit = min(firstRow+pageSize, data.size)
+        table = page.getTable()
+
+        # If sorting changed
+        if table.hasSortingChanged():
+            # do the sorting
+            sortingColIdx= table.getSortingColumnIndex()
+            sortingCol = data.dtype.descr[sortingColIdx][0]
+            sortingAsc = table.isSortingAsc()
+            data.sort(order=sortingCol)
+
+            if table.isSortingAsc():
+                data=numpy.flipud(data)
+
+
+        for i in range(firstRow,limit):
+            row = data[i]
+            values = [value for value in row]
+            id = i
+
+            page.addRow((int(id), values))
+
+    def fillTable(self, table: Table, objectManager) -> None:
+
+        for descr in self.getData().dtype.descr:
+            field, ftype = descr[0], descr[1]
+
+            if len(descr)==3:
+                ftype="S"
+            newCol = Column(name=field, renderer=self.getRenderer(ftype))
+            table.addColumn(newCol)
+
+    def getRenderer(self, fType):
+        if fType.startswith("<u"):
+            return IntRenderer()
+        elif fType.startswith("<f"):
+            return FloatRenderer()
+        else:
+            return StrRenderer()
+    def getTableNames(self) -> list:
+        return ["data"]
+
+    @staticmethod
+    def getCompatibleFileTypes() -> list:
+        return ["cs"]
+
+    def getTableRowCount(self, tableName: str) -> int:
+        return self.getData().size
+    def getTableWithAdditionalInfo(self):
+        pass
+
+    def getSelectedRangeRowsIds(self, tableName, startRow, numberOfRows, column, reverse=True) -> list:
+        pass
+
+
 # --------- Helper functions  ------------------------
 def _guessType(strValue):
     if strValue is None:
@@ -634,3 +711,5 @@ def extendMDViewer(om: metadataviewer.model.ObjectManager):
     """ Function to extend the object manager with DAOs and readers"""
     om.registerDAO(SqliteFile)
     om.registerReader(ScipionImageReader)
+    om.registerDAO(NumpyDao)
+    om.registerDAO(StarFile)
