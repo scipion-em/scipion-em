@@ -41,13 +41,14 @@ import pyworkflow.gui.dialog as dialog
 from matplotlib import cm
 from pwem import convertPixToLength, splitRange
 from pyworkflow.gui.plotter import getHexColorList
-from pyworkflow.gui.tree import BoundTree, ListTreeProvider, ListTreeProviderString, AttributesTreeProvider
+from pyworkflow.gui.tree import BoundTree, ListTreeProvider, AttributesTreeProvider
 from pyworkflow.gui.widgets import LabelSlider, ExplanationText
 
 import pwem.constants as emcts
 import pwem.objects as emobj
 from pwem import emlib
 from pyworkflow.protocol import IntParam, StringParam, FloatParam, LEVEL_ADVANCED
+from pyworkflow.utils import Icon
 
 # Color map wizard constants
 HIGHEST_ATTR = 'highest'
@@ -250,7 +251,7 @@ class MaskRadiusWizard(EmWizard):
                 if units == emcts.UNIT_ANGSTROM:
                     value = round(d.getRadiusAngstroms(d.radiusSlider))  # Must be an integer
                 else:
-                    value = d.getRadius(d.radiusSlider)
+                    value = int(d.getRadius(d.radiusSlider))
                 self.setVar(form, label, value)
         else:
             dialog.showWarning("Empty input", "Select elements first", form.root)
@@ -276,8 +277,8 @@ class MaskRadiiWizard(EmWizard):
                     form.setVar(label[0], d.getRadiusAngstroms(d.radiusSliderIn))
                     form.setVar(label[1], d.getRadiusAngstroms(d.radiusSliderOut))
                 else:
-                    form.setVar(label[0], d.getRadius(d.radiusSliderIn))
-                    form.setVar(label[1], d.getRadius(d.radiusSliderOut))
+                    form.setVar(label[0], int(d.getRadius(d.radiusSliderIn)))
+                    form.setVar(label[1], int(d.getRadius(d.radiusSliderOut)))
         else:
             dialog.showWarning("Empty input", "Select elements first", form.root)
 
@@ -566,7 +567,7 @@ class ImagePreviewDialog(PreviewDialog):
             self.Z = self.image.getData()
         except Exception as e:
             from pyworkflow.gui.matplotlib_image import getPngData
-            self.Z = getPngData(pw.findResource('no-image.gif'))
+            self.Z = getPngData(pw.getResourcesPath(Icon.NO_IMAGE_128))
             dialog.showError("Input particles", "Error reading image <%s>"
                              % filename, self)
         self.preview.updateData(self.Z)

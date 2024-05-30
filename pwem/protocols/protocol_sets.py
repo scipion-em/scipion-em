@@ -35,11 +35,10 @@ import random
 import sys
 
 import pyworkflow.protocol as pwprot
-import pyworkflow.object as pwobj
+from pyworkflow.object import Object,Float, Integer, String
 
-import pwem.objects as emobj
 from pwem.protocols import EMProtocol
-from pwem.objects import Volume, EMSet
+from pwem.objects import Volume, EMSet, SetOfClasses, SetOfStats
 from pyworkflow.utils import ProgressBar, getListFromRangeString
 
 
@@ -58,7 +57,8 @@ class ProtSets(EMProtocol):
         if isinstance(item, EMSet):
             for subElem in sourceItem.iterItems():
                 # We need to create a clone because all items have a same _objId
-                subElemList.append(subElem.clone())
+                clon = subElem.clone(copyEnable=True)
+                subElemList.append(clon)
 
         outputSet.append(item)
         if subElemList:
@@ -159,6 +159,7 @@ class ProtUnionSet(ProtSets):
 
     # --------------------------- STEPS functions ------------------------------
     def createOutputStep(self):
+
         set1 = self.inputSets[0].get()  # 1st set (we use it many times)
 
         # Read ClassName and create the corresponding EMSet (SetOfParticles...)
@@ -181,17 +182,22 @@ class ProtUnionSet(ProtSets):
         # or we find duplicated ids in the sets
         cleanIds = not self.ignoreDuplicates.get() and self.duplicatedIds()
 
-        # TODO ROB remove ignoreExtraAttributes condition
-        # or implement it. But this will be for Scipion 1.2
-        self.ignoreExtraAttributes = pwobj.Boolean(True)
-        if self.ignoreExtraAttributes:
-            _, commonAttrs = self.commonAttributes()
+        # Warn in the log in case attributes will be lost
+        allSetAttributes, commonAttrs = self.commonAttributes()
+        warnings = self._getHeterogeneityWarning(allSetAttributes, commonAttrs)
+        if warnings:
+            self.info(warnings)
 
-            # Get the 1st level attributes to be used for the copyAttributes
-            copyAttrs = list()
-            for attr in commonAttrs:
-                if "." not in attr:
-                    copyAttrs.append(attr)
+        # Always ignore non-common attributes
+        ignoreExtraAttributes = True
+
+        # Get the 1st level attributes to be used for the copyAttributes
+        copyAttrs = list()
+        for attr in commonAttrs:
+            if "." not in attr:
+                copyAttrs.append(attr)
+
+        self.info("Common attributes to all sets are: %s" % copyAttrs)
 
         idsList = {}
         setNum = 0
@@ -204,8 +210,8 @@ class ProtUnionSet(ProtSets):
                         if objId in idsList:
                             continue
                         idsList[objId] =objId
-
-                    if self.ignoreExtraAttributes:
+                    # This is always TRUE, if stable we could remove the "if" and the "else".
+                    if ignoreExtraAttributes:
                         newObj = itemSet.get().ITEM_TYPE()
                         newObj.copyAttributes(obj, *copyAttrs)
 
@@ -256,9 +262,9 @@ class ProtUnionSet(ProtSets):
                 self.cleanExtraAttributes(value, verifyAttrs,
                                           prefixedAttribute + ".")
 
-    def getObjDict(self, includeClass=False, includeBasic=False):
-        return super(ProtUnionSet, self).getObjDict(
-            includeClass=includeClass, includeBasic=includeBasic)
+    # def getObjDict(self, includeClass=False, includeBasic=False):
+    #     return super(ProtUnionSet, self).getObjDict(
+    #         includeClass=includeClass, includeBasic=includeBasic)
 
     def duplicatedIds(self):
         """ Check if there are duplicated ids to renumber from
@@ -310,7 +316,7 @@ class ProtUnionSet(ProtSets):
         if len(classes) > 1:
             return ["All objects should have the same type.",
                     "Types of objects found: %s" % ", ".join(classes)]
-        if issubclass(type(self.inputSets[0].get()), emobj.SetOfClasses):
+        if issubclass(type(self.inputSets[0].get()), SetOfClasses):
             return ["Is not possible to join different sets of classes.\n"
                     "If you want to join different representative, extract them "
                     "with the viewer and them run this protocol with the "
@@ -357,9 +363,15 @@ class ProtUnionSet(ProtSets):
 
     def _warnings(self):
         """ Warn about loosing info. """
-        warnings = []
+
         # Get all attributes "map"
         allSetsAttributes, commonAttributes = self.commonAttributes()
+
+        return self._getHeterogeneityWarning(allSetsAttributes, commonAttributes)
+
+    def _getHeterogeneityWarning(self, allSetsAttributes, commonAttributes):
+
+        warnings = []
         # Use a set
         commonAttributes = set(commonAttributes)
 
@@ -378,9 +390,10 @@ class ProtUnionSet(ProtSets):
         if len(warnings):
             warnings.append("Your input sets have different attributes. "
                             "We will keep only the common ones. This may "
-                            "cause the lost of important data like CFT, "
+                            "cause the lost of important data like CTF, "
                             "alignment information,...")
-        return warnings
+
+        return  warnings
 
     def _summary(self):
         if not hasattr(self, 'outputSet'):
@@ -425,7 +438,7 @@ class ProtSplitSet(ProtSets):
 
     # -------------------------- INSERT steps functions -----------------------
     def _insertAllSteps(self):
-        self._insertFunctionStep('createOutputStep')
+        self._insertFunctionStep(self.createOutputStep)
 
     # -------------------------- STEPS functions ------------------------------
     def createOutputStep(self):
@@ -570,66 +583,17 @@ class ProtSubSet(ProtSets):
         outputSet.copyInfo(inputFullSet)
 
         if self.chooseAtRandom or self.selectIds:
-            nElementsFull = len(inputFullSet)
-
             if self.chooseAtRandom:
-                nElements = self.nElements.get()
-
                 # Get all ids form iput set
-                ids = list(inputFullSet.getIdSet())
-
-                # Values here releate to ids index above. This is the only way to
-                # do it rendomly since id are not warrantied to be continuous from 1 (subsets, joins,..)
-                chosen = random.sample(range(nElementsFull),
-                                   nElements)
-
-                self.info("Subseting by random positions")
-
+                self.info("Creating subset from random positions from input set.")
+                ids = set(random.sample(inputFullSet.getIdSet(), self.nElements.get()))
             else:
-                chosen = getListFromRangeString(self.range.get())
-                nElements = len(chosen)
-                ids = None
-                self.info("Subseting by ids: %s" % self.range.get())
-
-            self.debug("Chosen ids: %s" % chosen)
-
-            doProgressBar = False
-            if nElementsFull > 10000:  # show progressBar for large sets
-                progress = ProgressBar(total=len(chosen), fmt=ProgressBar.NOBAR)
-                progress.start()
-                sys.stdout.flush()
-                step = max(100, len(chosen) // 100)
-                doProgressBar = True
-            j = 0  # index for chosen list
-
-            for i,value in enumerate(chosen):
-
-                if doProgressBar and ((i+1) % step == 0):
-                     progress.update(i+1)
-
-                # if coming from random id, random values are positions in ids
-                if self.chooseAtRandom:
-                    # get the id at index
-                    value = ids[value]
-
-                # Get the actual element by id
-                elem = inputFullSet[value]
-
-                if elem is None:
-                    self.warning("Item with id %s not found in set. Skipping it." % value)
-                else:
-                    self._append(outputSet, elem)
-
-            if doProgressBar:
-                progress.finish(printNewLine=True)
-
+                self.info("Creating subset by range: %s" % self.range)
+                ids = set(getListFromRangeString(self.range.get()))
         else:
-            # Store the second set
-            inputSet = self.inputSubSet.get()
-
             # Get the ids from both sets
             fullSetIds = inputFullSet.getIdSet()
-            smallSetIds=inputSet.getIdSet()
+            smallSetIds = self.inputSubSet.get().getIdSet()
 
             # The function to include an element or not
             # depends on the set operation
@@ -637,14 +601,30 @@ class ProtSubSet(ProtSets):
             # if it is 'difference' we want that item is None
             # (not found, different)
             if self.setOperation == self.SET_INTERSECTION:
-                finalIds = fullSetIds.intersection(smallSetIds)
+                ids = fullSetIds.intersection(smallSetIds)
             else:
-                finalIds = fullSetIds.difference(smallSetIds)
+                ids = fullSetIds.difference(smallSetIds)
 
-            for finalId in finalIds:
+        progress = None
+        nElements = len(ids)
 
-                item = inputFullSet[finalId]
-                self._append(outputSet, item)
+        if nElements > 100000:  # show progressBar for large sets
+            progress = ProgressBar(total=nElements, fmt=ProgressBar.NOBAR)
+            progress.start()
+            sys.stdout.flush()
+            step = max(25000, nElements // 25000)
+
+        i = 0
+
+        for elem in inputFullSet.iterItems():
+            if elem.getObjId() in ids:
+                i += 1
+                if progress and i % step == 0:
+                    progress.update(i)
+                self._append(outputSet, elem)
+
+        if progress:
+            progress.finish(printNewLine=True)
 
         if outputSet.getSize():
             key = 'output' + inputClassName.replace('SetOf', '')
@@ -670,24 +650,25 @@ class ProtSubSet(ProtSets):
         notImplentedClasses = ['SetOfClasses2D', 'SetOfClasses3D',
                                'CoordinatesTiltPair']
 
+        errors =[]
+        if not self.chooseAtRandom and not self.selectIds and not self.inputSubSet.get():
+            errors.append("Subsetting without ids or random selection needs the 'Other set' parameter.")
+
         if not self.inputFullSet.get():
-            # Since is mandatory is will not validate
-            return []
+            # Since is mandatory it will not validate
+            # Stop validating since following validations need this set
+            return errors
 
         c1 = self.inputFullSet.get().getClassName()
         if c1 in notImplentedClasses:
-            return ["%s subset is not implemented." % c1]
+            errors.append("%s subset is not implemented." % c1)
 
         # First dispatch the easy case, where we choose elements at random.
         if self.chooseAtRandom:
-            if self.nElements <= self.inputFullSet.get().getSize():
-                return []
-            else:
-                return ["Number of elements to choose cannot be bigger than",
-                        "the number of elements in the set."]
+            if self.nElements > self.inputFullSet.get().getSize():
+                errors.append("Number of elements to choose cannot be bigger than",
+                        "the number of elements in the set.")
 
-        if not self.inputSubSet.get():
-            return []
 
         # Now the harder case: two sets. Check for compatible classes.
 
@@ -706,12 +687,16 @@ class ProtSubSet(ProtSets):
         #   Particles
         #   Volumes
 
+        if not self.inputSubSet.get():
+            # Stop validating since following validations need this set
+            return errors
+        
         c2 = self.inputSubSet.get().getClassName()
         if c2 in notImplentedClasses:
-            return ["%s subset is not implemented." % c2]
+            errors.append("%s subset is not implemented." % c2)
 
         if c1 == c2:
-            return []
+            return errors
 
         # Avoid combinations that make no sense.
         for classA, classesIncompatible in [
@@ -723,9 +708,9 @@ class ProtSubSet(ProtSets):
              {'SetOfMicrographs', 'SetOfMovies', 'SetOfParticles', 'SetOfCoordinates'})]:
             if ((c1 == classA and c2 in classesIncompatible) or
                     (c2 == classA and c1 in classesIncompatible)):
-                return ["The full set and the subset are of incompatible classes",
-                        "%s and %s." % (c1, c2)]
-        return []  # no errors
+                errors.append("The full set and the subset are of incompatible classes",
+                        "%s and %s." % (c1, c2))
+        return errors
 
     def _summary(self):
         if self.summaryVar.hasValue():
@@ -883,3 +868,203 @@ class ProtSubSetByCoord(ProtSets):
                        ' particles.' % (self.outputParticles.getSize(),
                                         self.inputParticles.get().getSize())]
         return summary
+
+class ProtCrossSubSet(ProtSets):
+    """
+    Create a subset of the main set based on a matching field in another set. e.g.: Use _micName field (in both fields)
+    to select micrographs (main set) present in a set of coordinates (secondary set)
+    """
+    _label = 'Crossed subset'
+
+    # --------------------------- DEFINE param functions ----------------------
+    def _defineParams(self, form):
+        form.addSection(label='Input')
+
+        add = form.addParam  # short notation
+        add('mainSet', pwprot.params.PointerParam,
+            pointerClass='EMSet', label="Main set",
+            help='Set to be reduced')
+
+        add('mainSetField', pwprot.params.StringParam,
+            label='Main field', default="id",
+            help='Field in the main set that contains the values in common with the secondary set. Use any of the metadata viewers to find the field name.')
+
+        add('secSet', pwprot.params.PointerParam,
+            pointerClass='EMSet', label="Secondary set",
+            help='Set holding the matching field. e.g: Set of Coordinates hold the micName that can be used to filter a set of micrographs (main set)')
+
+        add('secSetField', pwprot.params.StringParam,
+            label='Secondary field', default="id",
+            help='Field in the secondary set that contains the values in common with the main set. Use any of the metadata viewers to find the field name.')
+
+
+    # --------------------------- INSERT steps functions ----------------------
+    def _insertAllSteps(self):
+        # These arguments are mainly for skipping the step if they are the same in the resume execution.
+        self._insertFunctionStep(self.createOutputStep,
+                                 self.mainSet.getObjId(),
+                                 self.secSet.getObjId(),
+                                 self.mainSetField.get(),
+                                 self.secSetField.get())
+
+    # --------------------------- STEPS functions -----------------------------
+    def createOutputStep(self, mainId, secId, mainSetField, secSetField):
+        mainSet = self.mainSet.get()
+        secSet = self.secSet.get()
+
+        # Instantiate and copy main properties
+        outputSet = mainSet.create(self.getPath())
+        outputSet.copyInfo(mainSet)
+
+        # Get unique values of secfield in secset
+        uniqueValuesinSec = secSet.getUniqueValues(secSetField)
+        uniqueValuesinSec ={value:None for value in uniqueValuesinSec}
+
+        pb = ProgressBar(mainSet.getSize(), fmt=ProgressBar.FULL)
+        pb.start()
+
+        for item in mainSet:
+            valueInMain=getattr(item,self.getMainSetField(pythonName=True))
+            if valueInMain.get() in uniqueValuesinSec:
+                self._append(outputSet,item)
+            pb.increase()
+
+        pb.finish()
+
+        self._defineOutputs(subset=outputSet)
+        self._defineTransformRelation(mainSet, outputSet)
+
+    def getMainSetField(self, pythonName=False):
+        if pythonName:
+            return self._normalizeSpecialFields(self.mainSetField.get())
+        else:
+            return self.mainSetField.get()
+
+    def getSecSetField(self, pythonName=False):
+        if pythonName:
+            return self._normalizeSpecialFields(self.secSetField.get())
+        else:
+            return self.secSetField.get()
+
+    def _normalizeSpecialFields(self, field):
+        if field == "id":
+            return "_objId"
+        else:
+            return field
+    # --------------------------- INFO functions ------------------------------
+    def _validate(self):
+        """Make sure the input data make sense"""
+        errors=[]
+        if not hasattr(self.mainSet.get().getFirstItem(), self.getMainSetField(pythonName=True)):
+            errors.append('The main set does not have the field %s' % self.mainSetField.get())
+
+        if not hasattr(self.secSet.get().getFirstItem(), self.getSecSetField(pythonName=True)):
+            errors.append('The secondary set does not have the field %s' % self.secSetField.get())
+
+        return errors
+    def _summary(self):
+
+        summary = ["Items in the main set where %s=%s of items in the secondary set where selected." % (self.mainSetField.get(), self.secSetField.get())]
+
+        if hasattr(self, "subset"):
+            summary.append('*%d* items matched the criteria' % self.subset.getSize())
+
+        return summary
+
+
+class ProtSetAggregate(EMProtocol):
+    """ Aggregates any set data based on its fields"""
+    _label = "data summary"
+    def _defineParams(self, form):
+        form.addSection(label='Input')
+
+        add = form.addParam  # short notation
+        add('inputSet', pwprot.params.PointerParam,
+            pointerClass='EMSet', label="Any set",
+            help='Set with the dta to be aggregated')
+
+        add('operations', pwprot.params.StringParam,
+            label='Summary operations',default="COUNT",
+            help='Summary operations to apply to all fields in Fields parameter. e.g: MIN MAX AVG. Possible values are MIN, MAX, COUNT, '
+                 'AVG, SUM, TOTAL, GROUP_CONCAT. For more technical information see: https://www.sqlite.org/lang_aggfunc.html')
+
+        add('fields', pwprot.params.StringParam,
+            label='Fields', default="id",
+            help='Fields to apply operations on. Fields can be found in the metadata viewers.'
+                  ' The header of the columns are valid names. e.g: _samplingRate id. Fields listed here should '
+                 'support the operations specified: DO NOT add literal fields.',
+            )
+
+        add('groupby', pwprot.params.StringParam,
+            label='Group by',
+            help='Fields to make the group. An empty value will summarize the whole dataset.',
+            )
+
+    def _insertAllSteps(self):
+        self._insertFunctionStep(self.aggregateSet, self.operations.get(), self.fields.get(), self.groupby.get())
+
+    def aggregateSet(self, *args):
+
+        mainSet = self.inputSet.get()
+
+        # Instantiate and copy main properties
+        outputSet = SetOfStats.create(self.getPath())
+
+        # Run the aggregation method
+        operations = self.operations.getListFromValues(caster=str)
+        self.info("Operations: %s" % operations)
+
+        fields = self.fields.getListFromValues(caster=str)
+        self.info("Fields: %s" % fields)
+
+
+        if self.groupby.get():
+            groupBy = self.groupby.getListFromValues(caster=str)
+            self.info("Grouping by: %s" % groupBy)
+        else:
+            groupBy = None
+            self.info("No grouping fields.")
+
+
+        result = mainSet.aggregate(operations,
+                                   fields, groupBy)
+
+        pb = ProgressBar(len(result), fmt=ProgressBar.FULL)
+        pb.start()
+
+        # Dictionary to hold the scipion data type based on the key
+        scipionTypes ={}
+
+        def getScipionType(fieldName:str):
+
+            if fieldName not in scipionTypes:
+
+                if fieldName.startswith("COUNT"):
+                    scipionType=Integer
+                elif fieldName.startswith(("MIN","MAX","AVG", "SUM","TOTAL")):
+                    scipionType=Float
+                else:
+                    scipionType=String
+
+                self.info("Scipion type for %s is %s" %(key, scipionType.getClassName()))
+                scipionTypes[key] = scipionType
+            return scipionTypes[key]
+
+        # Fill the set
+        for line in result:
+            newItem = Object()
+            for key in line.keys():
+                scipionType = getScipionType(key)
+                value =line[key]
+                setattr(newItem, key, scipionType(value))
+
+            outputSet.append(newItem)
+            pb.increase()
+
+        pb.finish()
+
+        self._defineOutputs(aggregate=outputSet)
+        self._defineTransformRelation(mainSet, outputSet)
+
+
+

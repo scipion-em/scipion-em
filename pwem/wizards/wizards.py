@@ -34,6 +34,7 @@ import pyworkflow.object as pwobj
 from pyworkflow.gui import dialog
 import pyworkflow.wizard as pwizard
 from pyworkflow.gui.tree import ListTreeProviderString
+from pyworkflow.gui.dialog import showError
 
 import pwem.convert as emconv
 
@@ -462,12 +463,14 @@ class SelectAttributeWizard(VariableWizard):
     """Wizard to select attributes stored in a scipion object or set """
     _targets, _inputs, _outputs = [], {}, {}
 
-    def getFirstItem(self, form, inputParam):
-        inputPointer = getattr(form.protocol, inputParam)
-        if issubclass(inputPointer.__class__, pwobj.PointerList):
-            inputPointer = inputPointer[0]
+    def getInputSet(self, form, inputParam):
+      inputPointer = getattr(form.protocol, inputParam)
+      if issubclass(inputPointer.__class__, pwobj.PointerList):
+        inputPointer = inputPointer[0]
+      return inputPointer.get()
 
-        inputSet = inputPointer.get()
+    def getFirstItem(self, form, inputParam):
+        inputSet = self.getInputSet(form, inputParam)
         if issubclass(inputSet.__class__, pwobj.Set):
             item = inputSet.getFirstItem()
         elif issubclass(inputSet.__class__, pwobj.Object):
@@ -483,19 +486,20 @@ class SelectAttributeWizard(VariableWizard):
 
     def show(self, form, *params):
       inputParam, outputParam = self.getInputOutput(form)
-      attrsList = self.getInputAttributes(form, inputParam)
-      finalAttrsList = []
-      for i in attrsList:
-        finalAttrsList.append(pwobj.String(i))
-      provider = ListTreeProviderString(finalAttrsList)
-      dlg = dialog.ListDialog(form.root, "Filter set", provider,
-                            "Select one of the attributes")
-      form.setVar(outputParam[0], dlg.values[0].get())
-
+      if self.getInputSet(form, inputParam[0]):
+        attrsList = self.getInputAttributes(form, inputParam)
+        finalAttrsList = []
+        for i in attrsList:
+          finalAttrsList.append(pwobj.String(i))
+        provider = ListTreeProviderString(finalAttrsList)
+        dlg = dialog.ListDialog(form.root, "Filter set", provider,
+                              "Select one of the attributes")
+        form.setVar(outputParam[0], dlg.values[0].get())
+      else:
+        showError('Input error', 'Input needs to be defined in the form for the wizard be used', form.root)
 
 class ColorScaleWizardRMSD(ColorScaleWizardBase):
-    _targets = ColorScaleWizardBase.defineTargets(emview.ChimeraAttributeViewer)
-
+    _targets = ColorScaleWizardBase.defineTargets(emview.ChimeraAttributeViewer) + ColorScaleWizardBase.defineTargets(emview.AngularDistributionViewer)
 
 #Defining target for the SelectAttributeWizard
 SelectAttributeWizard().addTarget(protocol=emprot.ProtSetFilter,

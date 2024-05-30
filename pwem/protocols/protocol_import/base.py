@@ -32,6 +32,7 @@ from datetime import datetime
 
 import pyworkflow.utils as pwutils
 import pyworkflow.protocol.params as params
+from pwem import getMatchingFiles
 
 from pwem.protocols import EMProtocol
 
@@ -227,8 +228,7 @@ class ProtImportFiles(ProtImport):
         if pattern is None:
             pattern = self.getPattern()
 
-        filePaths = glob(pattern)
-        filePaths.sort()
+        filePaths = getMatchingFiles(pattern, sort=True)
         self.numberOfFiles = len(filePaths)
 
         return filePaths

@@ -113,7 +113,6 @@ class EmProtocolViewer(pwviewer.ProtocolViewer):
                 return None
 
             weight = 1. / numberOfParticles
-
             for angleRot, angleTilt in itemDataIterator:
                 projection = getCloseProjection(angleRot, angleTilt)
                 if projection is None:

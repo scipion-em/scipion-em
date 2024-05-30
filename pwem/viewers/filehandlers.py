@@ -35,6 +35,10 @@ from pyworkflow import gui
 from pyworkflow.gui.browser import FileHandler, isStandardImage
 
 from pwem import emlib
+from pwem.emlib.image.image_handler import ImageHandler
+
+import logging
+logger = logging.getLogger(__name__)
 
 
 class ImageFileHandler(FileHandler):
@@ -44,7 +48,7 @@ class ImageFileHandler(FileHandler):
     def _getImageString(self, filename):
         if isStandardImage(filename):
             return "Image file."
-        x, y, z, n = emlib.getImageSize(filename)
+        x, y, z, n = ImageHandler.getDimensions(filename)
         objType = 'Image'
         objFileType = "link" if os.path.islink(filename) else "file"
         dimMsg = "*%(objType)s %(objFileType)s*\n  dimensions: %(x)d x %(y)d"
@@ -61,6 +65,7 @@ class ImageFileHandler(FileHandler):
         if Ccp4Header.isCompatible(filename):
             ccp4Reader= Ccp4Header(filename, readHeader=True)
             expMsg += "\nHeader info: \nSampling rate: %1.2f, %1.2f, %1.2f" % ccp4Reader.getSampling()
+            expMsg += "\nOrigin: %1.2f, %1.2f, %1.2f" % ccp4Reader.getOrigin()
 
 
         return (dimMsg + "\n" + expMsg) % locals()
@@ -95,18 +100,34 @@ class ImageFileHandler(FileHandler):
 
 class ParticleFileHandler(ImageFileHandler):
     def getFileIcon(self, objFile):
-        return 'file_image.gif' if not objFile.isLink() else 'file_image_link.gif'
+        return pwutils.Icon.FILE_IMAGE if not objFile.isLink() else pwutils.Icon.FILE_IMAGE_LINK
 
 
 class VolFileHandler(ImageFileHandler):
     def getFileIcon(self, objFile):
-        return 'file_vol.gif'
+        return pwutils.Icon.FILE_VOL
 
 class StackHandler(ImageFileHandler):
     _index = '1@'
 
     def getFileIcon(self, objFile):
-        return 'file_stack.gif' if not objFile.isLink() else 'file_stack_link.gif'
+        return pwutils.Icon.FILE_STACK if not objFile.isLink() else pwutils.Icon.FILE_STACK_LINK
+
+class ImajeJFileHandler(FileHandler):
+
+    def getFileActions(self, objFile):
+        from pyworkflow.viewer import CommandView
+
+        fn = objFile.getPath()
+        fijiPath = pwem.Config.IMAGEJ_BINARY_PATH
+
+        if fijiPath:
+            cmd = '%s "%s"' % (fijiPath, fn)
+            return [('Open with ImageJ/Fiji', lambda: CommandView(cmd).show(),
+                 pwutils.Icon.ACTION_VISUALIZE)]
+
+    def getFileIcon(self, objFile):
+        return 'file_image.gif' if not objFile.isLink() else 'file_image_link.gif'
 
 
 class ChimeraHandler(FileHandler):
@@ -118,12 +139,15 @@ class ChimeraHandler(FileHandler):
                  pwutils.Icon.ACTION_VISUALIZE)]
 
     def getFileIcon(self, objFile):
-        return 'file_text.gif'
+        return pwutils.Icon.TXT_FILE
 
 
 class MdFileHandler(ImageFileHandler):
     def getFileIcon(self, objFile):
-        return 'file_md.gif'
+        if objFile.isLink():
+            return pwutils.Icon.FILE_METADATA_LINK
+        else:
+            return pwutils.Icon.FILE_METADATA
 
     def _getImgPath(self, mdFn, imgFn):
         """ Get ups and ups until finding the relative location to images. """
@@ -197,6 +221,24 @@ class MdFileHandler(ImageFileHandler):
             msg += self._getMdString(filename)
 
         return self._imgPreview, msg
+
+with pwutils.weakImport("metadataviewer"):
+    from .mdviewer.viewer import MDView
+    class MetadataFileHandler(FileHandler):
+
+        _compatibleExtensions =[".star", ".xmd", ".cs", ".sqlite"]
+        def getFileIcon(self, objFile):
+            if objFile.isLink():
+                return pwutils.Icon.FILE_METADATA_LINK
+            else:
+                return pwutils.Icon.FILE_METADATA
+
+        def getFileActions(self, objFile):
+
+            fn = objFile.getPath()
+            return [('Open with Scipion', lambda: MDView(fn).show(),
+                     pwutils.Icon.ACTION_VISUALIZE)]
+
 
 
 # Image methods for filehandlers

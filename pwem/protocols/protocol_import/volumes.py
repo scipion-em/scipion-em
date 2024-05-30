@@ -92,7 +92,6 @@ class ProtImportVolumes(ProtImportImages):
                       condition='importFrom == IMPORT_FROM_FILES',
                       label=pwutils.Message.LABEL_SAMP_RATE)
         form.addParam('setOrigCoord', params.BooleanParam,
-                      condition='importFrom == IMPORT_FROM_FILES',
                       label="Set origin of coordinates",
                       help="Option YES:\nA new volume will be created with "
                            "the "
@@ -224,11 +223,13 @@ class ProtImportVolumes(ProtImportImages):
             if n == 1:
                 vol.cleanObjId()
                 vol.setFileName(newFileName)
+                vol.setObjComment(vol.getBaseName())
                 volSet.append(vol)
             else:
                 for index in range(1, n + 1):
                     vol.cleanObjId()
                     vol.setLocation(index, newFileName)
+                    vol.setObjComment("%s@%s" % (index, vol.getBaseName()))
                     volSet.append(vol)
 
         if volSet.getSize() > 1:

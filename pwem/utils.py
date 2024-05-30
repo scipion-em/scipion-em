@@ -24,12 +24,12 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
+from glob import glob
 from os.path import join, dirname, basename
 import logging
 logger = logging.getLogger(__name__)
 import pyworkflow.utils as pwutils
 import pwem
-from pwem.objects import Micrograph
 
 
 def loadSetFromDb(dbName, dbPrefix=''):
@@ -42,7 +42,7 @@ def loadSetFromDb(dbName, dbPrefix=''):
 
 
 def runProgram(program, params):
-    """ Runs a em program setting its environment matching a prefix"""
+    """ Runs an em program setting its environment matching a prefix"""
     env = None
 
     # Allow passing absolute paths
@@ -66,6 +66,7 @@ def runProgram(program, params):
         print("eman/sparx command detected")
         eman2 = Domain.importFromPlugin('eman2', 'Plugin')
         env = eman2.getEnviron()
+        program = eman2.getProgram(programName)
     elif programName.startswith('b'):
         print("Bsoft command detected")
         bsoft = Domain.importFromPlugin('bsoft', 'Plugin')
@@ -127,6 +128,25 @@ def cleanFileName(fn, warn=True):
             cleaned = True
 
     return fn, cleaned
+
+
+def round_to_nearest(number, base):
+    """ Rounds number to the nearest integer: E.g: pass base=5 to round to the nearest
+     number multiple of 5
+
+    :param number: number to be rounded
+    :param base: integer to limit the rounding to
+    """
+
+    return base * round(number/base)
+
+
+def getMatchingFiles(path, sort=False):
+    filePaths = glob(path)
+    if sort:
+        filePaths.sort()
+    return filePaths
+
 
 
 def fnMatching(objFile,  setDict):

@@ -1,3 +1,125 @@
+V3.8.0:
+    - Filehandlers for cs, star and sqlite files to be displayied in the Scipion metadataviewer.
+
+V3.7.1:
+    - Hot-fix: SetOf3DClasses and other sets without visualization config can be shown in the metadataviewer
+
+V3.7.0:
+  Users:
+     - Allowing drag and drop a coordinate when picking
+     - Allowing to create subsets from the selection in the metadataviewer plotter
+     - Fixing an error creating subset through new metadataviewer
+     - NEW PROTOCOL - Crossed subset protocol: Creates a subset of the main set based on a matching field in another set.
+     - ChimeraX resolution viewer compatible with WSL.
+     - Fix: Wizard for choosing a Mask radius returns integer.
+     - Describes better and register variables for the new GUI to edit variables
+     - NEW PROTOCOL - data summary: Aggregates (COUNT, MAX, MIN, AVG) any set data based on its fields
+     - Importing coordinates from cryoSPARC
+     - Fix: The coordinate viewer shows the complete list of micrographs when a subset has been generated and there are only coordinates for some micrographs in this subset
+     - Allows to run the whole workflow until 3D processing with trigger points
+     - Allowing the use of a pattern for the import of the gain file.
+
+Developers:
+     - Plugin._defineVar and _defineEmVar offers  description(str) and  varType(VarTypes) as optional arguments to better describe the variable devel
+     - Modify the finishing condition of the parent protocol "extract particles". Now, it checks if the input coords are closed and if all mics and CTFs have been processed.
+
+V3.6.0:
+  Users:
+     - Adapted to Sprites
+     - Add a new 2D coordinate viewer
+     - 2 level sets (like tilt series) copy enable flag in subitems when subsetting.
+
+  Developers:
+     - Add a new parameter in the classifyItems method(raiseOnNextFailure). This parameter is a boolean flag indicating
+       whether to raise an exception if there is a failure while attempting to retrieve the next element from itemDataIterator.
+
+V3.5.1: hotfix tif reader dimensions
+V3.5.0
+  Users:
+     - add wait protocol. This protocol wait N seconds and then ends.
+       It is helpful to schedule other protocols using the option "wait for"
+     - Fix: .em files are handled by xmipp (dimensions now are correct)
+     - Add symmetry option to export_DB protocol. This will produce the list
+       of symmetry matrices that PDBe asks for when deposition a new atomic structure
+  Developers:
+     - Add method setWrongDefocus to CTFModel (code centralization)
+     - Add FlexHub model (objects and base methods)
+
+V3.4.0:
+   Users:
+     - Fix: CTFTomoSeries manual subset should work
+     - Windows' ChimeraX properly called from WSL installations
+   Developers:
+      - add attribute isSubParticles to SetOfParticles
+      - modify __str__ to print SubParticles when appropriate
+      - remove setOf in SetOfImages.__str__
+     - EMSet.copyItems and createCopy accepts "itemSelectedCallback" falling back to isEnabled.
+     - getVersionFromPath improved: works with cuda-11.4.safe (uses regex looking up for numbers)
+
+V3.3.1:
+     - Improving performance of the metadataviewer.
+     - Metadataviewer integration with Chimera and ImageJ     - Subsets: Tolerates missing properties in sqlite but present in run.db (CTFTomoseries without TS pointer)
+
+V3.3.0:
+   Users:
+     - Fix: importing non cubic volumes could render 0 elements in dimensions. Now minimum is 1.
+   Developers:
+     - ImageHandler.getDimensions uses ImageReader registry and its readers (Xmipp, Tiff, Eman, ...) image
+     - tiff dimensions (gain, eer, tif, tiff) are swap. They original  y were opposite to xmipp and others convention.
+     - User subset: ready for new metadata viewer using txt files with ids.
+     - classifyItems method of SetOfClasses updates an existing output set than can be utilized for streaming protocols
+     - New metadata viewer(BETA). To use it run 'scipion3 pip install metadata-viewer mrcfile'. Right click on outputs should show "Scipion metadata viewer"
+
+V3.2.2; Hotfix: buggy logline commented
+
+V3.2.1: Hotfix: set dimensions are updated upon set creation
+
+V3.2.0:
+ Users:
+   - New viewer: "Basic MD viewer" to allow doing manual subsets on those sets where before it wasn't possible (Coordinates2D, FSCs)
+   - ImageJ filehandler: Set IMAGEJ_BINARY_PATH to the ImageJ or Fiji binary.
+   Developers:
+     - SetOfCoordinates tweaks: better use of micrographs pointer
+
+V3.1.0
+ Users:
+   - New Angular distribution viewer (right click on any SetOfParticles or SetOfSubtomograms will list it)
+   - Use main color config variable
+   - New variable: CHIMERA_OLD_BINARY_PATH: Full path to chimera binary. If defined, it will offer BASIC visualization of pdb and volumes
+   - Set editor: summary show the formula
+   - Join sets: clones all attributes, not only 1st level ones.
+   - New protocol box size checkpoint to validate an estimated particle size.
+   - The browser thumbnail show origin info for mrc files
+   - Import volumes set the volume comment to the original file.
+   - Fix subset: Scheduling waits when subset uses other set
+   - ChimeraViewer: Handle also set of volumes and 3d classifications
+
+ Developers:
+   - SCIPION_CANCEL_XMIPP_BINDING_WARNING defined in the environment will cancel the warning about xmipp binding missing
+   - SCIPION_CANCEL_XMIPP_BINDING_WARNING defined in the github action
+   - function readFromPDBDatabase tries to download an atomic structure up to 5 times before returning  an error (before it tried only once)
+   - function retry search for fatal error messages in the output and if found,  it aborts instead of trying several times.
+   - plotter.py uses logging
+   - Plotter.plotAngularDistribution refactored: uses scatter instead of plot fo each point. It may improve performance.
+   - Plotter.plotAngularDistributionFromSet new: To plot sets with items.getTransform()
+   - Volume.getHalfMaps: receives optionally "asList" to return the list instead of the string
+   - Volume.fixMRCVolume, now receives (optionally) a boolean to set the header's sampling rate of the MRC file it refers
+   - showj.py: uses logger
+   - showj.py: javaVersion cached, javaBin taken from Config.JAVA_HOME o "java"
+   - showj.py: SCIPION_JAVA_HOME takes priority over JAVA_HOME (pycharm debugging case)
+   - Use new Config.isScipionRunning to register file handlers.
+   - Use new Config.isScipionRunning to print xmipp ghost message.
+   - SetOfImages._samplingRateStr extracted to convert sampling rate to a str
+
+V3.0.27
+   - Hot fix: Assign angles assign full shifts by default. Warns about loosing xFrac and yFrac comming from extract coordinates.
+
+V3.0.26
+   - Hot fix: Import volumes annotates the filename in the volume/s
+
+V3.0.25
+   - Hot fix: protocols.conf is packaged now!
+
 V3.0.24
 users:
    - Version compatible with latest released scipion-em-chimera plugin.

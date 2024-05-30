@@ -38,6 +38,7 @@ from .protocol_particles_picking import *
 from .protocol_2d import *
 from .protocol_3d import *
 from .protocol_sets import *
+from .protocol_projection_edit import *
 from .protocol_pdf_report import *
 from .protocol_tiltpairs import *
 from .protocol_ctf_assign import ProtCTFAssign
@@ -45,6 +46,7 @@ from .protocol_alignment_assign import ProtAlignmentAssign
 from .protocol_alignment_invertHand import ProtAlignmentInvertHand
 from .protocol_batch import *
 from .protocol_extract_coordinates import ProtExtractCoords
+
 from .protocol_create_stream_data import ProtCreateStreamData
 from .parallel import ProtTestParallel
 from .protocol_create_stream_data import SET_OF_RANDOM_MICROGRAPHS
@@ -55,13 +57,17 @@ from .protocol_export import *
 from .protocol_tests import *
 
 from .protocol_origin_sampling_volume import ProtOrigSampling
+from .protocol_projection_edit import ProtProjectionEditor
 from .protocol_set_editor import ProtSetEditor
 from .protocol_set_filter import ProtSetFilter
 from .protocol_movie_eraser import ProtMovieEraser
 from .protocol_classes_selector import ProtClassesSelector
 from .protocol_boxsize_parameters import ProtBoxSizeParameters
+from .protocol_boxsize_checkpoint import ProtBoxSizeCheckpoint
 
 from .protocol_mathematical_operator import ProtMathematicalOperator
 
 from .protocol_tools import *
+from .protocol_wait import ProtWait
 
+from .protocol_base_flexhub import *
