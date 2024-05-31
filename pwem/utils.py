@@ -148,48 +148,55 @@ def getMatchingFiles(path, sort=False):
     return filePaths
 
 
-
-def fnMatching(objFile,  setDict):
+def fnMatching(itemId, filesDict, objType='Micrograph'):
     """
-    Check if in an object(micrograph, etc...) its files are matched
+    Check if in an object (micrograph, ctf, etc...) its files are matched
     """
-    objFile = pwutils.removeBaseExt(objFile)
     longestItem = None
-    finalMessage = "No matching item for %s" % objFile
-    lenObjFile = len(objFile)
+    longestItemId = None
+    finalMessage = None
 
-    if objFile in setDict:
-        longestItem = setDict[objFile]
-        finalMessage = "Coordinate file %s matches exactly with the micrograph name %s" % (objFile, objFile)
+    if itemId in filesDict:
+        longestItem = filesDict[itemId]
+        longestItemId = itemId
+        finalMessage = "%s %s exact match" % (objType, itemId)
     else:
-        bestMatch = 500
-        matchLen = 500
+        longestMatch = 0
+        matchLen = 0
         # ItemId is not objId. Is micName or tsId
-        for itemId, item in setDict.items():
-            if objFile.startswith(itemId):
-                # BVP_1234_aligned(objFile) startswith BVP_1234(micName or baseName)
-                message = "Coordinate file name %s starts with the micrograph name %s" % (objFile, itemId)
-                matchLen = lenObjFile - len(itemId)
-            elif itemId in objFile:
+        for fileBaseName, filePath in filesDict.items():
+            if itemId.startswith(fileBaseName):
+                # BVP_1234_aligned(objFile) startswith BVP_1234(micName, baseName, tsId,...)
+                message = "%s %s starts with %s" % (objType, itemId, fileBaseName)
+                matchLen = len(fileBaseName)
+            elif fileBaseName in itemId:
                 # BVP_1234(micName or baseName) in BVP_1234_info(objFile)
-                message = "Coordinate file %s contains the micrograph name %s" % (objFile, itemId)
-                matchLen = lenObjFile - len(itemId)
+                message = "%s %s contains %s" % (objType, itemId, fileBaseName)
+                matchLen = len(fileBaseName)
 
-            elif itemId.startswith(objFile):
-                # BVP_1234_aligned(micName or baseName) startswith BVP_1234(objFile)
-                # MicBase start with coordBase
-                message = "Micrograph name %s starts with coordinate file name %s" % (itemId, objFile)
-                matchLen = len(itemId) - lenObjFile
-            elif objFile in itemId:
-                # BVP_1234(objFile) in BVP_1234_aligned(micName or baseName)
-                # micBase contains coordBase
-                message = "Micrograph name %s contains the coordinate file name %s" % (itemId, objFile)
-                matchLen = len(itemId) - lenObjFile
+            if len(itemId) > matchLen:
+                if fileBaseName.startswith(itemId):
+                    # BVP_1234_aligned(fileBaseName) startswith BVP_1234(itemId)
+                    # MicBase start with coordBase
+                    message = "%s %s is the beginning of %s" % (objType, itemId, fileBaseName)
+                    matchLen = len(itemId)
+                elif itemId in fileBaseName:
+                    # BVP_1234(itemId) in BVP_1234_aligned(fileBaseName)
+                    # micBase contains coordBase
+                    message = "%s %s contained in %s" % (objType, itemId, fileBaseName)
+                    matchLen = len(itemId)
 
-            if matchLen < bestMatch:
-                bestMatch = matchLen
-                longestItem = item
+            if matchLen > longestMatch:
                 finalMessage = message
+                longestMatch = matchLen
+                longestItem = filePath
+                longestItemId = fileBaseName
+                matchLen = 0
 
-    logger.info(finalMessage)
-    return longestItem
+    if finalMessage is not None:
+        logger.debug(finalMessage + ': ' + longestItem)
+    else:
+        finalMessage = '%s %s does not match ' % (objType, itemId)
+        logger.debug(finalMessage)
+
+    return longestItemId, longestItem

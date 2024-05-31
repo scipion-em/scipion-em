@@ -255,7 +255,7 @@ class ProtImportCoordinates(ProtImportFiles, ProtParticlePicking):
                     self.micSetDict[micClone.getObjId()] = micClone
 
         if fileId is None:
-            return fnMatching(coordFile,  self.micSetDict)
+            return fnMatching(pwutils.removeBaseExt(coordFile),  self.micSetDict)[1]
         else:
             return self.micSetDict[fileId]
 
