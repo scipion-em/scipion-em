@@ -106,7 +106,6 @@ class ProtImportCoordinates(ProtImportFiles, ProtParticlePicking):
 
     # ------------------- INSERT steps functions ------------------------------
     def _insertAllSteps(self):
-        importFrom = self.importFrom.get()
         self.micSetDict = None
         self._insertFunctionStep(self.createOutputStep,
                                  self.getImportFrom(),
