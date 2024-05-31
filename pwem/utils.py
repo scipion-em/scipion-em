@@ -151,7 +151,13 @@ def getMatchingFiles(path, sort=False):
 def fnMatching(itemId, filesDict, objType='Micrograph'):
     """
     Check if in an object (micrograph, ctf, etc...) its files are matched
-    """
+   :param itemId: Is micName, baseName, tsId,...(is not objId)
+   :param filesDict: The keys are the base name of the file to import without the extension,
+                     and the values can be a path (e.g. path of the ctf files when importing ctf)
+                     or an object (e.g. micrographs when importing coordinates).
+   :param objType: This parameter is informative to complete the log messages to know what is being imported.
+   :return: A tuple with the key and the value of filesDict that matches itemId
+   """
     longestItem = None
     longestItemId = None
     finalMessage = None
@@ -164,7 +170,7 @@ def fnMatching(itemId, filesDict, objType='Micrograph'):
         longestMatch = 0
         matchLen = 0
         # ItemId is not objId. Is micName or tsId
-        for fileBaseName, filePath in filesDict.items():
+        for fileBaseName, item in filesDict.items():
             if itemId.startswith(fileBaseName):
                 # BVP_1234_aligned(objFile) startswith BVP_1234(micName, baseName, tsId,...)
                 message = "%s %s starts with %s" % (objType, itemId, fileBaseName)
@@ -189,12 +195,12 @@ def fnMatching(itemId, filesDict, objType='Micrograph'):
             if matchLen > longestMatch:
                 finalMessage = message
                 longestMatch = matchLen
-                longestItem = filePath
+                longestItem = item
                 longestItemId = fileBaseName
                 matchLen = 0
 
     if finalMessage is not None:
-        logger.debug(finalMessage + ': ' + longestItem)
+        logger.debug(finalMessage + ': ' + str(longestItem))
     else:
         finalMessage = '%s %s does not match ' % (objType, itemId)
         logger.debug(finalMessage)
