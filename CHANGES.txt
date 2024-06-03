@@ -1,3 +1,8 @@
+V3.8.1:
+    - Generalizing the method for checking the match between files and objects identificators
+    - SCIPION_EM_NEW_FILE_CHECK_SEC defined in the environment determines the number of seconds to wait
+      before checking if new files are available or finished in streamified import protocols.
+
 V3.8.0:
     - Filehandlers for cs, star and sqlite files to be displayied in the Scipion metadataviewer.
 
