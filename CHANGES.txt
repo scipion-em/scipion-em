@@ -1,6 +1,6 @@
 V3.8.0:
-    - Filehandlers for cs, star and sqlite files to be displayied in the Scipion metadataviewer.
-
+    - Filehandlers for cs, star and sqlite files to be displayed in the Scipion metadataviewer.
+    - Fix volume halfmaps wrong filename
 V3.7.1:
     - Hot-fix: SetOf3DClasses and other sets without visualization config can be shown in the metadataviewer
 

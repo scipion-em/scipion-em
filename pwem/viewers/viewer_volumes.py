@@ -142,10 +142,7 @@ class viewerProtImportVolumes(EmProtocolViewer):
             f.write("volume #2 origin %0.2f,%0.2f,%0.2f\n" % (x, y, z))
             if vol.getHalfMaps():
                 for halfMap in vol.getHalfMaps().split(','):
-                    if not os.path.abspath(halfMap).endswith(".mrc"):
-                        f.write("open %s\n" % (os.path.abspath(halfMap).split(".")[0] + ".mrc"))
-                    else:
-                        f.write("open %s\n" % os.path.abspath(halfMap))
+                    f.write("open %s\n" % os.path.abspath(halfMap))
                     f.write("volume #%d style surface level 0.001 voxelSize %f\n" %
                             (count, sampling))
                     f.write("volume #%d origin %0.2f,%0.2f,%0.2f\n" %
@@ -170,10 +167,7 @@ class viewerProtImportVolumes(EmProtocolViewer):
                 for halfMap in self.protocol.outputVolume.getHalfMaps().split(','):
                     volHalf = emobj.Volume()
                     volHalf.setSamplingRate(sampling)
-                    if not halfMap.endswith(".mrc"):
-                        volHalf.setFileName(halfMap.split(".")[0] + ".mrc")
-                    else:
-                        volHalf.setFileName(halfMap)
+                    volHalf.setFileName(halfMap)
                     setOfVolumes.append(volHalf)
                 setOfVolumes.write()
                 return [self.objectView(setOfVolumes)]
