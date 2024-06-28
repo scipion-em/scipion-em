@@ -21,6 +21,7 @@ from metadataviewer.dao.model import IDAO
 from metadataviewer.model import Table, Column, BoolRenderer, ImageRenderer, StrRenderer, IntRenderer, FloatRenderer,Page
 from metadataviewer.model.renderers import ImageReader, Action
 from pwem.viewers.mdviewer.star_dao import StarFile
+from pwem.convert.transformations import euler_from_matrix
 
 SCIPION_OBJECT_ID = "SCIPION_OBJECT_ID"
 SCIPION_PORT = "SCIPION_PORT"
@@ -53,6 +54,28 @@ PROPERTIES_TABLE = 'Properties'
 OBJECT_TABLE = 'objects'
 
 
+class ScipionTable(Table):
+
+    def __init__(self, name, definitionTable):
+        super().__init__(name)
+        self.definitionTable=definitionTable
+
+    def getDefinitionTable(self):
+
+        return self.definitionTable
+
+class ScipionColumn(Column):
+
+    def __init__(self, name, renderer=None, callback=None):
+        super().__init__(name, renderer=renderer)
+        self.callback=callback
+    def setCallback(self, callback):
+        """ Calback to compute the value for this column. The callback will receives the row"""
+        self.callback = callback
+    def calculate(self, row, values):
+        self.callback(row, values)
+
+
 class SqliteFile(IDAO):
     """  Class to manipulate Scipion Sqlite files. """
 
@@ -62,12 +85,11 @@ class SqliteFile(IDAO):
         self._con = self.__loadDB(sqliteFile)
         self._con.row_factory = self._dictFactory
         self._tableCount = {}
-        self._tables = {}
+        self._tables = {}  # Dictionary to hold the table as key, and the table with the definition as value {"Class001_Objects": "Class001_Classess"}
         self._labels = {}
         self._labelsTypes = {}
         self._aliases = {}
         self._columnsMap = {}
-        self._extendedColumn = None
         self._tableWithAdditionalInfo = None
         self._objectsType = {}
 
@@ -80,16 +102,15 @@ class SqliteFile(IDAO):
                          "correct: \n %s" % e)
             return None
 
-    def hasExtendedColumn(self):
-        """Return if the table need to extend a column. That column is used to
-        renderer an image that is composed by other two columns"""
-        return self._extendedColumn is not None
-
     def composeDataTables(self, tablesNames):
         """This method is used to generate a dictionary with the principal
            tables mapping the dependencies with other tables"""
         tablesNames = sorted(tablesNames)
         for tableName in tablesNames:
+
+            alias = self.composeTableAlias(tableName)
+            self._aliases[tableName] = alias
+
             divTable = tableName.split('_')
             if len(divTable) > 1:
                 if divTable[-1].startswith('Class') and tableName not in self._tables:
@@ -119,6 +140,7 @@ class SqliteFile(IDAO):
     def composeTableAlias(self, tableName):
         """Create an alias for the given table"""
         if tableName != PROPERTIES_TABLE:
+            print(tableName)
             firstRow = self.getTableRow(tableName, 0)
             className = firstRow['class_name']
             if tableName.__contains__('_'):
@@ -132,66 +154,44 @@ class SqliteFile(IDAO):
             alias = PROPERTIES_TABLE
         return alias
 
-    def getTableNames(self):
+    def getTables(self):
         """ Return all the table names found in the database. """
         initTime = time.time()
         if not self._names:
-            self._tables = {OBJECT_TABLE: 'classes'}
+
+            # Add main items table
+            self._tables = {OBJECT_TABLE: ScipionTable(OBJECT_TABLE, definitionTable='classes')}
             self._names = [OBJECT_TABLE]
 
-            res = self._con.execute("SELECT name FROM sqlite_master WHERE type='table'")
-            tablesNames = [row['name'] for row in res.fetchall()]
-            self.composeDataTables(tablesNames)
+            # Add properties table
+            self._tables[PROPERTIES_TABLE] = ScipionTable(PROPERTIES_TABLE, definitionTable=PROPERTIES_TABLE)
+            self._names.append(PROPERTIES_TABLE)
 
-            for tableName in self._names:
-                # Getting the first row to identify the labels and theirs type
-                firstRow = self.getTableRow(tableName, 0, classes=self._tables[tableName])
-                self._labels[tableName] = [key for key in firstRow.keys() if key not in EXCLUDED_COLUMNS]
-                alias = self.composeTableAlias(self._tables[tableName])
-                self._aliases[tableName] = alias
+            # Add additional tables: Case for classes or titl series elements
+            res = self._con.execute("SELECT name FROM sqlite_master WHERE type='table' AND name LIKE '%_Objects%'")
 
-                labelsTypes = []
-                for key, value in firstRow.items():
-                    if key not in EXCLUDED_COLUMNS:
-                        labelsTypes.append(_guessType(value))
-                self._labelsTypes[tableName] = labelsTypes
+            for row in res.fetchall():
+                name = row['name']
+                definitionTable = name.replace('_Objects', "_Classes")
+                self._tables[name]= ScipionTable(name, definitionTable=definitionTable)
+                self._names.append(name)
 
-            self.composeObjectType()
-
-        if len(self._tables) > 2:  # Assuming that there are more tables than just Object and Properties
-            self._tableWithAdditionalInfo = OBJECT_TABLE
         endTime = time.time()
-        logging.info("GetTableNames: %f" % (endTime - initTime))
-        return self._names
+        logging.debug("Getting Tables: %f" % (endTime - initTime))
+        return self._tables
 
-    def findColbyName(self, colNames, colName):
-        """Return a column index given a column name"""
-        for i, col in enumerate(colNames):
-            if colName.lower() == col.lower():
-                return i
-        return None
+    def _fillMappingColumns(self, table:ScipionTable):
 
-    def updateExtendColumn(self, table):
-        """Find the columns that need to extend and keep the indexes"""
         tableName = table.getName()
-        colNames = self._labels[tableName]
-        indexCol = self.findColbyName(colNames, '_index')
-        fileNameCol = self.findColbyName(colNames, '_filename')
+        # Getting the first row to identify the labels and theirs type
+        firstRow = self.getTableRow(tableName, 0, classes=table.getDefinitionTable())
+        self._labels[tableName] = [key for key in firstRow.keys() if key not in EXCLUDED_COLUMNS]
 
-        if indexCol and fileNameCol:
-            logger.debug("The columns _index and _filename have been found. "
-                         "We will proceed to create a new column with the "
-                         "values of these columns.")
-            self._extendedColumn = indexCol, fileNameCol
-        else:
-            indexCol = self.findColbyName(colNames, '_representative._index')
-            fileNameCol = self.findColbyName(colNames, '_representative._filename')
-            if indexCol and fileNameCol:
-                logger.debug("The columns _representative._index and "
-                             "_representative._filename have been found. "
-                             "We will proceed to create a new column with the "
-                             "values of these columns.")
-                self._extendedColumn = indexCol, fileNameCol
+        labelsTypes = []
+        for key, value in firstRow.items():
+            if key not in EXCLUDED_COLUMNS:
+                labelsTypes.append(_guessType(value))
+        self._labelsTypes[tableName] = labelsTypes
 
     def generateTableActions(self, table, objectManager):
         """Generate actions for a given table in order to create subsets"""
@@ -217,21 +217,25 @@ class SqliteFile(IDAO):
                 table.addAction(alias,
                                 lambda: self.createSubsetCallback(table, self._objectsType[alias], objectManager))
 
-    def fillTable(self, table, objectManager):
+    def composeImageFilename(self, row, values):
+        indexStr = "%s@" % values[-2] if values[-2] != 0 else ""
+        values.append("%s%s" % (indexStr, values[-1]))
+
+    def fillTable(self, table:ScipionTable, objectManager):
         """Create the table structure (columns) and set the table alias"""
         initTime = time.time()
         tableName = table.getName()
+        self._fillMappingColumns(table)
         colNames = self._labels[tableName]
-        self.updateExtendColumn(table)
 
-        row = self.getTableRow(tableName, 0, classes=self._tables[tableName])
+        row = self.getTableRow(tableName, 0, classes=table.getDefinitionTable())
         if 'id' not in row:
             table.setHasColumnId(False)
         values = [value for key, value in row.items() if key not in EXCLUDED_COLUMNS]
 
         for index, colName in enumerate(colNames):
 
-            isFileNameCol = self.hasExtendedColumn() and index == self._extendedColumn[1]
+            isFileNameCol= colName.endswith( "_filename")
 
             if colName == ENABLED_COLUMN:
                 renderer = BoolRenderer()
@@ -243,7 +247,7 @@ class SqliteFile(IDAO):
                     imageExt = str(values[index]).split('.')[-1]
                     self.addExternalProgram(renderer, imageExt)
 
-            newCol = Column(colName, renderer)
+            newCol = ScipionColumn(colName, renderer)
             newCol.setIsSorteable(True)
             if (tableName == OBJECT_TABLE):
                 newCol.setIsVisible(objectManager.isLabelVisible(colName))
@@ -252,23 +256,60 @@ class SqliteFile(IDAO):
             table.addColumn(newCol)
 
             if isFileNameCol:
-                logger.debug("Creating an extended column: %s" % EXTENDED_COLUMN_NAME)
-                imageExt = str(values[index]).split('.')[-1]
-                if values[index] is not None and ImageRenderer().getImageReader(values[index]) is not None:
-                    renderer = ImageRenderer()
-                    self.addExternalProgram(renderer, imageExt)
-                extraCol = Column(colName, renderer)
-                extraCol.setIsVisible(newCol.isVisible())
-                extraCol.setIsSorteable(False)
-                table.addColumn(extraCol)
-                newCol.setIsVisible(False)
-                newCol.setName(EXTENDED_COLUMN_NAME)
+                previousCol = colNames[index-1]
+                if previousCol.endswith("_index"):
+                    logger.debug("Creating an extended column: %s" % EXTENDED_COLUMN_NAME)
+                    imageExt = str(values[index]).split('.')[-1]
+                    if values[index] is not None and ImageRenderer().getImageReader(values[index]) is not None:
+                        renderer = ImageRenderer()
+                        self.addExternalProgram(renderer, imageExt)
+                    extraCol = ScipionColumn(EXTENDED_COLUMN_NAME, renderer)
+                    
+                    extraCol.setCallback(self.composeImageFilename)
+                    extraCol.setIsVisible(newCol.isVisible())
+                    extraCol.setIsSorteable(False)
+                    table.addColumn(extraCol)
+                    newCol.setIsVisible(False)
 
-        table.setAlias(self._aliases[tableName])
+            elif colName.endswith("_matrix"):
+                def addAlignmentColumn(name, offset, position):
+
+                    extraCol = ScipionColumn(name, renderer=FloatRenderer())
+                    extraCol.setIsSorteable(False)
+                    extraCol.setCallback(lambda row, values: self.exctractAngularValue(values,offset, position))
+                    table.addColumn(extraCol)
+
+                def addShiftColumn(name, offset, position):
+                    extraCol = ScipionColumn(name, renderer=FloatRenderer())
+                    extraCol.setIsSorteable(False)
+                    extraCol.setCallback(lambda row, values: self.exctractShift(values, offset, position))
+                    table.addColumn(extraCol)
+
+                addAlignmentColumn("rot", -1, 0)  #TODO: Check values
+                addAlignmentColumn("tilt", -2, 1)
+                addAlignmentColumn("psi", -3, 2)
+                addShiftColumn("shiftX", -4, 0)
+                addShiftColumn("shiftY", -5, 1)
+
+        #table.setAlias(self._aliases[tableName])
         self.generateTableActions(table, objectManager)
         endTime = time.time()
-        logging.info("Create the table structure: %f" % (endTime - initTime))
+        logger.debug("Table structure created: %f" % (endTime - initTime))
 
+    def exctractAngularValue(self, values, offset, position):
+        """ Extract the euler angle form the matrix"""
+        matrix = values[offset]
+        if isinstance(matrix, str):
+            matrix = numpy.array(eval(matrix))
+            values[offset]= matrix
+        matrixI = numpy.linalg.inv(matrix)
+        euler_data = euler_from_matrix(matrix=matrixI, axes='szyz')
+        values.append(euler_data[position])
+
+    def exctractShift(self, values, offset, position):
+        """ Extract offset value """
+        matrix = values[offset]
+        values.append(matrix[position,3])
     def addExternalProgram(self, renderer: ImageRenderer, imageExt: str):
         self.addChimera(renderer, imageExt)
         self.addImageJ(renderer)
@@ -339,7 +380,8 @@ Stack.setSlice(slice);
         Read the given table from the sqlite and fill the page(add rows)
         """
         initTime = time.time()
-        tableName = page.getTable().getName()
+        table = page.getTable()
+        tableName = table.getName()
         # moving to the first row of the page
         pageNumber = page.getPageNumber()
         pageSize = page.getPageSize()
@@ -348,27 +390,31 @@ Stack.setSlice(slice);
 
         column = self._labels[tableName][actualColumn]
         mode = 'ASC' if orderAsc else 'DESC'
-        self.updateExtendColumn(page.getTable())
 
+        hasId = None
         for rowcount, row in enumerate(self.iterTable(tableName, start=firstRow, limit=limit,
-                                                      classes=self._tables[tableName],
+                                                      classes=table.getDefinitionTable(),
                                                       orderBy=column, mode=mode)):
             if row:
-                values = [value for key, value in row.items() if key not in EXCLUDED_COLUMNS]
-                if 'id' in row.keys():
+                values = []
+
+                for column in page.getTable().getColumns():
+                    if column.isSorteable():
+                        values.append(row[column.getName()])
+                    else:
+                        column.calculate(row, values)
+
+                # Resolve the id value
+                if hasId is None:
+                    hasId = 'id' in row.keys()
+
+                if hasId:
                     id = row['id']
                 else:
                     id = rowcount
 
-                # Checking if exists an extended column
-                if self.hasExtendedColumn() and tableName != PROPERTIES_TABLE:
-                    if values[self._extendedColumn[1]] is not None:
-                        values.insert(self._extendedColumn[1] + 1,
-                                      str(values[self._extendedColumn[0]]) + '@' + values[self._extendedColumn[1]])
-                    else:
-                        values.insert(self._extendedColumn[1] + 1, None)
-
                 page.addRow((int(id), values))
+
         endTime = time.time()
         logger.debug("Page filled in %f seconds." % (endTime - initTime))
 
@@ -483,17 +529,25 @@ Stack.setSlice(slice);
         if 'start' in kwargs:
             query += f" OFFSET {kwargs['start']}"
 
+        # Properties Table
         if 'classes' not in kwargs or kwargs['classes'] == PROPERTIES_TABLE:
             res = self._con.execute(query)
             while row := res.fetchone():
                 yield row
         else:  # Mapping the column names and  including only the allowed columns
-            self._columnsMap[tableName] = {row['column_name']: row['label_property']
-                                           for row in self.iterTable(kwargs['classes']) if
-                                           row['class_name'] in ALLOWED_COLUMNS_TYPES}
-            self._excludedColumns = {row['column_name']: row['label_property']
-                                     for row in self.iterTable(kwargs['classes']) if
-                                     row['class_name'] not in ALLOWED_COLUMNS_TYPES}
+
+            self._columnsMap[tableName] = {}
+            self._excludedColumns={}
+
+            for row in self.iterTable(kwargs['classes']):
+
+                colName=row['column_name']
+                colType= row['label_property']
+
+                if row['class_name'] in ALLOWED_COLUMNS_TYPES:
+                    self._columnsMap[tableName] [colName]= colType
+                else:
+                    self._excludedColumns[colName]= colType
 
             def _row_factory(cursor, row):
                 fields = [column[0] for column in cursor.description]
