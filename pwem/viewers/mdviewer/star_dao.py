@@ -25,6 +25,9 @@
 # *
 # **************************************************************************
 import logging
+
+from metadataviewer.model import Table
+
 logger = logging.getLogger()
 
 from metadataviewer.dao.model import IDAO
@@ -39,9 +42,8 @@ class StarFile(IDAO):
         self._tableCount = {}
         self._tableData = {}
         self._labels = {}
-        self._names = []
+        self._tables = {}
         self._labelsTypes = {}
-        self._aliases = {}
 
     def __loadFile(self, inputFile):
         try:
@@ -80,10 +82,10 @@ class StarFile(IDAO):
         """Get the number of rows of a given table"""
         return self._tableCount[tableName]
 
-    def getTableNames(self):
+    def getTables(self):
         """ Return all the names of the data_ blocks found in the file and
             fill all labels and data of every table name """
-        if not self._names:
+        if not self._tables:
             f = self._file
             line = f.readline()
             logger.debug("Reading the star file completely and filling "
@@ -92,21 +94,19 @@ class StarFile(IDAO):
                 # While searching for a data line, we will store the offsets
                 # for any data_ line that we find
                 if line.startswith('data_'):
-                    tn = line.strip().replace('data_', '')
-                    self._names.append(tn)
+                    table = line.strip()
+                    alias = table.replace('data_', '')
+                    tbl = Table(table)
+                    #tbl.setAlias(alias)
+                    self._tables[table] = tbl
                     data = self._getData()
-                    self._tableCount[tn] = data[0]
-                    self._labels[tn] = ['id'] + data[1]
-                    self._labelsTypes[tn] = data[2]
-                    self._tableData[tn] = data[3]
-                    self._aliases[tn] = tn
+                    self._tableCount[table] = data[0]
+                    self._labels[table] = ['id'] + data[1]
+                    self._labelsTypes[table] = data[2]
+                    self._tableData[table] = data[3]
                 line = f.readline()
 
-        return list(self._names)
-
-    def getTableAliases(self):
-        """Get the tables aliases"""
-        return self._aliases
+        return self._tables
 
     def _getData(self):
         """ Method to get all information of the table (labels, data,...)"""
