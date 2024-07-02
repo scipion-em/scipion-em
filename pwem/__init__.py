@@ -47,7 +47,7 @@ from .objects import EMObject
 from .tests import defineDatasets
 from .utils import *
 
-__version__ = '3.7.0'
+__version__ = '3.7.1'
 NO_VERSION_FOUND_STR = "0.0"
 CUDA_LIB_VAR = 'CUDA_LIB'
 
@@ -252,6 +252,11 @@ class Plugin(pyworkflow.plugin.Plugin):
 
         if Config.IMAGEJ_BINARY_PATH:
             register(ImajeJFileHandler(), '.mrcs', '.mrc', '.st', '.ali', '.rec', '.tif', '.tiff', *STANDARD_IMAGE_EXTENSIONS)
+
+        with pwutils.weakImport("MetadataFileHandler"):
+            from .viewers.filehandlers import MetadataFileHandler
+            register(MetadataFileHandler(), *MetadataFileHandler._compatibleExtensions)
+
 
 
 def findFolderWithPattern(path, pattern):
