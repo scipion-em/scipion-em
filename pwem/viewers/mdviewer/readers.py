@@ -140,7 +140,6 @@ class SqliteFile(IDAO):
     def composeTableAlias(self, tableName):
         """Create an alias for the given table"""
         if tableName != PROPERTIES_TABLE:
-            print(tableName)
             firstRow = self.getTableRow(tableName, 0)
             className = firstRow['class_name']
             if tableName.__contains__('_'):
@@ -161,11 +160,10 @@ class SqliteFile(IDAO):
 
             # Add main items table
             self._tables = {OBJECT_TABLE: ScipionTable(OBJECT_TABLE, definitionTable='classes')}
+            alias = self.composeTableAlias('Classes')
+            self._tables[OBJECT_TABLE].setAlias(alias)
+            self._aliases[OBJECT_TABLE] = alias
             self._names = [OBJECT_TABLE]
-
-            # Add properties table
-            self._tables[PROPERTIES_TABLE] = ScipionTable(PROPERTIES_TABLE, definitionTable=PROPERTIES_TABLE)
-            self._names.append(PROPERTIES_TABLE)
 
             # Add additional tables: Case for classes or titl series elements
             res = self._con.execute("SELECT name FROM sqlite_master WHERE type='table' AND name LIKE '%_Objects%'")
@@ -173,9 +171,19 @@ class SqliteFile(IDAO):
             for row in res.fetchall():
                 name = row['name']
                 definitionTable = name.replace('_Objects', "_Classes")
-                self._tables[name]= ScipionTable(name, definitionTable=definitionTable)
+                alias = self.composeTableAlias(definitionTable)
+                self._tables[name] = ScipionTable(name, definitionTable=definitionTable)
+                self._tables[name].setAlias(alias)
+                self._aliases[name] = alias
                 self._names.append(name)
 
+            # Add properties table
+            self._tables[PROPERTIES_TABLE] = ScipionTable(PROPERTIES_TABLE, definitionTable=PROPERTIES_TABLE)
+            self._tables[PROPERTIES_TABLE].setAlias(PROPERTIES_TABLE)
+            self._aliases[PROPERTIES_TABLE] = PROPERTIES_TABLE
+            self._names.append(PROPERTIES_TABLE)
+
+        self.composeObjectType()
         endTime = time.time()
         logging.debug("Getting Tables: %f" % (endTime - initTime))
         return self._tables
@@ -293,6 +301,7 @@ class SqliteFile(IDAO):
 
         #table.setAlias(self._aliases[tableName])
         self.generateTableActions(table, objectManager)
+        table.setSortingColumn(table.getColumns()[0].getName())
         endTime = time.time()
         logger.debug("Table structure created: %f" % (endTime - initTime))
 
@@ -309,7 +318,9 @@ class SqliteFile(IDAO):
     def exctractShift(self, values, offset, position):
         """ Extract offset value """
         matrix = values[offset]
-        values.append(matrix[position,3])
+        shape = matrix.shape[0]
+        values.append(matrix[position, shape-1])
+
     def addExternalProgram(self, renderer: ImageRenderer, imageExt: str):
         self.addChimera(renderer, imageExt)
         self.addImageJ(renderer)
@@ -375,7 +386,7 @@ Stack.setSlice(slice);
             renderer.addAction(Action('IV', icon, 'Open with ImageViewer',
                                       openImageViewerCallback))
 
-    def fillPage(self, page, actualColumn=0, orderAsc=True):
+    def fillPage(self, page, actualColumn: str, orderAsc=True):
         """
         Read the given table from the sqlite and fill the page(add rows)
         """
@@ -388,13 +399,13 @@ Stack.setSlice(slice);
         firstRow = pageNumber * pageSize - pageSize
         limit = pageSize
 
-        column = self._labels[tableName][actualColumn]
+        columnLabel = actualColumn if tableName != PROPERTIES_TABLE else table.getColumns()[0].getName()
         mode = 'ASC' if orderAsc else 'DESC'
 
         hasId = None
         for rowcount, row in enumerate(self.iterTable(tableName, start=firstRow, limit=limit,
                                                       classes=table.getDefinitionTable(),
-                                                      orderBy=column, mode=mode)):
+                                                      orderBy=columnLabel, mode=mode)):
             if row:
                 values = []
 
@@ -684,7 +695,7 @@ class NumpyDao(IDAO):
 
         return self._data
 
-    def fillPage(self, page: Page, actualColumn: int, orderAsc: bool) -> None:
+    def fillPage(self, page: Page, actualColumn: str, orderAsc: bool) -> None:
 
         # moving to the first row of the page
         pageNumber = page.getPageNumber()
@@ -746,19 +757,7 @@ class NumpyDao(IDAO):
         pass
 
 
-# --------- Helper functions  ------------------------
-def _guessType(strValue):
-    if strValue is None:
-        return str('None')
-    try:
-        int(strValue)
-        return int
-    except ValueError:
-        try:
-            float(strValue)
-            return float
-        except ValueError:
-            return str
+
 
 
 def extendMDViewer(om: metadataviewer.model.ObjectManager):
