@@ -28,12 +28,8 @@
 import logging
 import os
 import sys
-from functools import lru_cache
 from subprocess import Popen
-
 import numpy
-
-from pwem.emlib.image.image_handler import ImageReadersRegistry
 
 logger = logging.getLogger(__name__)
 from datetime import datetime
@@ -45,8 +41,21 @@ import time
 import pyworkflow as pw
 from metadataviewer.dao.model import IDAO
 from metadataviewer.model import Table, Column, BoolRenderer, ImageRenderer, StrRenderer, FloatRenderer
-from metadataviewer.model.renderers import ImageReader, Action
+from metadataviewer.model.renderers import Action
 from pwem.convert.transformations import euler_from_matrix
+
+ALLOWED_COLUMNS_TYPES = ['String', 'Float', 'Integer', 'Boolean', 'Matrix',
+                         'CsvList']
+ADITIONAL_INFO_DISPLAY_COLUMN_LIST = ['_size', 'id']
+EXCLUDED_COLUMNS = ['label', 'comment', 'creation', '_streamState']
+PERMANENT_COLUMNS = ['id', 'enabled']
+CLASS_OBJECT = 1
+REPRESENTATIVE_OBJECT = 2
+CLASS_ELEMENTS = 3
+EXTENDED_COLUMN_NAME = 'stack'
+ENABLED_COLUMN = 'enabled'
+PROPERTIES_TABLE = 'Properties'
+OBJECT_TABLE = 'objects'
 
 SCIPION_OBJECT_ID = "SCIPION_OBJECT_ID"
 SCIPION_PORT = "SCIPION_PORT"
@@ -67,33 +76,6 @@ def _guessType(strValue):
             return str
 
 
-class ScipionImageReader(ImageReader):
-    @classmethod
-    def getCompatibleFileTypes(cls) -> list:
-        return list(ImageReadersRegistry._readers.keys())
-
-    @classmethod
-    @lru_cache
-    def open(cls, path):
-        ext = path.split('.')[-1]
-        imageReader = ImageReadersRegistry._readers[ext]
-        return imageReader.open(path)
-
-
-ALLOWED_COLUMNS_TYPES = ['String', 'Float', 'Integer', 'Boolean', 'Matrix',
-                         'CsvList']
-ADITIONAL_INFO_DISPLAY_COLUMN_LIST = ['_size', 'id']
-EXCLUDED_COLUMNS = ['label', 'comment', 'creation', '_streamState']
-PERMANENT_COLUMNS = ['id', 'enabled']
-CLASS_OBJECT = 1
-REPRESENTATIVE_OBJECT = 2
-CLASS_ELEMENTS = 3
-EXTENDED_COLUMN_NAME = 'stack'
-ENABLED_COLUMN = 'enabled'
-PROPERTIES_TABLE = 'Properties'
-OBJECT_TABLE = 'objects'
-
-
 class ScipionTable(Table):
 
     def __init__(self, name, definitionTable):
@@ -111,15 +93,15 @@ class ScipionColumn(Column):
         self.callback = callback
 
     def setCallback(self, callback):
-        """ Calback to compute the value for this column. The callback will receives the row"""
+        """ Callback to compute the value for this column. The callback will receives the row"""
         self.callback = callback
 
     def calculate(self, row, values):
         self.callback(row, values)
 
 
-class SqliteFile(IDAO):
-    """  Class to manipulate Scipion Sqlite files. """
+class ScipionSetsDAO(IDAO):
+    """  Class to serve data from scipion sets files (sqlite). """
 
     def __init__(self, sqliteFile):
         self._names = []
@@ -615,10 +597,6 @@ Stack.setSlice(slice);
                 yield row
             # Restore row factory
             self._con.row_factory = self._dictFactory
-
-    def getTableAliases(self):
-        """Return the tables aliases"""
-        return self._aliases
 
     def _getColumnMap(self, tableName, column):
         """Get the column name that has been mapped"""
