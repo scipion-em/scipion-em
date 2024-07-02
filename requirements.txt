@@ -1,6 +1,8 @@
-scipion-pyworkflow>=3.4.0
-biopython==1.79
-tifffile<=2021.11.2
-emtable
+scipion-pyworkflow>=3.4.0 # matches scipion-em-xmipp on 11-2023
+biopython==1.81; python_version >= '3.8' # up to date on 11-2023
+tifffile==2023.7.10; python_version == '3.8'
+tifffile==2023.9.26; python_version >= '3.9' # up to date on 11-2023
+emtable>=0.0.14 # up to date on 11-2023
 mrcfile<=1.4.3
-scipy<=1.8.1 # Fix for dependency conflict with PyWavelets --> scipy 1.9 --> numpy > pyworkflow numpy
+scipy<=1.10.0; python_version < '3.12' # matches scipion-em-xmipp on 11-2023
+scipy==1.11.2; python_version == '3.12' #  up to date on 11-2023

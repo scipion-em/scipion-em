@@ -23,10 +23,6 @@
 
 import os
 import tempfile
-try:
-    from itertools import izip
-except ImportError:
-    izip = zip
 
 import pyworkflow.tests as pwtests
 
@@ -51,7 +47,7 @@ class TestImportMicrographs(TestImportBase):
         """
         goldSet = emobj.SetOfMicrographs(filename=goldFn)
 
-        for mic1, mic2 in izip(goldSet, micSet):
+        for mic1, mic2 in zip(goldSet, micSet):
             # Remove the absolute path in the micrographs to
             # really check that the attributes should be equal
             mic1.setFileName(os.path.basename(mic1.getFileName()))

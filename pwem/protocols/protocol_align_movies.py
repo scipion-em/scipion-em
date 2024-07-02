@@ -28,11 +28,6 @@
 import enum
 import os
 import warnings
-
-try:
-    from itertools import izip
-except ImportError:
-    izip = zip
 from math import ceil
 
 import pyworkflow.object as pwobj
@@ -720,7 +715,7 @@ def createAlignmentPlot(meanX, meanY):
     plotRange = max(max(meanX) - min(meanX), max(meanY) - min(meanY))
     i = 1
     skipLabels = ceil(len(meanX) / 10.0)
-    for x, y in izip(meanX, meanY):
+    for x, y in zip(meanX, meanY):
         if i % skipLabels == 0:
             ax.text(x - 0.02 * plotRange, y + 0.02 * plotRange, str(i))
         i += 1

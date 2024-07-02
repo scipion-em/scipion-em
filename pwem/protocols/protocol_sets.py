@@ -586,7 +586,7 @@ class ProtSubSet(ProtSets):
             if self.chooseAtRandom:
                 # Get all ids form iput set
                 self.info("Creating subset from random positions from input set.")
-                ids = set(random.sample(inputFullSet.getIdSet(), self.nElements.get()))
+                ids = set(random.sample(list(inputFullSet.getIdSet()), self.nElements.get()))
             else:
                 self.info("Creating subset by range: %s" % self.range)
                 ids = set(getListFromRangeString(self.range.get()))
