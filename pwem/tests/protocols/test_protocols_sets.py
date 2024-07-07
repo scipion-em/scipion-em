@@ -35,11 +35,6 @@ import unittest
 from pwem.protocols import ProtUserSubSet
 from pyworkflow.tests import DataSet
 
-try:
-    from itertools import izip
-except ImportError:
-    izip = zip
-
 import pyworkflow.tests as pwtests
 import pyworkflow.utils as pwutils
 
@@ -635,7 +630,7 @@ class TestSets(pwtests.BaseTest):
             for obj in itemSet:
                 outputSet.append(obj)
 
-        for item1, item2 in izip(imgSet, outputSet):
+        for item1, item2 in zip(imgSet, outputSet):
             if not item1.equalAttributes(item2):
                 logger.info("Items differ:")
                 prettyDict(item1.getObjDict())

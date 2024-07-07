@@ -26,11 +26,6 @@
 
 import time
 
-try:
-    from itertools import izip
-except ImportError:
-    izip = zip
-
 import pyworkflow.object as pwobj
 import pyworkflow.protocol as pwprot
 import pyworkflow.protocol.params as params
@@ -82,7 +77,7 @@ class EMProtocol(pwprot.Protocol):
         coordTiltPairs.setAngles(angles)
         coordTiltPairs.setMicsPair(micTiltPairs)
 
-        for coordU, coordT in izip(uCoords, tCoords):
+        for coordU, coordT in zip(uCoords, tCoords):
             coordTiltPairs.append(emobj.TiltPair(coordU, coordT))
 
         return coordTiltPairs
