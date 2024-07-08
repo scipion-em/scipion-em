@@ -539,6 +539,7 @@ class ProtImportMovies(ProtImportMicBase):
     def _insertAllSteps(self):
         # Only the import movies has property 'inputIndividualFrames'
         # so let's query in a non-intrusive manner
+        self._fillFileNamesList()
         inputIndividualFrames = getattr(self, 'inputIndividualFrames', False)
 
         if self.dataStreaming or inputIndividualFrames:
