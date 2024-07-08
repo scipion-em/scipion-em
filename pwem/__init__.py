@@ -32,12 +32,12 @@ from pyworkflow import VarTypes
 
 logger = logging.getLogger(__name__)
 import os
+from packaging import version
 import re
-from pkg_resources import parse_version
 
 import pyworkflow as pw
 from pyworkflow.protocol import Protocol
-from pyworkflow.utils import  getSubclasses
+from pyworkflow.utils import getSubclasses
 from pyworkflow.viewer import Viewer
 from pyworkflow.wizard import Wizard
 import pyworkflow.plugin
@@ -234,18 +234,16 @@ class Plugin(pyworkflow.plugin.Plugin):
         if pattern is not None:
             path = findFolderWithPattern(path, pattern)
             if path is None:
-                return parse_version(default)
+                return version.Version(default)
 
         parts = path.split(separator)
         if len(parts)>=2:
 
             # Version should be the last bit
             versionStr = parts[-1]
-            versionStr = re.search("\d+\.\d+", versionStr)[0]
-            # Match only numbers
-            return parse_version(versionStr)
+            return version.Version(versionStr)
         else:
-            return parse_version(default)
+            return version.Version(default)
     @classmethod
     def _registerFileHandlers(cls):
         # register file handlers to preview info in the Filebrowser....
@@ -265,7 +263,7 @@ class Plugin(pyworkflow.plugin.Plugin):
         if Config.IMAGEJ_BINARY_PATH:
             register(ImajeJFileHandler(), '.mrcs', '.mrc', '.st', '.ali', '.rec', '.tif', '.tiff', *STANDARD_IMAGE_EXTENSIONS)
 
-        with pwutils.weakImport("metadataviewer"):
+        with pwutils.weakImport("MetadataFileHandler"):
             from .viewers.filehandlers import MetadataFileHandler
             register(MetadataFileHandler(), *MetadataFileHandler._compatibleExtensions)
 
