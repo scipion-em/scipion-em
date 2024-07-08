@@ -180,8 +180,8 @@ class ProtBoxSizeCheckpoint(EMProtocol):
                         self.waitingHasFinished())
 
     def getTimeOutInSeconds(self, timeOut):
-        timeOutFormatRegexList = {'\d+s':1, '\d+m':60, '\d+h':3600,
-                                  '\d+d':72000}
+        timeOutFormatRegexList = {r'\d+s': 1, r'\d+m': 60, r'\d+h': 3600,
+                                  r'\d+d': 72000}
         try:
             return int(timeOut)
         except Exception:
@@ -236,10 +236,10 @@ class ProtBoxSizeCheckpoint(EMProtocol):
         if self.boolTimer.get():
             timeInSec = self.getTimeOutInSeconds(self.timeout.get())
             if timeInSec == 0:
-                message.append('Time format is wrong. A correct format is an '
-                               'integer number in seconds or the following syntax: '
-                               '{days}d {hours}h {minutes}m {seconds}s separated by'
-                               ' spaces e.g: 1d 2h 20m 15s,  10m 3s, 1h, 20s or 25.')
+                errors.append('Time format is wrong. A correct format is an '
+                              'integer number in seconds or the following syntax: '
+                              '{days}d {hours}h {minutes}m {seconds}s separated by'
+                              ' spaces e.g: 1d 2h 20m 15s,  10m 3s, 1h, 20s or 25.')
 
         return errors
 
