@@ -381,6 +381,7 @@ class TestSets(pwtests.BaseTest):
             # Simple checks on merge, coming from many split sets of set0.
             logger.info(pwutils.magentaStr("==> Check merge of %s" % type(set0).__name__))
             p_union = self.proj.newProtocol(emprot.ProtUnionSet)
+            p_union.renumber.set(True)  # We join subsets made randomly, so there is a chance of receiving the same particle with the same id twice
 
             setsIds = []
             for i in range(random.randint(1, 5)):

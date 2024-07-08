@@ -94,7 +94,6 @@ class ProtImportImages(ProtImportFiles):
 
     # --------------------------- INSERT functions ----------------------------
     def _insertAllSteps(self):
-        self._fillFileNamesList()
         # Only the import movies has property 'inputIndividualFrames'
         # so let's query in a non-intrusive manner
         inputIndividualFrames = getattr(self, 'inputIndividualFrames', False)
@@ -311,7 +310,7 @@ class ProtImportImages(ProtImportFiles):
                 # the timestamp of the last event
                 lastDetectedChange = now
 
-            for fileName in self.fileNamesList:
+            for fileName in self.getFileNamesList():
                 self.fileNamesList[fileName] = False
 
         self._updateOutputSet(outputName, imgSet,
@@ -501,7 +500,7 @@ class ProtImportImages(ProtImportFiles):
             
     def _getUniqueFileName(self, filename, filePaths=None):
         fileBaseName = os.path.basename(filename)
-        isFileName = self.fileNamesList.get(fileBaseName, False)
+        isFileName = self.getFileNamesList().get(fileBaseName, False)
         if isFileName:
             if filePaths is None:
                 filePaths = [re.split(r'[$*#?]', self.getPattern())[0]]
@@ -512,13 +511,16 @@ class ProtImportImages(ProtImportFiles):
         self.fileNamesList[fileBaseName] = True
         return fileBaseName
 
-    def _fillFileNamesList(self):
+    def getFileNamesList(self):
         """
         Fill a list with the file names that contains extra folder
         """
-        self.fileNamesList = dict()
-        for file in os.listdir(self._getExtraPath()):
-            self.fileNamesList[file] = False
+        if not hasattr(self, 'fileNamesList'):
+            self.fileNamesList = dict()
+            for file in os.listdir(self._getExtraPath()):
+                self.fileNamesList[file] = False
+
+        return self.fileNamesList
 
     def handleImgHed(self, copyOrLink, src, dst):
         """ Check the special case of Imagic files format
