@@ -259,15 +259,18 @@ class ScipionSetsDAO(IDAO):
         tableName = table.getName()
         self._fillMappingColumns(table)
         colNames = self._labels[tableName]
+        computedColsCount = 0
 
         row = self.getTableRow(tableName, 0, classes=table.getDefinitionTable())
         if 'id' not in row:
             table.setHasColumnId(False)
         values = [value for key, value in row.items() if key not in EXCLUDED_COLUMNS]
 
+        imgRenderer = None  # Renderer for the main image column (EXTENDED_COLUMN_NAME)
+
         for index, colName in enumerate(colNames):
 
-            isFileNameCol = colName.endswith("_filename")
+            isFileNameCol = imgRenderer is None and colName.endswith("_filename")
 
             if colName == ENABLED_COLUMN:
                 renderer = BoolRenderer()
@@ -281,7 +284,8 @@ class ScipionSetsDAO(IDAO):
 
             newCol = ScipionColumn(colName, renderer)
             newCol.setIsSorteable(True)
-            if (tableName == OBJECT_TABLE):
+
+            if tableName == OBJECT_TABLE:
                 newCol.setIsVisible(objectManager.isLabelVisible(colName))
             else:
                 newCol.setIsVisible(True)
@@ -294,6 +298,7 @@ class ScipionSetsDAO(IDAO):
                     imageExt = str(values[index]).split('.')[-1]
                     if values[index] is not None and ImageRenderer().getImageReader(values[index]) is not None:
                         renderer = ImageRenderer()
+                        imgRenderer = renderer
                         self.addExternalProgram(renderer, imageExt)
                     extraCol = ScipionColumn(EXTENDED_COLUMN_NAME, renderer)
 
@@ -302,6 +307,7 @@ class ScipionSetsDAO(IDAO):
                     extraCol.setIsSorteable(False)
                     table.addColumn(extraCol)
                     newCol.setIsVisible(False)
+                    computedColsCount += 1
 
             elif colName.endswith("_matrix"):
                 def addAlignmentColumn(name, offset, position):
@@ -317,11 +323,18 @@ class ScipionSetsDAO(IDAO):
                     extraCol.setCallback(lambda row, values: self.exctractShift(values, offset, position))
                     table.addColumn(extraCol)
 
-                addAlignmentColumn("rot", -1, 0)  # TODO: Check values
+                addAlignmentColumn("rot", -1, 0)
+                computedColsCount += 1
+                if imgRenderer:
+                    imgRenderer.setRotationColumnIndex(index + computedColsCount)
                 addAlignmentColumn("tilt", -2, 1)
+                computedColsCount += 1
                 addAlignmentColumn("psi", -3, 2)
+                computedColsCount += 1
                 addShiftColumn("shiftX", -4, 0)
+                computedColsCount += 1
                 addShiftColumn("shiftY", -5, 1)
+                computedColsCount += 1
 
         # table.setAlias(self._aliases[tableName])
         self.generateTableActions(table, objectManager)
@@ -337,7 +350,7 @@ class ScipionSetsDAO(IDAO):
             values[offset] = matrix
         matrixI = numpy.linalg.inv(matrix)
         euler_data = euler_from_matrix(matrix=matrixI, axes='szyz')
-        values.append(euler_data[position])
+        values.append(numpy.rad2deg(euler_data[position]))
 
     def exctractShift(self, values, offset, position):
         """ Extract offset value """

@@ -1,7 +1,7 @@
 import logging
 from functools import lru_cache
 from pwem.emlib.image.image_handler import ImageReadersRegistry
-from pwem.viewers.mdviewer.numpy_dao import NumpyDao
+from metadataviewer.dao.numpy_dao import NumpyDao
 
 logger = logging.getLogger(__name__)
 
@@ -29,5 +29,5 @@ def extendMDViewer(om: metadataviewer.model.ObjectManager):
     """ Function to extend the object manager with DAOs and readers"""
     om.registerDAO(ScipionSetsDAO)
     om.registerReader(ScipionImageReader)
-    om.registerDAO(NumpyDao)
+    NumpyDao.addCompatibleFileType('cs')
     om.registerDAO(StarFile)

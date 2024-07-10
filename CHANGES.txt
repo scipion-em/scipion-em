@@ -2,6 +2,7 @@ V3.8.0:
     - Filehandlers for cs, star and sqlite files to be displayied in the Scipion metadataviewer.
     - Adapted to new changes in metadata-viewer (v.2.0)
     - xmippLib missing message less critical for those domains without xmipp need.
+    - Displaying calculated columns from the transformation matrix
 
 V3.7.1:
     - Hot-fix: SetOf3DClasses and other sets without visualization config can be shown in the metadataviewer
