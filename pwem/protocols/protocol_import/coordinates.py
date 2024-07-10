@@ -25,7 +25,8 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-
+import logging
+logger = logging.getLogger(__name__)
 from os.path import exists
 from glob import glob
 
@@ -34,7 +35,7 @@ from pyworkflow.protocol.params import (IntParam, PointerParam, FloatParam,
                                         LEVEL_ADVANCED)
 import pyworkflow.utils as pwutils
 
-from pwem import Domain
+from pwem import Domain, fnMatching
 import pwem.emlib.metadata as md
 from pwem.objects import CoordinatesTiltPair
 from pwem.protocols import ProtParticlePicking
@@ -101,6 +102,7 @@ class ProtImportCoordinates(ProtImportFiles, ProtParticlePicking):
 
     # ------------------- INSERT steps functions ------------------------------
     def _insertAllSteps(self):
+        self.micSetDict = None
         self._insertFunctionStep(self.createOutputStep,
                                  self.getImportFrom(),
                                  self.filesPath.get())
@@ -236,17 +238,21 @@ class ProtImportCoordinates(ProtImportFiles, ProtParticlePicking):
         that this files matches.
         """
         micSet = self.inputMicrographs.get()
+        if self.micSetDict == None:
+            self.micSetDict = dict()
+            for mic in micSet:
+                micClone = mic.clone()
+                micName = pwutils.removeBaseExt(micClone.getMicName())
+                micBase = pwutils.removeBaseExt(micClone.getFileName())
+                self.micSetDict[micName] = micClone
+                self.micSetDict[micBase] = micClone
+                if fileId is not None:
+                    self.micSetDict[micClone.getObjId()] = micClone
 
         if fileId is None:
-            coordBase = pwutils.removeBaseExt(coordFile)
-            for mic in micSet:
-                micBase = pwutils.removeBaseExt(mic.getFileName())
-                # temporal use of in
-                if coordBase in micBase or micBase in coordBase:
-                    return mic
-            return None
+            return fnMatching(pwutils.removeBaseExt(coordFile),  self.micSetDict)[1]
         else:
-            return micSet[fileId]
+            return self.micSetDict[fileId]
 
     def correctCoordinatePosition(self, coord):
         mic = coord.getMicrograph()
