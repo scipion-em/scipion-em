@@ -138,24 +138,27 @@ class TestImportCoordinates(TestImportBase):
                                  )
         prot1.inputMicrographs.set(protImport.outputMicrographs)
         prot1.setObjLabel('import coords from xmipp(mark '
-                          'some digits in the filename as ID)')
+                          'some digits in the filename as ID) ')
         self.launchProtocol(prot1)
 
-        # Make sure that all 264 coordinates where correctly imported
-        from pwem import Domain
-        self.assertTrue(prot1.outputCoordinates.getSize() == 264)
-        coordCount = prot1.outputCoordinates.aggregate(['count'], '_micName',
-                                                       ['_micName'])
-        readPosCoordinates = Domain.importFromPlugin('xmipp3.convert',
-                                                     'readPosCoordinates')
-        coordsList = []
-        for coordFile, fileId in prot1.iterFiles():
-            posMd = readPosCoordinates(coordFile)
-            coordsList.append(posMd.size())
+        def validateImport(protocol, coordsCount):
+            from pwem import Domain
+            self.assertTrue(protocol.outputCoordinates.getSize() == coordsCount)
+            coordCount = protocol.outputCoordinates.aggregate(['count'], '_micName',
+                                                           ['_micName'])
+            readPosCoordinates = Domain.importFromPlugin('xmipp3.convert',
+                                                         'readPosCoordinates')
+            coordsList = []
+            for coordFile, fileId in protocol.iterFiles():
+                posMd = readPosCoordinates(coordFile)
+                coordsList.append(posMd.size())
 
-        self.assertTrue(coordsList[0] == coordCount[0]['count'])
-        self.assertTrue(coordsList[1] == coordCount[1]['count'])
-        self.assertTrue(coordsList[2] == coordCount[2]['count'])
+            self.assertTrue(coordsList[0] == coordCount[0]['count'])
+            self.assertTrue(coordsList[1] == coordCount[1]['count'])
+            self.assertTrue(coordsList[2] == coordCount[2]['count'])
+
+        # Make sure that all 264 coordinates where correctly imported
+        validateImport(prot1, 264)
 
         prot3 = self.newProtocol(emprot.ProtImportCoordinates,
                                  importFrom=emprot.ProtImportCoordinates.IMPORT_FROM_EMAN,
@@ -208,12 +211,18 @@ class TestImportCoordinates(TestImportBase):
                                  "There was a problem with the import")
 
             filesPath = self.dsXmipp.getFile('pickingXmipp')
-            newPos0 = os.path.join(micTempdir, 'BPV_1.pos')
-            newPos1 = os.path.join(micTempdir, 'BPV_10.pos')
-            newPos2 = os.path.join(micTempdir, 'BPV_100.pos')
-            os.link(os.path.join(filesPath, 'BPV_1386.pos'), newPos0)
-            os.link(os.path.join(filesPath, 'BPV_1387.pos'), newPos1)
-            os.link(os.path.join(filesPath, 'BPV_1388.pos'), newPos2)
+            # Define file names and paths
+            fileNames = ['BPV_1.pos', 'BPV_10.pos', 'BPV_100.pos']
+            sourceFiles = ['BPV_1386.pos', 'BPV_1387.pos', 'BPV_1388.pos']
+
+            # Create symbolic links
+            def createSymbolicLinks(filesNamesList, sourcesFilesList):
+                for newName, srcName in zip(filesNamesList, sourcesFilesList):
+                    newPath = os.path.join(micTempdir, newName)
+                    srcPath = os.path.join(filesPath, srcName)
+                    os.link(srcPath, newPath)
+
+            createSymbolicLinks(fileNames, sourceFiles)
 
             prot1 = self.newProtocol(emprot.ProtImportCoordinates,
                                      importFrom=emprot.ProtImportCoordinates.IMPORT_FROM_XMIPP,
@@ -228,20 +237,7 @@ class TestImportCoordinates(TestImportBase):
                               'starts with the mic name)')
             self.launchProtocol(prot1)
             # Make sure that all 264 coordinates where correctly imported
-            from pwem import Domain
-            self.assertTrue(prot1.outputCoordinates.getSize() == 264)
-            coordCount = prot1.outputCoordinates.aggregate(['count'], '_micName',
-                                                           ['_micName'])
-            readPosCoordinates = Domain.importFromPlugin('xmipp3.convert',
-                                                         'readPosCoordinates')
-            coordsList = []
-            for coordFile, fileId in prot1.iterFiles():
-                posMd = readPosCoordinates(coordFile)
-                coordsList.append(posMd.size())
-
-            self.assertTrue(coordsList[0] == coordCount[0]['count'])
-            self.assertTrue(coordsList[1] == coordCount[1]['count'])
-            self.assertTrue(coordsList[2] == coordCount[2]['count'])
+            validateImport(prot1, 264)
 
         # Import a set of micrographs (Micrograph name starts with coordinate
         # file name)
@@ -265,13 +261,9 @@ class TestImportCoordinates(TestImportBase):
             self.assertIsNotNone(protImport.outputMicrographs.getFileName(),
                                  "There was a problem with the import")
 
-            filesPath = self.dsXmipp.getFile('pickingXmipp')
-            newPos0 = os.path.join(micTempdir, 'BPR_1386.pos')  # No matching (tolerate)
-            newPos1 = os.path.join(micTempdir, 'BPV_1387.pos')
-            newPos2 = os.path.join(micTempdir, 'BPV_1388.pos')
-            os.link(os.path.join(filesPath, 'BPV_1386.pos'), newPos0)
-            os.link(os.path.join(filesPath, 'BPV_1387.pos'), newPos1)
-            os.link(os.path.join(filesPath, 'BPV_1388.pos'), newPos2)
+            fileNames = ['BPR_1386.pos', 'BPV_1387.pos', 'BPV_1388.pos']
+
+            createSymbolicLinks(fileNames, sourceFiles)
 
             prot1 = self.newProtocol(emprot.ProtImportCoordinates,
                                      importFrom=emprot.ProtImportCoordinates.IMPORT_FROM_XMIPP,
