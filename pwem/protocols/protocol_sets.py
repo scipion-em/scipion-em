@@ -64,6 +64,7 @@ class ProtSets(EMProtocol):
         if subElemList:
             for subElem in subElemList:
                 item.append(subElem)
+        outputSet.update(item)
 
 
 class ProtUnionSet(ProtSets):
@@ -155,7 +156,19 @@ class ProtUnionSet(ProtSets):
 
     # -------------------------- INSERT steps functions -----------------------
     def _insertAllSteps(self):
-        self._insertFunctionStep('createOutputStep')
+        # JORGE
+        import os
+        fname = "/home/jjimenez/test_JJ.txt"
+        if os.path.exists(fname):
+            os.remove(fname)
+        fjj = open(fname, "a+")
+        fjj.write('JORGE--------->onDebugMode PID {}'.format(os.getpid()))
+        fjj.close()
+        print('JORGE--------->onDebugMode PID {}'.format(os.getpid()))
+        import time
+        time.sleep(10)
+        # JORGE_END
+        self._insertFunctionStep(self.createOutputStep)
 
     # --------------------------- STEPS functions ------------------------------
     def createOutputStep(self):
@@ -270,17 +283,19 @@ class ProtUnionSet(ProtSets):
         """ Check if there are duplicated ids to renumber from
         the beginning. """
         usedIds = set()  # to keep track of the object ids we have already seen
-
         for item_pointer in self.inputSets:
             if str(item_pointer.get().getClassName()) is not Volume.__name__:
-                for objId in item_pointer.get().getIdSet():
-                    if objId in usedIds:
+                for objIds in item_pointer.get().getIdSet():
+                    if objIds in usedIds:
                         return True
+                    else:
+                        usedIds.add(objIds)
             else:
                 objId = item_pointer.get().getObjId()
                 if objId in usedIds:
                     return True
-            usedIds.add(objId)
+                else:
+                    usedIds.add(objId)
         return False
 
     def getAllSetsAttributes(self):
