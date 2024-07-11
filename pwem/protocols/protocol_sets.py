@@ -327,9 +327,8 @@ class ProtUnionSet(ProtSets):
 
     def _checkSetsCompatibility(self):
         """ Check if all input sets have a minimum compatible attributes """
-        # Attributes to check
-        attrs = {'sampling rates': 'getSamplingRate',
-                 'dimensions': 'getDimensions'}
+        # Attributes to check -> defined by the Set subclass type that are requested to be joined
+        attrs = self.inputSets[0].get()._attrDictForSetsComp
         errors = []
         # For each attribute
         for key, attr in attrs.items():

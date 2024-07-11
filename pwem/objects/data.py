@@ -29,6 +29,7 @@ This modules contains basic hierarchy
 for EM data objects like: Image, SetOfImage and others
 """
 import logging
+
 logger = logging.getLogger(__name__)
 
 import os
@@ -113,10 +114,10 @@ class Acquisition(EMObject):
 
     def __str__(self):
         return "\n    mag=%s\n    volt= %s\n    Cs=%s\n    Q0=%s\n\n" % \
-               (self._magnification.get(),
-                self._voltage.get(),
-                self._sphericalAberration.get(),
-                self._amplitudeContrast.get())
+            (self._magnification.get(),
+             self._voltage.get(),
+             self._sphericalAberration.get(),
+             self._amplitudeContrast.get())
 
 
 class Transform(EMObject):
@@ -279,7 +280,7 @@ class CTFModel(EMObject):
                  "psh={}, res={}, fit={}".format(
             strEx(self._defocusU.get()),
             strEx(self._defocusV.get()),
-            strEx(self._defocusU.get(0)-self._defocusV.get(0)),
+            strEx(self._defocusU.get(0) - self._defocusV.get(0)),
             strEx(self.getPhaseShift()),
             strEx(self._resolution.get()),
             strEx(self._fitQuality.get())
@@ -703,7 +704,7 @@ class Image(EMObject):
     def hasTransform(self):
         return self._transform is not None
 
-    def getTransform(self)-> Transform:
+    def getTransform(self) -> Transform:
         return self._transform
 
     def setTransform(self, newTransform):
@@ -776,6 +777,7 @@ class Image(EMObject):
         """ Sets the sampling rate to the mrc file represented by this image"""
         from pwem.convert.headers import setMRCSamplingRate
         setMRCSamplingRate(self.getFileName(), self.getSamplingRate())
+
 
 class Micrograph(Image):
     """ Represents an EM Micrograph object """
@@ -920,6 +922,7 @@ class Volume(Image):
 
         return imgStr
 
+
 class VolumeMask(Volume):
     """ A 3D mask to be used with volumes. """
     pass
@@ -940,12 +943,13 @@ class EMFile(EMObject):
         """ Use the _objValue attribute to store filename. """
         self._filename.set(filename)
 
+
 class Alphabet():
     """ class with a dictionary of all valid alphabets"""
     # sequence types
     AMINOACIDS = 0
     NUCLEOTIDES = 1
-    
+
     SEQ_TYPE = ['aminoacids', 'nucleotides']
 
     # alphabets for proteins
@@ -957,14 +961,15 @@ class Alphabet():
     UNAMBIGOUS_DNA_ALPHABET = 3
     EXTENDED_DNA_ALPHABET = 4
     AMBIGOUS_RNA_ALPHABET = 5
-    UNAMBIGOUS_RNA_ALPHABET = 6 
+    UNAMBIGOUS_RNA_ALPHABET = 6
     NUCLEOTIDES_ALPHABET = 7
 
     # dummy alphabet
     DUMMY_ALPHABET = 8
 
     # dictionary with all alphabets
-    alphabets = {}; alphabetsLabels = {}
+    alphabets = {};
+    alphabetsLabels = {}
 
     alphabets[PROTEIN_ALPHABET] = 'ACDEFGHIKLMNPQRSTVWY'
     alphabets[EXTENDED_PROTEIN_ALPHABET] = 'ACDEFGHIKLMNPQRSTVWYBJOUXZ'
@@ -985,7 +990,6 @@ class Alphabet():
     alphabetsLabels[AMBIGOUS_RNA_ALPHABET] = 'Ambigous RNA'
     alphabetsLabels[UNAMBIGOUS_RNA_ALPHABET] = 'Unambigous RNA'
 
-    
 
 class Sequence(EMObject):
     """Class containing a sequence of aminoacids/nucleotides
@@ -998,6 +1002,7 @@ class Sequence(EMObject):
             param: description: string with the sequence description
            
     """
+
     def __init__(self, name=None, sequence=None,
                  alphabet=None, isAminoacids=True, id=None, description=None,
                  **kwargs):
@@ -1073,8 +1078,8 @@ class Sequence(EMObject):
         seqHandler.saveFile(seqFileName, seqID,
                             name=seqName, seqDescription=seqDescription,
                             type=None)
-                            #seqFiP12345 USER_SEQ 
-                            # Aspartate aminotransferase, mitochondrial
+        #seqFiP12345 USER_SEQ
+        # Aspartate aminotransferase, mitochondrial
 
     def appendToFile(self, seqFileName, doClean=True):
         '''Exports the sequence to the specified file. If it already exists,
@@ -1088,9 +1093,8 @@ class Sequence(EMObject):
         seqName = self.getSeqName() if self.getSeqName() is not None else 'seqName'
         seqDescription = self.getDescription() if self.getDescription() is not None else ''
         seqHandler.appendFile(seqFileName, seqID,
-                            name=seqName, seqDescription=seqDescription,
-                            type=None)
-
+                              name=seqName, seqDescription=seqDescription,
+                              type=None)
 
     def __str__(self):
         return "Sequence (name = {})\n".format(self.getSeqName())
@@ -1209,10 +1213,10 @@ class EMSet(Set, EMObject):
             itemSelectedCallback: Optional, callback receiving an item and
                 returning true if it has to be copied
         """
-        
+
         if itemSelectedCallback is None:
             itemSelectedCallback = EMSet.isItemEnabled
-            
+
         itemDataIter = itemDataIterator  # shortcut
 
         for item in otherSet:
@@ -1311,6 +1315,8 @@ class SetOfImages(EMSet):
         self._isAmplitudeCorrected = Boolean(False)
         self._acquisition = Acquisition()
         self._firstDim = ImageDim()  # Dimensions of the first image
+        self._attrDictForSetsComp = {'sampling rates': 'getSamplingRate',
+                                     'dimensions': 'getDimensions'}
 
     def getAcquisition(self):
         return self._acquisition
@@ -1484,19 +1490,20 @@ class SetOfImages(EMSet):
         try:
             s = "%s (%d items, %s, %s%s)" % \
                 (self.getClassNameStr(), self.getSize(),
-                self._dimStr(), self._samplingRateStr(), self._appendStreamState())
+                 self._dimStr(), self._samplingRateStr(), self._appendStreamState())
         except Exception as e:
             s = "Couldn't convert the set to text."
             logger.error(s, exc_info=e)
 
         return s
+
     def _samplingRateStr(self):
         """ Returns how the sampling rate is presented in a 'str' context."""
         sampling = self.getSamplingRate()
 
         if not sampling:
             logger.error("FATAL ERROR: Object %s has no sampling rate!!!"
-                  % self.getName())
+                         % self.getName())
             sampling = -999.0
 
         return "%0.2f Å/px" % sampling
@@ -1610,6 +1617,7 @@ class SetOfParticles(SetOfImages):
             return 'SubParticles'
         else:
             return super().getClassNameStr()
+
     def hasCoordinates(self):
         return self._coordsPointer.hasValue()
 
@@ -1617,8 +1625,10 @@ class SetOfParticles(SetOfImages):
         """ Returns the SetOfCoordinates associated with
         this SetOfParticles"""
         return self._coordsPointer.get()
+
     def getIsSubparticles(self):
         return self._isSubParticles
+
     def setIsSubparticles(self, value):
         self._isSubParticles = Boolean(value)
 
@@ -1636,7 +1646,6 @@ class SetOfParticles(SetOfImages):
                            "They are problematic in complex streaming scenarios. "
                            "Pass a pointer to a protocol with extended "
                            "(e.g.: input param are this kind of pointers. Without get()!)")
-
 
     def copyInfo(self, other):
         """ Copy basic information (voltage, spherical aberration and
@@ -1736,13 +1745,14 @@ class SetOfAtomStructs(EMSet):
 
         return files
 
+
 class SetOfPDBs(SetOfAtomStructs):
     """ Set containing PDB items. """
 
     def __init__(self):
         SetOfAtomStructs.__init__(self)
         logger.warning("FOR DEVELOPERS: SetOfPDBs class has been renamed to SetOfAtomStructs. "
-              "Please update your code.")
+                       "Please update your code.")
 
 
 class SetOfSequences(EMSet):
@@ -1752,7 +1762,6 @@ class SetOfSequences(EMSet):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.aligned = Boolean(kwargs.get('aligned', False))
-
 
     def exportToFile(self, seqFileName):
         '''Writes the sequences in the set in the specified file'''
@@ -1959,9 +1968,9 @@ class SetOfCoordinates(EMSet):
 
         if not self._micrographsPointer.hasExtended():
             logger.warning("FOR DEVELOPERS: Direct pointers to objects should be avoided. "
-                         "They are problematic in complex streaming scenarios. "
-                         "Pass a pointer to a protocol with extended "
-                         "(e.g.: input param are this kind of pointers. Without get()!)")
+                           "They are problematic in complex streaming scenarios. "
+                           "Pass a pointer to a protocol with extended "
+                           "(e.g.: input param are this kind of pointers. Without get()!)")
 
     def getFiles(self):
         filePaths = set()
@@ -2132,9 +2141,9 @@ class SetOfClasses(EMSet):
 
         if not self._imagesPointer.hasExtended():
             logger.warning("FOR DEVELOPERS: Direct pointers to objects should be avoided. "
-                         "They are problematic in complex streaming scenarios. "
-                         "Pass a pointer to a protocol with extended "
-                         "(e.g.: input param are this kind of pointers. Without get()!)")
+                           "They are problematic in complex streaming scenarios. "
+                           "Pass a pointer to a protocol with extended "
+                           "(e.g.: input param are this kind of pointers. Without get()!)")
 
     def getDimensions(self):
         """Return first image dimensions as a tuple: (xdim, ydim, zdim)"""
@@ -2667,19 +2676,20 @@ class FSC(EMObject):
         """
         dataLength = len(self._x)
         for i in range(dataLength):
-            if float(self._y[i]) < threshold or i == dataLength-1:
-                above_res = float(self._x[i-1])
-                above_fsc = float(self._y[i-1])
+            if float(self._y[i]) < threshold or i == dataLength - 1:
+                above_res = float(self._x[i - 1])
+                above_fsc = float(self._y[i - 1])
                 below_res = float(self._x[i])
                 below_fsc = float(self._y[i])
                 break
-        resolution = below_res - ((threshold-below_fsc)/(above_fsc-below_fsc) * (below_res-above_res))
-        return "{0:.1f}".format(1/resolution)
+        resolution = below_res - ((threshold - below_fsc) / (above_fsc - below_fsc) * (below_res - above_res))
+        return "{0:.1f}".format(1 / resolution)
 
 
 class SetOfFSCs(EMSet):
     """Represents a set of FSCs"""
     ITEM_TYPE = FSC
+
 
 class SetOfStats(EMSet):
     """Represents lines of data elements"""

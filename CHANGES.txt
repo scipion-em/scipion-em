@@ -7,6 +7,7 @@ V3.8.0:
                     protocols.
     - Filehandlers for cs, star and sqlite files to be displayed in the Scipion metadataviewer.
     - Fix volume halfmaps wrong filename
+    - Join heterogeneous sets are possible for tomography objects TS and tomograms.
 
 V3.7.1:
     - Hot-fix: SetOf3DClasses and other sets without visualization config can be shown in the metadataviewer
