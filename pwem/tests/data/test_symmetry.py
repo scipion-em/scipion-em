@@ -31,11 +31,6 @@ import pwem.constants as emcts
 import pwem.convert as emconv
 import os
 
-try:
-    from itertools import izip
-except ImportError:
-    izip = zip
-
 
 class TestSymmetry(pwtests.unittest.TestCase):
 
@@ -60,7 +55,7 @@ class TestSymmetry(pwtests.unittest.TestCase):
                                 [s, c, 0, 0],
                                 [0, 0, 1.0, 0],
                                 [0, 0, 0.0, 1.0]])
-        for i, (m, r) in enumerate(izip(matrices, refMatrices)):
+        for i, (m, r) in enumerate(zip(matrices, refMatrices)):
             print(f"Symmetry matrix {i}:\n ", m)
             self.assertArrayAlmostEqual(r, m)
 
@@ -102,7 +97,7 @@ class TestSymmetry(pwtests.unittest.TestCase):
             mat[2][2] *= -1
             refMatrices.append(mat)
 
-        for i, (m, r) in enumerate(izip(matrices, refMatrices)):
+        for i, (m, r) in enumerate(zip(matrices, refMatrices)):
             print(f"Symmetry matrix {i}:\n ", m)
             self.assertArrayAlmostEqual(r, m)
 
@@ -129,7 +124,7 @@ class TestSymmetry(pwtests.unittest.TestCase):
             mat[2][2] *= -1
             refMatrices.append(mat)
 
-        for i, (m, r) in enumerate(izip(matrices, refMatrices)):
+        for i, (m, r) in enumerate(zip(matrices, refMatrices)):
             print(f"Symmetry matrix {i}:\n ", m)
             self.assertArrayAlmostEqual(r, m)
 
@@ -216,7 +211,7 @@ class TestSymmetry(pwtests.unittest.TestCase):
                             [-1.0, 0.0, 0,  0],
                             [0,   0,   0,   1]],
         ]
-        for i, (m, r) in enumerate(izip(matrices, refMatrices)):
+        for i, (m, r) in enumerate(zip(matrices, refMatrices)):
              self.assertArrayAlmostEqual(r, m)
 
         #t222 phantom
@@ -305,7 +300,7 @@ class TestSymmetry(pwtests.unittest.TestCase):
         ]
 
 
-        for i, (m, r) in enumerate(izip(matrices, refMatrices)):
+        for i, (m, r) in enumerate(zip(matrices, refMatrices)):
             # print(f"Symmetry matrix {i}:\n ", m, r, type(m), type(r))
             self.assertArrayAlmostEqual(m, r)
 
@@ -394,7 +389,7 @@ class TestSymmetry(pwtests.unittest.TestCase):
             [ 0.,         0.,         0.,         1.,       ]]
         ]
 
-        for i, (m, r) in enumerate(izip(matrices, refMatrices)):
+        for i, (m, r) in enumerate(zip(matrices, refMatrices)):
             # print(f"Symmetry matrix {i}:\n ", m, r, type(m), type(r))
             self.assertArrayAlmostEqual(m, r)
 
@@ -882,7 +877,7 @@ class TestSymmetry(pwtests.unittest.TestCase):
              [0., 0., 0., 1.]]
         ]
 
-        for m1, m2 in izip(matrices[:len(refMatrices)], refMatrices):
+        for m1, m2 in zip(matrices[:len(refMatrices)], refMatrices):
             self.assertArrayAlmostEqual(m1, m2)
 
     def test_42_SymmetryIcosahedral222UnitCell(self):

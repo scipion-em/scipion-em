@@ -427,8 +427,8 @@ class TableView(pwviewer.View):
             Normalizes string, converts to lowercase, removes non-alpha characters,
             and converts spaces to hyphens.
             """
-            value = re.sub('[^\w\s-]', '', value).strip().lower()
-            value = re.sub('[-\s]+', '-', value)
+            value = re.sub(r'[^\w\s-]', '', value).strip().lower()
+            value = re.sub(r'[-\s]+', '-', value)
             return value
 
         if self.outFileName is None:

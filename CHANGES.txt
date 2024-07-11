@@ -1,5 +1,11 @@
 V3.8.0:
-    - Filehandlers for cs, star and sqlite files to be displayied in the Scipion metadataviewer.
+ Users:
+    - Filehandlers for cs, star and sqlite files to be displayed in the Scipion metadataviewer.
+    - Generalizing the method for checking the match between files and objects identifiers
+    - New variable: SCIPION_EM_NEW_FILE_CHECK_SEC, default to 10:  defined in the environment determines the number
+                    of seconds to wait before checking if new files are available or finished in streamified import
+                    protocols.
+    - Fix volume halfmaps wrong filename
     - Adapted to new changes in metadata-viewer (v.2.0)
     - xmippLib missing message less critical for those domains without xmipp need.
     - Displaying calculated columns from the transformation matrix
@@ -133,7 +139,7 @@ developers:
      Useful for tomography sets and avoiding unnecessary inheritance.
    - Icon is a png (compatible with future pillow versions)
    - weakImport("tifffile") added when registering FileHandlers (bug at installation in github action)
-
+   - Fixing an error related with the import coordinates
 
 V3.0.23
 users:

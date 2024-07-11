@@ -32,12 +32,12 @@ from pyworkflow import VarTypes
 
 logger = logging.getLogger(__name__)
 import os
+from packaging import version
 import re
-from pkg_resources import parse_version
 
 import pyworkflow as pw
 from pyworkflow.protocol import Protocol
-from pyworkflow.utils import  getSubclasses
+from pyworkflow.utils import getSubclasses
 from pyworkflow.viewer import Viewer
 from pyworkflow.wizard import Wizard
 import pyworkflow.plugin
@@ -47,7 +47,7 @@ from .objects import EMObject
 from .tests import defineDatasets
 from .utils import *
 
-__version__ = '3.7.1'
+__version__ = '3.8.0'
 NO_VERSION_FOUND_STR = "0.0"
 CUDA_LIB_VAR = 'CUDA_LIB'
 
@@ -81,13 +81,23 @@ class Config(pw.Config):
     CUDA_BIN = _get('CUDA_BIN', '/usr/local/cuda/bin')
 
 
-    MAX_PREVIEW_FILE_SIZE = float(_get("MAX_PREVIEW_FILE_SIZE", DEFAULT_MAX_PREVIEW_FILE_SIZE, description="Maximum size (MB) of files to visualize in the file browser preview."))
+    MAX_PREVIEW_FILE_SIZE = float(_get("MAX_PREVIEW_FILE_SIZE", DEFAULT_MAX_PREVIEW_FILE_SIZE,
+                                       description="Maximum size (MB) of files to visualize in the file browser preview."))
 
     # OLD CHIMERA variable
-    CHIMERA_OLD_BINARY_PATH = _get("CHIMERA_OLD_BINARY_PATH",'',description="Path to the Chimera OLD binary program (not the folder). Will only be used a viewer. None of the chimera scripts will work.", var_type=VarTypes.PATH, source="pwem")
+    CHIMERA_OLD_BINARY_PATH = _get("CHIMERA_OLD_BINARY_PATH",'',
+                                   description="Path to the Chimera OLD binary program (not the folder). Will only "
+                                               "be used a viewer. None of the chimera scripts will work.",
+                                   var_type=VarTypes.PATH, source="pwem")
 
     # Path to either ImageJ or Fiji binary program
-    IMAGEJ_BINARY_PATH = _get("IMAGEJ_BINARY_PATH",'',description="Path to the IMAGEJ or FIJI program.", var_type=VarTypes.PATH, source="pwem")
+    IMAGEJ_BINARY_PATH = _get("IMAGEJ_BINARY_PATH",'',description="Path to the IMAGEJ or FIJI program.",
+                              var_type=VarTypes.PATH, source="pwem")
+
+    SCIPION_EM_NEW_FILE_CHECK_SEC = int(_get('SCIPION_EM_NEW_FILE_CHECK_SEC', 10,
+                                             description='Number of seconds to wait before checking if new files are '
+                                                         'available or finished in streamified import protocols.',
+                                             var_type=VarTypes.INTEGER, source='pwem'))
 
 
 class Domain(pyworkflow.plugin.Domain):
@@ -224,18 +234,16 @@ class Plugin(pyworkflow.plugin.Plugin):
         if pattern is not None:
             path = findFolderWithPattern(path, pattern)
             if path is None:
-                return parse_version(default)
+                return version.Version(default)
 
         parts = path.split(separator)
         if len(parts)>=2:
 
             # Version should be the last bit
             versionStr = parts[-1]
-            versionStr = re.search("\d+\.\d+", versionStr)[0]
-            # Match only numbers
-            return parse_version(versionStr)
+            return version.Version(versionStr)
         else:
-            return parse_version(default)
+            return version.Version(default)
     @classmethod
     def _registerFileHandlers(cls):
         # register file handlers to preview info in the Filebrowser....
