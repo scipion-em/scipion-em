@@ -365,18 +365,17 @@ class ScipionSetsDAO(IDAO):
 
     def addChimera(self, renderer: ImageRenderer, imageExt: str):
         chimeraPath = os.environ.get('CHIMERA_HOME', None)
-        if chimeraPath is not None:
-            if imageExt not in ['st', 'stk', 'mrcs']:
-                icon = pw.findResource('chimera.png')
+        if chimeraPath is not None and imageExt not in ['st', 'stk', 'mrcs']:
+            icon = pw.findResource('chimera.png')
 
-                def openChimeraCallback(imagePath):
-                    path = imagePath.split('@')[-1]
-                    program = os.path.join(chimeraPath, 'bin', 'ChimeraX')
-                    cmd = program + ' "%s"' % path
-                    Popen(cmd, shell=True, cwd=os.getcwd())
+            def openChimeraCallback(imagePath):
+                path = imagePath.split('@')[-1]
+                program = os.path.join(chimeraPath, 'bin', 'ChimeraX')
+                cmd = program + ' "%s"' % path
+                Popen(cmd, shell=True, cwd=os.getcwd())
 
-                renderer.addAction(Action('ChX', icon, 'Open with ChimeraX',
-                                          openChimeraCallback))
+            renderer.addAction(Action('ChX', icon, 'Open with ChimeraX',
+                                      openChimeraCallback))
 
     def addImageJ(self, renderer: ImageRenderer):
         imageJPath = os.environ.get('IMAGEJ_BINARY_PATH', None)
@@ -457,11 +456,11 @@ Stack.setSlice(slice);
                     hasId = 'id' in row.keys()
 
                 if hasId:
-                    id = row['id']
+                    idValue = row['id']
                 else:
-                    id = rowcount
+                    idValue = rowcount
 
-                page.addRow((int(id), values))
+                page.addRow((int(idValue), values))
 
         endTime = time.time()
         logger.debug("Page filled in %f seconds." % (endTime - initTime))
@@ -502,7 +501,7 @@ Stack.setSlice(slice);
                          useSelection, reverse=True):
         """Get the values of the selected columns in order to plot them"""
 
-        logger.debug("Reading the table %s and selected some columns values...")
+        logger.debug("Reading the table %s and selected some columns values..." % tableName)
         cols = [colName for colName in columns]
         if xAxis and xAxis not in cols:
             cols.append(xAxis)
@@ -557,13 +556,13 @@ Stack.setSlice(slice);
         query = f"SELECT * FROM {tableName}"
 
         if 'mode' in kwargs:
-            if 'orderBy' in kwargs:
-                if kwargs['orderBy']:
-                    column = self._getColumnMap(tableName, kwargs['orderBy'])
-                    if not column:
-                        column = kwargs['orderBy']
+            orderBy = kwargs.get('orderBy', '')
+            if orderBy:
+                column = self._getColumnMap(tableName, orderBy)
+                if not column:
+                    column = orderBy
 
-                    query += f" ORDER BY {column}"
+                query += f" ORDER BY {column}"
 
             if kwargs['mode']:
                 query += f" {kwargs['mode']}"
@@ -643,9 +642,9 @@ Stack.setSlice(slice);
                                                   'id', 'ASC')
         subsetName = objectManager.getGui().getSubsetName(objectType, elementsCount)
         if subsetName:
-            format = '%Y%m%d%H%M%S'
+            timeFormat = '%Y%m%d%H%M%S'
             now = datetime.now()
-            timestamp = now.strftime(format)
+            timestamp = now.strftime(timeFormat)
             path = 'Logs/selection_%s.txt' % timestamp
             self.writeSelection(table, path)
             path += ","  # Always add a comma, it is expected by the user subset protocol
