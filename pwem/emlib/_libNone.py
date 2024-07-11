@@ -29,9 +29,11 @@ import pwem
 import os
 
 ghostStr = """
- >>> WARNING: Image library not found!
-  > Please install Xmipp to get full functionality. 
+ >>> WARNING: XmippImage library not found!
+  > Please install Xmipp to get full functionality for cryo electron microscopy workflows. Otherwise ignore this.
 (Configuration->Plugins->scipion-em-xmipp -> expand, in Scipion plugin manager window)\n
+
+Set SCIPION_CANCEL_XMIPP_BINDING_WARNING = True to cancel this message.
 """
 
 

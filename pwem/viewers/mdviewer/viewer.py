@@ -31,7 +31,7 @@ from pwem.objects import EMSet
 from pwem.viewers.viewers_data import RegistryViewerConfig
 from pyworkflow import PYTHON
 from pyworkflow.viewer import Viewer, View
-from pwem.viewers.mdviewer.readers import SCIPION_PORT, SCIPION_OBJECT_ID
+from pwem.viewers.mdviewer.sqlite_dao import SCIPION_PORT, SCIPION_OBJECT_ID
 
 
 class MDView(View):
@@ -47,6 +47,7 @@ class MDView(View):
             env[SCIPION_PORT] = str(self.port)
             env[SCIPION_OBJECT_ID] = str(self._emSet.getObjId())
             visibleLabels, orderLabels = self.getVisibleAndOrderLabels()
+            orderLabels = orderLabels.replace(' _filename', ' stack', 1)
             fn = self._emSet.getFileName()
         else:
             visibleLabels = orderLabels = ""
