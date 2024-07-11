@@ -145,7 +145,7 @@ class TestProtInvertHand(BaseTest):
                                  )
         prot3.setObjLabel('assign angle 1 -> 2')
         self.launchProtocol(prot3)
-        for part1, part3 in emprot.izip(
+        for part1, part3 in emprot.zip(
                 prot1.outputParticles,
                 prot3.outputParticles):
             matrix = Matrix()

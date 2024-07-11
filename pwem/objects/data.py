@@ -2020,7 +2020,7 @@ class Matrix(Scalar):
     def __str__(self):
         return np.array_str(self._matrix)
 
-    def _copy(self, other, copyDict, copyId, level=1, ignoreAttrs=[]):
+    def _copy(self, other, copyDict, copyId, level=1, ignoreAttrs=[], copyEnable=False):
         """ Override the default behaviour of copy
         to also copy array data.
         """
