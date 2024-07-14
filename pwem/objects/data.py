@@ -615,10 +615,12 @@ class Image(EMObject):
         return ih.read(self)
 
     def getXDim(self):
-        return self.getDim()[0] if self.getDim() is not None else 0
+        dim = self.getDim()
+        return dim[0] if dim is not None else 0
 
     def getYDim(self):
-        return self.getDim()[1] if self.getDim() is not None else 0
+        dim = self.getDim()
+        return dim[1] if dim is not None else 0
 
     def getIndex(self):
         return self._index.get()
