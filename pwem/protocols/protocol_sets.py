@@ -210,7 +210,7 @@ class ProtUnionSet(ProtSets):
                     if self.ignoreDuplicates.get():
                         if objId in idsList:
                             continue
-                        idsList[objId] =objId
+                        idsList[objId] = objId
                     # This is always TRUE, if stable we could remove the "if" and the "else".
                     if ignoreExtraAttributes:
                         newObj = itemSet.get().ITEM_TYPE()
