@@ -1305,6 +1305,8 @@ class EMSet(Set, EMObject):
 class SetOfImages(EMSet):
     """ Represents a set of Images """
     ITEM_TYPE = Image
+    _compatibilityDict = {'sampling rates': 'getSamplingRate',
+                          'dimensions': 'getDimensions'}
 
     def __init__(self, **kwargs):
         EMSet.__init__(self, **kwargs)
@@ -1315,8 +1317,6 @@ class SetOfImages(EMSet):
         self._isAmplitudeCorrected = Boolean(False)
         self._acquisition = Acquisition()
         self._firstDim = ImageDim()  # Dimensions of the first image
-        self._attrDictForSetsComp = {'sampling rates': 'getSamplingRate',
-                                     'dimensions': 'getDimensions'}
 
     def getAcquisition(self):
         return self._acquisition
