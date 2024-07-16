@@ -64,6 +64,7 @@ class ProtSets(EMProtocol):
         if subElemList:
             for subElem in subElemList:
                 item.append(subElem)
+        outputSet.update(item)
 
 
 class ProtUnionSet(ProtSets):
@@ -155,7 +156,7 @@ class ProtUnionSet(ProtSets):
 
     # -------------------------- INSERT steps functions -----------------------
     def _insertAllSteps(self):
-        self._insertFunctionStep('createOutputStep')
+        self._insertFunctionStep(self.createOutputStep)
 
     # --------------------------- STEPS functions ------------------------------
     def createOutputStep(self):
@@ -209,7 +210,7 @@ class ProtUnionSet(ProtSets):
                     if self.ignoreDuplicates.get():
                         if objId in idsList:
                             continue
-                        idsList[objId] =objId
+                        idsList[objId] = objId
                     # This is always TRUE, if stable we could remove the "if" and the "else".
                     if ignoreExtraAttributes:
                         newObj = itemSet.get().ITEM_TYPE()
@@ -270,17 +271,19 @@ class ProtUnionSet(ProtSets):
         """ Check if there are duplicated ids to renumber from
         the beginning. """
         usedIds = set()  # to keep track of the object ids we have already seen
-
         for item_pointer in self.inputSets:
             if str(item_pointer.get().getClassName()) is not Volume.__name__:
-                for objId in item_pointer.get().getIdSet():
-                    if objId in usedIds:
+                for objIds in item_pointer.get().getIdSet():
+                    if objIds in usedIds:
                         return True
+                    else:
+                        usedIds.add(objIds)
             else:
                 objId = item_pointer.get().getObjId()
                 if objId in usedIds:
                     return True
-            usedIds.add(objId)
+                else:
+                    usedIds.add(objId)
         return False
 
     def getAllSetsAttributes(self):
@@ -327,9 +330,8 @@ class ProtUnionSet(ProtSets):
 
     def _checkSetsCompatibility(self):
         """ Check if all input sets have a minimum compatible attributes """
-        # Attributes to check
-        attrs = {'sampling rates': 'getSamplingRate',
-                 'dimensions': 'getDimensions'}
+        # Attributes to check -> defined by the Set subclass type that are requested to be joined
+        attrs = self.inputSets[0].get().getCompatibilityDict()
         errors = []
         # For each attribute
         for key, attr in attrs.items():

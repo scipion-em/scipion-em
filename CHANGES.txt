@@ -6,6 +6,7 @@ V3.8.0:
                     of seconds to wait before checking if new files are available or finished in streamified import
                     protocols.
     - Fix volume halfmaps wrong filename
+    - Join heterogeneous sets are possible for tomography objects TS and tomograms.
     - Adapted to new changes in metadata-viewer (v.2.0)
     - xmippLib missing message less critical for those domains without xmipp need.
     - Displaying calculated columns from the transformation matrix
