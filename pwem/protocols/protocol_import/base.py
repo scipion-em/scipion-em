@@ -208,7 +208,7 @@ class ProtImportFiles(ProtImport):
             fullPattern = filesPath
 
         pattern = pwutils.expandPattern(fullPattern.replace("$", ""))
-        match = re.match('[^#]*(#+)[^#]*', pattern)
+        match = re.match(r'[^#]*(#+)[^#]*', pattern)
 
         if match is not None:
             g = match.group(1)

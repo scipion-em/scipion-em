@@ -29,9 +29,11 @@ import pwem
 import os
 
 ghostStr = """
- >>> WARNING: Image library not found!
-  > Please install Xmipp to get full functionality. 
+ >>> WARNING: XmippImage library not found!
+  > Please install Xmipp to get full functionality for cryo electron microscopy workflows. Otherwise ignore this.
 (Configuration->Plugins->scipion-em-xmipp -> expand, in Scipion plugin manager window)\n
+
+Set SCIPION_CANCEL_XMIPP_BINDING_WARNING = True to cancel this message.
 """
 
 
@@ -299,6 +301,7 @@ MDL_NMA_COLLECTIVITY = None
 MDL_NMA_MINRANGE = None
 MDL_NMA_MAXRANGE = None
 MDL_NMA_SCORE = None
+MDL_NMA_EIGENVAL = None
 MDL_NMA_ATOMSHIFT = None
 MDL_NOISE_ANGLES = None
 MDL_NOISE_PARTICLE_COORD = None

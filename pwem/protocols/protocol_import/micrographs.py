@@ -658,7 +658,7 @@ class ProtImportMovies(ProtImportMicBase):
         else:
             filePaths = self.getMatchFiles()
 
-        frameRegex = re.compile("(?P<prefix>.+[^\d]+)(?P<frameid>\d+)")
+        frameRegex = re.compile(r"(?P<prefix>.+[^\d]+)(?P<frameid>\d+)")
         # Group all frames for each movie
         # Key of the dictionary will be the common prefix and the value
         # will be a list with all frames in that movie

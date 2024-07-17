@@ -68,8 +68,9 @@ class ScipionImport:
         inputSet = emobj.SetOfCoordinates(filename=self._sqliteFile)
         # self._findImagesPath(inputSet)
         
-        coorSet = self.protocol._createSetOfCoordinates(inputMics)
+        coorSet = emobj.SetOfCoordinates.create(self.protocol.getPath())
         coorSet.copyInfo(inputSet)
+        coorSet.setMicrographs(inputMics)
         coorSet.setObjComment('Coordinates imported from sqlite file:\n%s'
                              % self._sqliteFile)
 
