@@ -10,6 +10,7 @@ V3.8.0:
     - Adapted to new changes in metadata-viewer (v.2.0)
     - xmippLib missing message less critical for those domains without xmipp need.
     - Displaying calculated columns from the transformation matrix
+    - Durations like timeouts in streaming can be specified as "1h 24m 36s"
 
 V3.7.1:
     - Hot-fix: SetOf3DClasses and other sets without visualization config can be shown in the metadataviewer
@@ -140,7 +141,7 @@ developers:
      Useful for tomography sets and avoiding unnecessary inheritance.
    - Icon is a png (compatible with future pillow versions)
    - weakImport("tifffile") added when registering FileHandlers (bug at installation in github action)
-   - Fixing an error related with the import coordinates
+
 
 V3.0.23
 users:

@@ -635,9 +635,9 @@ class ProtImportMovies(ProtImportMicBase):
 
     def iterNewInputFiles(self):
         """ In the case of importing movies, we want to override this method
-        for the case when input are individual frames and we want to create
+        for the case when input are individual frames, and we want to create
         movie stacks before importing.
-        The frames pattern should contains a part delimited by $.
+        The frames pattern should contain a part delimited by $.
         The id expression with # is not supported for simplicity.
         """
 
@@ -652,7 +652,7 @@ class ProtImportMovies(ProtImportMicBase):
         if self.dataStreaming:
             # Consider only the files that are not changed in the fileTime
             # delta if processing data in streaming
-            fileTimeout = timedelta(seconds=self.fileTimeout.get())
+            fileTimeout = timedelta(seconds=self.fileTimeout.toSeconds())
             filePaths = [f for f in self.getMatchFiles()
                          if not self.fileModified(f, fileTimeout)]
         else:
