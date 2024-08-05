@@ -24,6 +24,16 @@ class ImageReader:
         """ Returns the dimensions [X,Y,Z,N] of the file"""
         pass
 
+    @staticmethod
+    def write(pilImages: list, fileName: str, sr: float, isStack: bool) -> None:
+        """ Generate a stack of images or a volume from a list of PIL images.
+        :param pilImages: The list of a PIL images
+        :param fileName: Path of the new stack
+        :param sr: Sampling rate
+        :param isStack: Specifies whether to generate a volume or an image stack
+        """
+        pass
+
 
 class PILImageReader(ImageReader):
     """ PIL image reader"""
@@ -150,6 +160,19 @@ class MRCImageReader(ImageReader):
         filename = filename.split('@')[-1]
         with mrcfile.open(filename, permissive=True) as mrc:
             return numpy.array(mrc.data)
+
+    @classmethod
+    def write(cls, pilImages: list, fileName: str, sr=1.0, isStack=False) -> None:
+        """Generate a stack of images or a volume from a list of PIL images."""
+        sr = 1.0 if sr == 0.0 else sr
+        stack = numpy.stack(pilImages, axis=0)
+
+        with mrcfile.new(fileName, overwrite=True) as mrc:
+            mrc.set_data(stack.astype(numpy.float32))
+            if isStack:
+                mrc.header.ispg = 0
+            mrc.update_header_from_data()
+            mrc.voxel_size = sr
 
 
 class STKImageReader(ImageReader):

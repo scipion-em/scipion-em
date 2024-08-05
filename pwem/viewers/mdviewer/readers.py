@@ -24,6 +24,13 @@ class ScipionImageReader(ImageReader):
         imageReader = ImageReadersRegistry._readers[ext]
         return imageReader.open(path)
 
+    @classmethod
+    def write(cls, pilImages: list, fileName: str, sr=1.0, isStack=False) -> None:
+        """Generate a stack of images from a list of PIL images."""
+        ext = fileName.split('.')[-1]
+        imageReader = ImageReadersRegistry._readers[ext]
+        imageReader.write(pilImages, fileName, sr, isStack)
+
 
 def extendMDViewer(om: metadataviewer.model.ObjectManager):
     """ Function to extend the object manager with DAOs and readers"""
