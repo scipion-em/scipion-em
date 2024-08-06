@@ -222,6 +222,24 @@ class MdFileHandler(ImageFileHandler):
 
         return self._imgPreview, msg
 
+with pwutils.weakImport("metadataviewer"):
+    from .mdviewer.viewer import MDView
+    class MetadataFileHandler(FileHandler):
+
+        _compatibleExtensions =[".star", ".xmd", ".cs", ".sqlite"]
+        def getFileIcon(self, objFile):
+            if objFile.isLink():
+                return pwutils.Icon.FILE_METADATA_LINK
+            else:
+                return pwutils.Icon.FILE_METADATA
+
+        def getFileActions(self, objFile):
+
+            fn = objFile.getPath()
+            return [('Open with Scipion', lambda: MDView(fn).show(),
+                     pwutils.Icon.ACTION_VISUALIZE)]
+
+
 
 # Image methods for filehandlers
 def getPILImage(imageXmipp, dim=None, normalize=True):

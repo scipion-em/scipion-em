@@ -35,6 +35,7 @@ import pyworkflow.protocol.params as params
 from pwem import getMatchingFiles
 
 from pwem.protocols import EMProtocol
+from pyworkflow import HELP_DURATION_FORMAT
 
 
 class ProtImport(EMProtocol):
@@ -120,26 +121,26 @@ class ProtImportFiles(ProtImport):
                            "new files and will update the output Set, which can "
                            "be used right away by next steps.")
 
-        form.addParam('timeout', params.IntParam, default=43200,
+        form.addParam('timeout', params.StringParam, default="12h",
                       condition='dataStreaming',
-                      label="Timeout (secs)",
-                      help="Interval of time (in seconds) after which, if no new file "
+                      label="Timeout",
+                      help="Duration after which, if no new file "
                            "is detected, the protocol will end. When finished, "
                            "the output Set will be closed and no more data will be "
                            "added to it. \n"
                            "Note 1:  The default value is  high (12 hours) to avoid "
-                           "the protocol finishes during the acquisition of the "
+                           "the protocol finishing during the acquisition of the "
                            "microscope. You can also stop it from right click and press "
                            "STOP_STREAMING.\n"
                            "Note 2: If you're using individual frames when importing "
                            "movies, the timeout won't be refreshed until a whole "
-                           "movie is stacked.")
+                           "movie is stacked. %s\n" % HELP_DURATION_FORMAT)
 
-        form.addParam('fileTimeout', params.IntParam, default=30,
+        form.addParam('fileTimeout', params.StringParam, default="30",
                       condition='dataStreaming',
-                      label="File timeout (secs)",
-                      help="Interval of time (in seconds) after which, if a file has "
-                           "not changed, we consider it as a new file. \n")
+                      label="File timeout",
+                      help="Duration after which, if a file has "
+                           "not changed, we consider it as a new file. \n%s" % HELP_DURATION_FORMAT)
 
         self._defineBlacklistParams(form)
 
@@ -207,7 +208,7 @@ class ProtImportFiles(ProtImport):
             fullPattern = filesPath
 
         pattern = pwutils.expandPattern(fullPattern.replace("$", ""))
-        match = re.match('[^#]*(#+)[^#]*', pattern)
+        match = re.match(r'[^#]*(#+)[^#]*', pattern)
 
         if match is not None:
             g = match.group(1)
