@@ -213,9 +213,11 @@ class Plugin(pyworkflow.plugin.Plugin):
          :return Version after parsing the variable"""
 
         value = cls.getVar(variable)
-        return cls.getVersionFromPath(value, default= default, pattern=pattern)
-
-
+        try:
+            return cls.getVersionFromPath(value, default=default, pattern=pattern)
+        except Exception as e:
+            logger.warning("Can't get the version from %s (the content of %s variable). Using default value: %s" % (value, variable, default))
+            return version.Version(default)
     @classmethod
     def getVersionFromPath(cls, path, separator="-", default=NO_VERSION_FOUND_STR, pattern=None):
         """ Resolves path to the realpath (links) and returns the last part
