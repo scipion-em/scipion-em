@@ -137,7 +137,7 @@ class MRCImageReader(ImageReader):
         if mrcImg.is_volume() or isVol:
             dim = mrcImg.data.shape
             x = int(dim[0] / 2) if forceIndex or index == 0 else index
-            imfloat = mrcImg.data[x, :, :]
+            imfloat = mrcImg.data[x-1, :, :]
         elif mrcImg.is_image_stack():
             imfloat = mrcImg.data[index - 1]
         else:
