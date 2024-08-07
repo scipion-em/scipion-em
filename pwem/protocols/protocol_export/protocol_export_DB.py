@@ -31,7 +31,6 @@ import os
 
 import pyworkflow.protocol.params as params
 from pwem.convert import Ccp4Header
-from pyworkflow import VERSION_1_2
 
 from pwem.convert.atom_struct import fromPDBToCIF, fromCIFTommCIF, \
     AtomicStructHandler
@@ -56,7 +55,6 @@ class ProtExportDataBases(EMProtocol):
     """
     _label = 'export to emdb/pdb'
     _program = ""
-    _lastUpdateVersion = VERSION_1_2
     VOLUMENAME = 'main_map.mrc'
     HALFVOLUMENAME = 'half_map_%d.mrc'
     COORDINATEFILENAME = 'coordinates.cif'
