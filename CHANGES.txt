@@ -1,3 +1,7 @@
+V3.9.0:
+Developers:
+    - Hot-fix: Generate a stack of images or a volume from a list of PIL images using ScipionImageReader.
+
 V3.8.0:
  Users:
     - Filehandlers for cs, star and sqlite files to be displayed in the Scipion metadataviewer.
