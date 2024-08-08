@@ -38,7 +38,6 @@ from Bio import Entrez, SeqIO
 import sys
 from Bio.SeqRecord import SeqRecord
 from Bio.Align.Applications import ClustalOmegaCommandline, MuscleCommandline
-from Bio import pairwise2
 from pyworkflow.utils import getExt
 from pwem.objects.data import Alphabet
 
@@ -215,6 +214,7 @@ class SequenceHandler:
 
     def alignSeq(self, referenceSeq):
         if self._sequence is not None:
+            from Bio import pairwise2
             alignments = pairwise2.align.globalds(self._sequence.seq,
                                                   referenceSeq.seq)
             return alignments
@@ -275,6 +275,7 @@ def alignBioPairwise2Sequences(structureSequenceId, structureSequence,
                                userSequenceId, userSequence,
                                outFileName):
     """aligns two sequences and saves them to disk using fasta format"""
+    from Bio import pairwise2
     # see alignment_function for globalms parameters
     alignments = pairwise2.align.globalms(structureSequence,
                                           userSequence,  3, -1, -3, -2)
