@@ -43,7 +43,6 @@ class ProtOrigSampling(EMProtocol):
     """
     _label = 'assign Orig & Sampling'
     _program = ""
-    _lastUpdateVersion = VERSION_3_0
 
     def __init__(self, **kwargs):
         EMProtocol.__init__(self, **kwargs)

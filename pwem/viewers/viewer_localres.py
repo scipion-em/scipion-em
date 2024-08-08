@@ -39,7 +39,8 @@ from pwem.convert.atom_struct import *
 
 from .plotter import EmPlotter, plt
 
-CHIMERA_ERROR = 'Chimera program is not found were it was expected: \n\n{}\n\n' \
+def getChimeraError():
+    return 'Chimera program is not found were it was expected: \n\n{}\n\n' \
                 'Either install ChimeraX in this path or install our ' \
                 'scipion-em-chimera plugin'.format(Chimera.getProgram())
 
@@ -131,7 +132,7 @@ class ChimeraAttributeViewer(pwviewer.ProtocolViewer):
     def __init__(self, **kwargs):
         pwviewer.ProtocolViewer.__init__(self, **kwargs)
         if not chimeraInstalled():
-            print(CHIMERA_ERROR)
+            print(getChimeraError())
 
     def _defineParams(self, form):
       form.addSection(label='Visualization of attributes')
@@ -313,7 +314,7 @@ class ChimeraAttributeViewer(pwviewer.ProtocolViewer):
           return [view]
 
       else:
-          return [self.warnMessage(CHIMERA_ERROR, 'Chimera not found')]
+          return [self.warnMessage(getChimeraError(), 'Chimera not found')]
 
     def _showHistogram(self, paramName=None):
       attrname = self.getEnumText('attrName')

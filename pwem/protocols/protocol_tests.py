@@ -31,7 +31,6 @@ import time
 
 import pyworkflow.protocol as pwprot
 import pyworkflow.protocol.params as params
-from pyworkflow import VERSION_1_1
 
 
 STRESS_NG = 'stress-ng'
@@ -51,7 +50,6 @@ class ProtStress(ProtTests):
     """
     _label = 'stress'
     _program = STRESS_NG
-    _lastUpdateVersion = VERSION_1_1
 
     def __init__(self, **kwargs):
         ProtTests.__init__(self, **kwargs)

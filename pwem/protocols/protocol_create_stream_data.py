@@ -32,7 +32,6 @@ import time
 import random
 
 import pyworkflow.protocol.params as params
-from pyworkflow import VERSION_1_1
 from pyworkflow.protocol.constants import STEPS_PARALLEL
 
 from pwem.protocols import EMProtocol
@@ -56,7 +55,6 @@ class ProtCreateStreamData(EMProtocol):
         particles  -> read nDim particles in memory and writes it in streaming
     """
     _label = "create stream data"
-    _lastUpdateVersion = VERSION_1_1
     _singleImageFn = "singleImage.xmp"
     _magnification = 500000
     _voltage = 200
