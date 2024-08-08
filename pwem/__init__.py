@@ -237,13 +237,16 @@ class Plugin(pyworkflow.plugin.Plugin):
                 return version.Version(default)
 
         parts = path.split(separator)
-        if len(parts)>=2:
-
+        if len(parts) >= 2:
             # Version should be the last bit
             versionStr = parts[-1]
-            return version.Version(versionStr)
+            try:
+                return version.Version(versionStr)
+            except version.InvalidVersion:
+                return version.Version(default)
         else:
             return version.Version(default)
+
     @classmethod
     def _registerFileHandlers(cls):
         # register file handlers to preview info in the Filebrowser....

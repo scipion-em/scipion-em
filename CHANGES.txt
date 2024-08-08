@@ -1,4 +1,6 @@
 V3.9.0:
+Users:
+    - Hot-fix: fix version guessing from path
 Developers:
     - Hot-fix: Generate a stack of images or a volume from a list of PIL images using ScipionImageReader.
 
