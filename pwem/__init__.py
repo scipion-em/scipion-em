@@ -216,7 +216,7 @@ class Plugin(pyworkflow.plugin.Plugin):
         try:
             return cls.getVersionFromPath(value, default=default, pattern=pattern)
         except Exception as e:
-            logger.warning("Can't get the version from %s (the content of %s variable). Using default value: %s. Error: %s" % (value, variable, default, str(e)))
+            logger.warning("Can't get the version from the real path of %s (the content of %s variable). Be aware that we follow links!. Using default value: %s. Error: %s" % (value, variable, default, str(e)))
             return version.Version(default)
     @classmethod
     def getVersionFromPath(cls, path, separator="-", default=NO_VERSION_FOUND_STR, pattern=None):

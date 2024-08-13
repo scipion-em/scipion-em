@@ -20,8 +20,8 @@ class TestPluginCudaGuess(unittest.TestCase):
         v = Plugin.getVersionFromPath("/usr/local/cuda10.2")
         self.assertEqual(str(v), NO_VERSION_FOUND_STR, "Default value not working")
 
-        v = Plugin.getVersionFromPath("/usr/local/cuda-11.2.safe")
-        self.assertEqual(v.major, 11, ".safe suffix not working")
+        v = Plugin.getVersionFromPath("/usr/local/cuda-11.2.12")
+        self.assertEqual(v.major, 11, "version with .12 (micro) not working")
 
     def test_cuda_version_in_variable(self):
 
@@ -50,3 +50,10 @@ class TestPluginCudaGuess(unittest.TestCase):
 
                 v = Plugin.guessCudaVersion(CUDA_LIB_VAR)
                 self.assertEqual(str(v), "10.1", "Guess cuda version does not return default=10.1")
+
+                # Mock getVar return value. Reported case: /uochb/soft/b/spack/20221211-git/opt/spack/linux-almalinux9-zen3/gcc-11.3.0/cuda-11.7.1-3jkrz5czk5ug66swsg4vwxm6eoewh272/lib64
+                realpath_faked.return_value = "/uochb/soft/b/spack/20221211-git/opt/spack/linux-almalinux9-zen3/gcc-11.3.0/cuda-11.7.1-3jkrz5czk5ug66swsg4vwxm6eoewh272/lib64"
+
+                v = Plugin.guessCudaVersion(CUDA_LIB_VAR, default="11.4")
+                self.assertEqual(str(v), "11.4", "Guess cuda version with a hash suffix does not return the passed default value")
+
