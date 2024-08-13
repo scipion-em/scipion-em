@@ -237,15 +237,24 @@ class Plugin(pyworkflow.plugin.Plugin):
             path = findFolderWithPattern(path, pattern)
             if path is None:
                 return version.Version(default)
+        else:
+            path = os.path.basename(path)
 
-        parts = path.split(separator)
-        if len(parts)>=2:
+        regexpVersion= r"\d+((\.{1}\d+)*)"
+        match = re.search(regexpVersion, path)
 
-            # Version should be the last bit
-            versionStr = parts[-1]
-            return version.Version(versionStr)
+        if match:
+            return version.Version(match.group(0))
         else:
             return version.Version(default)
+        # parts = path.split(separator)
+        # if len(parts)>=2:
+        #
+        #     # Version should be the last bit
+        #     versionStr = parts[-1]
+        #     return version.Version(versionStr)
+        # else:
+        #     return version.Version(default)
     @classmethod
     def _registerFileHandlers(cls):
         # register file handlers to preview info in the Filebrowser....
