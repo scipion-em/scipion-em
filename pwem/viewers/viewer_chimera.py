@@ -27,6 +27,8 @@
 
 import os
 
+import logging
+logger = logging.getLogger(__name__)
 import pyworkflow.utils as pwutils
 import pyworkflow.viewer as pwviewer
 import pwem.constants as emcts
@@ -78,6 +80,10 @@ class Chimera:
         emcts.SYM_I2n5r: '2n5r'
     }
 
+    # To cache if running chimeraX on Linux or Windows
+    _onWindows = None
+    _program = None
+
     @classmethod
     def getSymmetry(cls, scipionSym):
         """ Return the equivalent Chimera symmetry from Scipion one. """
@@ -87,6 +93,7 @@ class Chimera:
     def getHome(cls):
         """ Returns chimera home, trying first to take it from chimera plugin. If it fails it will return, the default value in the config"""
         with pwutils.weakImport("chimera"):
+            # This is getting the plugin for the first time without defining its variables!!
             from chimera import Plugin as chimeraPlugin
             return chimeraPlugin.getHome()
 
@@ -109,16 +116,34 @@ class Chimera:
     @classmethod
     def getProgram(cls, progName="ChimeraX"):
         """ Return the program binary that will be used. """
-        home = cls.getHome()
-        if home is None:
-            return None
-        path = os.path.join(home, 'bin', os.path.basename(progName))
 
-        if OS.isWSL():
-            path +=".exe"
+        # This will work as long as we do not allow updating CHIMERA_HOME on the fly
+        # during the same execution (restart needed)
+        # Maybe we could remove progName since does not seem to be used from outside and
+        # is incompatible with caching it
+        if cls._program is None:
+            home = cls.getHome()
+            if home is None:
+                return None
+            path = os.path.join(home, 'bin', os.path.basename(progName))
 
-        return path
+            winPath = os.path.join(path +".exe")
+            if os.path.exists(winPath):
+                logger.debug("Windows ChimeraX detected: %s" % winPath)
+                cls._onWindows = True
+                path = winPath
 
+            cls._program = path
+
+        return cls._program
+
+    @classmethod
+    def isOnWindows(cls):
+
+        if cls._onWindows is None:
+            # Trigger and cache program and home
+            cls.getHome()
+        return cls._onWindows
 
     @classmethod
     def runProgram(cls, program=None, args="", cwd=None):
@@ -303,7 +328,7 @@ class ChimeraView(pwviewer.CommandView):
             inputFiles = [inputFiles]
 
         # If WLS we need to adapt the paths to windows style
-        if OS.isWSL():
+        if Chimera.isOnWindows():
             for i, file in enumerate(inputFiles):
 
                 inputFiles[i] =OS.WLSfile2Windows(file)
@@ -453,8 +478,8 @@ def mapVolsWithColorkey(displayVolFileName,
                                      bildFileName=bildFileName,
                                      sampling=sampling)
 
-    # Convert paths to WSL is apply:
-    if OS.isWSL():
+    # Convert paths to WSL if needed:
+    if Chimera.isOnWindows():
         bildFileName=OS.WLSfile2Windows(bildFileName)
         mapVolFileName=OS.WLSfile2Windows(mapVolFileName)
         displayVolFileName=OS.WLSfile2Windows(displayVolFileName)
