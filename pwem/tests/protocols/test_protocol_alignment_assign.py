@@ -156,7 +156,7 @@ class TestProtAssignAngles(BaseTest):
                                  )
         prot3.setObjLabel('assign angle 1 -> 2')
         self.launchProtocol(prot3)
-        for part1, part2, part3 in emprot.zip(
+        for part1, part2, part3 in zip(
                 prot1.outputParticles,
                 prot2.outputParticles,
                 prot3.outputParticles):

@@ -47,7 +47,7 @@ from .objects import EMObject
 from .tests import defineDatasets
 from .utils import *
 
-__version__ = '3.8.0'
+__version__ = '3.9.0'
 NO_VERSION_FOUND_STR = "0.0"
 CUDA_LIB_VAR = 'CUDA_LIB'
 
@@ -213,9 +213,11 @@ class Plugin(pyworkflow.plugin.Plugin):
          :return Version after parsing the variable"""
 
         value = cls.getVar(variable)
-        return cls.getVersionFromPath(value, default= default, pattern=pattern)
-
-
+        try:
+            return cls.getVersionFromPath(value, default=default, pattern=pattern)
+        except Exception as e:
+            logger.warning("Can't get the version from the real path of %s (the content of %s variable). Be aware that we follow links!. Using default value: %s. Error: %s" % (value, variable, default, str(e)))
+            return version.Version(default)
     @classmethod
     def getVersionFromPath(cls, path, separator="-", default=NO_VERSION_FOUND_STR, pattern=None):
         """ Resolves path to the realpath (links) and returns the last part
@@ -235,15 +237,24 @@ class Plugin(pyworkflow.plugin.Plugin):
             path = findFolderWithPattern(path, pattern)
             if path is None:
                 return version.Version(default)
+        else:
+            path = os.path.basename(path)
 
-        parts = path.split(separator)
-        if len(parts)>=2:
+        regexpVersion= r"\d+((\.{1}\d+)*)"
+        match = re.search(regexpVersion, path)
 
-            # Version should be the last bit
-            versionStr = parts[-1]
-            return version.Version(versionStr)
+        if match:
+            return version.Version(match.group(0))
         else:
             return version.Version(default)
+        # parts = path.split(separator)
+        # if len(parts)>=2:
+        #
+        #     # Version should be the last bit
+        #     versionStr = parts[-1]
+        #     return version.Version(versionStr)
+        # else:
+        #     return version.Version(default)
     @classmethod
     def _registerFileHandlers(cls):
         # register file handlers to preview info in the Filebrowser....
