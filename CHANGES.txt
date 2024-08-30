@@ -1,3 +1,6 @@
+V3.9.1:
+   - Fix: CrossSubset protocol works with "id" or "_objId" field too.
+   - Fix: Edit set protocol works with complex sets (titlseries, Classes2d) but not editing subelements for now.
 V3.9.0:
  Users:
    - Chimera viewer compatible with newer versions (flatpak, deb, windows via WSL) via linking

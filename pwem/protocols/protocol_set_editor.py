@@ -26,13 +26,13 @@
 # **************************************************************************
 
 import pyworkflow.protocol.params as params
-from pwem.protocols import EMProtocol
+from pwem.protocols.protocol_sets import ProtSets
 from pwem.objects.data import SetOfParticles
 
 import numpy as np
 
 
-class ProtSetEditor(EMProtocol):
+class ProtSetEditor(ProtSets):
     """
     Protocol to edit attributes of all the items of a set using a formula.
     This could be useful for editing some values in the set. Use this
@@ -70,9 +70,9 @@ class ProtSetEditor(EMProtocol):
         modifiedSet = inputSet.createCopy(self._getExtraPath(), copyInfo=True)
 
         for sourceItem in inputSet.iterItems():
-            item = sourceItem.clone()
+            item = sourceItem
             exec(self.formula.get())
-            modifiedSet.append(item)
+            self._append(modifiedSet, item)
 
         self.createOutput(self.inputSet, modifiedSet)
 

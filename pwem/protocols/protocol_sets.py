@@ -40,6 +40,7 @@ from pyworkflow.object import Object,Float, Integer, String
 from pwem.protocols import EMProtocol
 from pwem.objects import Volume, EMSet, SetOfClasses, SetOfStats
 from pyworkflow.utils import ProgressBar, getListFromRangeString
+from pwem.constants import ID_COLUMN, ID_ATTRIBUTE
 
 
 class ProtSets(EMProtocol):
@@ -922,12 +923,18 @@ class ProtCrossSubSet(ProtSets):
         uniqueValuesinSec = secSet.getUniqueValues(secSetField)
         uniqueValuesinSec ={value:None for value in uniqueValuesinSec}
 
+        mainSetField=self.getMainSetField(pythonName=True)
+        isIdField = self._isIdField(mainSetField)
+        self.info("Attribute in main set items is %s %s" % (mainSetField, "" if not isIdField else "(id field)"))
+
         pb = ProgressBar(mainSet.getSize(), fmt=ProgressBar.FULL)
         pb.start()
 
         for item in mainSet:
-            valueInMain=getattr(item,self.getMainSetField(pythonName=True))
-            if valueInMain.get() in uniqueValuesinSec:
+            valueInMain=getattr(item,mainSetField)
+
+            valueInMain = valueInMain if isIdField else valueInMain.get()
+            if  valueInMain in uniqueValuesinSec:
                 self._append(outputSet,item)
             pb.increase()
 
@@ -949,10 +956,12 @@ class ProtCrossSubSet(ProtSets):
             return self.secSetField.get()
 
     def _normalizeSpecialFields(self, field):
-        if field == "id":
-            return "_objId"
+        if field == ID_COLUMN:
+            return ID_ATTRIBUTE
         else:
             return field
+    def _isIdField(self, field):
+        return field in [ID_COLUMN, ID_ATTRIBUTE]
     # --------------------------- INFO functions ------------------------------
     def _validate(self):
         """Make sure the input data make sense"""
@@ -966,7 +975,7 @@ class ProtCrossSubSet(ProtSets):
         return errors
     def _summary(self):
 
-        summary = ["Items in the main set where %s=%s of items in the secondary set where selected." % (self.mainSetField.get(), self.secSetField.get())]
+        summary = ["Items in the main set where %s=%s of items in the secondary set were selected." % (self.mainSetField.get(), self.secSetField.get())]
 
         if hasattr(self, "subset"):
             summary.append('*%d* items matched the criteria' % self.subset.getSize())
