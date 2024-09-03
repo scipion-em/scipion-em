@@ -220,3 +220,7 @@ ALL_MRC_EXTENSIONS =[EXT_MRC, EXT_MRCS, EXT_MRC_MRC, EXT_MRC_MRCS,
 
 
 ALL_TIF_EXTENSIONS = ['tif','tiff', 'gain', 'eer']
+
+# Id field/attrubute constants. TODO: use declarations in pyworkflow
+ID_COLUMN='id'
+ID_ATTRIBUTE='_objId'
