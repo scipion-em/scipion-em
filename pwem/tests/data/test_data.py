@@ -17,6 +17,7 @@ import pyworkflow.utils as pwutils
 import pwem.objects as emobj
 from pwem import emlib
 from pwem.emlib import metadata as md
+from pwem.emlib.image.image_handler import ImageReadersRegistry, ImageHandler, ImageStack
 import pwem.protocols as emprot
 import pyworkflow.tests as pwtests
 from pwem.convert import SequenceHandler
@@ -150,7 +151,7 @@ class TestImageHandler(unittest.TestCase):
     def testExistLocation(self):
         volFn = self.dataset.getFile('volumes/volume_1_iter_002.mrc')
 
-        ih = emlib.image.ImageHandler()
+        ih = ImageHandler()
         # Test the volume filename exists
         self.assertTrue(ih.existsLocation(volFn))
         # Test missing filename
@@ -164,7 +165,7 @@ class TestImageHandler(unittest.TestCase):
     def testGetDimensions(self):
         volLabel = ':mrc'
         movieLabel = ':mrcs'
-        ih = emlib.image.ImageHandler()
+        ih = ImageHandler()
 
         # MICROGRAPH
         expectedSize_Mic = [9216, 9441, 1, 1]
@@ -257,7 +258,7 @@ class TestImageHandler(unittest.TestCase):
         """
         micFn = self.dataset.getFile('micrographs/BPV_1386.mrc')
         outSuffix = pwutils.replaceBaseExt(micFn, 'img')
-        ih = emlib.image.ImageHandler()
+        ih = ImageHandler()
 
         outFn = join('/tmp', outSuffix)
         logger.info("Converting: \n%s -> %s" % (micFn, outFn))
@@ -275,7 +276,7 @@ class TestImageHandler(unittest.TestCase):
         """
         micFn = self.dsFormat.getFile('SuperRef_c3-adp-se-xyz-0228_001.dm4')
 
-        ih = emlib.image.ImageHandler()
+        ih = ImageHandler()
         # Check that we can read the dimensions of the dm4 file:
         EXPECTED_SIZE = (7676, 7420, 1, 1)
         self.assertEqual(ih.getDimensions(micFn), EXPECTED_SIZE)
@@ -302,7 +303,7 @@ class TestImageHandler(unittest.TestCase):
         micFn = self.dsFormat.getFile('c3-adp-se-xyz-0228_200.tif')
 
         logger.info("Reading and converting %s" % micFn)
-        ih = emlib.image.ImageHandler()
+        ih = ImageHandler()
         # Check that we can read the dimensions of the dm4 file:
         EXPECTED_SIZE = (7676, 7420, 1, 38)
         self.assertEqual(ih.getDimensions(micFn), EXPECTED_SIZE)
@@ -326,7 +327,7 @@ class TestImageHandler(unittest.TestCase):
         """Check movie conversion"""
         movFn = self.dsFormat.getFile('qbeta/qbeta.mrc') + ":mrcs"
 
-        ih = emlib.image.ImageHandler()
+        ih = ImageHandler()
         # Check that we can read the dimensions of the dm4 file:
         EXPECTED_SIZE = (4096, 4096, 1, 7)
         EXPECTED_DT = emlib.DT_USHORT
@@ -349,7 +350,7 @@ class TestImageHandler(unittest.TestCase):
             pwutils.cleanPath(outFn)
 
     def test_truncateMask(self):
-        ih = emlib.image.ImageHandler()
+        ih = ImageHandler()
 
         maskFn = self.dataset.getFile('masks/mask.vol')
         outFn = join('/tmp', 'mask.vol')
@@ -366,7 +367,7 @@ class TestImageHandler(unittest.TestCase):
     def test_createEmptyImage(self):
         outFn = join('/tmp', 'empty.mrc')
         SIZE = (128, 128, 1, 1)
-        ih = emlib.image.ImageHandler()
+        ih = ImageHandler()
         DT = emlib.DT_FLOAT
         ih.createEmptyImage(outFn, SIZE[0], SIZE[1], dataType=DT)
 
@@ -377,7 +378,7 @@ class TestImageHandler(unittest.TestCase):
     def test_scaleStack(self):
         particles = self.dataset.getFile("particles/BPV_1386.stk")
         outFn = join('/tmp', 'scaled.mrc')
-        ih = emlib.image.ImageHandler()
+        ih = ImageHandler()
         DT = emlib.DT_FLOAT
 
         # Scaled with a higher dimension using finalDimension parameter
@@ -407,6 +408,54 @@ class TestImageHandler(unittest.TestCase):
         self.assertTrue(pwutils.getFileSize(outFn) > 0)
         self.assertEqual(ih.getDimensions(outFn), EXPECTED_SIZE)
         self.assertEqual(ih.getDataType(outFn), DT)
+
+
+class TestImageRegistry(pwtests.BaseTest):
+    """ tests image registry and related objects. New code to replace image handler in the future"""
+
+    @classmethod
+    def setUpClass(cls):
+        setupTestOutput(cls)
+
+    def testReadAndWrite(self):
+        """ Tests if a list of images can be read and written in other formats"""
+
+        npImage = np.array([[0,0],[255,255]])
+        newImage = ImageStack(npImage, {"sr":3.0})
+        for ext in ImageReadersRegistry.getAvailableExtensions():
+
+            # Skip those with :mrc :mrcs ...
+            if not ":" in ext:
+                self._testWriteAndRead(newImage, ext)
+
+
+    def _testWriteAndRead(self, imgStack, extension, properties_to_check=None):
+        """ Tests write and read of the image passed as parameter
+
+        :param imgStack: ImageStack to write and read and test
+        :param extension: Extension (format) to use: "mrc", "png"..
+        :param properties_to_check: list of property keys to test upon reading the written image
+
+        """
+
+        logger.info("Testing read and write of %s files" % extension)
+        outputFile = self.getOutputPath("image." + extension)
+        result = ImageReadersRegistry.write(imgStack, outputFile)
+
+        if result:
+            # Test reading
+            imgRead= ImageReadersRegistry.open(outputFile)
+            self.assertTrue(np.array_equal(imgStack.getImage(0), imgRead.getImage(0)), msg="There is a loss in the values of the images for %s" % outputFile)
+
+            # Test properties
+            if properties_to_check is not None:
+
+                for property in properties_to_check:
+                    self.assertEqual(imgStack.getProperty(property), imgRead.getProperty(property))
+
+
+
+
 
 
 class TestSetOfMicrographs(BaseTest):
@@ -472,8 +521,8 @@ class TestSetOfMicrographs(BaseTest):
         os.chdir(cwd)
 
     def testRead(self):
-        """ Read micrographs from a an sqlite file.
-        It should contains Acquisition info. """
+        """ Read micrographs from a sqlite file.
+        It should contain Acquisition info. """
         micFn = self.dataset.getFile('micsGoldSqlite2')
         logger.info(">>> Reading gold micrographs from %s " % micFn)
 

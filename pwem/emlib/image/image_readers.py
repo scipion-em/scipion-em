@@ -2,7 +2,7 @@ from functools import lru_cache
 
 import numpy
 from PIL import Image
-from tifffile import TiffFile, imread
+from tifffile import TiffFile, imread, imwrite
 import mrcfile
 
 import pwem.constants as emcts
@@ -11,6 +11,48 @@ from .. import lib
 import logging
 
 logger = logging.getLogger(__name__)
+
+# Classes to replace one day the functionality covered by ImageHandler... which uses xmipp binding
+class ImageStack:
+    """Class to hold image stacks. A single image is considered a stack of one image """
+    def __init__(self, images=None, properties=None):
+        """
+        :param images: either None, an image as returned by the readers or a list of them.
+             Images are numpy arrays
+        :param properties: optional: dictionary of key value pairs for header information for those files tha may need it
+        """
+        if images is None:
+            images = []
+        elif isinstance(images, numpy.ndarray):
+            images=[images]
+        elif not isinstance(images, list):
+            logger.warning("ImageStack initialized with an invalid type. Valid types are None, a singe numy array or a list of them. Current value is a %s. Continuing as an empty image." % type(images))
+            images = []
+            
+        self._images = images
+        self._properties = dict() if properties is None else properties
+
+    def getImage(self, index=0):
+        if index >= len(self._images):
+            raise IndexError("Image at %s position dos not exists. Current stack has %s images." % (index, len(self._images)))
+
+        return self._images[index]
+
+    def getImages(self):
+        """Returns all the images"""
+        return self._images
+
+    def getProperty(self, property):
+        """ Returns the property passed"""
+
+        return self._properties.get(property, None)
+    def getProperties(self):
+        """Returns the properties dictionary"""
+        return self._properties
+
+    def append(self, imgStack):
+        """ Appends to its local list of images the images inside the imgStack passed as parameter"""
+        self._images.extend(imgStack.getImages())
 
 
 class ImageReader:
@@ -25,14 +67,64 @@ class ImageReader:
         pass
 
     @staticmethod
-    def write(pilImages: list, fileName: str, sr: float, isStack: bool) -> None:
+    def write(images: ImageStack, fileName: str, isStack: bool) -> None:
         """ Generate a stack of images or a volume from a list of PIL images.
-        :param pilImages: The list of a PIL images
+        :param images: An ImageStack instance with one or more images
         :param fileName: Path of the new stack
-        :param sr: Sampling rate
         :param isStack: Specifies whether to generate a volume or an image stack
         """
-        pass
+        logger.warning("write method not implemented. Cannot write %s" % fileName)
+
+
+class ImageReadersRegistry:
+    """ Class to register image readers to provide basic information about an image like dimensions or getting an image"""
+    _readers = dict()  # Dictionary to hold the readers. The key is the extension
+
+    @classmethod
+    def addReader(cls, imageReader: ImageReader):
+
+        for ext in imageReader.getCompatibleExtensions():
+            ext_low = ext.lower()
+            logger.debug("Adding %s as image reader for %s" % (imageReader, ext_low))
+            cls._readers[ext_low] = imageReader
+
+    @classmethod
+    def getReader(cls, filePath) -> ImageReader:
+        """ Returns the reader or None able to deal with filePath based on the extension."""
+        ext = filePath.split(".")[-1].lower()
+        logger.debug("Getting ImageReader for %s (%s)" % (filePath, ext))
+
+        reader = cls._readers.get(ext, None)
+
+        # Fall back to XmippImage reader
+        if reader is None:
+            logger.info("Reader not registered for %s files. Falling back to XmippReader" % ext)
+            reader = XMIPPImageReader
+
+        return reader
+
+    @classmethod
+    @lru_cache
+    def open(cls, filePath):
+        "Opens the file and returns and image stack"
+
+        # Get the reader
+        imageReader = cls.getReader(filePath)
+
+        return ImageStack(imageReader.open(filePath))
+
+    @classmethod
+    def write(cls, imgStack:ImageStack, fileName: str, isStack=False) -> None:
+        """Generate a stack of images from a list of PIL images."""
+
+        imageWriter = cls.getReader(fileName)
+        return imageWriter.write(imgStack, fileName, isStack)
+
+    @classmethod
+    def getAvailableExtensions(cls):
+        """ Returns all the extensions it can handle"""
+        return cls._readers.keys()
+
 
 
 class PILImageReader(ImageReader):
@@ -48,6 +140,20 @@ class PILImageReader(ImageReader):
         x, y = im.size  # (width,height) tuple
         return x, y, 1, 1
 
+    @classmethod
+    def open(cls,filePath:str):
+
+        pilImg=Image.open(filePath)
+        return numpy.array(pilImg)
+    @classmethod
+    def write(cls, imgStack: ImageStack, fileName: str, isStack=False) -> None:
+
+        # So far write the first image in teh stack
+        np_img = imgStack.getImage()
+        im = Image.fromarray(numpy.uint8(np_img))
+        im.save(fileName)
+
+        return True
 
 class TiffImageReader(ImageReader):
     """ Tiff image reader"""
@@ -73,12 +179,14 @@ class TiffImageReader(ImageReader):
             key, path=path.split("@")
 
         npImg = imread(path, key=key)
-        iMax = npImg.max()
-        iMin = npImg.min()
-        im255 = ((npImg - iMin) / (iMax - iMin) * 255).astype(numpy.uint8)
-        return Image.fromarray(im255)
+        return npImg
 
+    @classmethod
+    def write(cls, imgStack: ImageStack, fileName: str, isStack=False) -> None:
 
+        npImg = imgStack.getImage().astype("uint8")
+        imwrite(fileName, npImg)
+        return True
 
 class EMANImageReader(ImageReader):
     """ Image reader for eman file formats"""
@@ -143,11 +251,7 @@ class MRCImageReader(ImageReader):
         else:
             imfloat = mrcImg.data
 
-        iMax = imfloat.max()
-        iMin = imfloat.min()
-        im255 = ((imfloat - iMin) / (iMax - iMin) * 255).astype(numpy.uint8)
-        img = Image.fromarray(im255)
-        return img
+        return imfloat
 
     @classmethod
     @lru_cache
@@ -162,10 +266,10 @@ class MRCImageReader(ImageReader):
             return numpy.array(mrc.data)
 
     @classmethod
-    def write(cls, pilImages: list, fileName: str, sr=1.0, isStack=False) -> None:
+    def write(cls, imageStack: ImageStack, fileName: str, isStack=False) -> None:
         """Generate a stack of images or a volume from a list of PIL images."""
-        sr = 1.0 if sr == 0.0 else sr
-        stack = numpy.stack(pilImages, axis=0)
+        sr = imageStack.getProperties().get("sr", 1.0)
+        stack = numpy.stack(imageStack.getImages(), axis=0)
 
         with mrcfile.new(fileName, overwrite=True) as mrc:
             mrc.set_data(stack.astype(numpy.float32))
@@ -173,6 +277,7 @@ class MRCImageReader(ImageReader):
                 mrc.header.ispg = 0
             mrc.update_header_from_data()
             mrc.voxel_size = sr
+        return True
 
 
 class STKImageReader(ImageReader):
@@ -206,10 +311,6 @@ class STKImageReader(ImageReader):
         cls.header_info = cls.readHeader()
         cls.IMG_BYTES = cls.FLOAT32_BYTES * cls.header_info["n_columns"] ** 2
         image = cls.readImage(id - 1)
-        iMax = image.max()
-        iMin = image.min()
-        image = ((image - iMin) / (iMax - iMin) * 255).astype('uint8')
-        image = Image.fromarray(image)
         return image
 
     @staticmethod
@@ -301,33 +402,6 @@ class STKImageReader(ImageReader):
 
         return numpyStack
 
-
-class ImageReadersRegistry:
-    """ Class to register image readers to provide basic information about an image like dimensions or getting an image"""
-    _readers = dict()  # Dictionary to hold the readers. The key is the extension
-
-    @classmethod
-    def addReader(cls, imageReader: ImageReader):
-
-        for ext in imageReader.getCompatibleExtensions():
-            ext_low = ext.lower()
-            logger.debug("Adding %s as image reader for %s" % (imageReader, ext_low))
-            cls._readers[ext_low] = imageReader
-
-    @classmethod
-    def getReader(cls, filePath):
-        """ Returns the reader or None able to deal with filePath based on the extension."""
-        ext = filePath.split(".")[-1].lower()
-        logger.debug("Getting ImageReader for %s (%s)" % (filePath, ext))
-
-        reader = cls._readers.get(ext, None)
-
-        # Fall back to XmippImage reader
-        if reader is None:
-            logger.info("Reader not registered for %s files. Falling back to XmippReader" % ext)
-            reader = XMIPPImageReader
-
-        return reader
 
 
 # Register reader in the registry. Latest registered will take priority.
