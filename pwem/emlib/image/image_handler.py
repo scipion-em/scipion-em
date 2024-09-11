@@ -36,7 +36,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 try:
-    from .image_readers import ImageReadersRegistry
+    from .image_readers import ImageReadersRegistry, ImageStack
 except Exception as e:
     logger.warning("Are you missing mrcfile ? Are you in devel mode ?. "
                    "So, please run: scipion3 pip install mrcfile")
@@ -246,38 +246,6 @@ class ImageHandler(object):
             # Dimensions based on Readers. Registered and defined in the bottom
             reader = ImageReadersRegistry.getReader(fn)
             return reader.getDimensions(fn)
-            # ext = pwutils.getExt(fn).lower()
-            #
-            # # Local import to avoid import loop between ImageHandler and Ccp4Header.
-            # from pwem.convert import headers
-            #
-            # if ext == '.png' or ext == '.jpg':
-            #     im = Image.open(fn)
-            #     x, y = im.size  # (width,height) tuple
-            #     return x, y, 1, 1
-            #
-            # elif headers.getFileFormat(fn) == headers.MRC:
-            #     header = headers.Ccp4Header(fn, readHeader=True)
-            #     return header.getXYZN()
-            #
-            # elif ext == '.img':
-            #     # FIXME Since now we can not read dm4 format in Scipion natively
-            #     # or recent .img format
-            #     # we are opening an Eman2 process to read the dm4 file
-            #     from pwem import Domain
-            #     getImageDimensions = Domain.importFromPlugin(
-            #         'eman2.convert', 'getImageDimensions',
-            #         doRaise=True)
-            #     return getImageDimensions(fn)  # we are ignoring index here
-            # elif ext in ['.eer', '.gain']:
-            #     tif = TiffFile(fn)
-            #     frames = len(tif.pages)  # number of pages in the file
-            #     page = tif.pages[0]  # get shape and dtype of the image in the first page
-            #     x, y = page.shape
-            #     return x, y, frames, 1
-            # else:
-            #     self._img.read(location, lib.HEADER)
-            #     return self._img.getDimensions()
         else:
             return None, None, None, None
 
@@ -582,3 +550,4 @@ class ImageHandler(object):
         else:
             resultImage = imageObj.applyWarpAffine(list(transformMatrix.flatten()), shape, doWrap, fillValue)
         resultImage.write(outputFile)
+
