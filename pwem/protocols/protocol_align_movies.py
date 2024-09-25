@@ -133,12 +133,17 @@ class ProtAlignMovies(ProtProcessMovies):
             output = out
             break
 
-        if output.getSize() == 0 and len(self.listOfMovies) != 0:
+        inputSet = self._loadInputSet(self.movsFn)
+        inputSize = inputSet.getSize()
+
+        if output.getSize() == 0 and inputSize != 0:
             raise Exception("All movies failed, didn't create outputMicrographs."
                             "Please review movie processing steps above.")
-        elif output.getSize() < len(self.listOfMovies):
+        elif output.getSize() < inputSize:
             self.warning(pwutils.yellowStr("WARNING - Failed to align %d movies."
-                                           % (len(self.listOfMovies) - output.getSize())))
+                                           % (inputSize - output.getSize())))
+
+        self._closeOutputSet()
 
     def _loadOutputSet(self, SetClass, baseName, fixSampling=True):
         """
@@ -267,41 +272,43 @@ class ProtAlignMovies(ProtProcessMovies):
                                 OUT_MICS_ODD, streamMode)
 
     def _checkNewOutput(self):
-        if getattr(self, 'finished', False):
-            return
-
-        # Load previously done items (from text file)
-        doneList = self._readDoneList()
-        # Check for newly done items
-        newDone = [m for m in self.listOfMovies
-                   if m.getObjId() not in doneList and self._isMovieDone(m)]
+        # if getattr(self, 'finished', False): # TODO: Maybe quitar
+        #     return
+        doneList, size_done = self._getAllDoneIds()
+        processedIds = self.processedIds
+        newDoneIds = [micId for micId in processedIds if micId not in doneList]
+        allDone = len(doneList) + len(newDoneIds)
+        maxMovSize = self._loadInputSet(self.movsFn).getSize()
 
         # Update the file with the newly done movies
         # or exit from the function if no new done movies
         self.debug('_checkNewOutput: ')
         self.debug('   listOfMovies: %s, doneList: %s, newDone: %s'
-                   % (len(self.listOfMovies), len(doneList), len(newDone)))
+                    % (maxMovSize, len(doneList), len(newDoneIds)))
 
         self._firstTimeOutput = len(doneList) == 0
-        allDone = len(doneList) + len(newDone)
         # We have finished when there is not more input movies (stream closed)
         # and the number of processed movies is equal to the number of inputs
-        self.finished = self.streamClosed and allDone == len(self.listOfMovies)
+        self.finished = self.streamClosed and allDone == maxMovSize
         streamMode = pwobj.Set.STREAM_CLOSED if self.finished else pwobj.Set.STREAM_OPEN
 
-        if newDone:
-            self._writeDoneList(newDone)
-
-        elif not self.finished:
+        if not self.finished and not newDoneIds:
             # If we are not finished and no new output have been produced
             # it does not make sense to proceed and updated the outputs
             # so we exit from the function here
             return
 
+        # todo: newDone
+        newDone = []
+        inputMovSet = self._loadInputSet(self.movsFn)
+        for movId in newDoneIds:
+            movie = inputMovSet.getItem("id", movId).clone()
+            newDone.append(movie)
+
         self.debug('   finished: %s ' % self.finished)
         self.debug('        self.streamClosed (%s) AND' % self.streamClosed)
-        self.debug('        allDone (%s) == len(self.listOfMovies (%s)'
-                   % (allDone, len(self.listOfMovies)))
+        self.debug('        allDone (%s) == maxMovSize (%s)'
+                   % (allDone, maxMovSize))
         self.debug('   streamMode: %s' % streamMode)
 
         self._updateOutputSets(newDone, streamMode)

@@ -43,8 +43,428 @@ from pwem import emlib
 from .protocol_micrographs import ProtPreprocessMicrographs
 from .protocol_particles import ProtExtractParticles
 
+OUTPUT_MOVIES = "outputMovies"
 
 class ProtProcessMovies(ProtPreprocessMicrographs):
+    """
+    Protocol base for processing movies from direct detectors cameras.
+    This base class will iterate through the movies (extract them if compressed)
+    and call a _processMovie method for each one.
+    """
+    # Redefine this in subclasses if want to convert the movies to mrc
+    # the value should be either 'mrc' or 'mrcs'
+    CONVERT_TO_MRC = None
+    CORRECT_GAIN = False
+    PARALLEL_BATCH_SIZE = 20 # todo: podria ser algo de protocolo
+
+    def __init__(self, **kwargs):
+        ProtPreprocessMicrographs.__init__(self, **kwargs)
+        self.stepsExecutionMode = pwcts.STEPS_PARALLEL
+
+    def _getConvertExtension(self, filename):
+        """ This method will be used to check whether a movie needs to be
+        converted to be used in a given program.
+         Returns:
+            If return None, it means that not conversion is required. If not
+            None, the return value should be the extension that it should
+            be converted.
+
+        NOTE: Now by default this function use the CONVERT_TO_MRC property
+        for backward compatibility reasons, but this method could be implemented
+        in any subclass of ProtProcessMovies.
+        """
+        if (self.CONVERT_TO_MRC and not (filename.endswith("mrc") or
+                                         filename.endswith("mrcs"))):
+            return self.CONVERT_TO_MRC
+
+        return None
+
+    def getGainAndDark(self):
+        inputMovs = self.inputMovies.get()
+        return inputMovs.getGain(), inputMovs.getDark()
+
+    def _doCorrectGain(self):
+        gain, dark = self.getGainAndDark()
+        return getattr(self, 'CORRECT_GAIN', False) and (gain or dark)
+
+    # --------------------------- DEFINE param functions ----------------------
+    def _defineParams(self, form):
+        form.addSection(label=pwutils.Message.LABEL_INPUT)
+
+        form.addParam('inputMovies', params.PointerParam, pointerClass='SetOfMovies',
+                      important=True,
+                      label=pwutils.Message.LABEL_INPUT_MOVS,
+                      help='Select a set of previously imported movies.')
+
+    # --------------------------- INSERT steps functions ----------------------
+    def _insertAllSteps(self):
+        # Build the list of all processMovieStep ids by
+        # inserting each of the steps for each movie
+        self.initializeStep()
+        # Gain and Dark conversion step
+        convertStepId = self._insertFunctionStep(self._convertInputStep,
+                                                 prerequisites=[])
+        self.convertCIStep.append(convertStepId)
+        # finalSteps = self._insertFinalSteps(movieSteps)
+        self._insertFunctionStep(self.createOutputStep,
+                                 prerequisites=[], wait=True)
+
+    def initializeStep(self):
+        self.insertedDict = {}
+        self.samplingRate = self.inputMovies.get().getSamplingRate()
+        self.movsFn = self.inputMovies.get().getFileName()
+        # Important to have both:
+        self.insertedIds = []  # Contains images that have been inserted in a Step (checkNewInput).
+        self.processedIds = [] # Contains images that have been processed in a Step (checkNewOutput).
+        self.streamClosed = self.inputMovies.get().isStreamClosed()
+        self.convertCIStep = []
+
+    def createOutputStep(self):
+        pass # To be implemented in sub-classes
+
+    # STEP to convert correction images if apply
+    def _convertInputStep(self):
+        # pwutils.makePath(self._getExtraPath('DONE'))
+        movs = self.inputMovies.get()
+
+        # Convert gain
+        gain = movs.getGain()
+        movs.setGain(self.__convertCorrectionImage(gain))
+
+        # Convert dark
+        dark = movs.getDark()
+        movs.setDark(self.__convertCorrectionImage(dark))
+
+    def __convertCorrectionImage(self, correctionImage):
+        """ Will convert a gain or dark file to a compatible one and return
+        the final file name. Otherwise, will return same passed parameter"""
+
+        # Get final correction image file
+        finalName = self.getFinalCorrectionImagePath(correctionImage)
+
+        # If correctionImage is None, finalName will be None
+        if finalName is None:
+            return None
+
+        elif not os.path.exists(finalName):
+            # Conversion never happened...
+            print('converting %s to %s' % (correctionImage, finalName))
+
+            if correctionImage.endswith('.gain'):  # treat as tif file
+                fnBase = basename(correctionImage)
+                tmpLink = self._getTmpPath(pwutils.replaceExt(fnBase, 'tif'))
+                pwutils.createAbsLink(correctionImage, tmpLink)
+                correctionImage = tmpLink
+
+            emlib.image.ImageHandler().convert(correctionImage, finalName)
+
+        # return final name
+        return os.path.abspath(finalName)
+
+    def getFinalCorrectionImagePath(self, correctionImage):
+        """ Returns the final path to the correction image (converted or not)
+        or and exception correctionImage does not exists"""
+
+        # Return if the correctionImage is None or the empty string
+        if not correctionImage:
+            return None
+
+        elif not os.path.exists(correctionImage):
+            raise Exception("Correction image is set but not present in the "
+                            "file system. Either clean the value in the import "
+                            "protocol or copy the file to %s."
+                            % correctionImage)
+
+        # Do we need to convert?
+        convertTo = self._getConvertExtension(correctionImage)
+
+        if convertTo is not None:
+            # Get the base name
+            fileName = basename(correctionImage)
+
+            # Replace extension
+            fileName = pwutils.replaceExt(fileName, convertTo)
+
+            # "Place" it at extra folder.
+            return self._getExtraPath(fileName)
+
+        else:
+            return correctionImage
+
+    def _insertFinalSteps(self, deps):
+         """ This should be implemented in subclasses"""
+         return deps
+
+    def _getFirstJoinStepName(self):
+        # This function will be used for streaming, to check which is
+        # the first function that need to wait for all micrographs
+        # to have completed, this can be overwritten in subclasses
+        # (eg in Xmipp 'sortPSDStep')
+        return 'createOutputStep'
+
+    def _getFirstJoinStep(self):
+        for s in self._steps:
+            if s.funcName == self._getFirstJoinStepName():
+                return s
+        return None
+
+    def _loadInputSet(self, moviesFile):
+        """ Load the input set of movies and create a list. """
+        self.debug("Loading input db: %s" % moviesFile)
+        movieSet = emobj.SetOfMovies(filename=moviesFile)
+        movieSet.loadAllProperties()
+        # self.listOfMovies = [m.clone() for m in movieSet] TODO: ver como afecta
+        self.streamClosed = movieSet.isStreamClosed()
+        movieSet.close()
+        self.debug("Closed db.")
+        return movieSet
+
+    def _stepsCheck(self):
+        # Input movie set can be loaded or None when checked for new inputs
+        # If None, we load it
+        self._checkNewInput()
+        self._checkNewOutput()
+
+    def _checkNewInput(self):
+        # Check if there are new movies to process from the input set
+        self.lastCheck = getattr(self, 'lastCheck', datetime.now())
+        mTime = datetime.fromtimestamp(os.path.getmtime(self.movsFn))
+        self.debug('Last check: %s, modification: %s'
+                   % (pwutils.prettyTime(self.lastCheck),
+                      pwutils.prettyTime(mTime)))
+        # If the input movies.sqlite have not changed since our last check,
+        # it does not make sense to check for new input data
+        # if self.lastCheck > mTime and hasattr(self, 'listOfMovies'):
+        if self.lastCheck > mTime and self.insertedIds: # If this is empty it is dut to a static "continue" action or it is the first round
+            return None
+
+        # Open input movies.sqlite and close it as soon as possible
+        movSet = self._loadInputSet(self.movsFn)
+        movSetIds = movSet.getIdSet()
+        newIds = [idMic for idMic in movSetIds if idMic not in self.insertedIds]
+
+        self.streamClosed = movSet.isStreamClosed()
+        self.lastCheck = datetime.now()
+        movSet.close()
+
+        outputStep = self._getFirstJoinStep()
+
+        if self.isContinued() and not self.insertedIds:  # For "Continue" action and the first round
+            doneIds, size_done_ids = self._getAllDoneIds()
+            skipIds = list(set(newIds).intersection(set(doneIds)))
+            newIds = list(set(newIds).difference(set(doneIds)))
+            self.info("Skipping Mics with ID: %s, seems to be done" % skipIds)
+            self.insertedIds = doneIds  # During the first round of "Continue" action it has to be filled
+
+        if newIds:
+            fDeps = self._insertNewMoviesSteps(newIds, self.insertedDict)
+            if outputStep is not None:
+                outputStep.addPrerequisites(*fDeps)
+            self.updateSteps()
+
+    def _checkNewOutput(self):
+        pass  # To be implemented in sub-classes
+
+    def _insertNewMoviesSteps(self, newIds, insertedDict):
+        """ Insert steps to process new movies (from streaming)
+        Params:
+            insertedDict: contains already processed movies
+            inputMovies: input movies set to be check
+        """
+        deps = []
+        # Loop through the image IDs in batches
+        for i in range(0, len(newIds), self.PARALLEL_BATCH_SIZE):
+            batch_ids = newIds[i:i + self.PARALLEL_BATCH_SIZE]
+            stepId = self._insertFunctionStep(self.processMovieListStep, batch_ids,
+                                                  prerequisites=self.convertCIStep)
+            for movId in batch_ids:
+                insertedDict[movId] = stepId  # All these mics are going to be process in the same step
+                self.insertedIds.append(movId)
+
+            deps.append(stepId)
+
+        return deps
+
+    def processMovieListStep(self, movIds):
+        inputMovSet = self._loadInputSet(self.movsFn)
+
+        for movId in movIds:
+            movie = inputMovSet.getItem("id", movId).clone()
+            movieDict = movie.getObjDict(includeBasic=True) # Todo: hasta que punto esto hace falta?
+            self.processMovieStep(movieDict, movie.hasAlignment())
+
+    # --------------------------- STEPS functions -----------------------------
+    def convertInputStep(self):
+        """ Should be implemented in sub-classes if needed. """
+        pass
+
+    def processMovieStep(self, movieDict, hasAlignment):
+        movie = emobj.Movie()
+        movie.setAcquisition(emobj.Acquisition())
+
+        if hasAlignment:
+            movie.setAlignment(emobj.MovieAlignment())
+
+        movie.setAttributesFromDict(movieDict, setBasic=True,
+                                    ignoreMissing=True)
+
+        movieId = movie.getObjId()
+        movieFolder = self._getOutputMovieFolder(movie)
+        movieFn = movie.getFileName()
+        movieName = basename(movieFn)
+
+        if self._filterMovie(movie):
+            pwutils.makePath(movieFolder)
+            pwutils.createAbsLink(os.path.abspath(movieFn), join(movieFolder, movieName))
+
+            if movieName.endswith('bz2'):
+                newMovieName = movieName.replace('.bz2', '')
+                # We assume that if compressed the name ends with .mrc.bz2
+                if not exists(newMovieName):
+                    self.runJob('bzip2', '-d -f %s' % movieName, cwd=movieFolder)
+
+            elif movieName.endswith('tbz'):
+                newMovieName = movieName.replace('.tbz', '.mrc')
+                # We assume that if compressed the name ends with .tbz
+                if not exists(newMovieName):
+                    self.runJob('tar', 'jxf %s' % movieName, cwd=movieFolder)
+
+            elif movieName.endswith('.txt'):
+                # Support a list of frame as a simple .txt file containing
+                # all the frames in a raw list, we could use a xmd as well,
+                # but a plain text was choose to simply its generation
+                movieTxt = os.path.join(movieFolder, movieName)
+                with open(movieTxt) as f:
+                    movieOrigin = os.path.basename(os.readlink(movieFn))
+                    newMovieName = movieName.replace('.txt', '.mrcs')
+                    ih = emlib.image.ImageHandler()
+                    for i, line in enumerate(f):
+                        if line.strip():
+                            inputFrame = os.path.join(movieOrigin, line.strip())
+                            ih.convert(inputFrame,
+                                       (i+1, os.path.join(movieFolder, newMovieName)))
+            else:
+                newMovieName = movieName
+
+            convertExt = self._getConvertExtension(newMovieName)
+            correctGain = self._doCorrectGain()
+
+            if convertExt or correctGain:
+                inputMovieFn = os.path.join(movieFolder, newMovieName)
+                if inputMovieFn.endswith('.em'):
+                    inputMovieFn += ":ems"
+
+                if convertExt:
+                    newMovieName = pwutils.replaceExt(newMovieName, convertExt)
+                else:
+                    newMovieName = '%s_corrected.%s' % os.path.splitext(newMovieName)
+
+                outputMovieFn = os.path.join(movieFolder, newMovieName)
+
+                # If the protocols wants Scipion to apply the gain, then
+                # there is no reason to convert, since we can produce the
+                # output in the format expected by the program. In some cases,
+                # the alignment programs can directly deal with gain and dark
+                # correction images, so we don't need to apply it
+                if self._doCorrectGain():
+                    self.info("Correcting gain and dark '%s' -> '%s'"
+                              % (inputMovieFn, outputMovieFn))
+                    gain, dark = self.getGainAndDark()
+                    self.correctGain(inputMovieFn, outputMovieFn,
+                                     gainFn=gain, darkFn=dark)
+                else:
+                    self.info("Converting movie '%s' -> '%s'"
+                              % (inputMovieFn, outputMovieFn))
+
+                    emlib.image.ImageHandler().convertStack(inputMovieFn, outputMovieFn)
+
+            # Just store the original name in case it is needed in _processMovie
+            movie._originalFileName = pwobj.String(objDoStore=False)
+            movie._originalFileName.set(movie.getFileName())
+            # Now set the new filename (either linked or converted)
+            movie.setFileName(os.path.join(movieFolder, newMovieName))
+            self.info("Processing movie: %s" % movie.getFileName())
+
+            self._processMovie(movie)
+
+            if self._doMovieFolderCleanUp():
+                self._cleanMovieFolder(movieFolder)
+
+        # Mark this movie as finished
+        self.processedIds.append(movieId)
+
+
+    # --------------------------- UTILS functions ----------------------------
+    def _getAllDoneIds(self):
+        done_ids = []
+        size_output = 0
+
+        if hasattr(self, OUTPUT_MOVIES):
+            size_output += self.outputMovies.getSize()
+            done_ids.extend(list(self.outputMovies.getIdSet()))
+
+        return done_ids, size_output
+
+    def _getOutputMovieFolder(self, movie):
+        """ Create a Movie folder where to work with it. """
+        return self._getTmpPath('movie_%06d' % movie.getObjId())
+
+    def _getMovieName(self, movie, ext='.mrc'):
+        return self._getExtraPath('movie_%06d%s' % (movie.getObjId(), ext))
+
+    def _getAllFailed(self):
+        return self._getExtraPath('FAILED_all.TXT')
+
+    # --------------------------- OVERRIDE functions --------------------------
+    def _filterMovie(self, movie):
+        """ Check if process or not this movie.
+        """
+        return True
+
+    def _processMovie(self, movie):
+        """ Process the movie actions, remember to:
+        1) Generate all output files inside movieFolder
+           (usually with cwd in runJob)
+        2) Copy the important result files after processing
+           (movieFolder will be deleted!!!)
+        """
+        pass
+
+    # FIXME: check if the following functions could be removed
+
+    def _getNameExt(self, movieName, postFix, ext):
+        if movieName.endswith("bz2"):
+            # removeBaseExt function only eliminate the last extension,
+            # but if files are compressed, we need to eliminate two extensions:
+            # bz2 and its own image extension (e.g: mrcs, em, etc)
+            return pwutils.removeBaseExt(pwutils.removeBaseExt(movieName)) + postFix + '.' + ext
+        else:
+            return pwutils.removeBaseExt(movieName) + postFix + '.' + ext
+
+    def _getCorrMovieName(self, movieId, ext='.mrcs'):
+        return 'movie_%06d%s' % (movieId, ext)
+
+    def _getLogFile(self, movieId):
+        return 'micrograph_%06d_Log.txt' % movieId
+
+    def _doMovieFolderCleanUp(self):
+        """ This functions allows subclasses to change the default behaviour
+        of cleanup the movie folders after the _processMovie function.
+        In some cases it makes sense that the protocol subclass take cares
+        of when to do the clean up.
+        """
+        return True
+
+    def _cleanMovieFolder(self, movieFolder):
+        if pwutils.envVarOn(SCIPION_DEBUG_NOCLEAN):
+            self.info('Clean movie data DISABLED. '
+                      'Movie folder will remain in disk!!!')
+        else:
+            self.info("Erasing.....movieFolder: %s" % movieFolder)
+            os.system('rm -rf %s' % movieFolder)
+            # cleanPath(movieFolder)
+
+class ProtProcessMovies_old(ProtPreprocessMicrographs):
     """
     Protocol base for processing movies from direct detectors cameras.
     This base class will iterate through the movies (extract them if compressed)
