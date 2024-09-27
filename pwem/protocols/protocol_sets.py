@@ -38,7 +38,7 @@ import pyworkflow.protocol as pwprot
 from pyworkflow.object import Object,Float, Integer, String
 
 from pwem.protocols import EMProtocol
-from pwem.objects import Volume, EMSet, SetOfClasses, SetOfStats
+from pwem.objects import Volume, EMSet, SetOfClasses, SetOfData
 from pyworkflow.utils import ProgressBar, getListFromRangeString
 from pwem.constants import ID_COLUMN, ID_ATTRIBUTE
 
@@ -332,7 +332,13 @@ class ProtUnionSet(ProtSets):
     def _checkSetsCompatibility(self):
         """ Check if all input sets have a minimum compatible attributes """
         # Attributes to check -> defined by the Set subclass type that are requested to be joined
-        attrs = self.inputSets[0].get().getCompatibilityDict()
+        firstInput=self.inputSets[0].get()
+
+        # Verify inputs are sets
+        if not isinstance(firstInput, EMSet):
+            return []
+
+        attrs = firstInput.getCompatibilityDict()
         errors = []
         # For each attribute
         for key, attr in attrs.items():
@@ -1019,7 +1025,7 @@ class ProtSetAggregate(EMProtocol):
         mainSet = self.inputSet.get()
 
         # Instantiate and copy main properties
-        outputSet = SetOfStats.create(self.getPath())
+        outputSet = SetOfData.create(self.getPath())
 
         # Run the aggregation method
         operations = self.operations.getListFromValues(caster=str)
