@@ -368,8 +368,15 @@ Format may be PDB or MMCIF"""
         baseName = basename(atomStructPath)
         localPath = abspath(self._getExtraPath(baseName))
 
-        if str(atomStructPath) != str(localPath):  # from local file
-            pwutils.copyFile(atomStructPath, localPath)
+        try:
+            from pwem import Domain
+            chimeraPlugin = Domain.importFromPlugin('chimera', 'Plugin', doRaise=True)
+            localPath = localPath[:-4] + localPath[-4:].replace(".pdb", ".cif")
+            args = f'--nogui --cmd "open {atomStructPath}; save {localPath}; exit"'
+            chimeraPlugin.runChimeraProgram(chimeraPlugin.getProgram(), args)
+        except ImportError:
+            if str(atomStructPath) != str(localPath):  # from local file
+                pwutils.copyFile(atomStructPath, localPath)
 
         localPath = relpath(localPath)
 
