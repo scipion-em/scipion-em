@@ -2693,6 +2693,11 @@ class SetOfFSCs(EMSet):
     ITEM_TYPE = FSC
 
 
-class SetOfStats(EMSet):
+class SetOfData(EMSet):
     """Represents lines of data elements"""
     ITEM_TYPE = Object
+
+
+class SetOfStats(SetOfData):
+    """Replaces by SetOfData. Here for backwards compatibility. """
+    pass

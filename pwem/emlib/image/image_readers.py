@@ -32,11 +32,16 @@ class ImageStack:
         self._images = images
         self._properties = dict() if properties is None else properties
 
-    def getImage(self, index=0):
+    def getImage(self, index=0, pilImage=False):
         if index >= len(self._images):
             raise IndexError("Image at %s position dos not exists. Current stack has %s images." % (index, len(self._images)))
 
-        return self._images[index]
+        npImg = self._images[index]
+
+        if pilImage:
+            return self._normalize(npImg)
+        else:
+            return npImg
 
     def getImages(self):
         """Returns all the images"""
@@ -53,6 +58,12 @@ class ImageStack:
     def append(self, imgStack):
         """ Appends to its local list of images the images inside the imgStack passed as parameter"""
         self._images.extend(imgStack.getImages())
+
+    def _normalize(cls, npImage):
+        iMax = npImage.max()
+        iMin = npImage.min()
+        im255 = ((npImage - iMin) / (iMax - iMin) * 255).astype(numpy.uint8)
+        return Image.fromarray(im255)
 
 
 class ImageReader:
