@@ -3,6 +3,7 @@
 # * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
 # *              Vahid Abrishami (vabrishami@cnb.csic.es)
 # *              Josue Gomez Blanco (josue.gomez-blanco@mcgill.ca)
+# *              Daniel Marchan (da.marchan@cnb.csic.es) - Refactor streaming
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -272,8 +273,6 @@ class ProtAlignMovies(ProtProcessMovies):
                                 OUT_MICS_ODD, streamMode)
 
     def _checkNewOutput(self):
-        # if getattr(self, 'finished', False): # TODO: Maybe quitar
-        #     return
         doneList, size_done = self._getAllDoneIds()
         processedIds = self.processedIds
         newDoneIds = [micId for micId in processedIds if micId not in doneList]
@@ -298,7 +297,6 @@ class ProtAlignMovies(ProtProcessMovies):
             # so we exit from the function here
             return
 
-        # todo: newDone
         newDone = []
         inputMovSet = self._loadInputSet(self.movsFn)
         for movId in newDoneIds:
