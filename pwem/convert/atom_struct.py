@@ -989,31 +989,41 @@ def retry(runEnvirom, program, args, cwd, listAtomStruct=[], log=None, clean_dir
             else:
                 try:
                     if atomStructName.endswith(".pdb"):
-                        newAtomStructName = os.path.abspath(
-                            os.path.join(cwd, "retrypdb%d.cif" % i))
-                        fromPDBToCIF(atomStructName, newAtomStructName, log)
-                        _args = args.replace(atomStructName, newAtomStructName)
                         try:
-                            runEnvirom(program, _args, cwd=cwd)
-                        except:
-                            testLog(log, messages,sdterrLog)
-                            fromCIFTommCIF(newAtomStructName, newAtomStructName, log)
-                            runEnvirom(program, _args, cwd=cwd)
-                    elif atomStructName.endswith(".cif"):
-                        newAtomStructName = os.path.abspath(
-                            os.path.join(cwd, "retrycif%d.cif" % i))
-                        fromCIFTommCIF(atomStructName, newAtomStructName, log)
-                        _args = args.replace(atomStructName, newAtomStructName)
-                        try:
-                            runEnvirom(program, _args, cwd=cwd)
-                        except:
-                            testLog(log, messages,sdterrLog)
-                            newAtomStructName = os.path.abspath(
-                                os.path.join(cwd, "retrycif%d.pdb" % i))
-                            fromCIFToPDB(atomStructName, newAtomStructName, log)
+                            newAtomStructName = atomStructName.replace(atomStructName.split(".")[-1],"cif")
                             _args = args.replace(atomStructName, newAtomStructName)
                             runEnvirom(program, _args, cwd=cwd)
-                            testLog(log, messages,sdterrLog)
+                        except:
+                            newAtomStructName = os.path.abspath(
+                                os.path.join(cwd, "retrypdb%d.cif" % i))
+                            fromPDBToCIF(atomStructName, newAtomStructName, log)
+                            _args = args.replace(atomStructName, newAtomStructName)
+                            try:
+                                runEnvirom(program, _args, cwd=cwd)
+                            except:
+                                testLog(log, messages,sdterrLog)
+                                fromCIFTommCIF(newAtomStructName, newAtomStructName, log)
+                                runEnvirom(program, _args, cwd=cwd)
+                    elif atomStructName.endswith(".cif"):
+                        try:
+                            newAtomStructName = atomStructName.replace(atomStruct.split(".")[-1],"pdb")
+                            _args = args.replace(atomStructName, newAtomStructName)
+                            runEnvirom(program, _args, cwd=cwd)
+                        except:
+                            newAtomStructName = os.path.abspath(
+                                os.path.join(cwd, "retrycif%d.cif" % i))
+                            fromCIFTommCIF(atomStructName, newAtomStructName, log)
+                            _args = args.replace(atomStructName, newAtomStructName)
+                            try:
+                                runEnvirom(program, _args, cwd=cwd)
+                            except:
+                                testLog(log, messages,sdterrLog)
+                                newAtomStructName = os.path.abspath(
+                                    os.path.join(cwd, "retrycif%d.pdb" % i))
+                                fromCIFToPDB(atomStructName, newAtomStructName, log)
+                                _args = args.replace(atomStructName, newAtomStructName)
+                                runEnvirom(program, _args, cwd=cwd)
+                                testLog(log, messages,sdterrLog)
                 except:
                     testLog(log, messages,sdterrLog)
                     # first remove files or directories in the extra folder,

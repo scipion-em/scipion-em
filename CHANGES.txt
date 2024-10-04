@@ -1,3 +1,8 @@
+V3.9.2:
+Users:
+   - Fix: 'Volume' object has no attribute 'getCompatibilityDict' when using join sets with Volumes 
+Developers:
+   - SetOfData replaces SetOfStats for generic tabular data.
 V3.9.1:
  Users:
    - Fix: CrossSubset protocol works with "id" or "_objId" field too.
@@ -5,6 +10,7 @@ V3.9.1:
  Developers:
    - New constants for "id" and "_objId": ID_COLUMN='id', ID_ATTRIBUTE='_objId'
    - ImageReadersRegistry closer to image handler. Reader (tif, Pil) have write method. Tests added.
+   
 V3.9.0:
  Users:
    - Chimera viewer compatible with newer versions (flatpak, deb, windows via WSL) via linking
