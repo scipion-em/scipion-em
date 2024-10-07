@@ -1,6 +1,7 @@
 V3.9.2:
 Users:
    - Fix: 'Volume' object has no attribute 'getCompatibilityDict' when using join sets with Volumes 
+   - Allowing nested set modifications in "edit set" protocol
 Developers:
    - SetOfData replaces SetOfStats for generic tabular data.
 V3.9.1:
