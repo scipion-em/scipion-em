@@ -27,7 +27,7 @@
 
 import pyworkflow.protocol.params as params
 from pwem.protocols.protocol_sets import ProtSets
-from pwem.objects.data import SetOfParticles
+from pwem.objects import EMSet
 
 import numpy as np
 
@@ -69,10 +69,14 @@ class ProtSetEditor(ProtSets):
         inputSet = self.inputSet.get()
         modifiedSet = inputSet.createCopy(self._getExtraPath(), copyInfo=True)
 
-        for sourceItem in inputSet.iterItems():
-            item = sourceItem
-            exec(self.formula.get())
-            self._append(modifiedSet, item)
+        for item in inputSet.iterItems():
+            if isinstance(item, EMSet):
+                self._append(modifiedSet, item)
+                exec(self.formula.get())
+                modifiedSet.update(item)
+            else:
+                exec(self.formula.get())
+                self._append(modifiedSet, item)
 
         self.createOutput(self.inputSet, modifiedSet)
 
