@@ -54,10 +54,9 @@ class ProtCTFMicrographs(ProtMicrographs):
     """ Base class for all protocols that estimates the CTF"""
 
     _possibleOutputs = ProtCTFMicOutputs
-
+    stepsExecutionMode = pwcts.STEPS_PARALLEL
     def __init__(self, **kwargs):
         EMProtocol.__init__(self, **kwargs)
-        self.stepsExecutionMode = pwcts.STEPS_PARALLEL
         self.isFirstTime = pwobj.Boolean(False)
 
     # -------------------------- DEFINE param functions -----------------------

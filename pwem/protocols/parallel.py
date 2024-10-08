@@ -30,39 +30,37 @@ from pyworkflow.protocol import Protocol
 
 class ProtTestParallel(Protocol):
     """ A parallel test protocol.
-    """    
+    """
     _label = "parallel test"
-    
-    def __init__(self, **args):
-        Protocol.__init__(self, **args)        
-        self.stepsExecutionMode = params.STEPS_PARALLEL
-        
+
+    stepsExecutionMode = params.STEPS_PARALLEL
+
     # --------------------------- DEFINE param functions ----------------------
     def _defineParams(self, form):
         form.addSection(label='Input')
         form.addParam('numberOfIterations', params.IntParam, default=2,
-                      label="Number of iterations", 
+                      label="Number of iterations",
                       help='Repeat the insertion of steps N times.')
         form.addParam('numberOfParallelSleeps', params.IntParam, default=2,
-                      label="Number of parallel sleeps", 
+                      label="Number of parallel sleeps",
                       help='How many sleep steps can be done at the same time.')
         form.addParam('failAfter', params.IntParam, default=0,
-                      label="Fail after", 
+                      label="Fail after",
                       help='If you set an id, the next step should fail')
         form.addParam('sleepSecs', params.IntParam, default=2,
                       label='Seconds to sleep')
-        
+
         form.addParallelSection(threads=4, mpi=1)
-            
+
     # --------------------------- INSERT steps functions ----------------------
     def _insertAllSteps(self):
         n = self.numberOfIterations.get()
         m = self.numberOfParallelSleeps.get()
         secs = self.sleepSecs.get()
         failAfter = self.failAfter.get()
-        
+
         deps = []
-        
+
         for i in range(n):
             initId = self._insertFunctionStep('initStep', i, prerequisites=deps)
             deps = []
@@ -74,12 +72,12 @@ class ProtTestParallel(Protocol):
                 deps.append(sleepId)
             endId = self._insertFunctionStep('endStep', i, prerequisites=deps)
             deps = [endId]
-            
+
     # --------------------------- STEPS functions -----------------------------
     def initStep(self, iterN):
         """ All subsequent sleep steps should depend on this. """
         self._log.info("Starting iteration: %d" % iterN)
-    
+
     def sleepStep(self, secs=5, forceFail=False, tag=''):
         if forceFail:
             self.runJob('echo', " 'Failing for testing purposes...'; exit 1")
@@ -88,9 +86,9 @@ class ProtTestParallel(Protocol):
             getEnviron = Domain.importFromPlugin('xmipp3', 'getEnviron')
             self.runJob('xmipp_work_test',
                         "--time %d --tag '%s'" % (secs, tag), env=getEnviron())
-            
+
     def awakeStep(self):
         print("Awakened after a sleep step")
-        
+
     def endStep(self, iterN):
         self._log.info("Ending iteration: %d" % iterN)
