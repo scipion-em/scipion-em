@@ -190,7 +190,7 @@ class TestImportCoordinates(TestImportBase):
         # Import a set of micrographs (Coordinate file name starts with the
         # micrograph name)
         import tempfile
-        with tempfile.TemporaryDirectory() as micTempdir:
+        with tempfile.TemporaryDirectory(prefix=self.getOutputPath()) as micTempdir:
             micsDir = self.dsXmipp.getFile('micrographs')
             micsList = sorted(os.listdir(micsDir))
             newMic0 = os.path.join(micTempdir, 'micrograph_BPV_1.mrc')
@@ -241,7 +241,7 @@ class TestImportCoordinates(TestImportBase):
 
         # Import a set of micrographs (Micrograph name starts with coordinate
         # file name)
-        with tempfile.TemporaryDirectory() as micTempdir:
+        with tempfile.TemporaryDirectory(prefix=self.getOutputPath()) as micTempdir:
             micsDir = self.dsXmipp.getFile('micrographs')
             micsList = sorted(os.listdir(micsDir))
             newMic0 = os.path.join(micTempdir, 'BPV_1386_aligned.mrc')
