@@ -836,8 +836,8 @@ class MainWindow:
         imagePath = os.path.abspath(self.micrographPathDict[self.micId][0])
         if imagePath:
             try:
-                imageReader = ImageReadersRegistry.getReader(imagePath)
-                self.imagePIL = imageReader.open(imagePath)
+                imgStack = ImageReadersRegistry.open(imagePath)
+                self.imagePIL = imgStack.getImage(pilImage=True)
                 self.imageSize = self.imagePIL.size
 
                 self.scale = max(self.imageSize[0]/self.imageCanvasSize, self.imageSize[1]/self.imageCanvasSize)
