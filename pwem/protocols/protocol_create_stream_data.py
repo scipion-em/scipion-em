@@ -61,11 +61,11 @@ class ProtCreateStreamData(EMProtocol):
     _sphericalAberration = 2.0
     _amplitudeContrast = 0.07
     object = None
+    stepsExecutionMode = STEPS_PARALLEL
 
     def __init__(self, **kwargs):
         EMProtocol.__init__(self, **kwargs)
         self.dictObj = OrderedDict()
-        self.stepsExecutionMode = STEPS_PARALLEL
 
     # -------------------------- DEFINE param functions ----------------------
     def _defineParams(self, form):
@@ -157,7 +157,7 @@ class ProtCreateStreamData(EMProtocol):
             self.nDims = int(min(self.nDim, len(self.inputParticles.get())))
             self.group = int(min(self.nDims, self.groups.get()))
             for mic in range(1, int((self.nDims / self.group) +
-                             (self.nDims % self.group > 0) + 1)):
+                                    (self.nDims % self.group > 0) + 1)):
                 self._insertFunctionStep(step, prerequisites=deps)
 
         elif self.setof == SET_OF_COORDINATES:
