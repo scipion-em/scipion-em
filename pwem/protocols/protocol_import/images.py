@@ -199,6 +199,8 @@ class ProtImportImages(ProtImportFiles):
             imgSet.loadAllProperties()
             self._fillImportedFiles(imgSet)
             imgSet.enableAppend()
+            if self.stopStreamingFileExists():
+                os.remove(self._getStopStreamingFilename()) # Remove stop streaming file if the import was not truly finished
         
         pointerExcludedMovs = getattr(self, 'moviesToExclude', None)
         if pointerExcludedMovs is not None:
@@ -300,7 +302,7 @@ class ProtImportImages(ProtImportFiles):
                 # special stop condition, this can be used to manually stop
                 # some protocols such as import movies
                 finished = (now - lastDetectedChange > timeout or
-                            self.streamingHasFinished())
+                            self.stopStreamingFileExists())
                 self.debug("Checking if finished:")
                 self.debug("   Now - Last Change: %s"
                            % pwutils.prettyDelta(now - lastDetectedChange))
@@ -584,7 +586,7 @@ class ProtImportImages(ProtImportFiles):
         else:
             return []
 
-    def stopImport(self):
+    def stopImport(self, e):
         """ Since the actual protocol that is running is in a different
         process that the one that this method will be invoked from the GUI,
         we will use a simple mechanism to place an special file to stop
@@ -594,5 +596,5 @@ class ProtImportImages(ProtImportFiles):
         f = open(self._getStopStreamingFilename(), 'w')
         f.close()
 
-    def streamingHasFinished(self):
+    def stopStreamingFileExists(self):
         return os.path.exists(self._getStopStreamingFilename())
