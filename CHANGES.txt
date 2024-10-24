@@ -1,3 +1,8 @@
+V3.9.3: hotfix
+Users:
+   - Import STOP_STREAMING button is fixed
+Developers:
+   - stop_import function needed the context for the button action
 V3.9.2:
 Users:
    - Fix: 'Volume' object has no attribute 'getCompatibilityDict' when using join sets with Volumes 
