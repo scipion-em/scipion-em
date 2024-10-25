@@ -2296,6 +2296,8 @@ class SetOfClasses(EMSet):
                 ref = newItem.getClassId()
                 if ref is None:
                     raise Exception('Particle classId is None!!!')
+                if ref == 0:
+                    continue
 
                 # Register a new class set if the ref was not found.
                 # if not ref in clsDict:
