@@ -1383,7 +1383,7 @@ class SetOfImages(EMSet):
         # will be set for each image added to the set
         if self.getSamplingRate() or not image.getSamplingRate():
             image.setSamplingRate(self.getSamplingRate())
-        # Copy the acquistion from the set to images
+        # Copy the acquisition from the set to images
         # only override image acquisition if setofImages acquisition
         # is not none
         if self.hasAcquisition():
