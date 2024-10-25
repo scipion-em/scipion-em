@@ -1,4 +1,6 @@
 V3.9.3:
+Users:
+  - Edit set protocol works with complex sets (titlseries, Classes2d) using "Sub item formula"
 Developers:
    - execution mode moved to class level
 V3.9.2:

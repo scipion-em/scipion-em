@@ -51,14 +51,21 @@ class ProtSetEditor(ProtSets):
                       pointerClass='EMSet',
                       label='Set to edit',
                       help='Set which items will be modified.')
-        # formula
+        # formula for main items
         form.addParam('formula', params.StringParam, label="Formula",
-                      help='A python code compatible with eval, where item represents each of '
+                      help='Any python code compatible with eval, where item represents each of '
                            'the elements of the set. E.g.: item._resolution.set(item._resolution.get() +1).'
                            'You could also use modules like "import numpy;  item._resolution .... "')
 
+        # formula for subitems items
+        form.addParam('subitemsformula', params.StringParam, label="Sub item formula",
+                      help='Only valid for complex sets with subelements: Classes -> Particles, TiltSeries -> TiltImage, ..'
+                           'Any python code compatible with eval, where item represents each of '
+                           'the SUBELEMENTS each ITEM. E.g.: subitem.tiltAngle.set(subitem.tiltAngle.get() +1).'
+                           'You could also use modules like "import numpy;  subitem._resolution .... "')
+
     def _insertAllSteps(self):
-        self._insertFunctionStep('formulaStep')
+        self._insertFunctionStep(self.formulaStep)
 
     def formulaStep(self):
         """
@@ -66,15 +73,30 @@ class ProtSetEditor(ProtSets):
         Complex python code could be run separating lines with ;  To use numpy you could do
         import numpy; item._resolution.set(numpy.random.randint(10))
         """
+
+        import time
+        time.sleep(10)
         inputSet = self.inputSet.get()
         modifiedSet = inputSet.createCopy(self._getExtraPath(), copyInfo=True)
 
         for sourceItem in inputSet.iterItems():
-            item = sourceItem
-            exec(self.formula.get())
-            self._append(modifiedSet, item)
+
+            # item = sourceItem
+            # exec(self.formula.get())
+            updateItemCallBack = self.updateItem if self.formula.get() else None
+            updateSubElemCallBack = self.updateSubElement if self.subitemsformula.get() else None
+
+            self._append(modifiedSet, sourceItem, itemUpdateCallback=updateItemCallBack, subElemUpdateCallback=updateSubElemCallBack)
 
         self.createOutput(self.inputSet, modifiedSet)
+
+    def updateItem(self, item):
+
+        exec(self.formula.get())
+    def updateSubElement(self, subitem):
+
+
+        exec(self.subitemsformula.get())
 
     def createOutput(self, inputSet, modifiedSet):
         """ Save the output set."""

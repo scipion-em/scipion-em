@@ -46,11 +46,14 @@ from pwem.constants import ID_COLUMN, ID_ATTRIBUTE
 class ProtSets(EMProtocol):
     """ Base class for all protocols related to subsets. """
 
-    def _append(self, outputSet, item, sourceItem=None):
+    def _append(self, outputSet, item, sourceItem=None, itemUpdateCallback=None, subElemUpdateCallback=None):
         """ Add an item to the outputSet.
         If the item is a new copy of sourceItem(case of the join sets),
         then use a sourceItem since item lost the information related with the
         mapper
+
+        :param itemUpdateCallback: callback receiving the item to apply any operation (optional)
+        :param subElemUpdateCallback: callback receiving the sub-element to apply any operation (optional)
         """
         subElemList = []
         if sourceItem is None:
@@ -59,13 +62,24 @@ class ProtSets(EMProtocol):
             for subElem in sourceItem.iterItems():
                 # We need to create a clone because all items have a same _objId
                 clon = subElem.clone(copyEnable=True)
+
+                # Update the sub-element if callback is passed
+                if subElemUpdateCallback:
+                    subElemUpdateCallback(clon)
+
                 subElemList.append(clon)
+
+        # Update the main item if callback is passed
+        if itemUpdateCallback:
+            itemUpdateCallback(item)
 
         outputSet.append(item)
         if subElemList:
             for subElem in subElemList:
                 item.append(subElem)
-        outputSet.update(item)
+            # When adding sub-elements, some item "summary" properties may be updated: e.g. TiltSeries anglesCount.
+            # Need to persist them.
+            outputSet.update(item)
 
 
 class ProtUnionSet(ProtSets):
