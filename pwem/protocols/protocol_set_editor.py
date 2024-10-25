@@ -74,8 +74,6 @@ class ProtSetEditor(ProtSets):
         import numpy; item._resolution.set(numpy.random.randint(10))
         """
 
-        import time
-        time.sleep(10)
         inputSet = self.inputSet.get()
         modifiedSet = inputSet.createCopy(self._getExtraPath(), copyInfo=True)
 
