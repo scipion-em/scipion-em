@@ -1,6 +1,9 @@
 V3.9.3:
+Users:
+  - Edit set protocol works with complex sets (titlseries, Classes2d) using "Sub item formula"
 Developers:
    - execution mode moved to class level
+   - classifyItems: report detailed information when updateItemCallback fails
 V3.9.2:
 Users:
    - Fix: 'Volume' object has no attribute 'getCompatibilityDict' when using join sets with Volumes 
