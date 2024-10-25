@@ -2288,7 +2288,11 @@ class SetOfClasses(EMSet):
                             raise ex
                         else:
                             break
-                    updateItemCallback(newItem, row)
+                    try:
+                        updateItemCallback(newItem, row)
+                    except Exception as ex:
+                        logger.error("There was an error updating the particle %s (row: %s): %s" % (newItem.getObjId(), str(row), str(ex)), exc_info=ex)
+                        raise ex
                     # If updateCallBack function returns attribute
                     # _appendItem to False do not append the item
                     if not getattr(newItem, "_appendItem", True):
