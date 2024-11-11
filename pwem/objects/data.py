@@ -149,6 +149,11 @@ class Transform(EMObject):
         M = self.getMatrix()
         return M[:3, :3]
 
+    def getEulerAngles(self):
+        from pwem.convert.transformations import euler_from_matrix
+        rotation = self.getRotationMatrix()
+        return euler_from_matrix(rotation)
+
     def getShifts(self):
         M = self.getMatrix()
         return M[1, 4], M[2, 4], M[3, 4]
@@ -553,6 +558,7 @@ class ImageDim(CsvList):
 
 class Image(EMObject):
     """Represents an EM Image object"""
+    IMG_FILENAME_ATTR = '_filename'
 
     def __init__(self, location=None, **kwargs):
         """
@@ -783,6 +789,7 @@ class Image(EMObject):
 
 class Micrograph(Image):
     """ Represents an EM Micrograph object """
+    MIC_NAME = '_micName'
 
     def __init__(self, location=None, **kwargs):
         Image.__init__(self, location, **kwargs)
