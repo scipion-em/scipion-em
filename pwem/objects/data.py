@@ -1390,7 +1390,7 @@ class SetOfImages(EMSet):
         # will be set for each image added to the set
         if self.getSamplingRate() or not image.getSamplingRate():
             image.setSamplingRate(self.getSamplingRate())
-        # Copy the acquistion from the set to images
+        # Copy the acquisition from the set to images
         # only override image acquisition if setofImages acquisition
         # is not none
         if self.hasAcquisition():
@@ -2295,7 +2295,11 @@ class SetOfClasses(EMSet):
                             raise ex
                         else:
                             break
-                    updateItemCallback(newItem, row)
+                    try:
+                        updateItemCallback(newItem, row)
+                    except Exception as ex:
+                        logger.error("There was an error updating the particle %s (row: %s): %s" % (newItem.getObjId(), str(row), str(ex)), exc_info=ex)
+                        raise ex
                     # If updateCallBack function returns attribute
                     # _appendItem to False do not append the item
                     if not getattr(newItem, "_appendItem", True):
@@ -2303,6 +2307,8 @@ class SetOfClasses(EMSet):
                 ref = newItem.getClassId()
                 if ref is None:
                     raise Exception('Particle classId is None!!!')
+                if ref == 0:
+                    continue
 
                 # Register a new class set if the ref was not found.
                 # if not ref in clsDict:
