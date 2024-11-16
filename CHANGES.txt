@@ -1,3 +1,7 @@
+V3.9.5:
+Users:
+    - Adding a prefix to the calculated columns for the metadataviewer
+
 V3.9.4:
 Users:
   - Edit set protocol works with complex sets (titlseries, Classes2d) using "Sub item formula"
