@@ -44,9 +44,11 @@ from pwem import emlib
 from .base import ProtImportFiles
 from .images import ProtImportImages
 
+
 class ImportVolumeOutputs(enum.Enum):
     outputVolume = emobj.Volume
     outputVolumes = emobj.SetOfVolumes
+
 
 class ProtImportVolumes(ProtImportImages):
     """Protocol to import a set of volumes to the project"""

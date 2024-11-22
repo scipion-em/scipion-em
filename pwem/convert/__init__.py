@@ -23,7 +23,7 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-
+from .pdb_list import PDBList
 from .utils import getSubsetByDefocus, downloadPdb
 from .atom_struct import AtomicStructHandler, toCIF, cifToPdb
 from .headers import Ccp4Header

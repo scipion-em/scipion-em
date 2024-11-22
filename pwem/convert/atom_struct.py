@@ -39,7 +39,8 @@ from Bio.PDB.mmcifio import mmcif_order
 from Bio.PDB import Superimposer
 from Bio.PDB.MMCIF2Dict import MMCIF2Dict
 from Bio.PDB import Entity
-from Bio.PDB import PDBList
+# from Bio.PDB import PDBList
+from .pdb_list import PDBList
 from collections import OrderedDict
 from Bio.PDB.Polypeptide import is_aa
 from Bio.PDB.Polypeptide import three_to_one
