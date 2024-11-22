@@ -84,9 +84,12 @@ class PDBList:
     http://www.pdb.org/.
     """
 
+    # Code line modified from the original 
+    # biopython code so now https is used instead of ftp
+    # server="ftp://ftp.wwpdb.org" -> server="https://files.wwpdb.org"
     def __init__(
-        # self, server="ftp://ftp.wwpdb.org", pdb=None, obsolete_pdb=None, verbose=True
-        self, server="https://files.wwpdb.org", pdb=None, obsolete_pdb=None, verbose=True
+        self, server="https://files.wwpdb.org", 
+        pdb=None, obsolete_pdb=None, verbose=True
     ):
         """Initialize the class with the default server or a custom one.
 
