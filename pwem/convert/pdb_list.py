@@ -300,7 +300,7 @@ class PDBList:
                 + f"/pub/pdb/compatible/pdb_bundle/{pdb_code[1:3]}/{pdb_code}/{archive_fn}"
             )
         else:
-            url = f"http://mmtf.rcsb.org/v1.0/full/{pdb_code}"
+            url = f"https://mmtf.rcsb.org/v1.0/full/{pdb_code}"
 
         # Where does the final PDB file get saved?
         if pdir is None:
