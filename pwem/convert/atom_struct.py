@@ -231,6 +231,7 @@ class AtomicStructHandler:
         for counter in range(5):
             try:
                 fileName = pdbl.retrieve_pdb_file(pdbID, pdir=dir, file_format=type)
+                break  # file has been retrived do not retry download
             except Exception as error:
                 print("Error: ", error)
                 print("Retry connection", counter)
