@@ -98,7 +98,9 @@ class ProtUserSubSet(BatchProtocol):
             markedSet.copy(sourceSet)
 
             newSet = markedSet.createCopy(self._getPath(),
-                                          copyInfo=True, copyItems=True, itemSelectedCallback=self._itemSelected)
+                                          copyInfo=True,
+                                          copyItems=True,
+                                          rowFilter=self._itemSelected)
 
             # Define outputs, may be use something more specific than "subset"
             self._defineOutputs(subset=newSet)
@@ -123,9 +125,7 @@ class ProtUserSubSet(BatchProtocol):
             self._createSubSetFromClasses(sourceSet)
 
         elif isinstance(sourceSet, emobj.SetOfCTF):
-            outputClassName = self.outputClassName.get()
-            if outputClassName.startswith('SetOfMicrographs'):
-                self._createMicsSubSetFromCTF(sourceSet)
+            self._createMicsSubSetFromCTF(sourceSet)
 
         elif isinstance(sourceSet, emobj.SetOfAtomStructs):
             self._createSubSetFromAtomStructs(sourceSet)
@@ -177,9 +177,8 @@ class ProtUserSubSet(BatchProtocol):
         except Exception:
             output = inputObj.createCopy(self._getPath())
 
-        for item in modifiedSet:
-            if self._itemSelected(item):
-                output.append(item)
+        for item in modifiedSet.iterItems(rowFilter=self._itemSelected):
+            output.append(item)
 
         if hasattr(modifiedSet, 'copyInfo'):
             output.copyInfo(inputObj)
@@ -202,14 +201,14 @@ class ProtUserSubSet(BatchProtocol):
 
         """
         if self.usingShowJ():
-            return item.isEnabled()
+            return item['enabled']
         else:
             return self._itemInSelectionTxt(item)
 
     def _itemInSelectionTxt(self, item):
 
-        id = item.getObjId()
-        return id in self._getSelectionTxtDict()
+        itemId = item['id']
+        return itemId in self._getSelectionTxtDict()
 
     def _createSubSetFromImages(self, inputImages,
                                 copyInfoCallback=None):
@@ -321,12 +320,11 @@ class ProtUserSubSet(BatchProtocol):
                                      prefix=self._dbPrefix)
 
         count = 0
-        for ctf in modifiedSet:
-            if self._itemSelected(ctf):
-                mic = ctf.getMicrograph()
-                outputMics.append(mic)
-                outputCtfs.append(ctf)
-                count += 1
+        for ctf in modifiedSet.iterItems(rowFilter=self._itemSelected):
+            mic = ctf.getMicrograph()
+            outputMics.append(mic)
+            outputCtfs.append(ctf)
+            count += 1
 
         # Register outputs
         outputCtfs.setMicrographs(outputMics)
@@ -367,16 +365,15 @@ class ProtUserSubSet(BatchProtocol):
         # THis is because is getting the alignment info from the input images and this does not have to match.
         # This created an error when scaling averages #903
         output.setAlignment(ALIGN_NONE)
-        for cls in modifiedSet:
-            if self._itemSelected(cls):
-                img = cls.getRepresentative()
-                if not output.getSamplingRate():
-                    output.setSamplingRate(cls.getSamplingRate()
-                                           if img.getSamplingRate() is None
-                                           else img.getSamplingRate())
-                img.copyObjId(cls)
-                output.append(img)
-                count += 1
+        for cls in modifiedSet.iterItems(rowFilter=self._itemSelected):
+            img = cls.getRepresentative()
+            if not output.getSamplingRate():
+                output.setSamplingRate(cls.getSamplingRate()
+                                       if img.getSamplingRate() is None
+                                       else img.getSamplingRate())
+            img.copyObjId(cls)
+            output.append(img)
+            count += 1
         # Register outputs
         self._defineOutput('Representatives', output)
         if inputClasses.hasObjId():
@@ -500,9 +497,8 @@ class ProtUserSubSet(BatchProtocol):
         output = emobj.SetOfAtomStructs(filename=self._getPath('atomstructs.sqlite'))
         modifiedSet = emobj.SetOfAtomStructs(filename=self._dbName, prefix=self._dbPrefix)
 
-        for pdb in modifiedSet:
-            if pdb.isEnabled():
-                output.append(pdb)
+        for pdb in modifiedSet.iterItems(rowFilter=self._itemSelected):
+            output.append(pdb)
 
         # Register outputs
         outputDict = {'outputAtomStructs': output}
