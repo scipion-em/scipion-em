@@ -28,6 +28,8 @@ import pyworkflow.webservices as pws
 import pyworkflow.tests as pwtests
 
 import pwem.protocols as emprot
+from pyworkflow import Config
+
 
 # Class intentionally renamed to avoid muting this test
 
@@ -38,7 +40,7 @@ class NotifierTest(pwtests.BaseTest):
 
     def _getUrl(self):
         return os.environ.get('SCIPION_NOTIFY_URL',
-                              pws.SCIPION_STATS_WORKFLOW_APP).strip()
+                              Config.SCIPION_STATS_WORKFLOW_APP).strip()
 
     def test_projectNotifier(self):
         """ Execute a protocol and then report on it
