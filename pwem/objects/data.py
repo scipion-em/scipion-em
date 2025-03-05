@@ -1198,7 +1198,8 @@ class EMSet(Set, EMObject):
                   itemDataIterator=None,
                   copyDisabled=False,
                   doClone=True,
-                  itemSelectedCallback=None):
+                  itemSelectedCallback=None,
+                  rowFilter=None):
         """ Copy items from another set, allowing to update items information
         based on another source of data, paired with each item.
 
@@ -1228,7 +1229,7 @@ class EMSet(Set, EMObject):
 
         itemDataIter = itemDataIterator  # shortcut
 
-        for item in otherSet:
+        for item in otherSet.iterItems(rowFilter=rowFilter):
             # copy items if enabled or copyDisabled=True
             if copyDisabled or itemSelectedCallback(item):
                 newItem = item.clone() if doClone else item
@@ -1273,7 +1274,8 @@ class EMSet(Set, EMObject):
     def createCopy(self, outputPath,
                    prefix=None, suffix=None, ext=None,
                    copyInfo=False, copyItems=False,
-                   itemSelectedCallback=None):
+                   itemSelectedCallback=None,
+                   rowFilter=None):
         """ Make a copy of the current set to another location (e.g file).
         Params:
             outputPath: where the output file will be written.
@@ -1303,7 +1305,7 @@ class EMSet(Set, EMObject):
             setObj.copyInfo(self)
 
         if copyItems:
-            setObj.copyItems(self, itemSelectedCallback=itemSelectedCallback)
+            setObj.copyItems(self, itemSelectedCallback=itemSelectedCallback, rowFilter=rowFilter)
 
         return setObj
 
@@ -1521,13 +1523,13 @@ class SetOfImages(EMSet):
         """ Return the string representing the dimensions. """
         return str(self._firstDim)
 
-    def iterItems(self, orderBy='id', direction='ASC', where='1', limit=None, iterate=True):
+    def iterItems(self, orderBy='id', direction='ASC', where='1', limit=None, iterate=True, rowFilter=None):
         """ Redefine iteration to set the acquisition to images. """
         for img in Set.iterItems(self, orderBy=orderBy, direction=direction,
-                                 where=where, limit=limit, iterate=iterate):
+                                 where=where, limit=limit, iterate=iterate, rowFilter=rowFilter):
 
             # Sometimes the images items in the set could
-            # have the acquisition info per data row and we
+            # have the acquisition info per data row, and we
             # don't want to override with the set acquisition for this case
             if not img.hasAcquisition():
                 img.setAcquisition(self.getAcquisition())
@@ -1545,9 +1547,8 @@ class SetOfImages(EMSet):
         if itemSelectedCallback is None:
             itemSelectedCallback = SetOfImages.isItemEnabled
 
-        for img in imagesSet:
-            if itemSelectedCallback(img):
-                self.append(img)
+        for img in imagesSet.iterItems(rowFilter=itemSelectedCallback):
+            self.append(img)
 
     def appendFromClasses(self, classesSet, filterClassFunc=None):
         """ Iterate over the classes and the element inside each
@@ -1557,8 +1558,8 @@ class SetOfImages(EMSet):
         if filterClassFunc is None:
             filterClassFunc = SetOfImages.isItemEnabled
 
-        for cls in classesSet:
-            if filterClassFunc(cls) and cls.getSize() > 0:
+        for cls in classesSet.iterItems(rowFilter=filterClassFunc):
+            if cls.getSize() > 0:
                 for img in cls:
                     if img.isEnabled():
                         self.append(img)
@@ -1684,6 +1685,11 @@ class SetOfVolumes(SetOfImages):
 
     def __init__(self, **kwargs):
         SetOfImages.__init__(self, **kwargs)
+
+
+class SetOfMorphing(SetOfVolumes):
+    def __init__(self, **kwargs):
+        SetOfVolumes.__init__(self, **kwargs)
 
 
 class SetOfCTF(EMSet):
@@ -2191,9 +2197,10 @@ class SetOfClasses(EMSet):
         self._setItemMapperPath(classItem)
         return classItem
 
-    def iterItems(self, orderBy='id', direction='ASC'):
+    def iterItems(self, orderBy='id', direction='ASC', rowFilter=None):
         for classItem in EMSet.iterItems(self, orderBy=orderBy,
-                                         direction=direction):
+                                         direction=direction,
+                                         rowFilter=rowFilter):
             self._setItemMapperPath(classItem)
             yield classItem
 
@@ -2226,8 +2233,8 @@ class SetOfClasses(EMSet):
         if filterClassFunc is None:
             filterClassFunc = lambda cls: True
 
-        for cls in classesSet:
-            if cls.isEnabled() and filterClassFunc(cls):
+        for cls in classesSet.iterItems(rowFilter=filterClassFunc):
+            if cls.isEnabled():
                 newCls = self.ITEM_TYPE()
                 newCls.copyInfo(cls)
                 newCls.setObjId(cls.getObjId())

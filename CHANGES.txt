@@ -3,6 +3,7 @@ Users:
   - Edit set protocol works with complex sets (titlseries, Classes2d) using "Sub item formula"
   - Adding a prefix to the calculated columns for the metadataviewer
   - Can use different name conventions for the acquisition info
+  - Improving subset creation
 Developers:
    - execution mode moved to class level
    - classifyItems: report detailed information when updateItemCallback fails
