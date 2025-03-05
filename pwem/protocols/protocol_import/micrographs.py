@@ -166,7 +166,7 @@ class ProtImportMicBase(ProtImportImages):
 
         for fileName, fileId in self.iterFiles():
             baseName = pwutils.removeExt(fileName)
-            xml1 = baseName.replace('_frames', '.xml')
+            xml1 = f"{baseName.rsplit('_', 1)[0]}.xml"
             if os.path.exists(xml1):
                 result = self._parseXML(xml1)
             else:
