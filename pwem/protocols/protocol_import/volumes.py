@@ -319,6 +319,7 @@ Format may be PDB or MMCIF"""
     IMPORT_FROM_ID = 0
     IMPORT_FROM_FILES = 1
     SYMPLIFIED_STRUCT = "symplified_atom_structure.cif"
+    _possibleOutputs = {"outputPdb": emobj.AtomStruct}
 
     def __init__(self, **args):
         ProtImportFiles.__init__(self, **args)
