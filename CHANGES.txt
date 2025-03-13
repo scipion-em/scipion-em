@@ -6,7 +6,9 @@ Users:
   - Improving subset creation
 Developers:
    - execution mode moved to class level
-   - classifyItems: report detailed information when updateItemCallback fails
+   - classifyItems: 1. report detailed information when updateItemCallback fails
+                    2. Adding a boolean flag (cancelNextWhenAppendIsFalse) that determines whether the
+                       classification process should skip the next item
    - Generalize the name convention to load acquisition info in the import movies/micrographs
 V3.9.3: hotfix
 Users:
