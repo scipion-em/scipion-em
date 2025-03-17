@@ -2253,7 +2253,8 @@ class SetOfClasses(EMSet):
                       classifyDisabled=False,
                       iterParams=None,
                       doClone=True,
-                      raiseOnNextFailure=True):
+                      raiseOnNextFailure=True,
+                      cancelNextWhenAppendIsFalse=False):
         """ Classify items from the self.getImages() and add the needed classes.
         This function iterates over each item in the images and call
         the updateItemCallback to register the information coming from
@@ -2274,6 +2275,12 @@ class SetOfClasses(EMSet):
                                    of failure. Pass False when itemDataIterator is a subset of the inputSet.
                                    Important: Pass the right iterParams to make sure the iteration on the inputSet
                                               matches the iteration of the itemDataIterator
+        :param cancelNextWhenAppendIsFalse: A boolean flag that determines whether the classification process should skip
+                                    the next item when the `_appendItem` attribute of the current item is set to `False`.
+                                    If set to `True`, after encountering an item where `_appendItem` is `False`, the
+                                    next item in the iteration will be skipped. If set to `False` (default),
+                                    classification continues normally without skipping the next item.
+
         """
         itemDataIter = itemDataIterator  # shortcut
 
@@ -2289,6 +2296,7 @@ class SetOfClasses(EMSet):
 
         inputSet = self.getImages()
         iterParams = iterParams or {}
+        cancelNext = False
 
         for item in inputSet.iterItems(**iterParams):
             # copy items if enabled or copyDisabled=True
@@ -2296,7 +2304,8 @@ class SetOfClasses(EMSet):
                 newItem = item.clone() if doClone else item
                 if updateItemCallback:
                     try:
-                        row = None if itemDataIter is None else next(itemDataIter)
+                        if not cancelNext and itemDataIter is not None:
+                            row = next(itemDataIter)
                     except Exception as ex:
                         if raiseOnNextFailure:
                             raise ex
@@ -2305,11 +2314,13 @@ class SetOfClasses(EMSet):
                     try:
                         updateItemCallback(newItem, row)
                     except Exception as ex:
-                        logger.error("There was an error updating the particle %s (row: %s): %s" % (newItem.getObjId(), str(row), str(ex)), exc_info=ex)
+                        logger.error("There was an error updating the particle %s (row: %s): %s" % (
+                        newItem.getObjId(), str(row), str(ex)), exc_info=ex)
                         raise ex
                     # If updateCallBack function returns attribute
                     # _appendItem to False do not append the item
                     if not getattr(newItem, "_appendItem", True):
+                        cancelNext = cancelNextWhenAppendIsFalse
                         continue
                 ref = newItem.getClassId()
                 if ref is None:
@@ -2332,6 +2343,7 @@ class SetOfClasses(EMSet):
                 else:
                     classItem = clsDict[ref]
                 classItem.append(newItem)
+                cancelNext = False
             else:
                 if itemDataIter is not None:
                     next(itemDataIter)  # just skip disabled data row
