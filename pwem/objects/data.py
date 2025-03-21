@@ -1533,7 +1533,7 @@ class SetOfImages(EMSet):
                 img.setAcquisition(self.getAcquisition())
             yield img
 
-    def appendFromImages(self, imagesSet, itemSelectedCallback=None):
+    def appendFromImages(self, imagesSet, itemSelectedCallback=None, rowFilter=None):
         """ Iterate over the images and append
         every image that is enabled.
 
@@ -1545,8 +1545,9 @@ class SetOfImages(EMSet):
         if itemSelectedCallback is None:
             itemSelectedCallback = SetOfImages.isItemEnabled
 
-        for img in imagesSet.iterItems(rowFilter=itemSelectedCallback):
-            self.append(img)
+        for img in imagesSet.iterItems(rowFilter=rowFilter):
+            if itemSelectedCallback(img):
+                self.append(img)
 
     def appendFromClasses(self, classesSet, filterClassFunc=None):
         """ Iterate over the classes and the element inside each
@@ -1557,7 +1558,7 @@ class SetOfImages(EMSet):
             filterClassFunc = SetOfImages.isItemEnabled
 
         for cls in classesSet.iterItems():
-            if cls.getSize() > 0:
+            if filterClassFunc(cls) and cls.getSize() > 0:
                 for img in cls:
                     if img.isEnabled():
                         self.append(img)
@@ -2231,8 +2232,8 @@ class SetOfClasses(EMSet):
         if filterClassFunc is None:
             filterClassFunc = lambda cls: True
 
-        for cls in classesSet.iterItems(rowFilter=filterClassFunc):
-            if cls.isEnabled():
+        for cls in classesSet.iterItems():
+            if cls.isEnabled() and filterClassFunc(cls):
                 newCls = self.ITEM_TYPE()
                 newCls.copyInfo(cls)
                 newCls.setObjId(cls.getObjId())
