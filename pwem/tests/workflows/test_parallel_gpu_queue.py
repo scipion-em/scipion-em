@@ -28,13 +28,14 @@ import subprocess
 
 from pyworkflow.tests import *
 import pyworkflow.utils as pwutils
+from pyworkflow.constants import QUEUE_FOR_JOBS
 
 from pwem import Domain
 import pwem.protocols as emprot
 
 # --- Set this to match with your queue system ---
 #  json params to fill the queue form, see SCIPION_HOME/config/host.conf
-QUEUE_PARAMS = (u'myslurmqueue', {u'JOB_TIME': u'1',        # in hours
+QUEUE_PARAMS = (u'standard', {u'JOB_TIME': u'1',        # in hours
                                   u'JOB_MEMORY': u'2048',   # in Mb
                                   u'QUEUE_FOR_JOBS': u'N', })
 #  command and args to list the queued jobs (to be used in a subprocess)
@@ -125,7 +126,7 @@ class TestQueueBase(BaseTest):
             print(pwutils.magentaStr("    ...job ended!"))
 
         if prot.useQueue():
-            if QUEUE_PARAMS[1]['QUEUE_FOR_JOBS'] != 'Y':
+            if prot.useQueueForProtocol():
                 # if the protocol is use queue system, we check if it's queued
                 # jobId = prot.getJobId()   # is an string
                 # protId = prot.getObjId()  # is an integer
@@ -134,11 +135,12 @@ class TestQueueBase(BaseTest):
             else:
                 # Check that job files have been created
                 jobFilesPath = join(pwutils.getParentFolder(prot.getLogPaths()[0]),
-                                    str(prot.getObjId()))
+                                    'scipion'+str(prot.getObjId()))
 
+                print("Expecting job file at %s" % jobFilesPath)
                 self.assertTrue(
-                    pwutils.exists(jobFilesPath + "-0-1.out") and pwutils.exists(
-                        jobFilesPath + "-0-1.err") and pwutils.exists(jobFilesPath + "-0-1.job"),
+                    pwutils.exists(jobFilesPath + "-2-1.job.out") and pwutils.exists(
+                        jobFilesPath + "-2-1.job.err") and pwutils.exists(jobFilesPath + "-2-1.job"),
                     "Job queue files not found in log folder, job did not make it to the queue.")
 
         self.assertIsNotNone(prot.outputClasses,
@@ -176,7 +178,7 @@ class TestQueueBase(BaseTest):
         if useQueue:
             prot2D._useQueue.set(True)
             if steps:
-                QUEUE_PARAMS[1]['QUEUE_FOR_JOBS'] = 'Y'
+                QUEUE_PARAMS[1][QUEUE_FOR_JOBS] = 'Y'
             prot2D._queueParams.set(json.dumps(QUEUE_PARAMS))
 
         prot2D.doGpu.set(doGpu)
@@ -216,7 +218,7 @@ class TestQueueALL(TestQueueBase):
     def testNoGpuMPIandThreads(self):
         relionNoGpu22 = self._runRelionClassify2D(self.protNormalize,
                                                   "Rel.2D noGPU MPI+Threads",
-                                                  MPI=2, threads=2,
+                                                  MPI=2, threads=3,
                                                   useQueue=True)
         self._checkAsserts(relionNoGpu22)
 
@@ -229,7 +231,7 @@ class TestQueueALL(TestQueueBase):
     def testGpuMPI(self):
         relionGpu12 = self._runRelionClassify2D(self.protNormalize,
                                                 "Rel.2D GPU MPI",
-                                                doGpu=True, MPI=2,
+                                                doGpu=True, threads=3, MPI=2,
                                                 useQueue=True)
         self._checkAsserts(relionGpu12)
 
@@ -244,7 +246,7 @@ class TestQueueALL(TestQueueBase):
         relionGpu22 = self._runRelionClassify2D(self.protNormalize,
                                                 "Rel.2D GPU MPI+Threads",
                                                 doGpu=True, useQueue=True,
-                                                MPI=2, threads=2)
+                                                MPI=2, threads=3)
         self._checkAsserts(relionGpu22)
 
 
@@ -259,14 +261,14 @@ class TestQueueSmall(TestQueueBase):
     def testGpuMPI(self):
         relionGpu12 = self._runRelionClassify2D(self.protNormalize,
                                                 "Rel.2D GPU MPI",
-                                                doGpu=True, MPI=2,
+                                                doGpu=True, threads=3, MPI=2,
                                                 useQueue=True)
         self._checkAsserts(relionGpu12)
 
     def testGpuMPISteps(self):
         relionGpu12 = self._runRelionClassify2D(self.protNormalize,
                                                 "Rel.2D GPU MPI Steps",
-                                                doGpu=True, MPI=4,
+                                                doGpu=True, threads=5, MPI=4,
                                                 useQueue=True, steps=True)
 
         self._checkAsserts(relionGpu12)
@@ -300,7 +302,7 @@ class TestNoQueueALL(TestQueueBase):
     def testNoGpuMPIandThreads(self):
         relionNoGpu22 = self._runRelionClassify2D(self.protNormalize,
                                                   "Rel.2D noGPU MPI+Threads",
-                                                  MPI=2, threads=4)
+                                                  MPI=2, threads=5)
         self._checkAsserts(relionNoGpu22)
 
     def testGpuSerial(self):
@@ -312,7 +314,7 @@ class TestNoQueueALL(TestQueueBase):
     def testGpuMPI(self):
         relionGpu12 = self._runRelionClassify2D(self.protNormalize,
                                                 "Rel.2D GPU MPI",
-                                                doGpu=True, MPI=2)
+                                                doGpu=True, threads=5, MPI=2)
         self._checkAsserts(relionGpu12)
 
     def testGpuThreads(self):
@@ -325,7 +327,7 @@ class TestNoQueueALL(TestQueueBase):
         relionGpu22 = self._runRelionClassify2D(self.protNormalize,
                                                 "Rel.2D GPU MPI+Threads",
                                                 doGpu=True,
-                                                MPI=2, threads=4)
+                                                MPI=2, threads=3)
         self._checkAsserts(relionGpu22)
 
 
@@ -340,7 +342,7 @@ class TestNoQueueSmall(TestQueueBase):
     def testGpuMPI(self):
         relionGpu12 = self._runRelionClassify2D(self.protNormalize,
                                                 "Rel.2D GPU MPI",
-                                                doGpu=True, MPI=2)
+                                                doGpu=True, threads=3, MPI=2)
         self._checkAsserts(relionGpu12)
 
 
@@ -362,7 +364,7 @@ class TestQueueSteps(TestQueueBase):
 
         protXmippPreproc._useQueue.set(True)
 
-        QUEUE_PARAMS[1]['QUEUE_FOR_JOBS'] = 'Y'
+        QUEUE_PARAMS[1][QUEUE_FOR_JOBS] = 'Y'
 
         protXmippPreproc._queueParams.set(json.dumps(QUEUE_PARAMS))
 
@@ -372,14 +374,16 @@ class TestQueueSteps(TestQueueBase):
         # Check that job files have been created
 
         jobFilesPath = join(pwutils.getParentFolder(protXmippPreproc.getLogPaths()[0]),
-                            str(protXmippPreproc.getObjId()))
+                            "scipion"+str(protXmippPreproc.getObjId()))
 
-        self.assertTrue(pwutils.exists(jobFilesPath + "-0-1.out") and
-                        pwutils.exists(jobFilesPath + "-0-1.err") and
-                        pwutils.exists(jobFilesPath + "-0-1.job") and
-                        pwutils.exists(jobFilesPath + "-0-2.out") and
-                        pwutils.exists(jobFilesPath + "-0-2.err") and
-                        pwutils.exists(jobFilesPath + "-0-2.job"),
+        print(jobFilesPath)
+
+        self.assertTrue(pwutils.exists(jobFilesPath + "-2-1.job.out") and
+                        pwutils.exists(jobFilesPath + "-2-1.job.err") and
+                        pwutils.exists(jobFilesPath + "-2-1.job") and
+                        pwutils.exists(jobFilesPath + "-3-1.job.out") and
+                        pwutils.exists(jobFilesPath + "-3-1.job.err") and
+                        pwutils.exists(jobFilesPath + "-3-1.job"),
                         "Job queue files not found on log folder, job did "
                         "not make it to the queue.")
 
