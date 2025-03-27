@@ -1199,7 +1199,10 @@ class EMSet(Set, EMObject):
                   copyDisabled=False,
                   doClone=True,
                   itemSelectedCallback=None,
-                  rowFilter=None):
+                  rowFilter=None,
+                  orderBy='id',
+                  direction='ASC'
+                  ):
         """ Copy items from another set, allowing to update items information
         based on another source of data, paired with each item.
 
@@ -1222,12 +1225,21 @@ class EMSet(Set, EMObject):
                 avoid the clone operation and the related overhead.
             itemSelectedCallback: Optional, callback receiving an item and
                 returning true if it has to be copied
+            orderBy: Attribute by which the items will be sorted before copying. Default is 'id'.
+            direction: Sorting direction, either 'ASC' for ascending or 'DESC' for descending. Default is 'ASC'.
         """
 
         if itemSelectedCallback is None:
             itemSelectedCallback = EMSet.isItemEnabled
 
-        for item in otherSet.iterItems(rowFilter=rowFilter):
+        if isinstance(otherSet, Set):
+            itemIterator = otherSet.iterItems(rowFilter=rowFilter,
+                                              orderBy=orderBy,
+                                              direction=direction)
+        else:
+            itemIterator = otherSet
+
+        for item in itemIterator:
             # copy items if enabled or copyDisabled=True
             if copyDisabled or itemSelectedCallback(item):
                 newItem = item.clone() if doClone else item
@@ -2313,7 +2325,7 @@ class SetOfClasses(EMSet):
                 if ref is None:
                     raise Exception('Particle classId is None!!!')
                 if ref == 0:
-                    continueh
+                    continue
 
                 # Get the class the newItem belongs to.
                 classItem = self._get_or_create_class(clsDict, ref, updateClassCallback)
