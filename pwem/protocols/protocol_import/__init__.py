@@ -28,7 +28,6 @@
 Sub-packages containing different sub-modules to import different type
 of objects.
 """
-
 from .base import ProtImport, ProtImportFiles
 from .coordinates import ProtImportCoordinates, ProtImportCoordinatesPairs
 from .ctfs import ProtImportCTF

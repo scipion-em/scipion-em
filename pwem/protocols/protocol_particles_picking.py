@@ -211,7 +211,7 @@ class ProtParticlePickingAuto(ProtParticlePicking):
         picking micrograph steps.
         Receive the list of step ids of the picking steps. """
         self._insertFunctionStep(self.createOutputStep.__name__,
-                                 prerequisites=micSteps, wait=True)
+                                 prerequisites=micSteps, wait=True, needsGPU=False)
 
     def _getPickArgs(self):
         """ Should be implemented in sub-classes to define the argument

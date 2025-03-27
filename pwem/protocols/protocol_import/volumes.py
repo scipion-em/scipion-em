@@ -44,9 +44,11 @@ from pwem import emlib
 from .base import ProtImportFiles
 from .images import ProtImportImages
 
+
 class ImportVolumeOutputs(enum.Enum):
     outputVolume = emobj.Volume
     outputVolumes = emobj.SetOfVolumes
+
 
 class ProtImportVolumes(ProtImportImages):
     """Protocol to import a set of volumes to the project"""
@@ -369,8 +371,7 @@ Format may be PDB or MMCIF"""
         localPath = abspath(self._getExtraPath(baseName))
 
         try:
-            from pwem import Domain
-            chimeraPlugin = Domain.importFromPlugin('chimera', 'Plugin', doRaise=True)
+            from chimera import Plugin as chimeraPlugin
             localPath = localPath[:-4] + localPath[-4:].replace(".pdb", ".cif")
             args = f'--nogui --cmd "open {atomStructPath}; save {localPath}; exit"'
             chimeraPlugin.runChimeraProgram(chimeraPlugin.getProgram(), args)

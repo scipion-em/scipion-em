@@ -203,7 +203,7 @@ class ProtExtractParticles(ProtParticles):
         extraction of micrograph steps.
         Receive the list of step ids of the picking steps. """
         self._insertFunctionStep('createOutputStep',
-                                 prerequisites=micSteps, wait=True)
+                                 prerequisites=micSteps, wait=True, needsGPU=False)
 
     def _insertExtractMicrographStep(self, mic, prerequisites, *args):
         """ Basic method to insert a picking step for a given micrograph. """

@@ -39,7 +39,9 @@ from Bio.PDB.mmcifio import mmcif_order
 from Bio.PDB import Superimposer
 from Bio.PDB.MMCIF2Dict import MMCIF2Dict
 from Bio.PDB import Entity
-from Bio.PDB import PDBList
+# PDBList is a biopython function but it not longer works
+# so we fix it and now is in this module
+from .pdb_list import PDBList
 from collections import OrderedDict
 from Bio.PDB.Polypeptide import is_aa
 from Bio.PDB.Polypeptide import three_to_one
@@ -229,6 +231,7 @@ class AtomicStructHandler:
         for counter in range(5):
             try:
                 fileName = pdbl.retrieve_pdb_file(pdbID, pdir=dir, file_format=type)
+                break  # file has been retrived do not retry download
             except Exception as error:
                 print("Error: ", error)
                 print("Retry connection", counter)

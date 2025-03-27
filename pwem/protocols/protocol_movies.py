@@ -54,10 +54,7 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
     # the value should be either 'mrc' or 'mrcs'
     CONVERT_TO_MRC = None
     CORRECT_GAIN = False
-
-    def __init__(self, **kwargs):
-        ProtPreprocessMicrographs.__init__(self, **kwargs)
-        self.stepsExecutionMode = pwcts.STEPS_PARALLEL
+    stepsExecutionMode = pwcts.STEPS_PARALLEL
 
     def _getConvertExtension(self, filename):
         """ This method will be used to check whether a movie needs to be

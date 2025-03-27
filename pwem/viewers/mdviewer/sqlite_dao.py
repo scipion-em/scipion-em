@@ -310,30 +310,33 @@ class ScipionSetsDAO(IDAO):
                     computedColsCount += 1
 
             elif colName.endswith("_matrix"):
-                def addAlignmentColumn(name, offset, position):
 
+                def addAlignmentColumn(name, offset, position):
                     extraCol = ScipionColumn(name, renderer=FloatRenderer())
                     extraCol.setIsSorteable(False)
+                    extraCol.setIsVisible(newCol.isVisible())
                     extraCol.setCallback(lambda row, values: self.exctractAngularValue(values, offset, position))
                     table.addColumn(extraCol)
 
                 def addShiftColumn(name, offset, position):
                     extraCol = ScipionColumn(name, renderer=FloatRenderer())
+                    extraCol.setIsVisible(newCol.isVisible())
                     extraCol.setIsSorteable(False)
                     extraCol.setCallback(lambda row, values: self.exctractShift(values, offset, position))
                     table.addColumn(extraCol)
 
-                addAlignmentColumn("rot", -1, 0)
+                colNamePrefix = colName.split("_matrix")[0]
+                addAlignmentColumn(colNamePrefix + "_rot", -1, 0)
                 computedColsCount += 1
                 if imgRenderer:
                     imgRenderer.setRotationColumnIndex(index + computedColsCount)
-                addAlignmentColumn("tilt", -2, 1)
+                addAlignmentColumn(colNamePrefix + "_tilt", -2, 1)
                 computedColsCount += 1
-                addAlignmentColumn("psi", -3, 2)
+                addAlignmentColumn(colNamePrefix + "_psi", -3, 2)
                 computedColsCount += 1
-                addShiftColumn("shiftX", -4, 0)
+                addShiftColumn(colNamePrefix + "_shiftX", -4, 0)
                 computedColsCount += 1
-                addShiftColumn("shiftY", -5, 1)
+                addShiftColumn(colNamePrefix + "_shiftY", -5, 1)
                 computedColsCount += 1
 
         # table.setAlias(self._aliases[tableName])
