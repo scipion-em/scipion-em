@@ -26,13 +26,11 @@
 # **************************************************************************
 import os.path
 import sys
-import time
 
 import numpy as np
 import logging
 
 from PIL import Image, ImageOps, ImageFilter
-import matplotlib.pyplot as plt
 
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon, QPixmap, QImage, QKeySequence
