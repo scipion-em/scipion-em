@@ -26,6 +26,8 @@
 # **************************************************************************
 import os.path
 import sys
+import time
+
 import numpy as np
 import logging
 
@@ -68,7 +70,8 @@ class CustomWidget(QWidget):
             self._label.setPixmap(pixmap)
             self._layout.addSpacing(5)
             self._layout.addWidget(self._label, alignment=Qt.AlignCenter)
-            self._layout.addWidget(self._adicinalText, alignment=Qt.AlignCenter)
+            if text:
+                self._layout.addWidget(self._adicinalText, alignment=Qt.AlignCenter)
 
         except Exception as e:
             logger.error("Error loading the image:", e)
@@ -255,6 +258,9 @@ class VolumeViewer(QMainWindow):
     def getZoom(self):
         return self.zoom.value()
 
+    def setZoom(self, value):
+        return self.zoom.setValue(value)
+
     def _calculateVisibleColumns(self):
         """Method that calculate how many columns are visible"""
         viewportWidth = self.tableWidget.parent().parent().width() if self.tableWidget.parent().parent() else self.tableWidget.viewport().width()
@@ -275,9 +281,15 @@ class VolumeViewer(QMainWindow):
     def loadVolume(self):
         """This method reads the volume data from the selected file and calls showVolume to display it."""
         if self._filePath:
-            ext = self._filePath.split('.')[-1]
+            index = None
+            splitPath = self._filePath.split('@')
+            if len(splitPath) > 1:
+                index = splitPath[0]
+            ext = splitPath[-1].split('.')[-1]
             self.imageReader = ImageReadersRegistry._readers[ext]
             self.volumeData = self.imageReader.getArray(self._filePath)
+            if index:
+                self.volumeData = self.volumeData[int(index)-1]
             self.showVolume()
         else:
             logger.error("Unable to upload the file %s. Make sure the path is correct." % self._filePath)
@@ -285,10 +297,20 @@ class VolumeViewer(QMainWindow):
     def showVolume(self):
         """This method sets up the table view based on the volume data"""
         self.tableWidget.setColumnCount(0)
-        self._columnCount = self._calculateVisibleColumns()
-        self._rowsCount = int(self.volumeData.shape[0] / self._columnCount)
-        if self.volumeData.shape[0] % self._columnCount > 0:
-            self._rowsCount += 1
+        self.isVolOrStack = True if len(self.volumeData.shape) > 2 else False
+        self._rowsCount = 1
+        self._columnCount = 1
+        self.iMax = self.volumeData.max()
+        self.iMin = self.volumeData.min()
+        if self.isVolOrStack:
+            self.axisSelector.setEnabled(True)
+            self._columnCount = self._calculateVisibleColumns()
+            self._rowsCount = int(self.volumeData.shape[0] / self._columnCount)
+            if self.volumeData.shape[0] % self._columnCount > 0:
+                self._rowsCount += 1
+        else:
+            self.axisSelector.setEnabled(False)
+
         selectedAxis = self.axisSelector.currentIndex()
         self.tableWidget.setRowCount(self._rowsCount)
         self.tableWidget.setColumnCount(self._columnCount)
@@ -302,20 +324,22 @@ class VolumeViewer(QMainWindow):
                     currentValue):
         """This method loads and displays the volume slices in the table view"""
         index = currentValue * visibleColumn
-        nslices = self.volumeData.shape[0]
-        self.iMax = self.volumeData.max()
-        self.iMin = self.volumeData.min()
-
-        for row in range(visibleRows):
-            for col in range(visibleColumn):
-                if index >= nslices:
-                    break
-                sliceData = np.take(self.volumeData, axis=selectedAxis,
-                                    indices=index)
-                self.addSlice(sliceData, currentValue + row, col, index)
-                self.tableWidget.setColumnWidth(col, self.getZoom() + 5)
-                index += 1
-            self.tableWidget.setRowHeight(currentValue + row, self.getZoom() + 5)
+        if self.isVolOrStack:
+            nslices = self.volumeData.shape[0]
+            for row in range(visibleRows):
+                for col in range(visibleColumn):
+                    if index >= nslices:
+                        break
+                    sliceData = np.take(self.volumeData, axis=selectedAxis,
+                                        indices=index)
+                    self.addSlice(sliceData, currentValue + row, col, index)
+                    self.tableWidget.setColumnWidth(col, self.getZoom() + 5)
+                    index += 1
+                self.tableWidget.setRowHeight(currentValue + row, self.getZoom() + 5)
+        else:
+            self.addSlice(self.volumeData, 0, 0, index)
+            self.tableWidget.setColumnWidth(0, self.getZoom() + 5)
+            self.tableWidget.setRowHeight(0, self.getZoom() + 5)
 
     def addSlice(self, sliceData, row, col, index):
         """This method converts the volume slice to a PIL image and displays it in
@@ -331,7 +355,10 @@ class VolumeViewer(QMainWindow):
         height = int(size * sizeY / sizeX)
         imageR = image.resize((size, height))
         imageR.thumbnail((size, height))
-        widget = CustomWidget(imageR, text='slice %s' % (index+1), autocontrast=self.applyImageAutocontrast,
+        text = ''
+        if self.isVolOrStack:
+            text = 'slice %s' % (index+1)
+        widget = CustomWidget(imageR, text=text, autocontrast=self.applyImageAutocontrast,
                               gaussianBlurFilter=self.applyImageGaussianBlurFilter)
 
         self.tableWidget.setCellWidget(row, col, widget)

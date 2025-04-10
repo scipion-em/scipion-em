@@ -253,11 +253,11 @@ class MRCImageReader(ImageReader):
         index = int(filePath[0])
         fileName = filePath[-1]
         mrcImg = cls.getMrcImage(fileName)
-        if mrcImg.is_volume() or isVol:
+        if cls.isMrcVolume(mrcImg) or isVol:
             dim = mrcImg.data.shape
             x = int(dim[0] / 2) if forceIndex or index == 0 else index
             imfloat = mrcImg.data[x-1, :, :]
-        elif mrcImg.is_image_stack():
+        elif cls.isMrcStack(mrcImg):
             imfloat = mrcImg.data[index - 1]
         else:
             imfloat = mrcImg.data
@@ -269,6 +269,18 @@ class MRCImageReader(ImageReader):
     def getMrcImage(cls, fileName):
         logger.info("Reading %s" % fileName)
         return mrcfile.mmap(fileName, mode='r+', permissive=True)
+
+    @classmethod
+    def isMrcVolume(cls, mrcImg):
+        if mrcImg.is_volume():
+            return True
+        return False
+
+    @classmethod
+    def isMrcStack(cls, mrcImg):
+        if mrcImg.is_image_stack():
+            return True
+        return False
 
     @classmethod
     def getArray(cls, filename):

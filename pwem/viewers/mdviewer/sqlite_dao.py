@@ -414,11 +414,9 @@ Stack.setSlice(slice);
         icon = os.path.join(pw.getResourcesPath(), 'file_vol.png')
 
         def openImageViewerCallback(imagePath):
-            path = imagePath.split('@')[-1]
-
             pythonPath = sys.executable
             program = '%s -m pwem.viewers.mdviewer.volumeViewer' % pythonPath
-            cmd = program + ' "%s"' % path
+            cmd = program + ' "%s"' % imagePath
             Popen(cmd, shell=True, cwd=os.getcwd())
 
         if imageExt in ['mrc', 'stk']:
