@@ -1,6 +1,14 @@
-V3.9.5:
+V3.10.0:
 Users:
+  - Scipion metadata viewer is default viewer
+  - Viewers proirity reviewed
+  - Angular distribution viewer only offered with sets with alignments
+  - Fix local resolution viewers load.
   - Fixing an error visualizing micrographs and particles with the volume viewer
+Developers:
+  - ImageReaders reviewed: open returns the whole stack. openSlice is optional
+  - Volume viewer adapted (uses open and not getArray())
+  - ImageFileHandler uses ImageReaderRegistry...falling back to XmippImageReader (less xmipp coupled)
 
 V3.9.4:
 Users:

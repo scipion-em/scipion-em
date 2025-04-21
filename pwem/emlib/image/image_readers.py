@@ -24,7 +24,11 @@ class ImageStack:
         if images is None:
             images = []
         elif isinstance(images, numpy.ndarray):
-            images=[images]
+            shape = images.shape
+
+            if len(shape) == 2:
+                images = numpy.array([images], dtype=object)
+
         elif not isinstance(images, list):
             logger.warning("ImageStack initialized with an invalid type. Valid types are None, a singe numy array or a list of them. Current value is a %s. Continuing as an empty image." % type(images))
             images = []
@@ -42,6 +46,15 @@ class ImageStack:
             return self._normalize(npImg)
         else:
             return npImg
+
+    def getCentralImage(self, pilImage=False):
+        """ Returns the central image"""
+        size = len(self._images)
+        if size==0:
+            raise FileNotFoundError("Cannot get a central image. It may not exist or is not yet opened.")
+
+        midIndex = size-1 if size == 1 else (size//2)
+        return self.getImage(midIndex, pilImage=pilImage)
 
     def getImages(self):
         """Returns all the images"""
@@ -67,6 +80,22 @@ class ImageStack:
 
 
 class ImageReader:
+    @classmethod
+    def open(cls, path):
+        """ Opens the image in the path and returns a numpy array with the whole file (all slices included)"""
+        raise NotImplementedError("Image reader %s does not implement 'open' method." % cls.__name__)
+
+    @classmethod
+    def canOpenSlices(cls):
+        """ Returns True if the reader can open slices optimally. Without loading the whole file.
+        If so, openSlice method should be implemented
+        """
+        return False
+    @classmethod
+    def openSlice(cls, path, slice):
+        """ Opens a specific slice"""
+        raise NotImplementedError("Image reader %s does not implement 'openSlice' method." % cls.__name__)
+
     @staticmethod
     def getCompatibleExtensions() -> list:
         """ Returns a list of the compatible extensions the reader can handle"""
@@ -116,13 +145,38 @@ class ImageReadersRegistry:
 
     @classmethod
     @lru_cache
-    def open(cls, filePath):
-        "Opens the file and returns and image stack"
+    def open(cls, filePath) -> ImageStack:
+        """"Opens the file and returns and ImageStack.
+        Accepts formats like 1@path/to/my/image.ext.
+        In this case there can be a performance penalty since readers are reading all the
+        stack but we are only taking one slice. This may be unavoidable in cases when you want
+        to read a single image but not optimal when you are going to go through all the stack.
+        """
 
-        # Get the reader
+        parts = filePath.split("@")
+
+        filePath = parts[-1]
+
+        # Get the reader that deals with the file extension.
         imageReader = cls.getReader(filePath)
 
-        return ImageStack(imageReader.open(filePath))
+        # If requesting a slice 1@ppath/to/image.ext
+        if len(parts) == 2:
+
+            slice = int(parts[0])
+
+            if imageReader.canOpenSlices():
+                data = imageReader.openSlice(filePath, slice)
+
+            else:
+                logger.debug("Requesting slice %s from %s. Suboptimal?." % (slice, filePath))
+                data = imageReader.open(filePath)
+                data = data[slice-1]
+        else:
+            # Get the numpy array
+            data = imageReader.open(filePath)
+
+        return ImageStack(data)
 
     @classmethod
     def write(cls, imgStack:ImageStack, fileName: str, isStack=False) -> None:
@@ -216,6 +270,11 @@ class EMANImageReader(ImageReader):
 
 
 class XMIPPImageReader(ImageReader):
+    @classmethod
+    def open(cls, path):
+        img = lib.Image()
+        img.read(path)
+        return img.getData()
     @staticmethod
     def getCompatibleExtensions():
         return emcts.ALL_MRC_EXTENSIONS + emcts.ALL_TIF_EXTENSIONS + ["hdf5", "dm4", "stk", "spi", "vol", "tif", "em", "map"]
@@ -242,25 +301,12 @@ class MRCImageReader(ImageReader):
 
     @classmethod
     def open(cls, path: str):
-        isVol = path.endswith(":mrc")
-        forceIndex = False
         path = path.replace(":mrc", "")
-        if not "@" in path:
-            path = "1@" + path
-            forceIndex = True
-        filePath = path.split('@')
+        if "@" in path:
+            path = path.split('@')[-1]
 
-        index = int(filePath[0])
-        fileName = filePath[-1]
-        mrcImg = cls.getMrcImage(fileName)
-        if cls.isMrcVolume(mrcImg) or isVol:
-            dim = mrcImg.data.shape
-            x = int(dim[0] / 2) if forceIndex or index == 0 else index
-            imfloat = mrcImg.data[x-1, :, :]
-        elif cls.isMrcStack(mrcImg):
-            imfloat = mrcImg.data[index - 1]
-        else:
-            imfloat = mrcImg.data
+        mrcImg = cls.getMrcImage(path)
+        imfloat = mrcImg.data
 
         return imfloat
 
