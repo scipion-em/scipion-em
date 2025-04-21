@@ -46,23 +46,24 @@ class MDView(View):
         if self.port:
             env[SCIPION_PORT] = str(self.port)
             env[SCIPION_OBJECT_ID] = str(self._emSet.getObjId())
-            visibleLabels, orderLabels = self.getVisibleAndOrderLabels()
+            visibleLabels, orderLabels, renderLabels = self.getVisibleAndOrderLabels()
             orderLabels = orderLabels.replace(' _filename', ' stack', 1)
             fn = self._emSet.getFileName()
         else:
-            visibleLabels = orderLabels = ""
+            visibleLabels = orderLabels = renderLabels = ""
             fn = self._emSet
 
         subprocess.Popen(
             [PYTHON, "-m", "metadataviewer", "--extensionpath", os.path.join(os.path.dirname(__file__), "readers.py"),
-            fn, "--visiblelabels", visibleLabels, "--orderlabels", orderLabels])
+            fn, "--visiblelabels", visibleLabels, "--orderlabels", orderLabels, "--renderlabels", renderLabels])
 
     def getVisibleAndOrderLabels(self):
-        from pwem.viewers import VISIBLE, ORDER
+        from pwem.viewers import VISIBLE, ORDER, RENDER
         config = RegistryViewerConfig.getConfig(type(self._emSet))
         visible = config[VISIBLE] if config and VISIBLE in config else ''
         order = config[ORDER] if config and ORDER in config else ''
-        return visible, order
+        render = config[RENDER] if config and RENDER in config else ''
+        return visible, order, render
 
 
 class MDViewer(Viewer):

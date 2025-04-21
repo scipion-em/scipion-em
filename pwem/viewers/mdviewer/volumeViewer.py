@@ -279,15 +279,9 @@ class VolumeViewer(QMainWindow):
     def loadVolume(self):
         """This method reads the volume data from the selected file and calls showVolume to display it."""
         if self._filePath:
-            index = None
-            splitPath = self._filePath.split('@')
-            if len(splitPath) > 1:
-                index = splitPath[0]
-            ext = splitPath[-1].split('.')[-1]
+            ext = os.path.splitext(self._filePath)[1].lstrip(".")
             self.imageReader = ImageReadersRegistry._readers[ext]
-            self.volumeData = self.imageReader.getArray(self._filePath)
-            if index:
-                self.volumeData = self.volumeData[int(index)-1]
+            self.volumeData = self.imageReader.open(self._filePath)
             self.showVolume()
         else:
             logger.error("Unable to upload the file %s. Make sure the path is correct." % self._filePath)
