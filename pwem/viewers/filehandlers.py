@@ -24,27 +24,26 @@
 # *
 # **************************************************************************
 """
-This modules contains file handlers to be registered in the scipion file browser
+This module contains file handlers to be registered in the scipion file browser
 """
 import os
 
 import pwem
 import pyworkflow.utils as pwutils
-from pwem.convert import Ccp4Header
 from pyworkflow import gui
 from pyworkflow.gui.browser import FileHandler, isStandardImage
 
 from pwem import emlib
 from pwem.emlib.image.image_handler import ImageHandler
+from pwem.emlib.image.image_readers import ImageReadersRegistry
+from pwem.convert import Ccp4Header
+
 
 import logging
 logger = logging.getLogger(__name__)
 
 
 class ImageFileHandler(FileHandler):
-    _image = emlib.Image()
-    _index = ''
-
     def _getImageString(self, filename):
         if isStandardImage(filename):
             return "Image file."
@@ -72,18 +71,20 @@ class ImageFileHandler(FileHandler):
 
     def _getImagePreview(self, filename):
 
-        # If file size if big
+        # If file size is big
         if pwutils.getFileSize(filename) > (pwem.Config.MAX_PREVIEW_FILE_SIZE * 1024*1024):
             return
 
-        dim = 128
+        dim = 200
 
         if isStandardImage(filename):
             self.tkImg = gui.getImage(os.path.abspath(filename),
                                       tkImage=True, maxheight=dim)
         else:
-            fn = self._index + filename
-            self.tkImg = getTkImage(self._image, fn, dim)
+            imgStk = ImageReadersRegistry.open(filename)
+            pilImg =imgStk.getCentralImage(pilImage=True)
+            pilImg.thumbnail((dim, dim))
+            self.tkImg = getTkImage(pilImg)
 
         return self.tkImg
 
@@ -108,8 +109,6 @@ class VolFileHandler(ImageFileHandler):
         return pwutils.Icon.FILE_VOL
 
 class StackHandler(ImageFileHandler):
-    _index = '1@'
-
     def getFileIcon(self, objFile):
         return pwutils.Icon.FILE_STACK if not objFile.isLink() else pwutils.Icon.FILE_STACK_LINK
 
@@ -240,36 +239,7 @@ with pwutils.weakImport("metadataviewer"):
                      pwutils.Icon.ACTION_VISUALIZE)]
 
 
-
-# Image methods for filehandlers
-def getPILImage(imageXmipp, dim=None, normalize=True):
-    """ Given an image read by Xmipp, convert it to PIL. """
-    from PIL import Image
-
-    if normalize:
-        imageXmipp.convert2DataType(emlib.DT_UCHAR, emlib.CW_ADJUST)
-
-    imageData = imageXmipp.getData()
-    image = Image.fromarray(imageData)
-    if dim:
-        size = int(dim), int(dim)
-        image.thumbnail(size, Image.ANTIALIAS)
-    return image
-
-
-def getTkImage(imageXmipp, filename, dim):
+def getTkImage(pilImage):
     from PIL import ImageTk
-    imageXmipp.readPreview(filename, dim)
-    return ImageTk.PhotoImage(getPILImage(imageXmipp))
+    return ImageTk.PhotoImage(pilImage)
 
-
-def getImageFromPath(imagePath):
-    """ Read an image using Xmipp, convert to PIL
-    and then return as expected by Tk.
-    """
-    img = emlib.Image(imagePath)
-    imgPIL = getPILImage(img)
-    from PIL import ImageTk
-    imgTk = ImageTk.PhotoImage(imgPIL)
-
-    return imgTk
