@@ -337,6 +337,18 @@ class MRCImageReader(ImageReader):
             mrc.voxel_size = sr
         return True
 
+    @classmethod
+    def isMrcVolume(cls, mrcImg):
+        if mrcImg.is_volume():
+            return True
+        return False
+
+    @classmethod
+    def isMrcStack(cls, mrcImg):
+        if mrcImg.is_image_stack():
+            return True
+        return False
+
 
 class STKImageReader(ImageReader):
     IMG_BYTES = None
