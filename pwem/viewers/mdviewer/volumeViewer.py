@@ -68,6 +68,7 @@ class CustomWidget(QWidget):
             self._label.setPixmap(pixmap)
             self._layout.addSpacing(5)
             self._layout.addWidget(self._label, alignment=Qt.AlignCenter)
+            self._layout.addSpacing(5)
             if text:
                 self._layout.addWidget(self._adicinalText, alignment=Qt.AlignCenter)
 
@@ -277,14 +278,22 @@ class VolumeViewer(QMainWindow):
         return visibleRows
 
     def loadVolume(self):
-        """This method reads the volume data from the selected file and calls showVolume to display it."""
-        if self._filePath:
-            ext = os.path.splitext(self._filePath)[1].lstrip(".")
-            self.imageReader = ImageReadersRegistry._readers[ext]
-            self.volumeData = self.imageReader.open(self._filePath)
+        """Reads the volume data from the selected file and calls showVolume to display it."""
+        if not self._filePath:
+            logger.error("Unable to upload the file %s. Make sure the path is correct.", self._filePath)
+            return
+
+        splitPath = self._filePath.split('@')
+        index = int(splitPath[0]) - 1 if len(splitPath) > 1 else None
+        ext = splitPath[-1].split('.')[-1]
+
+        try:
+            reader = ImageReadersRegistry._readers[ext]
+            volume = reader.getArray(self._filePath)
+            self.volumeData = volume[index] if index is not None else volume
             self.showVolume()
-        else:
-            logger.error("Unable to upload the file %s. Make sure the path is correct." % self._filePath)
+        except Exception as e:
+            logger.error("Failed to load volume data from %s: %s", self._filePath, e)
 
     def showVolume(self):
         """This method sets up the table view based on the volume data"""

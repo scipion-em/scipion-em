@@ -25,9 +25,9 @@ class ImageStack:
             images = []
         elif isinstance(images, numpy.ndarray):
             shape = images.shape
-
             if len(shape) == 2:
-                images = numpy.array([images], dtype=object)
+                images = [images]
+            #   images = numpy.array([images], dtype=object)
 
         elif not isinstance(images, list):
             logger.warning("ImageStack initialized with an invalid type. Valid types are None, a singe numy array or a list of them. Current value is a %s. Continuing as an empty image." % type(images))
@@ -50,10 +50,10 @@ class ImageStack:
     def getCentralImage(self, pilImage=False):
         """ Returns the central image"""
         size = len(self._images)
-        if size==0:
+        if size == 0:
             raise FileNotFoundError("Cannot get a central image. It may not exist or is not yet opened.")
 
-        midIndex = size-1 if size == 1 else (size//2)
+        midIndex = size - 1 if size == 1 else (size // 2)
         return self.getImage(midIndex, pilImage=pilImage)
 
     def getImages(self):
@@ -64,6 +64,7 @@ class ImageStack:
         """ Returns the property passed"""
 
         return self._properties.get(property, None)
+
     def getProperties(self):
         """Returns the properties dictionary"""
         return self._properties
@@ -91,6 +92,7 @@ class ImageReader:
         If so, openSlice method should be implemented
         """
         return False
+
     @classmethod
     def openSlice(cls, path, slice):
         """ Opens a specific slice"""
@@ -171,7 +173,7 @@ class ImageReadersRegistry:
             else:
                 logger.debug("Requesting slice %s from %s. Suboptimal?." % (slice, filePath))
                 data = imageReader.open(filePath)
-                data = data[slice-1]
+                data = data[slice - 1]
         else:
             # Get the numpy array
             data = imageReader.open(filePath)
@@ -179,7 +181,7 @@ class ImageReadersRegistry:
         return ImageStack(data)
 
     @classmethod
-    def write(cls, imgStack:ImageStack, fileName: str, isStack=False) -> None:
+    def write(cls, imgStack: ImageStack, fileName: str, isStack=False) -> None:
         """Generate a stack of images from a list of PIL images."""
 
         imageWriter = cls.getReader(fileName)
@@ -189,7 +191,6 @@ class ImageReadersRegistry:
     def getAvailableExtensions(cls):
         """ Returns all the extensions it can handle"""
         return cls._readers.keys()
-
 
 
 class PILImageReader(ImageReader):
@@ -206,19 +207,19 @@ class PILImageReader(ImageReader):
         return x, y, 1, 1
 
     @classmethod
-    def open(cls,filePath:str):
-
-        pilImg=Image.open(filePath)
+    def open(cls, filePath: str):
+        pilImg = Image.open(filePath)
         return numpy.array(pilImg)
+
     @classmethod
     def write(cls, imgStack: ImageStack, fileName: str, isStack=False) -> None:
-
-        # So far write the first image in teh stack
+        # So far write the first image in the stack
         np_img = imgStack.getImage()
         im = Image.fromarray(numpy.uint8(np_img))
         im.save(fileName)
 
         return True
+
 
 class TiffImageReader(ImageReader):
     """ Tiff image reader"""
@@ -238,20 +239,19 @@ class TiffImageReader(ImageReader):
 
     @classmethod
     def open(cls, path: str):
-
         key = 0
         if "@" in path:
-            key, path=path.split("@")
+            key, path = path.split("@")
 
         npImg = imread(path, key=key)
         return npImg
 
     @classmethod
     def write(cls, imgStack: ImageStack, fileName: str, isStack=False) -> None:
-
         npImg = imgStack.getImage().astype("uint8")
         imwrite(fileName, npImg)
         return True
+
 
 class EMANImageReader(ImageReader):
     """ Image reader for eman file formats"""
@@ -275,6 +275,7 @@ class XMIPPImageReader(ImageReader):
         img = lib.Image()
         img.read(path)
         return img.getData()
+
     @staticmethod
     def getCompatibleExtensions():
         return emcts.ALL_MRC_EXTENSIONS + emcts.ALL_TIF_EXTENSIONS + ["hdf5", "dm4", "stk", "spi", "vol", "tif", "em", "map"]
@@ -317,18 +318,6 @@ class MRCImageReader(ImageReader):
         return mrcfile.mmap(fileName, mode='r+', permissive=True)
 
     @classmethod
-    def isMrcVolume(cls, mrcImg):
-        if mrcImg.is_volume():
-            return True
-        return False
-
-    @classmethod
-    def isMrcStack(cls, mrcImg):
-        if mrcImg.is_image_stack():
-            return True
-        return False
-
-    @classmethod
     def getArray(cls, filename):
         filename = filename.split('@')[-1]
         with mrcfile.open(filename, permissive=True) as mrc:
@@ -365,21 +354,23 @@ class STKImageReader(ImageReader):
 
     @classmethod
     def open(cls, path):
-        stk = path.split('@')
-        id = int(stk[0]) if len(stk) > 1 else 1
-        image = cls.read(stk[-1], id)
-        return image
+        """ Opens the full stack"""
+        return cls.readAll(path)
 
     @classmethod
-    def read(cls, filename, id):
+    def canOpenSlices(cls):
+        return True
+
+    @classmethod
+    def openSlice(cls, path, slice):
         """
         Reads a given image
            :param filename (str) --> Image to be read
         """
-        cls.stk_handler = open(filename, "rb")
+        cls.stk_handler = open(path, "rb")
         cls.header_info = cls.readHeader()
         cls.IMG_BYTES = cls.FLOAT32_BYTES * cls.header_info["n_columns"] ** 2
-        image = cls.readImage(id - 1)
+        image = cls.readImage(slice - 1)
         return image
 
     @staticmethod
@@ -462,6 +453,10 @@ class STKImageReader(ImageReader):
 
     @classmethod
     def getArray(cls, filename):
+        return cls.readAll(filename)
+
+    @classmethod
+    def readAll(cls, filename):
         filename = filename.split('@')[-1]
         dimX, dimY, dimZ, nImages = cls.getDimensions(filename)
         if cls.TYPE == 'volume':
@@ -470,7 +465,6 @@ class STKImageReader(ImageReader):
             numpyStack = numpy.stack([cls.readImage(ii) for ii in range(0, nImages, 1)])
 
         return numpyStack
-
 
 
 # Register reader in the registry. Latest registered will take priority.
