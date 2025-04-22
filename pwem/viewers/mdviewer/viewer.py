@@ -47,10 +47,12 @@ class MDView(View):
             env[SCIPION_PORT] = str(self.port)
             env[SCIPION_OBJECT_ID] = str(self._emSet.getObjId())
             visibleLabels, orderLabels, renderLabels = self.getVisibleAndOrderLabels()
-            orderLabels = orderLabels.replace(' _filename', ' stack', 1)
-            renderLabels = renderLabels.replace(' _filename', ' stack', 1)
-            if ' _filename' in visibleLabels and ' stack' not in renderLabels:
-                renderLabels += ' stack'
+            fileNameLabel = ' _filename'
+            stackLabel = ' stack'
+            orderLabels = orderLabels.replace(fileNameLabel, stackLabel, 1)
+            renderLabels = renderLabels.replace(fileNameLabel, stackLabel, 1)
+            if fileNameLabel in visibleLabels and stackLabel not in renderLabels:
+                renderLabels += stackLabel
             fn = self._emSet.getFileName()
         else:
             visibleLabels = orderLabels = renderLabels = ""

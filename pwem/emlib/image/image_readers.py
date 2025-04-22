@@ -27,7 +27,6 @@ class ImageStack:
             shape = images.shape
             if len(shape) == 2:
                 images = [images]
-            #   images = numpy.array([images], dtype=object)
 
         elif not isinstance(images, list):
             logger.warning("ImageStack initialized with an invalid type. Valid types are None, a singe numy array or a list of them. Current value is a %s. Continuing as an empty image." % type(images))
@@ -165,15 +164,15 @@ class ImageReadersRegistry:
         # If requesting a slice 1@ppath/to/image.ext
         if len(parts) == 2:
 
-            slice = int(parts[0])
+            sliceIndex = int(parts[0])
 
             if imageReader.canOpenSlices():
-                data = imageReader.openSlice(filePath, slice)
+                data = imageReader.openSlice(filePath, sliceIndex)
 
             else:
-                logger.debug("Requesting slice %s from %s. Suboptimal?." % (slice, filePath))
+                logger.debug("Requesting slice %s from %s. Suboptimal?." % (sliceIndex, filePath))
                 data = imageReader.open(filePath)
-                data = data[slice - 1]
+                data = data[sliceIndex - 1]
         else:
             # Get the numpy array
             data = imageReader.open(filePath)
