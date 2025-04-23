@@ -544,7 +544,8 @@ class MainWindow:
                     coordSet.append(newCoordinate)
 
             coordSet.write()
-            self.protocol._defineOutputs(**{'coordinates_' + str(self.protocol.getOutputsSize()+1): coordSet})
+            nextOutputName = self.protocol.getNextOutputName('coordinates_')
+            self.protocol._defineOutputs(**{nextOutputName: coordSet})
             self.protocol._defineSourceRelation(micSet, coordSet)
             self.hasChanges.clear()
             for itemId in self.table.get_children():
