@@ -988,7 +988,6 @@ class MainWindow:
                                         icon='warning', **{'parent': self.root})
         if result == messagebox.YES:
             self.totalCoordinates -= len(self.coordinatesDict[self.micId])
-            self.coordinatesDict[self.micId] = {}
             self.shapes.clear()
             self.totalPickButton.configure(text=f"Total picks: {self.totalCoordinates}")
             self.table.set(self.table.selection(), column="Particles", value=0)
@@ -997,6 +996,11 @@ class MainWindow:
             self.hasChanges[self.micId] = True
             if self.particlesWindowVisible:
                 self.onParticlesWindowClosing()
+
+            for index in self.coordinatesDict[self.micId]:
+                coordObjId = self.coordinatesDict[self.micId][index][2]
+                self.deletedCoordinates[self.micId][coordObjId] = True
+            self.coordinatesDict[self.micId] = {}
 
     def restoreMicrograph(self):
         """Restore all removed coordinates from current micrograph"""
