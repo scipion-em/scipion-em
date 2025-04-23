@@ -502,7 +502,7 @@ class MainWindow:
         buttonsFrame.bind("<Enter>", self.recoveryPointer)
 
         # Button to close de application
-        closeButton = tk.Button(buttonsFrame, text='Close', command=self.root.destroy, font=('Helvetica', 10, 'bold'),
+        closeButton = tk.Button(buttonsFrame, text='Close', command=self._close, font=('Helvetica', 10, 'bold'),
                                       image=getImage(Icon.BUTTON_CANCEL), compound=tk.LEFT)
         closeButton.grid(row=0, column=0, sticky="w", padx=5)
 
@@ -514,6 +514,14 @@ class MainWindow:
 
         self.imageFrame.grid_rowconfigure(0, weight=1)
         self.imageFrame.grid_columnconfigure(0, weight=1)
+
+    def _close(self):
+        if not self.hasChanges or messagebox.askquestion(
+                "Confirmation",
+                "There are changes that could be saved. Do you really want to close the application?",
+                icon='info', parent=self.root
+        ) == messagebox.YES:
+            self.root.destroy()
 
     def _createOutput(self):
         """Create a new set of coordinates"""
@@ -538,6 +546,9 @@ class MainWindow:
             coordSet.write()
             self.protocol._defineOutputs(**{'coordinates_' + str(self.protocol.getOutputsSize()+1): coordSet})
             self.protocol._defineSourceRelation(micSet, coordSet)
+            self.hasChanges.clear()
+            for itemId in self.table.get_children():
+                self.table.set(itemId, column="Updated", value='No')
 
     def _removeCoordinate(self, item, row):
         """Remove the deleted coordinate"""
