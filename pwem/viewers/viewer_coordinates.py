@@ -41,8 +41,8 @@ from matplotlib.widgets import RangeSlider
 
 import pyworkflow
 from pwem.emlib.image.image_readers import ImageReadersRegistry
-from pwem.objects import EMSet, SetOfCoordinates, SetOfMicrographs
-from pyworkflow.gui import getImage, ToolTip
+from pwem.objects import EMSet, SetOfCoordinates, SetOfMicrographs, Coordinate
+from pyworkflow.gui import getImage, ToolTip, Dialog
 from pyworkflow.utils import Icon
 from pyworkflow.viewer import View, Viewer
 
@@ -532,13 +532,30 @@ class MainWindow:
             coordSet = self.protocol._createSetOfCoordinates(micSet, suffix=str(self.protocol.getOutputsSize()))
             coordSet.copyInfo(self.setOfCoordinate)
             coordSet.setBoxSize(self.boxSize)
-            coordSet.copyItems(self.setOfCoordinate, updateItemCallback=self._removeCoordinate)
+            micrographs = self.setOfCoordinate.getMicrographs()
+            for coordinate in self.setOfCoordinate.iterItems():
+                coord = Coordinate()
+                coord.setObjId(coordinate.getObjId())
+                micId = str(coordinate.getMicId())
+                coord.setMicrograph(micrographs[self.micrographPathDict[micId][1]])
+                if coordinate.getObjId() in self.movedCoordinates[micId]:
+                    coord.setX(self.movedCoordinates[micId][coordinate.getObjId()][0])
+                    coord.setY(self.movedCoordinates[micId][coordinate.getObjId()][1])
+                else:
+                    coord.setPosition(coordinate.getX(), coordinate.getY())
 
+                if coordinate.getObjId() in self.deletedCoordinates[micId]:
+                    continue
+
+                coordSet.append(coord)
+
+            # Adding new coordinates
+            maxObjIds = self.setOfCoordinate.aggregate(["MAX"], "_objId")[0]['MAX']
             for micId, coord in self.newCoordinates.items():
                 for newCoord in self.newCoordinates[micId].values():
+                    maxObjIds += 1
                     newCoordinate = self.setOfCoordinate.getFirstItem().clone()
-                    newCoordinate.setObjId(None)
-                    micrographs = self.setOfCoordinate.getMicrographs()
+                    newCoordinate.setObjId(maxObjIds)
                     newCoordinate.setMicrograph(micrographs[self.micrographPathDict[micId][1]])
                     newCoordinate.setPosition(newCoord[0], newCoord[1])
                     coordSet.append(newCoordinate)
@@ -550,15 +567,8 @@ class MainWindow:
             self.hasChanges.clear()
             for itemId in self.table.get_children():
                 self.table.set(itemId, column="Updated", value='No')
-
-    def _removeCoordinate(self, item, row):
-        """Remove the deleted coordinate"""
-        for micId, coord in self.newCoordinates.items():
-            if item.getObjId() in self.deletedCoordinates[micId]:
-                setattr(item, "_appendItem", False)
-            if item.getObjId() in self.movedCoordinates[micId]:
-                item.setX(self.movedCoordinates[micId][item.getObjId()][0])
-                item.setY(self.movedCoordinates[micId][item.getObjId()][1])
+            messagebox.showinfo('Information', 'The new set of coordinates has been created',
+                                icon='info', parent=self.root)
 
     def onFitActivate(self):
         """Fit to display area and reset all parameters"""
