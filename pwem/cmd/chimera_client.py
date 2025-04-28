@@ -1,10 +1,13 @@
 #!/usr/bin/env python
 
 import sys
+from pyworkflow import Config
 from pwem.viewers import Chimera
 
 
 def main():
+    # Initialize plugin discovery and initialization
+    Config.getDomain().getPlugins()
     fileName = sys.argv[1]
 
     # Clean filename in case it comes annotated like 1@xxxmrc:mrcs
