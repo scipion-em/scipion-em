@@ -1350,7 +1350,7 @@ class ColorScaleDialog(dialog.Dialog):
 
     def getAvailablePalettes(self):
         """ Returns a list of all available palettes"""
-        return list(cm.cmap_d.keys())
+        return list(cm._colormaps.keys())
 
     def _selectAllText(self, event):
         """ Select all the text of the widget that triggered the event"""
@@ -1363,7 +1363,7 @@ class ColorScaleDialog(dialog.Dialog):
 
 
 class FormulaDialog(dialog.Dialog):
-    """ This will assist users to create a formula based on class attibutes.
+    """ This will assist users to create a formula based on class attributes.
     """
 
     def __init__(self, parentWindow, set, formula=""):

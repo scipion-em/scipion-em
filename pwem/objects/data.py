@@ -1698,10 +1698,8 @@ class SetOfVolumes(SetOfImages):
         SetOfImages.__init__(self, **kwargs)
 
 
-class SetOfMorphing(SetOfVolumes):
-    def __init__(self, **kwargs):
-        SetOfVolumes.__init__(self, **kwargs)
-
+class Morphing(SetOfVolumes):
+    pass
 
 class SetOfCTF(EMSet):
     """ Contains a set of CTF models estimated for a set of images."""

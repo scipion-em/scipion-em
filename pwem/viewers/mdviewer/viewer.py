@@ -72,6 +72,17 @@ class MDViewer(Viewer):
     def _visualize(self, obj, **kwargs):
         return [MDView(obj, self.protocol, self._project.port)]
 
+    @classmethod
+    def can_handle_this(cls, classHierarchy, instance=None):
+        """ Returns super value but make it specific, so it is prioritized since EMSet target makes it non-specific."""
+
+        target = super().can_handle_this(classHierarchy,instance=instance)
+
+        if target is not None:
+            target = classHierarchy[0]
+
+        return target
+
 
 
 

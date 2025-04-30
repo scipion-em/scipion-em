@@ -39,6 +39,7 @@ import logging
 
 from matplotlib.widgets import RangeSlider
 
+import pyworkflow
 from pwem.emlib.image.image_readers import ImageReadersRegistry
 from pwem.objects import EMSet, SetOfCoordinates, SetOfMicrographs
 from pyworkflow.gui import getImage, ToolTip
@@ -62,7 +63,7 @@ class MainWindow:
     def _initGui(self):
         self.micId = None
         self.boxSize = self.setOfCoordinate.getBoxSize() if self.setOfCoordinate.getBoxSize() else 100
-        self.selectedColor = '#00FF00'
+        self.selectedColor = pyworkflow.Config.SCIPION_CONTRAST_COLOR
         self.circleButtonRelieve = tk.SUNKEN
         self.squareButtonRelieve = tk.GROOVE
         self.zoomButtonRelieve = tk.SUNKEN
