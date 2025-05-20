@@ -1,4 +1,5 @@
 from functools import lru_cache
+from typing import Union
 
 import numpy
 from PIL import Image
@@ -30,11 +31,18 @@ class ImageStack:
                 images = [images]
 
         elif not isinstance(images, list):
-            logger.warning("ImageStack initialized with an invalid type. Valid types are None, a singe numy array or a list of them. Current value is a %s. Continuing as an empty image." % type(images))
+            logger.warning("ImageStack initialized with an invalid type. Valid types are None, a singe numpy "
+                           "array or a list of them. Current value is a %s. Continuing as an empty image." % type(images))
             images = []
             
         self._images = images
         self._properties = dict() if properties is None else properties
+
+    def __iter__(self):
+        return iter(self._images)
+
+    def __len__(self):
+        return len(self._images)
 
     def getImage(self, index=0, pilImage=False):
         if index >= len(self._images):
@@ -114,7 +122,6 @@ class ImageReader:
         :param isStack: Specifies whether to generate a volume or an image stack
         """
         logger.warning("write method not implemented. Cannot write %s" % fileName)
-
 
 class ImageReadersRegistry:
     """ Class to register image readers to provide basic information about an image like dimensions or getting an image"""
@@ -323,18 +330,23 @@ class MRCImageReader(ImageReader):
             return numpy.array(mrc.data)
 
     @classmethod
-    def write(cls, imageStack: ImageStack, fileName: str, isStack=False) -> None:
-        """Generate a stack of images or a volume from a list of PIL images."""
-        sr = imageStack.getProperties().get("sr", 1.0)
-        stack = numpy.stack(imageStack.getImages(), axis=0)
-
-        with mrcfile.new(fileName, overwrite=True) as mrc:
-            mrc.set_data(stack.astype(numpy.float32))
+    def write(cls,
+              imageStack: ImageStack,
+              fileName: str,
+              samplingRate: Union[float, None] = None,
+              isStack=False) -> None:
+        """Generate a stack of images or a volume from a list of images."""
+        sr = samplingRate if samplingRate else imageStack.getProperties().get("sr", 1.0)
+        # stack = numpy.stack(imageStack.getImages(), axis=0)
+        nImgs = len(imageStack)
+        dims = (nImgs,) + imageStack.getImage().shape
+        with mrcfile.new_mmap(fileName, overwrite=True, shape=dims, mrc_mode=2) as mrc:  # Mode 2 is float32 (see new_mmap)
+            for i, img in enumerate(imageStack):
+                mrc.data[i, :, :] = img
             if isStack:
                 mrc.header.ispg = 0
             mrc.update_header_from_data()
             mrc.voxel_size = sr
-        return True
 
 
 class STKImageReader(ImageReader):
