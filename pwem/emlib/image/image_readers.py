@@ -334,20 +334,17 @@ class MRCImageReader(ImageReader):
               imageStack: ImageStack,
               fileName: str,
               samplingRate: Union[float, None] = None,
-              isStack=False) -> None:
+              isStack: bool = False) -> None:
         """Generate a stack of images or a volume from a list of images."""
         sr = samplingRate if samplingRate else imageStack.getProperties().get("sr", 1.0)
-        # stack = numpy.stack(imageStack.getImages(), axis=0)
-        nImgs = len(imageStack)
-        dims = (nImgs,) + imageStack.getImage().shape
-        with mrcfile.new_mmap(fileName, overwrite=True, shape=dims, mrc_mode=2) as mrc:  # Mode 2 is float32 (see new_mmap)
-            for i, img in enumerate(imageStack):
-                mrc.data[i, :, :] = img
+        stack = numpy.stack(imageStack.getImages(), axis=0)
+
+        with mrcfile.new(fileName, overwrite=True) as mrc:
+            mrc.set_data(stack.astype(numpy.float32))
             if isStack:
                 mrc.header.ispg = 0
             mrc.update_header_from_data()
             mrc.voxel_size = sr
-
 
 class STKImageReader(ImageReader):
     IMG_BYTES = None
