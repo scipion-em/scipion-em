@@ -1,3 +1,4 @@
+import enum
 from functools import lru_cache
 
 import numpy
@@ -7,10 +8,19 @@ import mrcfile
 
 import pwem.constants as emcts
 from .. import lib
+from scipy.ndimage import rotate, shift
+from skimage.transform import rescale
+
 
 import logging
 
 logger = logging.getLogger(__name__)
+
+class ROT_MODE(enum.Enum):
+    FIXED=1  # Final image will have exactly the same dims as the input image in the SAME orientation
+    NATURAL=2 # Rotation will require a bigger image to avoid loosing informatión in the corners
+    CONDITIONAL=3 # Similar to FIXED, but shifting x and y original dimensions in some cases to reduce
+                  # information loss. 45<rot<135 and 225<rot<315
 
 # Classes to replace one day the functionality covered by ImageHandler... which uses xmipp binding
 class ImageStack:
@@ -30,7 +40,7 @@ class ImageStack:
                 images = [images]
 
         elif not isinstance(images, list):
-            logger.warning("ImageStack initialized with an invalid type. Valid types are None, a singe numy array or a list of them. Current value is a %s. Continuing as an empty image." % type(images))
+            logger.warning("ImageStack initialized with an invalid type. Valid types are None, a single numpy array or a list of them. Current value is a %s. Continuing as an empty image." % type(images))
             images = []
             
         self._images = images
@@ -43,7 +53,7 @@ class ImageStack:
         npImg = self._images[index]
 
         if pilImage:
-            return self._normalize(npImg)
+            return self.asPilImage(npImg)
         else:
             return npImg
 
@@ -70,13 +80,172 @@ class ImageStack:
 
     def append(self, imgStack):
         """ Appends to its local list of images the images inside the imgStack passed as parameter"""
-        self._images.extend(imgStack.getImages())
 
-    def _normalize(cls, npImage):
+        if isinstance(imgStack, ImageStack):
+            self._images.extend(imgStack.getImages())
+        else:  # Numpy slice, validate is a slice?
+            self._images.append(imgStack)
+
+    ######### operations section ############
+
+
+    @classmethod
+    def normalizeSlice(cls, npImage):
         iMax = npImage.max()
         iMin = npImage.min()
         im255 = ((npImage - iMin) / (iMax - iMin) * 255).astype(numpy.uint8)
-        return Image.fromarray(im255)
+        return im255
+
+    @classmethod
+    def asPilImage(cls, npArray, normalize=True):
+        """ Returns the npArray a numpy image
+        :param npArray: 2d numpy array (image)
+        :param normalize: by default it has to be normalized. Cancel this is you are sure it hase been normalized before"""
+
+        if normalize:
+            npArray = cls.normalizeSlice(npArray)
+
+        return Image.fromarray(npArray)
+
+    @classmethod
+    def _center_crop(cls, npArray, target_height, target_width):
+
+        h, w = npArray.shape
+
+        start_y = (h - target_height) // 2
+        start_x = (w - target_width) // 2
+
+        return npArray[start_y:start_y + target_height, start_x:start_x + target_width]
+
+    @classmethod
+    def rotateSlice(cls, npArray: numpy.ndarray, angle: float, mode=ROT_MODE.FIXED, bg=None) -> numpy.ndarray:
+        """Rotates a numpy array"""
+
+        bg = npArray.mean() if bg is None else bg # Get the mean value
+        reshape = mode != ROT_MODE.FIXED  # Fixed mode should not reshape the array
+
+        # Rotate the image
+        rotated = rotate(npArray, angle, reshape=reshape, mode='constant', cval=bg)
+
+        # If mode
+        if mode == ROT_MODE.CONDITIONAL:
+            angle = angle % 360  # negative angles should turn into its equivalent: -15 -> 345
+            target_height, target_width = npArray.shape
+
+            # If in the region to shift dimension
+            if (45 <= angle <= 135) or (225 <= angle <= 315):
+                # Crop the image
+                target_height, target_width = target_width, target_height
+
+            rotated = cls._center_crop(rotated, target_height, target_width)
+
+
+        return rotated
+
+    @classmethod
+    def shiftSlice(cls, image: numpy.ndarray, shifts: float, bg=None) -> numpy.ndarray:
+        """Shifts a numpy array
+        :param shifts = float or sequence. If a sequence, first value should be X shift and second Y shift
+        """
+
+        bg = image.mean() if bg is  None else bg# Get the mean value
+
+        if not isinstance(shifts, float):
+            # Swap: shift expect first element to be y abd then x. We have opposite convention
+            shifts = (shifts[1], shifts[0])
+
+        # Rotate the image
+        return shift(image, shifts,  mode='constant', cval=bg)
+
+
+    @classmethod
+    def transformSlice(cls, npImage:numpy.ndarray, shifts: float, angle: float, mode=ROT_MODE.FIXED, bg=None):
+        """ Apply the rotation and the shift to the npImage passed"""
+
+        bg = npImage.mean() if bg is None else bg
+
+        return cls.shiftSlice(cls.rotateSlice(npImage, angle, mode=mode, bg=bg), shifts, bg=bg)
+
+    @classmethod
+    def scaleSlice(cls, npImage, factors, anti_aliasing=True):
+        """ Scales the npImage by the factor/s
+        :param npImage: 2d numpy array
+        :param factors: float or sequence
+            The zoom factor along the axes. If a float, `zoom` is the same for each
+            axis. If a sequence, `zoom` should contain one value for each axis.
+        :param anti_aliasing:
+
+        """
+        return rescale(npImage, factors, anti_aliasing=anti_aliasing)
+    @classmethod
+    def flipSlice(cls, npImage: numpy.ndarray, vertically=True):
+
+        mode = 0 if vertically else 1
+        return numpy.flip(npImage, mode)
+
+    def flip(self, vertically=True):
+        """Flip all images of an ImageStack horizontally or vertically.
+            Vertically is up-down, horizontally is left-right."""
+
+        return self._applyOperation(self.flipSlice, vertically)
+
+    def flipV(self):
+        """ Flips this stack vertically: up to down"""
+        return self.flip()
+
+    def flipH(self):
+        """ Flips this stack horizontally: left to right"""
+        return self.flip(False)
+
+    def shift(self, shifts):
+        """ Shifts the whole stack x and y returning a new stack.
+
+        :param shift: The shift along the axes. If a float, shift is the same for each axis. If a sequence, shift should contain one value for each axis.
+
+        """
+        return self._applyOperation(self.shiftSlice, shifts)
+
+    def scale(self, factors):
+        """ Scales the stack by the factors
+        :param: factors: Scale factors for spatial dimensions.
+        """
+
+        return self._applyOperation(self.scaleSlice, factors)
+
+    def rotate(self, angle, mode=ROT_MODE.FIXED, bg=None):
+        """rotates all its images the angle (deg) passed and returns a new ImageStack rotated"""
+        return self._applyOperation(self.rotateSlice, angle, mode=mode, bg=bg)
+
+    def transform(self, shifts, angle, mode=ROT_MODE.FIXED):
+        """rotates all its images the angle (deg) passed and returns a new ImageStack rotated"""
+        return self._applyOperation(self.transformSlice, shifts, angle, mode=mode)
+
+    def multiply(self, factor: float):
+        """ Multiplies the image stack by a factor
+        :param: factor: to multiply values by it
+        """
+
+        return self._applyOperation(lambda npImage, factor: npImage*factor, factor)
+    def invert(self):
+
+        return self.multiply(factor=-1)
+
+    def normalize(self):
+        return self._applyOperation(self.normalizeSlice)
+
+    def _applyOperation(self, operation, *args, **kwargs):
+        rotImg = ImageStack()
+
+        for image in self._images:
+            rot_slice = operation(image, *args, **kwargs)
+            rotImg.append(rot_slice)
+
+        return rotImg
+
+    def write(self, path):
+        ImageReadersRegistry.write(self, path)
+
+
 
 
 class ImageReader:
