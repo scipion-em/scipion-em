@@ -203,61 +203,6 @@ class CtfView(BaseCustomView):
                          **kwargs)
 
 
-# class MicrographsView(ObjectView):
-#     """ Customized ObjectView for Micrograph objects . """
-#
-#     def __init__(self, project, micSet, other='', **kwargs):
-#         first = micSet.getFirstItem()
-#
-#         def cleanLabels(label):
-#
-#             labelList = viewParams[label].split()
-#             labels = ' '.join([l for l in labelList if first.hasAttributeExt(l) or l in ['id','enabled']])
-#             if labels:
-#                 viewParams[label] = labels
-#             else:
-#                 viewParams.pop(label)
-#
-#         from pwem.viewers.viewers_data import RegistryViewerConfig
-#         config = RegistryViewerConfig.getConfig(SetOfMicrographs)
-#         viewParams = config.copy()
-#
-#         cleanLabels(ORDER)
-#         cleanLabels(RENDER)
-#
-#         inputId = micSet.getObjId() or micSet.getFileName()
-#         ObjectView.__init__(self, project,
-#                             inputId, micSet.getFileName(), other,
-#                             viewParams, **kwargs)
-#
-#
-# class CtfView(ObjectView):
-#     """ Customized ObjectView for SetOfCTF objects . """
-#
-#     def __init__(self, project, ctfSet, other='', **kwargs):
-#         first = ctfSet.getFirstItem()
-#
-#         def cleanLabels(label):
-#
-#             labelList = viewParams[label].split()
-#             viewParams[label] = ' '.join([l for l in labelList if first.hasAttributeExt(l) or l in ['id','enabled']])
-#
-#         from pwem.viewers.viewers_data import RegistryViewerConfig
-#         config = RegistryViewerConfig.getConfig(SetOfCTF)
-#         viewParams = config.copy()
-#
-#         cleanLabels(ORDER)
-#         viewParams[VISIBLE] = viewParams[ORDER]
-#         cleanLabels(RENDER)
-#
-#         viewParams['dont_recalc_ctf'] = ''
-#
-#         inputId = ctfSet.getObjId() or ctfSet.getFileName()
-#         ObjectView.__init__(self, project,
-#                             inputId, ctfSet.getFileName(), other,
-#                             viewParams, **kwargs)
-
-
 class ClassesView(ObjectView):
     """ Customized ObjectView for SetOfClasses. """
 

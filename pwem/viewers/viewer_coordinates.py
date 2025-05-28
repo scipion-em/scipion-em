@@ -41,8 +41,8 @@ from matplotlib.widgets import RangeSlider
 
 import pyworkflow
 from pwem.emlib.image.image_readers import ImageReadersRegistry
-from pwem.objects import EMSet, SetOfCoordinates, SetOfMicrographs
-from pyworkflow.gui import getImage, ToolTip
+from pwem.objects import EMSet, SetOfCoordinates, SetOfMicrographs, Coordinate
+from pyworkflow.gui import getImage, ToolTip, Dialog
 from pyworkflow.utils import Icon
 from pyworkflow.viewer import View, Viewer
 
@@ -502,7 +502,7 @@ class MainWindow:
         buttonsFrame.bind("<Enter>", self.recoveryPointer)
 
         # Button to close de application
-        closeButton = tk.Button(buttonsFrame, text='Close', command=self.root.destroy, font=('Helvetica', 10, 'bold'),
+        closeButton = tk.Button(buttonsFrame, text='Close', command=self._close, font=('Helvetica', 10, 'bold'),
                                       image=getImage(Icon.BUTTON_CANCEL), compound=tk.LEFT)
         closeButton.grid(row=0, column=0, sticky="w", padx=5)
 
@@ -515,6 +515,14 @@ class MainWindow:
         self.imageFrame.grid_rowconfigure(0, weight=1)
         self.imageFrame.grid_columnconfigure(0, weight=1)
 
+    def _close(self):
+        if not self.hasChanges or messagebox.askquestion(
+                "Confirmation",
+                "There are changes that could be saved. Do you really want to close the application?",
+                icon='info', parent=self.root
+        ) == messagebox.YES:
+            self.root.destroy()
+
     def _createOutput(self):
         """Create a new set of coordinates"""
         result = messagebox.askquestion("Confirmation", "Are you going to generate a new set of coordinates with the new changes?",
@@ -524,29 +532,43 @@ class MainWindow:
             coordSet = self.protocol._createSetOfCoordinates(micSet, suffix=str(self.protocol.getOutputsSize()))
             coordSet.copyInfo(self.setOfCoordinate)
             coordSet.setBoxSize(self.boxSize)
-            coordSet.copyItems(self.setOfCoordinate, updateItemCallback=self._removeCoordinate)
+            micrographs = self.setOfCoordinate.getMicrographs()
+            for coordinate in self.setOfCoordinate.iterItems():
+                coord = Coordinate()
+                coord.setObjId(coordinate.getObjId())
+                micId = str(coordinate.getMicId())
+                coord.setMicrograph(micrographs[self.micrographPathDict[micId][1]])
+                if coordinate.getObjId() in self.movedCoordinates[micId]:
+                    coord.setX(self.movedCoordinates[micId][coordinate.getObjId()][0])
+                    coord.setY(self.movedCoordinates[micId][coordinate.getObjId()][1])
+                else:
+                    coord.setPosition(coordinate.getX(), coordinate.getY())
 
+                if coordinate.getObjId() in self.deletedCoordinates[micId]:
+                    continue
+
+                coordSet.append(coord)
+
+            # Adding new coordinates
+            maxObjIds = self.setOfCoordinate.aggregate(["MAX"], "_objId")[0]['MAX']
             for micId, coord in self.newCoordinates.items():
                 for newCoord in self.newCoordinates[micId].values():
+                    maxObjIds += 1
                     newCoordinate = self.setOfCoordinate.getFirstItem().clone()
-                    newCoordinate.setObjId(None)
-                    micrographs = self.setOfCoordinate.getMicrographs()
+                    newCoordinate.setObjId(maxObjIds)
                     newCoordinate.setMicrograph(micrographs[self.micrographPathDict[micId][1]])
                     newCoordinate.setPosition(newCoord[0], newCoord[1])
                     coordSet.append(newCoordinate)
 
             coordSet.write()
-            self.protocol._defineOutputs(**{'coordinates_' + str(self.protocol.getOutputsSize()+1): coordSet})
+            nextOutputName = self.protocol.getNextOutputName('coordinates_')
+            self.protocol._defineOutputs(**{nextOutputName: coordSet})
             self.protocol._defineSourceRelation(micSet, coordSet)
-
-    def _removeCoordinate(self, item, row):
-        """Remove the deleted coordinate"""
-        for micId, coord in self.newCoordinates.items():
-            if item.getObjId() in self.deletedCoordinates[micId]:
-                setattr(item, "_appendItem", False)
-            if item.getObjId() in self.movedCoordinates[micId]:
-                item.setX(self.movedCoordinates[micId][item.getObjId()][0])
-                item.setY(self.movedCoordinates[micId][item.getObjId()][1])
+            self.hasChanges.clear()
+            for itemId in self.table.get_children():
+                self.table.set(itemId, column="Updated", value='No')
+            messagebox.showinfo('Information', 'The new set of coordinates has been created',
+                                icon='info', parent=self.root)
 
     def onFitActivate(self):
         """Fit to display area and reset all parameters"""
@@ -988,7 +1010,6 @@ class MainWindow:
                                         icon='warning', **{'parent': self.root})
         if result == messagebox.YES:
             self.totalCoordinates -= len(self.coordinatesDict[self.micId])
-            self.coordinatesDict[self.micId] = {}
             self.shapes.clear()
             self.totalPickButton.configure(text=f"Total picks: {self.totalCoordinates}")
             self.table.set(self.table.selection(), column="Particles", value=0)
@@ -997,6 +1018,11 @@ class MainWindow:
             self.hasChanges[self.micId] = True
             if self.particlesWindowVisible:
                 self.onParticlesWindowClosing()
+
+            for index in self.coordinatesDict[self.micId]:
+                coordObjId = self.coordinatesDict[self.micId][index][2]
+                self.deletedCoordinates[self.micId][coordObjId] = True
+            self.coordinatesDict[self.micId] = {}
 
     def restoreMicrograph(self):
         """Restore all removed coordinates from current micrograph"""
