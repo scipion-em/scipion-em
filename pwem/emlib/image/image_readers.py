@@ -177,6 +177,7 @@ class ImageStack:
 
         """
         return rescale(npImage, factors, anti_aliasing=anti_aliasing)
+
     @classmethod
     def flipSlice(cls, npImage: numpy.ndarray, vertically=True):
 
@@ -205,12 +206,12 @@ class ImageStack:
         """
         return self._applyOperation(self.shiftSlice, shifts)
 
-    def scale(self, factors):
+    def scale(self, factors, anti_aliasing=True):
         """ Scales the stack by the factors
         :param: factors: Scale factors for spatial dimensions.
         """
 
-        return self._applyOperation(self.scaleSlice, factors)
+        return self._applyOperation(self.scaleSlice, factors, anti_aliasing)
 
     def rotate(self, angle, mode=ROT_MODE.FIXED, bg=None):
         """rotates all its images the angle (deg) passed and returns a new ImageStack rotated"""
@@ -467,6 +468,19 @@ class MRCImageReader(ImageReader):
         from pwem.convert import headers
         header = headers.Ccp4Header(filePath, readHeader=True)
         return header.getXYZN()
+
+    @classmethod
+    def canOpenSlices(cls):
+        return True
+
+    @classmethod
+    def openSlice(cls, path, slice):
+        """
+        Reads a given image
+           :param path (str) --> Image to be read
+        """
+        npImg = cls.open(path)
+        return npImg[slice-1]
 
     @classmethod
     def open(cls, path: str):
