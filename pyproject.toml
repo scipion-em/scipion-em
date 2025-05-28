@@ -1,0 +1,42 @@
+[build-system]
+requires = ["setuptools>=42", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "scipion-em"
+dynamic = ["version", "dependencies"]
+
+authors = [
+    {name = "Pablo Conesa", email = "pconesa@cnb.csic.es"},
+    {name = "Yunior Fonseca", email = "cfonseca@cnb.csic.es"},
+    {name = "J.M. De la Rosa Trevin", email = "josemiguel.delarosatrevin@stjude.org"},
+    {name = "Roberto Marabini", email = "roberto@cnb.csic.es"},
+    {name = "Grigory Sharov", email = "sharov.grigory@gmail.com"},
+    {name = "Josue Gomez Blanco", email = "josue.gomez-blanco@mcgill.ca"},
+]
+description = "Plugin extends Scipion framework towards cryo EM image processing"
+readme = "README.rst"
+requires-python = ">=3.8"
+keywords = ["scipion", "electron-microscopy", "cryo-em", "structural-biology", "image-processing", "scipion-3.0"]
+license = {text = "GNU General Public License v3 (GPLv3)"}
+
+[project.urls]
+Homepage = "https://github.com/scipion-em/scipion-em"
+Repository = "https://github.com/scipion-em/scipion-em"
+Issues = "https://github.com/scipion-em/scipion-em/issues"
+
+[tool.setuptools.package-data]
+"pwem" = ["protocols.conf", "scipion_icon.png", "templates/*", "cmd/*"]
+
+[project.entry-points."pyworkflow.plugin"]
+pwem = "pwem"
+
+[project.scripts]
+emprogram = 'pwem.cmd.program:main'
+emchimera = 'pwem.cmd.chimera_client:main'
+emconvert = 'pwem.cmd.convert:main'
+
+
+[tool.setuptools.dynamic]
+version = {attr = "pwem.__version__"}
+dependencies = {file = ["requirements.txt"]}
