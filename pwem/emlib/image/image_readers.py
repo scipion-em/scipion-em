@@ -333,8 +333,8 @@ class MRCImageReader(ImageReader):
     def write(cls,
               imageStack: ImageStack,
               fileName: str,
-              samplingRate: Union[float, None] = None,
-              isStack: bool = False) -> None:
+              isStack: bool = False,
+              samplingRate: Union[float, None] = None) -> None:
         """Generate a stack of images or a volume from a list of images."""
         sr = samplingRate if samplingRate else imageStack.getProperties().get("sr", 1.0)
         stack = numpy.stack(imageStack.getImages(), axis=0)
