@@ -4,10 +4,15 @@ Users:
   - Viewers proirity reviewed
   - Angular distribution viewer only offered with sets with alignments
   - Fix local resolution viewers load.
+  - Fixing an error visualizing micrographs and particles with the volume viewer
 Developers:
   - ImageReaders reviewed: open returns the whole stack. openSlice is optional
   - Volume viewer adapted (uses open and not getArray())
   - ImageFileHandler uses ImageReaderRegistry...falling back to XmippImageReader (less xmipp coupled)
+  - ImageStack class has some image operations: flip, rotate, multiply, shift, transform, invert, normalize and a write method.
+  - Transform.getShifts compatible with tomo data (3x3 matrix: 1 angle + shift)
+  - SetOfImages.getBinning: returns the binning as a result of targeting a sampling rate.
+  - toml used.
 
 V3.9.4:
 Users:

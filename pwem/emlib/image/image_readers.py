@@ -1,3 +1,4 @@
+import enum
 from functools import lru_cache
 from typing import Union
 
@@ -8,10 +9,19 @@ import mrcfile
 
 import pwem.constants as emcts
 from .. import lib
+from scipy.ndimage import rotate, shift
+from skimage.transform import rescale
+
 
 import logging
 
 logger = logging.getLogger(__name__)
+
+class ROT_MODE(enum.Enum):
+    FIXED=1  # Final image will have exactly the same dims as the input image in the SAME orientation
+    NATURAL=2 # Rotation will require a bigger image to avoid loosing informatión in the corners
+    CONDITIONAL=3 # Similar to FIXED, but shifting x and y original dimensions in some cases to reduce
+                  # information loss. 45<rot<135 and 225<rot<315
 
 # Classes to replace one day the functionality covered by ImageHandler... which uses xmipp binding
 class ImageStack:
@@ -26,7 +36,6 @@ class ImageStack:
             images = []
         elif isinstance(images, numpy.ndarray):
             shape = images.shape
-
             if len(shape) == 2:
                 images = [images]
 
@@ -51,17 +60,17 @@ class ImageStack:
         npImg = self._images[index]
 
         if pilImage:
-            return self._normalize(npImg)
+            return self.asPilImage(npImg)
         else:
             return npImg
 
     def getCentralImage(self, pilImage=False):
         """ Returns the central image"""
         size = len(self._images)
-        if size==0:
+        if size == 0:
             raise FileNotFoundError("Cannot get a central image. It may not exist or is not yet opened.")
 
-        midIndex = size-1 if size == 1 else (size//2)
+        midIndex = size - 1 if size == 1 else (size // 2)
         return self.getImage(midIndex, pilImage=pilImage)
 
     def getImages(self):
@@ -72,19 +81,180 @@ class ImageStack:
         """ Returns the property passed"""
 
         return self._properties.get(property, None)
+
     def getProperties(self):
         """Returns the properties dictionary"""
         return self._properties
 
     def append(self, imgStack):
         """ Appends to its local list of images the images inside the imgStack passed as parameter"""
-        self._images.extend(imgStack.getImages())
 
-    def _normalize(cls, npImage):
+        if isinstance(imgStack, ImageStack):
+            self._images.extend(imgStack.getImages())
+        else:  # Numpy slice, validate is a slice?
+            self._images.append(imgStack)
+
+    ######### operations section ############
+
+
+    @classmethod
+    def normalizeSlice(cls, npImage):
         iMax = npImage.max()
         iMin = npImage.min()
         im255 = ((npImage - iMin) / (iMax - iMin) * 255).astype(numpy.uint8)
-        return Image.fromarray(im255)
+        return im255
+
+    @classmethod
+    def asPilImage(cls, npArray, normalize=True):
+        """ Returns the npArray a numpy image
+        :param npArray: 2d numpy array (image)
+        :param normalize: by default it has to be normalized. Cancel this is you are sure it hase been normalized before"""
+
+        if normalize:
+            npArray = cls.normalizeSlice(npArray)
+
+        return Image.fromarray(npArray)
+
+    @classmethod
+    def _center_crop(cls, npArray, target_height, target_width):
+
+        h, w = npArray.shape
+
+        start_y = (h - target_height) // 2
+        start_x = (w - target_width) // 2
+
+        return npArray[start_y:start_y + target_height, start_x:start_x + target_width]
+
+    @classmethod
+    def rotateSlice(cls, npArray: numpy.ndarray, angle: float, mode=ROT_MODE.FIXED, bg=None) -> numpy.ndarray:
+        """Rotates a numpy array"""
+
+        bg = npArray.mean() if bg is None else bg # Get the mean value
+        reshape = mode != ROT_MODE.FIXED  # Fixed mode should not reshape the array
+
+        # Rotate the image
+        rotated = rotate(npArray, angle, reshape=reshape, mode='constant', cval=bg)
+
+        # If mode
+        if mode == ROT_MODE.CONDITIONAL:
+            angle = angle % 360  # negative angles should turn into its equivalent: -15 -> 345
+            target_height, target_width = npArray.shape
+
+            # If in the region to shift dimension
+            if (45 <= angle <= 135) or (225 <= angle <= 315):
+                # Crop the image
+                target_height, target_width = target_width, target_height
+
+            rotated = cls._center_crop(rotated, target_height, target_width)
+
+
+        return rotated
+
+    @classmethod
+    def shiftSlice(cls, image: numpy.ndarray, shifts: float, bg=None) -> numpy.ndarray:
+        """Shifts a numpy array
+        :param shifts = float or sequence. If a sequence, first value should be X shift and second Y shift
+        """
+
+        bg = image.mean() if bg is  None else bg# Get the mean value
+
+        if not isinstance(shifts, float):
+            # Swap: shift expect first element to be y abd then x. We have opposite convention
+            shifts = (shifts[1], shifts[0])
+
+        # Rotate the image
+        return shift(image, shifts,  mode='constant', cval=bg)
+
+
+    @classmethod
+    def transformSlice(cls, npImage:numpy.ndarray, shifts: float, angle: float, mode=ROT_MODE.FIXED, bg=None):
+        """ Apply the rotation and the shift to the npImage passed"""
+
+        bg = npImage.mean() if bg is None else bg
+
+        return cls.shiftSlice(cls.rotateSlice(npImage, angle, mode=mode, bg=bg), shifts, bg=bg)
+
+    @classmethod
+    def scaleSlice(cls, npImage, factors, anti_aliasing=True):
+        """ Scales the npImage by the factor/s
+        :param npImage: 2d numpy array
+        :param factors: float or sequence
+            The zoom factor along the axes. If a float, `zoom` is the same for each
+            axis. If a sequence, `zoom` should contain one value for each axis.
+        :param anti_aliasing:
+
+        """
+        return rescale(npImage, factors, anti_aliasing=anti_aliasing)
+
+    @classmethod
+    def flipSlice(cls, npImage: numpy.ndarray, vertically=True):
+
+        mode = 0 if vertically else 1
+        return numpy.flip(npImage, mode)
+
+    def flip(self, vertically=True):
+        """Flip all images of an ImageStack horizontally or vertically.
+            Vertically is up-down, horizontally is left-right."""
+
+        return self._applyOperation(self.flipSlice, vertically)
+
+    def flipV(self):
+        """ Flips this stack vertically: up to down"""
+        return self.flip()
+
+    def flipH(self):
+        """ Flips this stack horizontally: left to right"""
+        return self.flip(False)
+
+    def shift(self, shifts):
+        """ Shifts the whole stack x and y returning a new stack.
+
+        :param shift: The shift along the axes. If a float, shift is the same for each axis. If a sequence, shift should contain one value for each axis.
+
+        """
+        return self._applyOperation(self.shiftSlice, shifts)
+
+    def scale(self, factors, anti_aliasing=True):
+        """ Scales the stack by the factors
+        :param: factors: Scale factors for spatial dimensions.
+        """
+
+        return self._applyOperation(self.scaleSlice, factors, anti_aliasing)
+
+    def rotate(self, angle, mode=ROT_MODE.FIXED, bg=None):
+        """rotates all its images the angle (deg) passed and returns a new ImageStack rotated"""
+        return self._applyOperation(self.rotateSlice, angle, mode=mode, bg=bg)
+
+    def transform(self, shifts, angle, mode=ROT_MODE.FIXED):
+        """rotates all its images the angle (deg) passed and returns a new ImageStack rotated"""
+        return self._applyOperation(self.transformSlice, shifts, angle, mode=mode)
+
+    def multiply(self, factor: float):
+        """ Multiplies the image stack by a factor
+        :param: factor: to multiply values by it
+        """
+
+        return self._applyOperation(lambda npImage, factor: npImage*factor, factor)
+    def invert(self):
+
+        return self.multiply(factor=-1)
+
+    def normalize(self):
+        return self._applyOperation(self.normalizeSlice)
+
+    def _applyOperation(self, operation, *args, **kwargs):
+        rotImg = ImageStack()
+
+        for image in self._images:
+            rot_slice = operation(image, *args, **kwargs)
+            rotImg.append(rot_slice)
+
+        return rotImg
+
+    def write(self, path):
+        ImageReadersRegistry.write(self, path)
+
+
 
 
 class ImageReader:
@@ -99,6 +269,7 @@ class ImageReader:
         If so, openSlice method should be implemented
         """
         return False
+
     @classmethod
     def openSlice(cls, path, slice):
         """ Opens a specific slice"""
@@ -170,15 +341,15 @@ class ImageReadersRegistry:
         # If requesting a slice 1@ppath/to/image.ext
         if len(parts) == 2:
 
-            slice = int(parts[0])
+            sliceIndex = int(parts[0])
 
             if imageReader.canOpenSlices():
-                data = imageReader.openSlice(filePath, slice)
+                data = imageReader.openSlice(filePath, sliceIndex)
 
             else:
-                logger.debug("Requesting slice %s from %s. Suboptimal?." % (slice, filePath))
+                logger.debug("Requesting slice %s from %s. Suboptimal?." % (sliceIndex, filePath))
                 data = imageReader.open(filePath)
-                data = data[slice-1]
+                data = data[sliceIndex - 1]
         else:
             # Get the numpy array
             data = imageReader.open(filePath)
@@ -186,7 +357,7 @@ class ImageReadersRegistry:
         return ImageStack(data)
 
     @classmethod
-    def write(cls, imgStack:ImageStack, fileName: str, isStack=False) -> None:
+    def write(cls, imgStack: ImageStack, fileName: str, isStack=False) -> None:
         """Generate a stack of images from a list of PIL images."""
 
         imageWriter = cls.getReader(fileName)
@@ -196,7 +367,6 @@ class ImageReadersRegistry:
     def getAvailableExtensions(cls):
         """ Returns all the extensions it can handle"""
         return cls._readers.keys()
-
 
 
 class PILImageReader(ImageReader):
@@ -213,19 +383,19 @@ class PILImageReader(ImageReader):
         return x, y, 1, 1
 
     @classmethod
-    def open(cls,filePath:str):
-
-        pilImg=Image.open(filePath)
+    def open(cls, filePath: str):
+        pilImg = Image.open(filePath)
         return numpy.array(pilImg)
+
     @classmethod
     def write(cls, imgStack: ImageStack, fileName: str, isStack=False) -> None:
-
-        # So far write the first image in teh stack
+        # So far write the first image in the stack
         np_img = imgStack.getImage()
         im = Image.fromarray(numpy.uint8(np_img))
         im.save(fileName)
 
         return True
+
 
 class TiffImageReader(ImageReader):
     """ Tiff image reader"""
@@ -245,20 +415,19 @@ class TiffImageReader(ImageReader):
 
     @classmethod
     def open(cls, path: str):
-
         key = 0
         if "@" in path:
-            key, path=path.split("@")
+            key, path = path.split("@")
 
         npImg = imread(path, key=key)
         return npImg
 
     @classmethod
     def write(cls, imgStack: ImageStack, fileName: str, isStack=False) -> None:
-
         npImg = imgStack.getImage().astype("uint8")
         imwrite(fileName, npImg)
         return True
+
 
 class EMANImageReader(ImageReader):
     """ Image reader for eman file formats"""
@@ -282,6 +451,7 @@ class XMIPPImageReader(ImageReader):
         img = lib.Image()
         img.read(path)
         return img.getData()
+
     @staticmethod
     def getCompatibleExtensions():
         return emcts.ALL_MRC_EXTENSIONS + emcts.ALL_TIF_EXTENSIONS + ["hdf5", "dm4", "stk", "spi", "vol", "tif", "em", "map"]
@@ -305,6 +475,19 @@ class MRCImageReader(ImageReader):
         from pwem.convert import headers
         header = headers.Ccp4Header(filePath, readHeader=True)
         return header.getXYZN()
+
+    @classmethod
+    def canOpenSlices(cls):
+        return True
+
+    @classmethod
+    def openSlice(cls, path, slice):
+        """
+        Reads a given image
+           :param path (str) --> Image to be read
+        """
+        npImg = cls.open(path)
+        return npImg[slice-1]
 
     @classmethod
     def open(cls, path: str):
@@ -345,7 +528,21 @@ class MRCImageReader(ImageReader):
                 mrc.header.ispg = 0
             mrc.update_header_from_data()
             mrc.voxel_size = sr
+        return True
 
+    @classmethod
+    def isMrcVolume(cls, mrcImg):
+        if mrcImg.is_volume():
+            return True
+        return False
+
+    @classmethod
+    def isMrcStack(cls, mrcImg):
+        if mrcImg.is_image_stack():
+            return True
+        return False
+
+      
 class STKImageReader(ImageReader):
     IMG_BYTES = None
     stk_handler = None
@@ -473,7 +670,6 @@ class STKImageReader(ImageReader):
             numpyStack = numpy.stack([cls.readImage(ii) for ii in range(0, nImages, 1)])
 
         return numpyStack
-
 
 
 # Register reader in the registry. Latest registered will take priority.

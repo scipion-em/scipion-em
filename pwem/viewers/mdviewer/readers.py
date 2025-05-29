@@ -23,7 +23,6 @@ class ScipionImageReader(ImageReader):
     @classmethod
     @lru_cache
     def open(cls, path):
-
         imgStack = ImageReadersRegistry.open(path)
         # They return in this case the whole stack. Ask for the central slice
         return cls._normalize(imgStack.getCentralImage())
