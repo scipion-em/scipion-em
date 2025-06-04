@@ -13,6 +13,7 @@ Developers:
   - Transform.getShifts compatible with tomo data (3x3 matrix: 1 angle + shift)
   - SetOfImages.getBinning: returns the binning as a result of targeting a sampling rate.
   - toml used.
+  - ImageStack.thumbnailSlice: Uses pillow's thumbnail (faster than skimage nut less accurate)
 
 V3.9.4:
 Users:

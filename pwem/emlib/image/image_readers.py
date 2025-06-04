@@ -3,6 +3,7 @@ from functools import lru_cache
 from typing import Union
 
 import numpy
+import numpy as np
 from PIL import Image
 from tifffile import TiffFile, imread, imwrite
 import mrcfile
@@ -95,8 +96,6 @@ class ImageStack:
             self._images.append(imgStack)
 
     ######### operations section ############
-
-
     @classmethod
     def normalizeSlice(cls, npImage):
         iMax = npImage.max()
@@ -185,6 +184,16 @@ class ImageStack:
 
         """
         return rescale(npImage, factors, anti_aliasing=anti_aliasing)
+
+    @classmethod
+    def thumbnailSlice(cls, npImage, width, height, normalize=True):
+        """ Calls PIl thumbnail. It is less precise but faster than scaleSlice"""
+
+        img = cls.asPilImage(npImage, normalize=normalize)
+        img.thumbnail((width,height))
+        return np.array(img)
+
+
 
     @classmethod
     def flipSlice(cls, npImage: numpy.ndarray, vertically=True):
