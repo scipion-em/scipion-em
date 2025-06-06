@@ -25,7 +25,7 @@ import csv
 import os
 import re
 
-from pwem.objects import SetOfClasses2D
+from pwem.objects import SetOfClasses2D, SetOfMicrographs, SetOfCTF
 from pyworkflow.config import Config as pwConfig
 from pyworkflow.gui import getDefaultFont, openTextFileEditor
 
@@ -146,82 +146,61 @@ class ObjectView(DataView):
                      self.getShowJParams(), env=self._env)
 
 
-class MicrographsView(ObjectView):
-    """ Customized ObjectView for SetOfCTF objects . """
-    # All extra labels that we want to show if present in the CTF results
-    RENDER_LABELS = ['thumbnail._filename', 'psdCorr._filename',
-                     'plotGlobal._filename']
-    EXTRA_LABELS = ['_filename']
+class BaseCustomView(ObjectView):
+    """Base class for customized ObjectViews with shared logic."""
 
-    def __init__(self, project, micSet, other='', **kwargs):
-        first = micSet.getFirstItem()
+    def __init__(self, project, dataSet,
+                 extraViewParams=None, adjustVisible=False, **kwargs):
+        self.firstItem = dataSet.getFirstItem()
 
-        def existingLabels(labelList):
-            return ' '.join([l for l in labelList if first.hasAttributeExt(l)])
+        from pwem.viewers.viewers_data import RegistryViewerConfig
+        config = RegistryViewerConfig.getConfig(dataSet.getClass())
+        self.viewParams = config.copy()
 
-        renderLabels = existingLabels(self.RENDER_LABELS)
-        extraLabels = existingLabels(self.EXTRA_LABELS)
-        labels = 'id enabled %s %s' % (renderLabels, extraLabels)
+        self.cleanLabels(ORDER)
 
-        viewParams = {MODE: MODE_MD,
-                      ORDER: labels,
-                      VISIBLE: labels,
-                      ZOOM: 50
-                      }
+        if adjustVisible:
+            self.viewParams[VISIBLE] = self.viewParams.get(ORDER, '')
 
-        if renderLabels:
-            viewParams[RENDER] = renderLabels
+        self.cleanLabels(RENDER)
 
-        inputId = micSet.getObjId() or micSet.getFileName()
-        ObjectView.__init__(self, project,
-                            inputId, micSet.getFileName(), other,
-                            viewParams, **kwargs)
+        if extraViewParams:
+            self.viewParams.update(extraViewParams)
+
+        inputId = dataSet.getObjId() or dataSet.getFileName()
+        super().__init__(project,
+                         inputId,
+                         dataSet.getFileName(),
+                         '',  # 'other' is unused
+                         self.viewParams,
+                         **kwargs)
+
+    def cleanLabels(self, label):
+        """Filter out invalid labels from viewParams[label]."""
+        labelList = self.viewParams[label].split()
+        labels = [l for l in labelList if self.firstItem.hasAttributeExt(l) or l in ['id', 'enabled']]
+        if labels:
+            self.viewParams[label] = ' '.join(labels)
+        else:
+            self.viewParams.pop(label, None)
 
 
-class CtfView(ObjectView):
-    """ Customized ObjectView for SetOfCTF objects . """
-    # All extra labels that we want to show if present in the CTF results
-    PSD_LABELS = ['_micObj.thumbnail._filename', '_psdFile',
-                  '_xmipp_enhanced_psd', '_xmipp_ctfmodel_quadrant',
-                  '_xmipp_ctfmodel_halfplane', '_micObj.plotGlobal._filename'
-                  ]
-    EXTRA_LABELS = ['_ctftilt_tiltAxis', '_ctftilt_tiltAngle',
-                    '_xmipp_ctfCritFirstZero',
-                    '_xmipp_ctfCritCorr13', '_xmipp_ctfCritIceness', '_xmipp_ctfCritFitting',
-                    '_xmipp_ctfCritNonAstigmaticValidty',
-                    '_xmipp_ctfCritCtfMargin', '_xmipp_ctfCritMaxFreq',
-                    '_xmipp_ctfCritPsdCorr90', '_xmipp_ctfVPPphaseshift'
-                    ]
+class MicrographsView(BaseCustomView):
+    """Customized ObjectView for Micrograph objects."""
 
-    def __init__(self, project, ctfSet, other='', **kwargs):
-        first = ctfSet.getFirstItem()
+    def __init__(self, project, micSet, **kwargs):
+        super().__init__(project, micSet, **kwargs)
 
-        def existingLabels(labelList):
-            return ' '.join([l for l in labelList if first.hasAttributeExt(l)])
 
-        psdLabels = existingLabels(self.PSD_LABELS)
-        extraLabels = existingLabels(self.EXTRA_LABELS)
-        labels = 'id enabled %s _defocusU _defocusV ' % psdLabels
-        labels += '_defocusAngle _defocusRatio '
-        labels += '_phaseShift _resolution _fitQuality %s ' % extraLabels
-        labels += ' _micObj._filename'
+class CtfView(BaseCustomView):
+    """Customized ObjectView for SetOfCTF objects."""
 
-        viewParams = {MODE: MODE_MD,
-                      ORDER: labels,
-                      VISIBLE: labels,
-                      ZOOM: 50
-                      }
-
-        if psdLabels:
-            viewParams[RENDER] = psdLabels
-
-        if ctfSet.isStreamOpen():
-            viewParams['dont_recalc_ctf'] = ''
-
-        inputId = ctfSet.getObjId() or ctfSet.getFileName()
-        ObjectView.__init__(self, project,
-                            inputId, ctfSet.getFileName(), other,
-                            viewParams, **kwargs)
+    def __init__(self, project, ctfSet, **kwargs):
+        extraParams = {'dont_recalc_ctf': ''}
+        super().__init__(project, ctfSet,
+                         extraViewParams=extraParams,
+                         adjustVisible=True,
+                         **kwargs)
 
 
 class ClassesView(ObjectView):

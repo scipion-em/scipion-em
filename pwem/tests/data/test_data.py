@@ -10,6 +10,7 @@ from unittest import TestCase
 
 import numpy as np
 
+from pwem.emlib.image.image_readers import ROT_MODE
 from pyworkflow import SCIPION_DEBUG_NOCLEAN
 from pyworkflow.tests import *
 import pyworkflow.utils as pwutils
@@ -428,6 +429,34 @@ class TestImageRegistry(pwtests.BaseTest):
             if not ":" in ext:
                 self._testWriteAndRead(newImage, ext)
 
+
+    def testRotation(self):
+        """ Tests image rotations"""
+
+        npImage = np.array([[0,1,2,3],
+                            [255, 254, 253, 252]])
+        newImage = ImageStack(npImage)
+
+        # Test rotation with swap
+        rotImg = newImage.rotate(90,mode=ROT_MODE.CONDITIONAL)
+        slice = rotImg.getImage()
+        np.testing.assert_equal(slice, np.array([[3,252],[2,253],[1,254], [0,255]]), "Image rotation 90 deg does not work")
+
+    def testFlip(self):
+        """ Tests images flip"""
+
+        npImage = np.array([[-100, -50],
+                            [100, 1000]])
+        newImage = ImageStack(npImage)
+
+        # Test rotation
+        rotImg = newImage.flipV()
+        slice = rotImg.getImage()
+        np.testing.assert_equal(slice, np.array([[100,1000], [-100, -50]]), "Image vertical flip does not work")
+
+        rotImg = rotImg.flipH()
+        slice = rotImg.getImage()
+        np.testing.assert_equal(slice, np.array([[1000,100], [-50, -100]]), "Image horizontal flip does not work")
 
     def _testWriteAndRead(self, imgStack, extension, properties_to_check=None):
         """ Tests write and read of the image passed as parameter

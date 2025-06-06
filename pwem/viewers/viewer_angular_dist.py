@@ -37,6 +37,9 @@ class AngularDistributionViewer(ProtocolViewer):
     _label = "Angular distribution viewer"
     _targets = [emobj.SetOfParticles, emobj.SetOfVolumes]
 
+    @classmethod
+    def can_handle_this_instance(cls, instance:emobj.SetOfImages):
+        return instance.hasAlignmentProj()
 
     def _defineParams(self, form):
 

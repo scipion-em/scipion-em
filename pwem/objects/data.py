@@ -190,7 +190,8 @@ class Transform(EMObject):
 
     def getShifts(self):
         m = self.getMatrix()
-        return m[0, 3], m[1, 3], m[2, 3]
+        # take last column values. Tomo matrices are 3x3: 2x2 angle + shifts.
+        return m[0, -1], m[1, -1], m[2, -1]
 
     def setShifts(self, x, y, z):
         m = self.getMatrix()
@@ -1482,6 +1483,21 @@ class SetOfImages(EMSet):
                 postprocessImage(img)
             self.append(img)
 
+    def getBinning(self, target_sr, decimals=0):
+        """ Returns the ratio of the sampling rate to target_sr.
+        :param target_sr: Target size you want the binning for.
+            E.g: target_sr=10, this.sr = 2, binning = 5
+        :param rounded: (True) pass False if you want exact ratio
+
+        """
+
+        binning = target_sr/self.getSamplingRate()
+        binning = round(binning, decimals)
+        if decimals==0:
+            binning=int(binning)
+        return binning
+
+
     def getDim(self):
         """ Return the dimensions of the first image in the set. """
         if self._firstDim.isEmpty():
@@ -1698,10 +1714,8 @@ class SetOfVolumes(SetOfImages):
         SetOfImages.__init__(self, **kwargs)
 
 
-class SetOfMorphing(SetOfVolumes):
-    def __init__(self, **kwargs):
-        SetOfVolumes.__init__(self, **kwargs)
-
+class Morphing(SetOfVolumes):
+    pass
 
 class SetOfCTF(EMSet):
     """ Contains a set of CTF models estimated for a set of images."""

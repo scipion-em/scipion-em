@@ -39,12 +39,12 @@ from .viewer_pdf import PDFReportViewer
 from .viewer_chimera import (Chimera, ChimeraView, ChimeraViewer, ChimeraAngDist)
 from .viewer_sequence import SequenceViewer
 from .viewer_volumes import viewerProtImportVolumes
-from .viewer_angular_dist import AngularDistributionViewer
+from .viewer_angular_dist import AngularDistributionViewer as zAngularDistViewer  # Low priority
 from .viewers_data import BasicMDViewer
-from .viewer_coordinates import CoordinateViewer
+from .viewer_coordinates import CoordinateViewer as ACoordinateViewer  # Prioritize this before Scipion metadata viewer
 
 try:
-    from .mdviewer import MDViewer
+    from .mdviewer import MDViewer as AMDViewer
 except Exception as e:
     pass
 
