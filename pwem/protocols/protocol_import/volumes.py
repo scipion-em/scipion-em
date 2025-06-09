@@ -27,6 +27,7 @@
 import enum
 import logging
 import os.path
+from typing import Optional
 
 logger = logging.getLogger(__name__)
 from os.path import exists, basename, abspath, relpath, join, splitext
@@ -370,12 +371,13 @@ Format may be PDB or MMCIF"""
         baseName = basename(atomStructPath)
         localPath = abspath(self._getExtraPath(baseName))
 
-        try:
+        chimeraPlugin = self.__getChimeraPlugin()
+        if chimeraPlugin:
             from chimera import Plugin as chimeraPlugin
             localPath = localPath[:-4] + localPath[-4:].replace(".pdb", ".cif")
             args = f'--nogui --cmd "open {atomStructPath}; save {localPath}; exit"'
             chimeraPlugin.runChimeraProgram(chimeraPlugin.getProgram(), args)
-        except ImportError:
+        else:
             if str(atomStructPath) != str(localPath):  # from local file
                 pwutils.copyFile(atomStructPath, localPath)
 
@@ -415,6 +417,14 @@ Format may be PDB or MMCIF"""
                           self.pdbFile.get())
         # TODO: maybe also validate that if exists is a valid PDB file
         return errors
+    
+    def __getChimeraPlugin():
+        try:
+            from chimera import Plugin as chimeraPlugin
+            if exists(chimeraPlugin.getProgram()):
+                return chimeraPlugin
+        except ImportError:
+            return
 
 
 class ProtImportSetOfAtomStructs(ProtImportFiles):
