@@ -418,6 +418,7 @@ Format may be PDB or MMCIF"""
         # TODO: maybe also validate that if exists is a valid PDB file
         return errors
     
+    @staticmethod
     def __getChimeraPlugin():
         try:
             from chimera import Plugin as chimeraPlugin
