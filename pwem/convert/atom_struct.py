@@ -939,15 +939,15 @@ def _frombase(inFileName, outFileName, log, oParam=1):
         print(pwutils.redStr("If maxit is installed check %s in scipion.conf" % MAXIT_HOME))
 
 
-def fromPDBToCIF(inFileName, outFileName, log):
+def fromPDBToCIF(inFileName, outFileName, log=None):
     _frombase(inFileName, outFileName, log, 1)
 
 
-def fromCIFToPDB(inFileName, outFileName, log):
+def fromCIFToPDB(inFileName, outFileName, log=None):
     _frombase(inFileName, outFileName, log, 2)
 
 
-def fromCIFTommCIF(inFileName, outFileName, log):
+def fromCIFTommCIF(inFileName, outFileName, log=None):
     _frombase(inFileName, outFileName, log, 8)
 
 def testLog(log, messages= None, sdterrLog = None):
@@ -1009,7 +1009,7 @@ def retry(runEnvirom, program, args, cwd, listAtomStruct=[], log=None, clean_dir
                                 runEnvirom(program, _args, cwd=cwd)
                     elif atomStructName.endswith(".cif"):
                         try:
-                            newAtomStructName = atomStructName.replace(atomStruct.split(".")[-1],"pdb")
+                            newAtomStructName = atomStructName.replace(atomStructName.split(".")[-1],"pdb")
                             _args = args.replace(atomStructName, newAtomStructName)
                             runEnvirom(program, _args, cwd=cwd)
                         except:
