@@ -73,29 +73,29 @@ class ProtSetFilterByNormal(EMProtocol):
 
     # --------------------------- STEPS functions -----------------------------
     def createOutputStep(self):
-        input = self._getInputSet()
-        output = input.createCopy(self._getPath(), copyInfo=True)
+        inputSet = self._getInputSet()
+        outputSet = inputSet.createCopy(self._getPath(), copyInfo=True)
         
         ANGLE_TARGETS = [90.0, 0.0]
         target = math.radians(ANGLE_TARGETS[self.selection.get()])
         tolerance = math.sin(math.radians(self.tolerance.get()))
-        for item in input:
+        for item in inputSet:
             transform: Transform = item._transform
             _, angle, _ = transform.getEulerAngles()
             angle -= target
             s = abs(math.sin(angle))
             if s < tolerance:
-                output.append(item)
+                outputSet.append(item)
             
-        self._defineOutputs(**{ProtSetFilterByNormalOutputs.Output.name: output})
-        self._defineSourceRelation(self.input, output)
+        self._defineOutputs(**{ProtSetFilterByNormalOutputs.Output.name: outputSet})
+        self._defineSourceRelation(self.input, outputSet)
             
     # --------------------------- INFO functions ------------------------------
     def _validate(self):
         errors = []
 
-        input = self._getInputSet()
-        item = input.getFirstItem()
+        inputSet = self._getInputSet()
+        item = inputSet.getFirstItem()
         if getattr(item, '_transform', None) is None:
             errors.append('Input items must have a transform assotiated.')
         
