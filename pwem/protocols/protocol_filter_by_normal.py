@@ -104,4 +104,3 @@ class ProtSetFilterByNormal(EMProtocol):
     # --------------------------- UTILS functions -----------------------------
     def _getInputSet(self) -> EMSet:
         return self.input.get()
-    
