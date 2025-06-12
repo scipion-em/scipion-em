@@ -46,6 +46,7 @@ from .protocol_alignment_assign import ProtAlignmentAssign
 from .protocol_alignment_invertHand import ProtAlignmentInvertHand
 from .protocol_batch import *
 from .protocol_extract_coordinates import ProtExtractCoords
+from .protocol_filter_by_normal import ProtSetFilterByNormal
 
 from .protocol_create_stream_data import ProtCreateStreamData
 from .parallel import ProtTestParallel
