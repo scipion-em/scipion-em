@@ -26,11 +26,21 @@
 
 from enum import Enum
 import math
+import numpy as np
 
+from pyworkflow.protocol.constants import LEVEL_ADVANCED
 from pyworkflow.protocol.params import (PointerParam, EnumParam, FloatParam, 
-                                        Range)
+                                        StringParam, Range)
 from pwem.protocols import EMProtocol
-from pwem.objects import EMSet, Transform
+from pwem.objects import EMSet, Transform, Matrix
+from pwem.convert.transformations import euler_from_matrix
+
+def deep_getattr(obj, attr: str):
+    for key in attr.split('.'):
+        obj = getattr(obj, key)
+    return obj
+
+
 
 class ProtSetFilterByNormalOutputs(Enum):
     Output = EMSet
@@ -66,6 +76,10 @@ class ProtSetFilterByNormal(EMProtocol):
                            'degrees. This defines the deviation from the angle '
                            'mentioned in the selection. Must be in [0, 90] '
                            'range.')
+        form.addParam('transformField', StringParam, label='Transform field',
+                      default='_transform', expertLevel=LEVEL_ADVANCED,
+                      help='Field used to retrieve the transform matrix of '
+                      'the items.')
 
     # --------------------------- INSERT steps functions ----------------------
     def _insertAllSteps(self):
@@ -80,10 +94,10 @@ class ProtSetFilterByNormal(EMProtocol):
         target = math.radians(ANGLE_TARGETS[self.selection.get()])
         tolerance = math.sin(math.radians(self.tolerance.get()))
         for item in inputSet:
-            transform: Transform = item._transform
-            _, angle, _ = transform.getEulerAngles()
-            angle -= target
-            s = abs(math.sin(angle))
+            matrix = self._getMatrix(item)
+            _, tilt, _ = euler_from_matrix(matrix, 'szyz')
+            tilt -= target
+            s = abs(math.sin(tilt))
             if s < tolerance:
                 outputSet.append(item)
             
@@ -96,11 +110,32 @@ class ProtSetFilterByNormal(EMProtocol):
 
         inputSet = self._getInputSet()
         item = inputSet.getFirstItem()
-        if getattr(item, '_transform', None) is None:
-            errors.append('Input items must have a transform assotiated.')
-        
+        try:
+            self._getMatrix(item)
+            
+        except (AttributeError, TypeError, ValueError):
+            errors.append('Input items must have a valid transform associated. '
+                          'Try modifying "Matrix Field" parameter if necessary')
+                    
         return errors
     
     # --------------------------- UTILS functions -----------------------------
     def _getInputSet(self) -> EMSet:
         return self.input.get()
+    
+    def _getMatrix(self, item) -> np.ndarray:
+        transform = deep_getattr(item, self.transformField.get())
+        if isinstance(transform, Transform):
+            matrix = transform.getMatrix()
+        elif isinstance(transform, Matrix):
+            matrix = transform.getMatrix()
+        else:
+            raise TypeError('Unknown transform type')
+        
+        if matrix.shape == (4, 4):
+            matrix = matrix[:3,:3]
+        
+        if matrix.shape != (3, 3):
+            raise ValueError('Invalid matrix shape')
+        
+        return matrix
