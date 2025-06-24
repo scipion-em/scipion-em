@@ -1,3 +1,7 @@
+V3.10.2:
+Developers:
+  - Fixing the star file DAO: Allowing white spaces in the tag block
+
 V3.10.1: Update metadata-viewer version to 2.5
 V3.10.0:
 Users:
