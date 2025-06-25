@@ -373,7 +373,6 @@ Format may be PDB or MMCIF"""
 
         chimeraPlugin = self.__getChimeraPlugin()
         if chimeraPlugin:
-            from chimera import Plugin as chimeraPlugin
             localPath = localPath[:-4] + localPath[-4:].replace(".pdb", ".cif")
             args = f'--nogui --cmd "open {atomStructPath}; save {localPath}; exit"'
             chimeraPlugin.runChimeraProgram(chimeraPlugin.getProgram(), args)
