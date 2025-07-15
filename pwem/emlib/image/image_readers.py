@@ -1,4 +1,5 @@
 import enum
+import os
 from functools import lru_cache
 from typing import Union
 
@@ -303,6 +304,7 @@ class ImageReader:
         """
         logger.warning("write method not implemented. Cannot write %s" % fileName)
 
+
 class ImageReadersRegistry:
     """ Class to register image readers to provide basic information about an image like dimensions or getting an image"""
     _readers = dict()  # Dictionary to hold the readers. The key is the extension
@@ -331,15 +333,41 @@ class ImageReadersRegistry:
         return reader
 
     @classmethod
-    @lru_cache
     def open(cls, filePath) -> ImageStack:
-        """"Opens the file and returns and ImageStack.
-        Accepts formats like 1@path/to/my/image.ext.
-        In this case there can be a performance penalty since readers are reading all the
-        stack but we are only taking one slice. This may be unavoidable in cases when you want
-        to read a single image but not optimal when you are going to go through all the stack.
         """
+        Opens an image or image stack from the given file path.
 
+        This method serves as a public interface and delegates the actual loading
+        to a cached internal method. It extracts the file last modification time
+        (mtime) to ensure the cache is invalidated if the file changes.
+
+        Parameters:
+            filePath (str): Path to the image file. Can include a slice index in the format
+                            '1@path/to/image.ext' to request a specific slice.
+
+        Returns:
+            ImageStack: The loaded image data, either a single slice or a full stack.
+        """
+        mTime = os.path.getmtime(filePath.split("@")[-1])
+        return cls._openInternal(filePath, mTime)
+
+    @classmethod
+    @lru_cache
+    def _openInternal(cls, filePath, mtime) -> ImageStack:
+        """
+        Internal method that performs the actual image loading and is cached.
+
+        This method handles slicing requests if the reader supports it. If not,
+        it loads the entire image stack and extracts the requested slice manually.
+        The cache is tied to both filePath and mTime to ensure consistency when files change.
+
+        Parameters:
+            filePath (str): Path to the image file. May include a slice index prefix ('N@path').
+            mTime (float): Last modification timestamp of the file (used for cache invalidation).
+
+        Returns:
+            ImageStack: The loaded image data.
+        """
         parts = filePath.split("@")
 
         filePath = parts[-1]
