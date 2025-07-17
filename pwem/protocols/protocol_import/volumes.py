@@ -372,10 +372,11 @@ Format may be PDB or MMCIF"""
 
         try:
             from chimera import Plugin as chimeraPlugin
-            localPath = localPath[:-4] + localPath[-4:].replace(".pdb", ".cif")
-            args = f'--nogui --cmd "open {atomStructPath}; save {localPath}; exit"'
+            cifPath = localPath[:-4] + localPath[-4:].replace(".pdb", ".cif")
+            args = f'--nogui --cmd "open {atomStructPath}; save {cifPath}; exit"'
             chimeraPlugin.runChimeraProgram(chimeraPlugin.getProgram(), args)
-        except ImportError:
+            localPath = cifPath
+        except:
             if str(atomStructPath) != str(localPath):  # from local file
                 pwutils.copyFile(atomStructPath, localPath)
 
