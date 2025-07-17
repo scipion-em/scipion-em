@@ -91,6 +91,7 @@ class Chimera:
 
     @classmethod
     def findHome(cls):
+        '''Returns the newest ChimeraX version found in the EMROOT'''
         files = os.listdir(emConfig.EM_ROOT)
         files.sort(reverse=True)
         for file in files:
