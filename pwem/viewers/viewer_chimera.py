@@ -90,6 +90,15 @@ class Chimera:
         return cls._symmetryMap[scipionSym]
 
     @classmethod
+    def findHome(cls):
+        files = os.listdir(emConfig.EM_ROOT)
+        files.sort(reverse=True)
+        for file in files:
+            if 'chimerax' in file:
+                return os.path.join(emConfig.EM_ROOT, file)
+        return os.path.join(emConfig.EM_ROOT, 'chimerax-1.2.5')
+
+    @classmethod
     def getHome(cls):
         """ Returns chimera home, trying first to take it from chimera plugin. If it fails it will return, the default value in the config"""
         with pwutils.weakImport("chimera"):
@@ -97,7 +106,7 @@ class Chimera:
             from chimera import Plugin as chimeraPlugin
             return chimeraPlugin.getHome()
 
-        return os.path.join(emConfig.EM_ROOT, 'chimerax-1.2.5')
+        return cls.findHome()
 
     @classmethod
     def getEnviron(cls):
