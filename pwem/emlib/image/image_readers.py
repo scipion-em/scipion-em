@@ -25,6 +25,7 @@ class ROT_MODE(enum.Enum):
     CONDITIONAL=3 # Similar to FIXED, but shifting x and y original dimensions in some cases to reduce
                   # information loss. 45<rot<135 and 225<rot<315
 
+
 # Classes to replace one day the functionality covered by ImageHandler... which uses xmipp binding
 class ImageStack:
     """Class to hold image stacks. A single image is considered a stack of one image """
@@ -130,7 +131,7 @@ class ImageStack:
         """Rotates a numpy array"""
 
         bg = npArray.mean() if bg is None else bg # Get the mean value
-        reshape = mode != ROT_MODE.FIXED  # Fixed mode should not reshape the array
+        reshape = mode == ROT_MODE.FIXED  # Fixed mode should not reshape the array
 
         # Rotate the image
         rotated = rotate(npArray, angle, reshape=reshape, mode='constant', cval=bg)
