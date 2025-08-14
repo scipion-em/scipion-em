@@ -1,3 +1,26 @@
+V3.10.2:
+Developers:
+  - Fixing the star file DAO: Allowing white spaces in the tag block
+  - Internal method that performs the actual image loading and is cached.
+
+V3.10.1: Update metadata-viewer version to 2.5
+V3.10.0:
+Users:
+  - Scipion metadata viewer is default viewer
+  - Viewers proirity reviewed
+  - Angular distribution viewer only offered with sets with alignments
+  - Fix local resolution viewers load.
+  - Fixing an error visualizing micrographs and particles with the volume viewer
+Developers:
+  - ImageReaders reviewed: open returns the whole stack. openSlice is optional
+  - Volume viewer adapted (uses open and not getArray())
+  - ImageFileHandler uses ImageReaderRegistry...falling back to XmippImageReader (less xmipp coupled)
+  - ImageStack class has some image operations: flip, rotate, multiply, shift, transform, invert, normalize and a write method.
+  - Transform.getShifts compatible with tomo data (3x3 matrix: 1 angle + shift)
+  - SetOfImages.getBinning: returns the binning as a result of targeting a sampling rate.
+  - toml used.
+  - ImageStack.thumbnailSlice: Uses pillow's thumbnail (faster than skimage nut less accurate)
+
 V3.9.4:
 Users:
   - Edit set protocol works with complex sets (titlseries, Classes2d) using "Sub item formula"
@@ -6,7 +29,9 @@ Users:
   - Improving subset creation
 Developers:
    - execution mode moved to class level
-   - classifyItems: report detailed information when updateItemCallback fails
+   - classifyItems: 1. report detailed information when updateItemCallback fails
+                    2. Adding a boolean flag (cancelNextWhenAppendIsFalse) that determines whether the
+                       classification process should skip the next item
    - Generalize the name convention to load acquisition info in the import movies/micrographs
 V3.9.3: hotfix
 Users:

@@ -100,7 +100,7 @@ class ProtUserSubSet(BatchProtocol):
             newSet = markedSet.createCopy(self._getPath(),
                                           copyInfo=True,
                                           copyItems=True,
-                                          rowFilter=self._itemSelected)
+                                          rowFilter=self._getRowSelector())
 
             # Define outputs, may be use something more specific than "subset"
             self._defineOutputs(subset=newSet)
@@ -177,7 +177,7 @@ class ProtUserSubSet(BatchProtocol):
         except Exception:
             output = inputObj.createCopy(self._getPath())
 
-        for item in modifiedSet.iterItems(rowFilter=self._itemSelected):
+        for item in modifiedSet.iterItems(rowFilter=self._getRowSelector()):
             output.append(item)
 
         if hasattr(modifiedSet, 'copyInfo'):
@@ -194,6 +194,26 @@ class ProtUserSubSet(BatchProtocol):
     def usingShowJ(self):
         return ".sqlite" in self.sqliteFile.get()
 
+    def _getRowSelector(self):
+        """ Returns tha ShowJ or txt selector callback"""
+        if self.usingShowJ():
+            return self._enableSelectorInRow
+        else:
+            return self._rowInSelectionTxt
+
+    def _getItemSelector(self):
+        """ Returns tha ShowJ or txt selector callback"""
+        if self.usingShowJ():
+            return self._enableSelectorInItem
+        else:
+            return self._itemInSelectionTxt
+
+    def _enableSelectorInRow(self, row):
+        return row['enabled']
+
+    def _enableSelectorInItem(self, item):
+        return item.isEnabled()
+
     def _itemSelected(self, item):
         """ Returns true if the element is selected. We will have to modes: ShowJ or Metadata viewer
         ShowJ marks the items as enable=False
@@ -201,13 +221,17 @@ class ProtUserSubSet(BatchProtocol):
 
         """
         if self.usingShowJ():
-            return item['enabled']
+            return self._enableSelectorInRow(item)
         else:
-            return self._itemInSelectionTxt(item)
+            return self._rowInSelectionTxt(item)
 
     def _itemInSelectionTxt(self, item):
 
-        itemId = item['id']
+        itemId = item.getObjId()
+        return itemId in self._getSelectionTxtDict()
+
+    def _rowInSelectionTxt(self, row):
+        itemId = row['id']
         return itemId in self._getSelectionTxtDict()
 
     def _createSubSetFromImages(self, inputImages,
@@ -228,7 +252,7 @@ class ProtUserSubSet(BatchProtocol):
         else:
             copyInfoCallback(output)
 
-        output.appendFromImages(modifiedSet, self._itemSelected)
+        output.appendFromImages(modifiedSet, rowFilter=self._getRowSelector())
         # Register outputs
         self._defineOutput(className, output)
 
@@ -320,7 +344,7 @@ class ProtUserSubSet(BatchProtocol):
                                      prefix=self._dbPrefix)
 
         count = 0
-        for ctf in modifiedSet.iterItems(rowFilter=self._itemSelected):
+        for ctf in modifiedSet.iterItems(rowFilter=self._getRowSelector()):
             mic = ctf.getMicrograph()
             outputMics.append(mic)
             outputCtfs.append(ctf)
@@ -365,7 +389,7 @@ class ProtUserSubSet(BatchProtocol):
         # THis is because is getting the alignment info from the input images and this does not have to match.
         # This created an error when scaling averages #903
         output.setAlignment(ALIGN_NONE)
-        for cls in modifiedSet.iterItems(rowFilter=self._itemSelected):
+        for cls in modifiedSet.iterItems(rowFilter=self._getRowSelector()):
             img = cls.getRepresentative()
             if not output.getSamplingRate():
                 output.setSamplingRate(cls.getSamplingRate()
@@ -417,7 +441,7 @@ class ProtUserSubSet(BatchProtocol):
         modifiedSet = inputClasses.getClass()(filename=self._dbName, prefix=self._dbPrefix)
         self.info("Creating subset of images from classes, sqlite file: %s" % self._dbName)
         self._copyInfoAndSetAlignment(inputClasses, output)
-        output.appendFromClasses(modifiedSet, filterClassFunc=self._itemSelected)
+        output.appendFromClasses(modifiedSet, filterClassFunc=self._getItemSelector())
         # Register outputs
         self._defineOutput(className, output)
         if inputClasses.hasObjId():
@@ -450,7 +474,7 @@ class ProtUserSubSet(BatchProtocol):
         modifiedSet = inputClasses.getClass()(filename=self._dbName, prefix=self._dbPrefix)
         self.info("Creating subset of classes from classes, sqlite file: %s" % self._dbName)
         output.copyInfo(inputClasses)
-        output.appendFromClasses(modifiedSet,filterClassFunc=self._itemSelected)
+        output.appendFromClasses(modifiedSet,filterClassFunc=self._getItemSelector())
         # Register outputs
         self._defineOutput(className, output)
         if inputClasses.hasObjId():
@@ -497,7 +521,7 @@ class ProtUserSubSet(BatchProtocol):
         output = emobj.SetOfAtomStructs(filename=self._getPath('atomstructs.sqlite'))
         modifiedSet = emobj.SetOfAtomStructs(filename=self._dbName, prefix=self._dbPrefix)
 
-        for pdb in modifiedSet.iterItems(rowFilter=self._itemSelected):
+        for pdb in modifiedSet.iterItems(rowFilter=self._getRowSelector()):
             output.append(pdb)
 
         # Register outputs

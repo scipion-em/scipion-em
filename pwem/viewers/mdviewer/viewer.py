@@ -46,23 +46,29 @@ class MDView(View):
         if self.port:
             env[SCIPION_PORT] = str(self.port)
             env[SCIPION_OBJECT_ID] = str(self._emSet.getObjId())
-            visibleLabels, orderLabels = self.getVisibleAndOrderLabels()
-            orderLabels = orderLabels.replace(' _filename', ' stack', 1)
+            visibleLabels, orderLabels, renderLabels = self.getVisibleAndOrderLabels()
+            fileNameLabel = ' _filename'
+            stackLabel = ' stack'
+            orderLabels = orderLabels.replace(fileNameLabel, stackLabel, 1)
+            renderLabels = renderLabels.replace(fileNameLabel, stackLabel, 1)
+            if fileNameLabel in visibleLabels and stackLabel not in renderLabels:
+                renderLabels += stackLabel
             fn = self._emSet.getFileName()
         else:
-            visibleLabels = orderLabels = ""
+            visibleLabels = orderLabels = renderLabels = ""
             fn = self._emSet
 
         subprocess.Popen(
             [PYTHON, "-m", "metadataviewer", "--extensionpath", os.path.join(os.path.dirname(__file__), "readers.py"),
-            fn, "--visiblelabels", visibleLabels, "--orderlabels", orderLabels])
+            fn, "--visiblelabels", visibleLabels, "--orderlabels", orderLabels, "--renderlabels", renderLabels])
 
     def getVisibleAndOrderLabels(self):
-        from pwem.viewers import VISIBLE, ORDER
+        from pwem.viewers import VISIBLE, ORDER, RENDER
         config = RegistryViewerConfig.getConfig(type(self._emSet))
         visible = config[VISIBLE] if config and VISIBLE in config else ''
         order = config[ORDER] if config and ORDER in config else ''
-        return visible, order
+        render = config[RENDER] if config and RENDER in config else ''
+        return visible, order, render
 
 
 class MDViewer(Viewer):
@@ -71,6 +77,17 @@ class MDViewer(Viewer):
 
     def _visualize(self, obj, **kwargs):
         return [MDView(obj, self.protocol, self._project.port)]
+
+    @classmethod
+    def can_handle_this(cls, classHierarchy, instance=None):
+        """ Returns super value but make it specific, so it is prioritized since EMSet target makes it non-specific."""
+
+        target = super().can_handle_this(classHierarchy,instance=instance)
+
+        if target is not None:
+            target = classHierarchy[0]
+
+        return target
 
 
 

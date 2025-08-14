@@ -23,11 +23,9 @@ class ScipionImageReader(ImageReader):
     @classmethod
     @lru_cache
     def open(cls, path):
-
         imgStack = ImageReadersRegistry.open(path)
-        # So far readers are not returning the whole stack...even if they are tomograms or volumes.
-        # They return in this case the central slice. So we always (for now) have a sinlge image.
-        return cls._normalize(imgStack.getImage())
+        # They return in this case the whole stack. Ask for the central slice
+        return cls._normalize(imgStack.getCentralImage())
 
     @classmethod
     def _normalize(cls, npImage):

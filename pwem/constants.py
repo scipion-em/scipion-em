@@ -27,6 +27,8 @@
 """
 This modules contains constants related to EM
 """
+import enum
+
 # ------------------ Constants values --------------------------------------
 
 NO_INDEX = 0  # This is the index value for single images
@@ -224,3 +226,9 @@ ALL_TIF_EXTENSIONS = ['tif','tiff', 'gain', 'eer']
 # Id field/attrubute constants. TODO: use declarations in pyworkflow
 ID_COLUMN='id'
 ID_ATTRIBUTE='_objId'
+
+# Loop return actions
+class LoopActions(enum.Enum):
+    NONE = 1
+    CONTINUE = 2
+    BREAK = 3

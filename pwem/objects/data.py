@@ -41,7 +41,7 @@ from pyworkflow.object import (Object, Float, Integer, String,
                                OrderedDict, CsvList, Boolean, Set, Pointer,
                                Scalar)
 from pwem.constants import (NO_INDEX, ALIGN_NONE, ALIGN_2D, ALIGN_3D,
-                            ALIGN_PROJ, ALIGNMENTS)
+                            ALIGN_PROJ, ALIGNMENTS, LoopActions)
 
 
 class EMObject(Object):
@@ -190,7 +190,8 @@ class Transform(EMObject):
 
     def getShifts(self):
         m = self.getMatrix()
-        return m[0, 3], m[1, 3], m[2, 3]
+        # take last column values. Tomo matrices are 3x3: 2x2 angle + shifts.
+        return m[0, -1], m[1, -1], m[2, -1]
 
     def setShifts(self, x, y, z):
         m = self.getMatrix()
@@ -1199,7 +1200,10 @@ class EMSet(Set, EMObject):
                   copyDisabled=False,
                   doClone=True,
                   itemSelectedCallback=None,
-                  rowFilter=None):
+                  rowFilter=None,
+                  orderBy='id',
+                  direction='ASC'
+                  ):
         """ Copy items from another set, allowing to update items information
         based on another source of data, paired with each item.
 
@@ -1222,27 +1226,34 @@ class EMSet(Set, EMObject):
                 avoid the clone operation and the related overhead.
             itemSelectedCallback: Optional, callback receiving an item and
                 returning true if it has to be copied
+            orderBy: Attribute by which the items will be sorted before copying. Default is 'id'.
+            direction: Sorting direction, either 'ASC' for ascending or 'DESC' for descending. Default is 'ASC'.
         """
 
         if itemSelectedCallback is None:
             itemSelectedCallback = EMSet.isItemEnabled
 
-        itemDataIter = itemDataIterator  # shortcut
+        if isinstance(otherSet, Set):
+            itemIterator = otherSet.iterItems(rowFilter=rowFilter,
+                                              orderBy=orderBy,
+                                              direction=direction)
+        else:
+            itemIterator = otherSet
 
-        for item in otherSet.iterItems(rowFilter=rowFilter):
+        for item in itemIterator:
             # copy items if enabled or copyDisabled=True
             if copyDisabled or itemSelectedCallback(item):
                 newItem = item.clone() if doClone else item
                 if updateItemCallback:
-                    row = None if itemDataIter is None else next(itemDataIter)
+                    row = None if itemDataIterator is None else next(itemDataIterator)
                     updateItemCallback(newItem, row)
                 # If updateCallBack function returns attribute
                 # _appendItem to False do not append the item
                 if getattr(newItem, "_appendItem", True):
                     self.append(newItem)
             else:
-                if itemDataIter is not None:
-                    next(itemDataIter)  # just skip disabled data row
+                if itemDataIterator is not None:
+                    next(itemDataIterator)  # just skip disabled data row
 
     @classmethod
     def create(cls, outputPath,
@@ -1472,6 +1483,21 @@ class SetOfImages(EMSet):
                 postprocessImage(img)
             self.append(img)
 
+    def getBinning(self, target_sr, decimals=0):
+        """ Returns the ratio of the sampling rate to target_sr.
+        :param target_sr: Target size you want the binning for.
+            E.g: target_sr=10, this.sr = 2, binning = 5
+        :param rounded: (True) pass False if you want exact ratio
+
+        """
+
+        binning = target_sr/self.getSamplingRate()
+        binning = round(binning, decimals)
+        if decimals==0:
+            binning=int(binning)
+        return binning
+
+
     def getDim(self):
         """ Return the dimensions of the first image in the set. """
         if self._firstDim.isEmpty():
@@ -1535,7 +1561,7 @@ class SetOfImages(EMSet):
                 img.setAcquisition(self.getAcquisition())
             yield img
 
-    def appendFromImages(self, imagesSet, itemSelectedCallback=None):
+    def appendFromImages(self, imagesSet, itemSelectedCallback=None, rowFilter=None):
         """ Iterate over the images and append
         every image that is enabled.
 
@@ -1547,8 +1573,9 @@ class SetOfImages(EMSet):
         if itemSelectedCallback is None:
             itemSelectedCallback = SetOfImages.isItemEnabled
 
-        for img in imagesSet.iterItems(rowFilter=itemSelectedCallback):
-            self.append(img)
+        for img in imagesSet.iterItems(rowFilter=rowFilter):
+            if itemSelectedCallback(img):
+                self.append(img)
 
     def appendFromClasses(self, classesSet, filterClassFunc=None):
         """ Iterate over the classes and the element inside each
@@ -1558,8 +1585,8 @@ class SetOfImages(EMSet):
         if filterClassFunc is None:
             filterClassFunc = SetOfImages.isItemEnabled
 
-        for cls in classesSet.iterItems(rowFilter=filterClassFunc):
-            if cls.getSize() > 0:
+        for cls in classesSet.iterItems():
+            if filterClassFunc(cls) and cls.getSize() > 0:
                 for img in cls:
                     if img.isEnabled():
                         self.append(img)
@@ -1687,10 +1714,8 @@ class SetOfVolumes(SetOfImages):
         SetOfImages.__init__(self, **kwargs)
 
 
-class SetOfMorphing(SetOfVolumes):
-    def __init__(self, **kwargs):
-        SetOfVolumes.__init__(self, **kwargs)
-
+class Morphing(SetOfVolumes):
+    pass
 
 class SetOfCTF(EMSet):
     """ Contains a set of CTF models estimated for a set of images."""
@@ -2233,8 +2258,8 @@ class SetOfClasses(EMSet):
         if filterClassFunc is None:
             filterClassFunc = lambda cls: True
 
-        for cls in classesSet.iterItems(rowFilter=filterClassFunc):
-            if cls.isEnabled():
+        for cls in classesSet.iterItems():
+            if cls.isEnabled() and filterClassFunc(cls):
                 newCls = self.ITEM_TYPE()
                 newCls.copyInfo(cls)
                 newCls.setObjId(cls.getObjId())
@@ -2253,7 +2278,8 @@ class SetOfClasses(EMSet):
                       classifyDisabled=False,
                       iterParams=None,
                       doClone=True,
-                      raiseOnNextFailure=True):
+                      raiseOnNextFailure=True,
+                      cancelNextWhenAppendIsFalse=False):
         """ Classify items from the self.getImages() and add the needed classes.
         This function iterates over each item in the images and call
         the updateItemCallback to register the information coming from
@@ -2274,10 +2300,116 @@ class SetOfClasses(EMSet):
                                    of failure. Pass False when itemDataIterator is a subset of the inputSet.
                                    Important: Pass the right iterParams to make sure the iteration on the inputSet
                                               matches the iteration of the itemDataIterator
-        """
-        itemDataIter = itemDataIterator  # shortcut
+        :param cancelNextWhenAppendIsFalse: A boolean flag that determines whether the classification process should skip
+                                    the next item when the `_appendItem` attribute of the current item is set to `False`.
+                                    If set to `True`, after encountering an item where `_appendItem` is `False`, the
+                                    next item in the iteration will be skipped. If set to `False` (default),
+                                    classification continues normally without skipping the next item.
 
-        clsDict = {}  # Dictionary to store the (classId, classSet) pairs
+        """
+
+        # Dictionary to store the {classId: class} pairs
+        clsDict = self._getExistingItems()
+
+        inputSet = self.getImages()
+        iterParams = iterParams or {}
+        cancelNext = False
+
+        # For each item in the input set: Particles tipically (which will contribute to the main items here: class2d or 3d).
+        for item in inputSet.iterItems(**iterParams):
+            # copy items if enabled or copyDisabled=True
+            if classifyDisabled or item.isEnabled():
+
+                # get the new item (cloned or not)
+                newItem = item.clone() if doClone else item
+
+                # If we need have a callback to update the item
+                if updateItemCallback:
+
+                    action, cancelNext = self._updateItem(cancelNext, cancelNextWhenAppendIsFalse, itemDataIterator, newItem,
+                                     raiseOnNextFailure, updateItemCallback)
+
+                    if action == LoopActions.BREAK:
+                        break
+                    elif action == LoopActions.CONTINUE:
+                        continue
+
+                # Get the class id (reference)
+                ref = newItem.getClassId()
+                if ref is None:
+                    raise Exception('Particle classId is None!!!')
+                if ref == 0:
+                    continue
+
+                # Get the class the newItem belongs to.
+                classItem = self._get_or_create_class(clsDict, ref, updateClassCallback)
+                classItem.append(newItem)
+                # cancel next() cancelation --> Enable next()
+                cancelNext = False
+            else:
+                if itemDataIterator is not None:
+                    next(itemDataIterator)  # just skip disabled data row
+
+        for classItem in clsDict.values():
+            self.update(classItem)
+
+    def _updateItem(self, cancelNext, cancelNextWhenAppendIsFalse, itemDataIterator, newItem, raiseOnNextFailure,
+                    updateItemCallback)->LoopActions:
+        # Declare row
+        row = None
+
+        # If next is not canceled and have and iterator to do the next()
+        if not cancelNext and itemDataIterator is not None:
+            try:
+                # ... do the next
+                row = next(itemDataIterator)
+            except Exception as ex:
+                # ... if need to raise an exception
+                if raiseOnNextFailure:
+                    raise ex
+                else:
+                    # tolerate next execeptions
+                    return LoopActions.BREAK, cancelNext
+        # Update items using callback
+        try:
+            updateItemCallback(newItem, row)
+        except Exception as ex:
+            logger.error("There was an error updating the particle %s (row: %s): %s" % (
+                newItem.getObjId(), str(row), str(ex)), exc_info=ex)
+            raise ex
+        # If updateCallBack function returns attribute
+        # _appendItem to False do not append the item
+        if not getattr(newItem, "_appendItem", True):
+            cancelNext = cancelNextWhenAppendIsFalse
+            return LoopActions.CONTINUE, cancelNext
+
+        return LoopActions.NONE, cancelNext
+
+    def _get_or_create_class(self, clsDict, ref, updateClassCallback):
+        # Register a new class set if the ref was not found.
+        # if not ref in clsDict:
+
+        inputSet = self.getImages()
+
+        if ref not in clsDict:
+            classItem = self.ITEM_TYPE(objId=ref)
+            rep = self.REP_TYPE()
+            classItem.setRepresentative(rep)
+            clsDict[ref] = classItem
+            classItem.copyInfo(inputSet)
+            classItem.setAcquisition(inputSet.getAcquisition())
+            if updateClassCallback is not None:
+                updateClassCallback(classItem)
+            self.append(classItem)
+        else:
+            classItem = clsDict[ref]
+        return classItem
+
+    def _getExistingItems(self):
+        """ Returns a dictionary with the class id as key and the class as value asa representation
+        of what already is in the set"""
+        clsDict = dict()
+
         if not self.isEmpty():
             for item in self.iterItems():
                 # clone with a param to clone also mapper path?
@@ -2287,58 +2419,7 @@ class SetOfClasses(EMSet):
                 clone.enableAppend()
                 clsDict[item.getObjId()] = clone
 
-        inputSet = self.getImages()
-        iterParams = iterParams or {}
-
-        for item in inputSet.iterItems(**iterParams):
-            # copy items if enabled or copyDisabled=True
-            if classifyDisabled or item.isEnabled():
-                newItem = item.clone() if doClone else item
-                if updateItemCallback:
-                    try:
-                        row = None if itemDataIter is None else next(itemDataIter)
-                    except Exception as ex:
-                        if raiseOnNextFailure:
-                            raise ex
-                        else:
-                            break
-                    try:
-                        updateItemCallback(newItem, row)
-                    except Exception as ex:
-                        logger.error("There was an error updating the particle %s (row: %s): %s" % (newItem.getObjId(), str(row), str(ex)), exc_info=ex)
-                        raise ex
-                    # If updateCallBack function returns attribute
-                    # _appendItem to False do not append the item
-                    if not getattr(newItem, "_appendItem", True):
-                        continue
-                ref = newItem.getClassId()
-                if ref is None:
-                    raise Exception('Particle classId is None!!!')
-                if ref == 0:
-                    continue
-
-                # Register a new class set if the ref was not found.
-                # if not ref in clsDict:
-                if ref not in clsDict:
-                    classItem = self.ITEM_TYPE(objId=ref)
-                    rep = self.REP_TYPE()
-                    classItem.setRepresentative(rep)
-                    clsDict[ref] = classItem
-                    classItem.copyInfo(inputSet)
-                    classItem.setAcquisition(inputSet.getAcquisition())
-                    if updateClassCallback is not None:
-                        updateClassCallback(classItem)
-                    self.append(classItem)
-                else:
-                    classItem = clsDict[ref]
-                classItem.append(newItem)
-            else:
-                if itemDataIter is not None:
-                    next(itemDataIter)  # just skip disabled data row
-
-        for classItem in clsDict.values():
-            self.update(classItem)
-
+        return clsDict
 
 class SetOfClasses2D(SetOfClasses):
     """ Store results from a 2D classification of Particles. """
