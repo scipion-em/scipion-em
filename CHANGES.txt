@@ -2,6 +2,7 @@ V3.10.2:
 Developers:
   - Fixing the star file DAO: Allowing white spaces in the tag block
   - Internal method that performs the actual image loading and is cached.
+  - __debug__ enable; assert commands replaced by if not + raise.
 
 V3.10.1: Update metadata-viewer version to 2.5
 V3.10.0:
