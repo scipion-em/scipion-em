@@ -191,6 +191,10 @@ class ImageStack:
     def thumbnailSlice(cls, npImage, width, height, normalize=True):
         """ Calls PIl thumbnail. It is less precise but faster than scaleSlice"""
 
+        imgX, imgY = npImage.shape
+        if width > imgX or height > imgY:
+            raise Exception("thumbnailSlice does not scale up images.")
+
         img = cls.asPilImage(npImage, normalize=normalize)
         img.thumbnail((width,height))
         return np.array(img)

@@ -320,7 +320,9 @@ class TestProjectionEdit(pwtests.BaseTest):
         if counter >= 4:
             raise SystemExit("Can connect to server")
 
-        assert req.status_code == 200
+
+        if req.status_code != 200:
+            raise AssertionError("Couldn't get file form %s" % url)
 
         # save retrieved file in /tmp
         with open(self.proj.getTmpPath(f"{baseName}"), "wb") as _fh:
