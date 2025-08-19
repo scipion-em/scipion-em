@@ -127,10 +127,15 @@ class ImageStack:
         return npArray[start_y:start_y + target_height, start_x:start_x + target_width]
 
     @classmethod
-    def rotateSlice(cls, npArray: numpy.ndarray, angle: float, mode=ROT_MODE.FIXED, bg=None) -> numpy.ndarray:
+    def rotateSlice(cls, npArray: numpy.ndarray, angle: float, mode=ROT_MODE.CONDITIONAL, bg=None) -> numpy.ndarray:
         """Rotates a numpy array"""
 
-        bg = npArray.mean() if bg is None else bg # Get the mean value
+        angle = angle % 360  # negative angles should turn into its equivalent: -15 -> 345
+
+        if angle == 0:
+            return npArray
+
+        bg = npArray.mean() if bg is None else bg  # Get the mean value
         reshape = mode == ROT_MODE.FIXED  # Fixed mode should not reshape the array
 
         # Rotate the image
@@ -138,7 +143,7 @@ class ImageStack:
 
         # If mode
         if mode == ROT_MODE.CONDITIONAL:
-            angle = angle % 360  # negative angles should turn into its equivalent: -15 -> 345
+
             target_height, target_width = npArray.shape
 
             # If in the region to shift dimension
@@ -157,7 +162,7 @@ class ImageStack:
         :param shifts = float or sequence. If a sequence, first value should be X shift and second Y shift
         """
 
-        bg = image.mean() if bg is  None else bg# Get the mean value
+        bg = image.mean() if bg is  None else bg  # Get the mean value
 
         if not isinstance(shifts, float):
             # Swap: shift expect first element to be y abd then x. We have opposite convention
@@ -373,6 +378,8 @@ class ImageReadersRegistry:
         Returns:
             ImageStack: The loaded image data.
         """
+
+        logger.debug(f"Reading image file {filePath}")
         parts = filePath.split("@")
 
         filePath = parts[-1]
@@ -543,7 +550,6 @@ class MRCImageReader(ImageReader):
         return imfloat
 
     @classmethod
-    @lru_cache
     def getMrcImage(cls, fileName):
         logger.info("Reading %s" % fileName)
         return mrcfile.mmap(fileName, mode='r+', permissive=True)
