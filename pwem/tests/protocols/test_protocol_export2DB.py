@@ -308,7 +308,6 @@ class TestExport2DataBases(pwtest.BaseTest):
         self.assertTrue(os.path.exists(nameVolume))
         self.assertTrue(os.path.exists(nameFsc))
         self.assertTrue(os.path.exists(nameAtomStruct))
-        # assert results
 
     def test_symmetry(self):
         """ If the input is a 3D map with half volumes associated
