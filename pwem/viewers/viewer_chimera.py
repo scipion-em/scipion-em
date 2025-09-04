@@ -366,7 +366,8 @@ class ChimeraViewer(pwviewer.Viewer):
     def _visualize(self, obj, **kwargs):
         cls = type(obj)
         if issubclass(cls, emobj.AtomStruct):
-            objSet = SetOfAtomStructs.create(outputPath='/tmp', suffix=self.protocol.getObjId())
+            outDir = os.path.dirname(obj.getFileName())
+            objSet = SetOfAtomStructs.create(outputPath=outDir, suffix=self.protocol.getObjId())
             objSet.append(obj)
             if hasattr(obj, '_chimeraScript'):
                 objSet.copyAttributes(obj, '_chimeraScript')
