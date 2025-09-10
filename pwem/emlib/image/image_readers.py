@@ -212,6 +212,22 @@ class ImageStack:
         mode = 0 if vertically else 1
         return numpy.flip(npImage, mode)
 
+    @classmethod
+    def highlightSlice(cls, npImage:numpy.ndarray, stds=2):
+        """
+        :param npImage: image as 2d numpy array
+        :param stds: number of STD to apply the contrast
+        """
+
+        imgmean = npImage.mean()
+        imgstd = npImage.std()
+        offset = stds * imgstd
+        low = imgmean - offset
+        high = imgmean + offset
+        contrast_data = np.clip(npImage, low, high)
+        return contrast_data
+
+
     def flip(self, vertically=True):
         """Flip all images of an ImageStack horizontally or vertically.
             Vertically is up-down, horizontally is left-right."""
@@ -255,12 +271,20 @@ class ImageStack:
         """
 
         return self._applyOperation(lambda npImage, factor: npImage*factor, factor)
+
     def invert(self):
+        """ Invert values of all slices"""
 
         return self.multiply(factor=-1)
 
     def normalize(self):
+        """ Normalize values of all slices"""
         return self._applyOperation(self.normalizeSlice)
+
+    def highlight(self, stds=2):
+        """ Increases de contrast of all slices
+        :param stds: number of STD to apply the contrast"""
+        return  self._applyOperation(self.highlightSlice, stds=stds)
 
     def _applyOperation(self, operation, *args, **kwargs):
         rotImg = ImageStack()
