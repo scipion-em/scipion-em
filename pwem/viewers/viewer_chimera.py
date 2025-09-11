@@ -94,10 +94,18 @@ class Chimera:
         '''Returns the newest ChimeraX version found in the EMROOT'''
         files = os.listdir(emConfig.EM_ROOT)
         files.sort(reverse=True)
+
+        # Case 1: exact 'chimerax' directory exists
+        if "chimerax" in files:
+            return os.path.join(emConfig.EM_ROOT, "chimerax")
+
+        # Case 2: fallback to latest chimerax-XXXXXX
         for file in files:
-            if 'chimerax' in file:
+            if file.startswith('chimerax'):
                 return os.path.join(emConfig.EM_ROOT, file)
-        return os.path.join(emConfig.EM_ROOT, 'chimerax-1.2.5')
+
+        # Case 3: nothing found
+        return None
 
     @classmethod
     def getHome(cls):
