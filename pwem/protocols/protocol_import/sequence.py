@@ -500,10 +500,12 @@ class ProtImportSequence(ProtImportFiles):
         pass
 
     def _getUniProtID(self):
-        return self.uniProtSequence.get().strip()
+        uniId = self.uniProtSequence.get()
+        return uniId.strip() if uniId else uniId
 
     def _getGeneBankID(self):
-        return self.geneBankSequence.get().strip()
+        genId = self.geneBankSequence.get()
+        return genId.strip() if genId else genId
 
     def _getAlphabet(self):
         if self.inputSequence == Alphabet.AMINOACIDS:
