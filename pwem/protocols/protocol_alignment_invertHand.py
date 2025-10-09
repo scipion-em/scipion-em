@@ -69,8 +69,8 @@ class ProtAlignmentInvertHand(ProtAlign2D):
             m = t.getMatrix()
             m[0, 2] *= -1.
             m[1, 2] *= -1.
-            m[2, 0] *= -1.
             m[2, 1] *= -1.
+            m[2, 0] *= -1.
             m[2, 3] *= -1.
             # particle.setTransform(t.setMatrix(m))
             outputParticles.append(particle)
