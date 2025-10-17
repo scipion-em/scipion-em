@@ -430,11 +430,12 @@ class TestSymmetry(pwtests.unittest.TestCase):
                                                        circumscribed_radius=1, 
                                                        center=(0, 0, 0))
         
-        #print("vectorsPlane", vectorsPlane)
-        refereceVectors= [ [-1.0, 0.0, 0.0],
-                            [0.5, 0.8660254037844387, 0.],
-                            [0.5, 0.28867513459481275, -0.816496580927726]
-        ]                            
+        # nprint("vectorsPlane", vectorsPlane)
+        refereceVectors = [
+            [-1.0, 0.0, 0.0],
+            [0.5, 0.8660254037844387, 0.],
+            [0.5, 0.28867513459481275, -0.816496580927726]
+        ]                         
         for v, w in zip(refereceVectors, vectorsPlane):
             self.assertArrayAlmostEqual(v, w, decimal=3)
 
@@ -564,14 +565,14 @@ class TestSymmetry(pwtests.unittest.TestCase):
                                                        circumscribed_radius=1, 
                                                        center=(0, 0, 0))
         print("vectorsPlane", vectorsPlane)
-        refereceVectors= [ [0.7071067811865476, 0.7071067811865476, -0.0],
-                           [0.0, -0.7071067811865475, 0.7071067811865475],
-                           [-0.7071067811865476, 0.7071067811865476, 0.0]
+        refereceVectors = [
+            [0.7071067811865476, 0.7071067811865476, -0.0],
+            [0.0, -0.7071067811865475, 0.7071067811865475],
+            [-0.7071067811865476, 0.7071067811865476, 0.0]
+        ]
 
-        ]                            
         for v, w in zip(refereceVectors, vectorsPlane):
             self.assertArrayAlmostEqual(v, w, decimal=3)
-
 
     def test_41_SymmetryIcosahedral222(self):
         matrices = emconv.getSymmetryMatrices(emcts.SYM_I222)
@@ -980,12 +981,12 @@ class TestSymmetry(pwtests.unittest.TestCase):
                                                        circumscribed_radius=1, 
                                                        center=(0, 0, 0))
         print("vectorsPlane", vectorsPlane)
-        refereceVectors= [ 
-                           [0.3090169943749475, -0.9510565162951535, 0.],
-                           [0.3090169943749475, -0.42532540417602, -0.8506508083520399],
-                           [0.0, 0.8506508083520401, 0.5257311121191336]
-                          ]
-                         
+        refereceVectors = [
+            [0.3090169943749475, -0.9510565162951535, 0.],
+            [0.3090169943749475, -0.42532540417602, -0.8506508083520399],
+            [0.0, 0.8506508083520401, 0.5257311121191336]
+        ]
+
         for v, w in zip(refereceVectors, vectorsPlane):
             self.assertArrayAlmostEqual(v, w, decimal=3)
 
@@ -1105,21 +1106,167 @@ class TestSymmetry(pwtests.unittest.TestCase):
 
     def test_60_SymmetryHelicalSymmetryMatrices(self):
         n = 7
+        angle=360.0/n
+        rise = 10.0
         matrices = emconv.getSymmetryMatrices(emcts.SYM_HELICAL, n=n, 
-                                              rise_per_subunit=0.0, 
-                                              twist_per_subunit=360.0/n)  # two full turns
+                                              center=(0.0, 0.0, 0.0),
+                                              axis=(0.0, 0.0, 1.0),
+                                              rise=rise, 
+                                              angle=angle)  # two full turns
+        refMatrices = []
+        # this are the matrices for the 7-fold dihedral symmetry
+        angle = 2 * np.pi / n
+        for i in [i for i in range(-n, n+1)]:
+            c = np.cos(angle * i)
+            s = np.sin(angle * i)
+            refMatrices.append([[c, -s, 0, 0],
+                                [s, c, 0, 0],
+                                [0, 0, 1.0, rise*i],
+                                [0, 0, 0.0, 1.0]])
 
-        for i, m in enumerate(matrices):
+        for i, (m, r) in enumerate(zip(matrices, refMatrices)):
             print(f"Symmetry matrix {i}:\n ", m)
-        # refMatrices = []
-        # angle = 2 * np.pi / n
-        # for i in range(n):
-        #     c = np.cos(angle * i)
-        #     s = np.sin(angle * i)
-        #     refMatrices.append([[c, -s, 0, 0],
-        #                         [s, c, 0, 0],
-        #                         [0, 0, 1.0, 0],
-        #                         [0, 0, 0.0, 1.0]])
-        # for i, (m, r) in enumerate(zip(matrices, refMatrices)):
-        #     print(f"Symmetry matrix {i}:\n ", m)
-        #     self.assertArrayAlmostEqual(r, m)
+            self.assertArrayAlmostEqual(r, m)
+
+    def test_61_SymmetryHelicalSymmetryMatrices(self):
+        n = 10
+        angle=360.0/n
+        rise = .5
+        matrices = emconv.getSymmetryMatrices(emcts.SYM_HELICAL, n=n, 
+                                              center=(0.0, 0.0, 0.0),
+                                              axis=(0.0, 0.0, 1.0),
+                                              rise=rise, 
+                                              angle=angle)  # two full turns
+        # usa an structure taht consists of 19 alpha carbon atoms (CA)
+        # arranged in a right-handed helix with:
+        # Radius: 10 Å
+        # Pitch: 5 Å per turn
+        # 10 atoms per full turn (36° per atom)
+        PDBFILE_STRUCTURE = """ATOM      2  CA  ALA A   2       8.090   5.878   0.500  1.00 20.00           C
+ATOM      3  CA  ALA A   3       3.090   9.511   1.000  1.00 20.00           C
+ATOM      4  CA  ALA A   4      -3.090   9.511   1.500  1.00 20.00           C
+ATOM      5  CA  ALA A   5      -8.090   5.878   2.000  1.00 20.00           C
+ATOM      6  CA  ALA A   6     -10.000   0.000   2.500  1.00 20.00           C
+ATOM      7  CA  ALA A   7      -8.090  -5.878   3.000  1.00 20.00           C
+ATOM      8  CA  ALA A   8      -3.090  -9.511   3.500  1.00 20.00           C
+ATOM      9  CA  ALA A   9       3.090  -9.511   4.000  1.00 20.00           C
+ATOM     10  CA  ALA A  10       8.090  -5.878   4.500  1.00 20.00           C
+ATOM     11  CA  ALA A  11      10.000  -0.000   5.000  1.00 20.00           C
+ATOM     12  CA  ALA A  12       8.090   5.878   5.500  1.00 20.00           C
+ATOM     13  CA  ALA A  13       3.090   9.511   6.000  1.00 20.00           C
+ATOM     14  CA  ALA A  14      -3.090   9.511   6.500  1.00 20.00           C
+ATOM     15  CA  ALA A  15      -8.090   5.878   7.000  1.00 20.00           C
+ATOM     16  CA  ALA A  16     -10.000   0.000   7.500  1.00 20.00           C
+ATOM     17  CA  ALA A  17      -8.090  -5.878   8.000  1.00 20.00           C
+ATOM     18  CA  ALA A  18      -3.090  -9.511   8.500  1.00 20.00           C
+ATOM     19  CA  ALA A  19       3.090  -9.511   9.000  1.00 20.00           C
+ATOM     20  CA  ALA A  20       8.090  -5.878   9.500  1.00 20.00           C
+END
+"""
+        sphere_centers = [
+            (10.000, -0.000,  0.000, 1.), # -10
+            ( 8.090,  5.878,  0.500, 1.),  # -9
+            ( 3.090,  9.511,  1.000, 1.),  # -8
+            (-3.090,  9.511,  1.500, 1.),  # -7
+            (-8.090,  5.878,  2.000, 1.),  # -6
+            (-10.000, 0.000,  2.500, 1.), # -5
+            (-8.090, -5.878,  3.000, 1.), # -4
+            (-3.090, -9.511,  3.500, 1.), # -3
+            ( 3.090, -9.511,  4.000, 1.), # -2
+            ( 8.090, -5.878,  4.500, 1.), # 1
+            (10.000, -0.000,  5.000, 1.), # 0
+            ( 8.090,  5.878,  5.500, 1.), # 1
+            ( 3.090,  9.511,  6.000, 1.), # 2
+            (-3.090,  9.511,  6.500, 1.), # 3
+            (-8.090,  5.878,  7.000, 1.), # 4
+            (-10.000, 0.000,  7.500, 1.), # 5
+            (-8.090, -5.878,  8.000, 1.),  # 6
+            (-3.090, -9.511,  8.500, 1.), # 7
+            ( 3.090, -9.511,  9.000, 1.), # 8
+            ( 8.090, -5.878,  9.500, 1.), # 9
+            (10.000,  0.000, 10.000, 1.), # 10
+        ]
+        point = np.array(sphere_centers[10])
+        for coordinates, matrix in zip(sphere_centers, matrices):
+            print("Symmetry matrix:\n ", matrix)
+            transformed_point = np.dot(matrix, point)
+            self.assertArrayAlmostEqual(transformed_point, coordinates, decimal=3)
+
+    def test_62_SymmetryHelicalSymmetryMatrices(self):
+        n = 10
+        angle=360.0/n
+        rise = .5
+        matrices = emconv.getSymmetryMatrices(emcts.SYM_HELICAL, n=n, 
+                                              center=(0.0, 0.0, 0.0),
+                                              axis=(1.0, 0.0, 0.0),
+                                              rise=rise, 
+                                              angle=angle)  # two full turns
+        # usa an structure taht consists of 19 alpha carbon atoms (CA)
+        # arranged in a right-handed helix with:
+        # Radius: 10 Å
+        # Pitch: 5 Å per turn
+        # 10 atoms per full turn (36° per atom)
+        sphere_centers = [
+            (0.000,  10.000,	0.000, 1.),  # -10
+            (0.500,	8.090,	5.878, 1.),  #  -9
+            (1.000,	3.090,	9.511, 1.),  #  -8
+            (1.500,  -3.090,	9.511, 1.), #  -7 
+            (2.000,  -8.090,	5.878, 1.),  #  -6
+            (2.500, -10.000,	0.000, 1.),  #  -5
+            (3.000,  -8.090,  -5.878, 1.),   #  -4 
+            (3.500,  -3.090,  -9.511, 1.),       #  -3
+            (4.000,	3.090,  -9.511, 1.),  #  -2
+            (4.500,	8.090,  -5.878, 1.),  #  -1
+            (5.000,  10.000,  -0.000, 1.),  #  0
+            (5.500,	8.090,	5.878, 1.),  # 
+            (6.000,	3.090,	9.511, 1.),  # 
+            (6.500,  -3.090,	9.511, 1.),  # 
+            (7.000,  -8.090,	5.878, 1.),  # 
+            (7.500, -10.000,	0.000, 1.),  # 
+            (8.000,  -8.090,  -5.878, 1.),  # 
+            (8.500,  -3.090,  -9.511, 1.),  # 
+            (9.000,	3.090,  -9.511, 1.),  # 
+            (9.500,	8.090,  -5.878, 1.),  # 
+            (10.000,  10.000,	0.000, 1.)  # 
+        ]
+
+        point = np.array(sphere_centers[10])
+        for coordinates, matrix in zip(sphere_centers, matrices):
+            print("Symmetry matrix:\n ", matrix)
+            transformed_point = np.dot(matrix, point)
+            self.assertArrayAlmostEqual(transformed_point, coordinates, decimal=3)
+
+    def test_63_SymmetryHelicalSymmetryMatrices(self):
+        from pwem.viewers.viewer_chimera import Chimera
+        def chimera_bild(angle, rise, filename):
+            n = 7
+            expansionFactor = 350.0
+            matrices = emconv.getSymmetryMatrices(emcts.SYM_HELICAL, n=n, 
+                                                center=(0.0, 0.0, 0.0),
+                                                axis=(0.0, 0.0, 1.0),
+                                                rise=rise, 
+                                                angle=angle)  # two full turns
+            point = np.array([expansionFactor, 0.0, 0.0, 1.0])
+            # create chimera bild file to visualize the symmetry
+            bildFileName = f'/tmp/{filename}.bild'
+            Chimera.createCoordinateAxisFile(dim=expansionFactor,
+                                            bildFileName=bildFileName,
+                                            sampling=1)
+            with open(bildFileName, 'a') as f:
+                f.write('.color red\n')
+                for i, matrix in enumerate(matrices):
+                    transformed_point = np.dot(matrix, point)
+                    f.write(f'.comment {i}\n')
+                    # f.write(f'.color {colors[i]}\n')
+                    x = transformed_point[0]
+                    y = transformed_point[1]
+                    z = transformed_point[2]
+                    f.write(f'.sphere  {x} {y} {z} {expansionFactor/20.}\n')
+            f.close()
+
+        angle = 28.33
+        rise = 63.1827
+        chimera_bild(angle, rise, 'helical_symmetry_28.33_63.1827')
+        angle = 343.31
+        rise = 63.299
+        chimera_bild(angle, rise, 'helical_symmetry_-16.27_63.1827')
