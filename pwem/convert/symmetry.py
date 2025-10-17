@@ -29,14 +29,14 @@ point symmetries. Code based on chimera file sym.py
 """
 
 import logging
-logger = logging.getLogger(__name__)
-from math import sin, cos, pi, acos, sqrt, asin
 import numpy as np
+import operator
+logger = logging.getLogger(__name__)
+import pwem.constants as cts
+from math import sin, cos, pi, acos, sqrt, asin
 from numpy.linalg import inv as matrix_inverse
 from numpy import dot as matrix_multiply
-import operator
 
-import pwem.constants as cts
 
 DEBUG = False  # set to True for debuging
 if DEBUG:
@@ -115,7 +115,7 @@ def _rotationTransform(axis, angle, center=(0, 0, 0)):
 
 
 def _translationMatrix(shift):
-    """ returns matriz that shift point by vector shift"""
+    """ returns matrix that shift point by vector shift"""
     tf = np.array(((1.0, 0, 0, shift[0]),
                    (0, 1.0, 0, shift[1]),
                    (0, 0, 1.0, shift[2])))
@@ -132,7 +132,7 @@ def _invertMatrix(tf):
     tf = np.array(tf)
     r = tf[:, :3]
     t = tf[:, 3]
-    tfinv = np.zeros((3, 4), np.float)
+    tfinv = np.zeros((3, 4), np.float32)
     rinv = tfinv[:, :3]
     tinv = tfinv[:, 3]
     rinv[:, :] = matrix_inverse(r)
@@ -192,23 +192,25 @@ def _transposeMatrix(tf):
 
 # ==================== End of utility functions ====================
 
+
 class SymmetryHelper:
     """ This is a static class so there is no need to instantiate it. 
         Given a symmetry the class provides methods to "move" projection
-        directions to the equivalent orientation that lays within the unit 
+        directions to the equivalent orientation that lays within the unit
         cells defined at https://scipion-em.github.io/docs/release-3.0.0/docs/developer/symmetries/symmetries.html?highlight=symmetry."""
 
     # Dictionary to cache all the symmetry matrices and unit cell 
     # planes for a particular symmetry
-    _matricesAndPlanes = {}  
+    _matricesAndPlanes = {}
 
     @classmethod
-    def getSymmetryKey(cls,sym, n):
+    def getSymmetryKey(cls, sym, n):
         return "%s_%s" % (sym, n)
 
     @classmethod
     def getSymmetryMatricesAndPlanes(cls, sym, n):
-        """ Lazy return a tuple of symmetry matrices and unit cell planes for the symmetry and order passed
+        """ Lazy return a tuple of symmetry matrices and unit cell planes
+            for the symmetry and order passed
 
         :param sym: Symmetry type
         :param n: symmetry order
@@ -232,7 +234,8 @@ class SymmetryHelper:
         """ apply to the projection direction the symmetry matrix that "moves" the projection
         direction to the equivalent orientation that lays within the "canonical" unit
         This is useful to move for example Cryosparc angles to a same unit cell
-        and therefore been able to plot angular distribution. This method can be used in the typical "updateParticle"
+        and therefore been able to plot angular distribution. This method 
+        can be used in the typical "updateParticle"
         callback when generating any output set.
 
         :param particle: Particle to move.
@@ -242,13 +245,12 @@ class SymmetryHelper:
         """
 
         # For C1 particles we do not move angles to unit cell.
-        if symmetry==cts.SYM_CYCLIC and symmetryOrder==1:
+        if symmetry == cts.SYM_CYCLIC and symmetryOrder == 1:
             logger.debug("Cancelling unit cell migration due to C1 symmetry.")
             return
 
         matrices, unitCellPlanes = cls.getSymmetryMatricesAndPlanes(symmetry, symmetryOrder)
         cls._moveParticleInsideUnitCell(particle, matrices, unitCellPlanes)
-
 
     @classmethod
     def _moveParticleInsideUnitCell(cls, particle, matrixSet, unitCellPlanes):
@@ -308,15 +310,23 @@ def moveParticlesInsideUnitCell(setIN, setOUT, sym=cts.SYM_CYCLIC, n=1):
 
 
 def moveParticleInsideUnitCell(particle, matrixSet, unitCellPlanes):
-    logger.warning("FOR DEVELOPERS: This method is deprecated. Call SymmetryHelper.moveParticleInsideUnitCell for convenience.")
-    SymmetryHelper._moveParticleInsideUnitCell(particle, matrixSet, unitCellPlanes)
+    logger.warning("FOR DEVELOPERS: This method is deprecated. "
+                   "Call SymmetryHelper.moveParticleInsideUnitCell"
+                   " for convenience.")
+    SymmetryHelper._moveParticleInsideUnitCell(
+        particle, matrixSet, unitCellPlanes)
 
 
 def getSymmetryMatrices(sym=cts.SYM_CYCLIC,
-                        n=1,
+                        n=1,  # order in cyclic and dihedral symmetries
+                              # number repetitions for helical symmetry
                         circumscribed_radius=1,
                         center=(0, 0, 0),
-                        offset=None):
+                        offset=None,
+                        rise=0,  # for helical symmetry
+                        angle=0,  # for helical symmetry
+                        axis=(0, 0, 1)  # for helical symmetry
+                        ):
     """ interface between scipion and chimera code
         chimera code uses tuples of tuples as matrices
         but scipion uses np.arrays (lists of lists)
@@ -363,6 +373,10 @@ def getSymmetryMatrices(sym=cts.SYM_CYCLIC,
         # 'n25r'        'n25' with 180 degree rotation about x.
         # '2n3'         2-fold symmetry along x and 3-fold along z.
         # '2n3r'        '2n3' with 180 degree rotation about y.
+    elif sym == cts.SYM_HELICAL:
+        # rise, angle, axis = (0,0,1), center = (0,0,0), n = 1)
+        h = Helical()
+        matrices = h.symmetryMatrices()
 
     # convert from 4x3 to 4x4 matrix, Scipion standard
     extraRow = (0., 0., 0., 1.)
@@ -876,6 +890,61 @@ class Octahedral(object):
         return [_4fold_1, _3fold_2, _3fold_1], [plane1, plane2, plane3]
 
 
+class Helical(object):
+    """helical class.
+        Allow to compute symmetry matrices of a helical symmetry.
+    """
+    def __init__(self, rise=1, angle=0, center=(
+            0, 0, 0), axis=(0, 0, 1), n=1):
+        """
+        :Parameters:
+            rise: float rise per subunit along the helical axis (unit agnostic)
+            angle: float angle in degrees per subunit around the helical axis
+            center: tuple of 3 floats, center of coordinate system
+            axis: tuple of 3 floats, helical axis direction
+            n: number symmetry matrices to be produced  2*n+1
+               n=0 returns identity matrix only
+               n=1 returns identity, +angle and -angle rotations
+            """
+        self.rise = rise
+        self.angle = angle
+        self.center = center
+        self.axis = axis
+        self.n = n
+        self.matrices = None
+
+    def symmetryMatrices(self):
+        """ get Matrices for helical symmetry of order n
+        """
+        # Rise and angle per-subunit.  Angle in degrees.
+        def helical_symmetry_matrices(rise, angle, axis=(0, 0, 1),
+                                      center=(0, 0, 0), n=1):
+            zlist = [i for i in range(-5, 5)]
+            self.matrices = []
+            for z in zlist:
+                self.matrices.append(
+                    helical_symmetry_matrix(rise, angle, axis, center, z))
+            return self.matrices
+
+        # Angle in degrees.
+        def helical_symmetry_matrix(rise, angle, axis=(0, 0, 1),
+                                    center=(0, 0, 0), n=1):
+            if n == 0:
+                return _identityMatrix()
+            rtf = _rotationTransform(axis, n*angle, center)
+            shift = _translationMatrix([x*n*rise for x in axis])
+            tf = _multiplyMatrices(shift * rtf)
+            return tf
+
+    def unitCellPlanes(self):
+        """ get planes that define a unit cell for an octahedral symmetry
+        """
+        print("Unit cell for helical symmetry is not implemented")
+        # return a fake plane and axis
+        plane = np.array([0., 0., 1.])
+        return [self.axis], [plane]
+
+
 # TODO: Why is this a global variable instead of
 # a class variable?
 icos_matrices = {}  # Maps orientation name to 60 matrices.
@@ -1371,7 +1440,7 @@ class Icosahedron(object):
         return self._2foldAxis
 
     def unitCellPlanes(self):
-        """ get planes that define a unit cell for an octahedral symmetry
+        """ get planes that define a unit cell for an icosahedral symmetry
         """
         if self.orientation == '222':
             # Unit cell in triangle 11 -> (2,8,9)

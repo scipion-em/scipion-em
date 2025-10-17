@@ -1103,3 +1103,23 @@ class TestSymmetry(pwtests.unittest.TestCase):
             print(img.getTransform().getMatrix(), transformsOUT[i])
             self.assertTrue(np.allclose(img.getTransform().getMatrix(), transformsOUT[i]))
 
+    def test_60_SymmetryHelicalSymmetryMatrices(self):
+        n = 7
+        matrices = emconv.getSymmetryMatrices(emcts.SYM_HELICAL, n=n, 
+                                              rise_per_subunit=0.0, 
+                                              twist_per_subunit=360.0/n)  # two full turns
+
+        for i, m in enumerate(matrices):
+            print(f"Symmetry matrix {i}:\n ", m)
+        # refMatrices = []
+        # angle = 2 * np.pi / n
+        # for i in range(n):
+        #     c = np.cos(angle * i)
+        #     s = np.sin(angle * i)
+        #     refMatrices.append([[c, -s, 0, 0],
+        #                         [s, c, 0, 0],
+        #                         [0, 0, 1.0, 0],
+        #                         [0, 0, 0.0, 1.0]])
+        # for i, (m, r) in enumerate(zip(matrices, refMatrices)):
+        #     print(f"Symmetry matrix {i}:\n ", m)
+        #     self.assertArrayAlmostEqual(r, m)
