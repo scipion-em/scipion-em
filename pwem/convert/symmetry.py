@@ -376,8 +376,8 @@ def getSymmetryMatrices(sym=cts.SYM_CYCLIC,
     elif sym == cts.SYM_HELICAL:
         # rise, angle, axis = (0,0,1), center = (0,0,0), n = 1)
         h = Helical()
-        matrices = h.symmetryMatrices()
-
+        matrices = h.symmetryMatrices(
+            rise=rise, angle=angle, center=center, axis=axis, n=n)
     # convert from 4x3 to 4x4 matrix, Scipion standard
     extraRow = (0., 0., 0., 1.)
     for i in range(len(matrices)):
@@ -913,19 +913,12 @@ class Helical(object):
         self.n = n
         self.matrices = None
 
-    def symmetryMatrices(self):
+    def symmetryMatrices(self, rise, angle, axis=(0, 0, 1),
+                         center=(0, 0, 0), n=1):
         """ get Matrices for helical symmetry of order n
+        2*n+1 matrices are returned, from -n to +n
+        angle in degrees
         """
-        # Rise and angle per-subunit.  Angle in degrees.
-        def helical_symmetry_matrices(rise, angle, axis=(0, 0, 1),
-                                      center=(0, 0, 0), n=1):
-            zlist = [i for i in range(-5, 5)]
-            self.matrices = []
-            for z in zlist:
-                self.matrices.append(
-                    helical_symmetry_matrix(rise, angle, axis, center, z))
-            return self.matrices
-
         # Angle in degrees.
         def helical_symmetry_matrix(rise, angle, axis=(0, 0, 1),
                                     center=(0, 0, 0), n=1):
@@ -933,8 +926,15 @@ class Helical(object):
                 return _identityMatrix()
             rtf = _rotationTransform(axis, n*angle, center)
             shift = _translationMatrix([x*n*rise for x in axis])
-            tf = _multiplyMatrices(shift * rtf)
+            tf = _multiplyMatrices(shift, rtf)
             return tf
+
+        zlist = [i for i in range(-n, n+1)]
+        self.matrices = []
+        for z in zlist:
+            self.matrices.append(
+                helical_symmetry_matrix(rise, angle, axis, center, z))
+        return self.matrices
 
     def unitCellPlanes(self):
         """ get planes that define a unit cell for an octahedral symmetry
