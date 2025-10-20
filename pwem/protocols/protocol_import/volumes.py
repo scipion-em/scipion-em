@@ -351,6 +351,32 @@ Format may be PDB or MMCIF"""
         else:
             self._insertFunctionStep('createOutputStep', self.pdbFile.get())
 
+    def _addChainA(self, pdbPath, patchedPath):
+        """
+        Add a chain ID 'A' to every ATOM/HETATM line of a PDB file.
+        Keeps original spacing and formatting.
+        """
+        patched_lines = []
+        with open(pdbPath, "r") as f:
+            for line in f:
+                if line.startswith(("ATOM", "HETATM")):
+                    # PDB format: chain ID is at column 22 (index 21)
+                    if len(line) >= 22 and line[21] == " ":
+                        # insert 'A' at position 21
+                        line = line[:21] + "A" + line[22:]
+                patched_lines.append(line)
+
+        # Add TER and END if missing
+        if not any(l.startswith("TER") for l in patched_lines):
+            patched_lines.append("TER\n")
+        if not any(l.startswith("END") for l in patched_lines):
+            patched_lines.append("END\n")
+
+        with open(patchedPath, "w") as f:
+            f.writelines(patched_lines)
+
+        return patchedPath
+
     def pdbDownloadStep(self):
         """Download all pdb files in file_list and unzip them.
         """
@@ -374,13 +400,33 @@ Format may be PDB or MMCIF"""
 
         chimeraPlugin = self.__getChimeraPlugin()
         if chimeraPlugin:
-            localPath = localPath[:-4] + localPath[-4:].replace(".pdb", ".cif")
-            args = f'--nogui --cmd "open {atomStructPath}; save {localPath}; exit"'
-            chimeraPlugin.runChimeraProgram(chimeraPlugin.getProgram(), args)
+            localCIFPath = localPath[:-4] + ".cif"
+            try:
+                localPath = localPath[:-4] + localPath[-4:].replace(".pdb", ".cif")
+                args = f'--nogui --cmd "open {atomStructPath}; save {localPath}; exit"'
+                chimeraPlugin.runChimeraProgram(chimeraPlugin.getProgram(), args)
+            except Exception as e:
+                logger.warning(f"Normal ChimeraX conversion failed: {e}")
+                logger.info("Attempting to patch PDB and retry...")
+
+                patchedPDB = self._addChainA(atomStructPath, localPath[:-4] + "_chain.pdb")
+                try:
+                    args = (
+                        f'--nogui --cmd "open {patchedPDB}; '
+                        f'save {localCIFPath}; exit"'
+                    )
+                    chimeraPlugin.runChimeraProgram(chimeraPlugin.getProgram(), args)
+                    logger.info("PDB successfully converted after patch.")
+                except Exception as e2:
+                    logger.error(f"Failed again after patch: {e2}")
+                    logger.info("Copying original PDB instead.")
+                    pwutils.copyFile(atomStructPath, localPath)
+                    localCIFPath = localPath
+
+            localPath = localCIFPath
         else:
             if str(atomStructPath) != str(localPath):  # from local file
                 pwutils.copyFile(atomStructPath, localPath)
-
         localPath = relpath(localPath)
 
         pdb = emobj.AtomStruct()
