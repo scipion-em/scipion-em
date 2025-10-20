@@ -40,3 +40,7 @@ emconvert = 'pwem.cmd.convert:main'
 [tool.setuptools.dynamic]
 version = {attr = "pwem.__version__"}
 dependencies = {file = ["requirements.txt"]}
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["pwem*", "software*"]
