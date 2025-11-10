@@ -300,6 +300,77 @@ SelectChainWizard().addTarget(protocol=emprot.ProtImportSequence,
                               inputs=[['pdbId', 'pdbFile']],
                               outputs=['inputStructureChain'])
 
+class SelectChainSWizard(VariableWizard):
+    '''Opens the input AtomStruct and allows you to select MORE THAN ONE of the present chains'''
+    _targets, _inputs, _outputs = [], {}, {}
+
+    @classmethod
+    def getModelsChainsStep(cls, protocol, inputObj):
+        """ Returns (1) list with the information
+           {"model": %d, "chain": "%s", "residues": %d} (modelsLength)
+           (2) list with residues, position and chain (modelsFirstResidue)"""
+        structureHandler = emconv.AtomicStructHandler()
+        if type(inputObj) == str:
+            if os.path.exists(inputObj):
+                fileName = inputObj
+            else:
+                pdbID = inputObj
+                url = "https://www.rcsb.org/structure/"
+                URL = url + ("%s" % pdbID)
+                try:
+                    response = requests.get(URL)
+                except:
+                    raise Exception("Cannot connect to PDB server")
+                if (response.status_code >= 400) and (response.status_code < 500):
+                    raise Exception("%s is a wrong PDB ID" % pdbID)
+                fileName = structureHandler.readFromPDBDatabase(os.path.basename(pdbID), dir="/tmp/")
+
+        elif str(type(inputObj).__name__) == 'SchrodingerAtomStruct':
+            fileName = os.path.abspath(inputObj.convert2PDB())
+        else:
+            fileName = os.path.abspath(inputObj.getFileName())
+
+        structureHandler.read(fileName)
+        structureHandler.getStructure()
+        return structureHandler.getModelsChains()
+
+    def editionListOfChains(self, listOfChains):
+        chainList = []
+        for model, chainDic in listOfChains.items():
+            for chainID, lenResidues in chainDic.items():
+                chainList.append(
+                    '{"model": %d, "chain": "%s", "residues": %d}' %
+                    (model, str(chainID), lenResidues))
+        return chainList
+
+    def show(self, form, *params):
+        inputParams, outputParam = self.getInputOutput(form)
+        protocol = form.protocol
+        try:
+            inputObj = getattr(protocol, inputParams[0]).get()
+            listOfChains, listOfResidues = self.getModelsChainsStep(protocol, inputObj)
+        except Exception as e:
+            print("ERROR: ", e)
+            return
+
+        chainList = self.editionListOfChains(listOfChains)
+        finalChainList = []
+        for i in chainList:
+            finalChainList.append(pwobj.String(i))
+        provider = ListTreeProviderString(finalChainList)
+        dlg = dialog.ListDialog(form.root, "Model chains", provider,
+                                "Select one of the chains (model, chain, "
+                                "number of chain residues)")
+        result_str = ""
+        separator = ""
+
+        for value in dlg.values:
+            chain = json.loads(value.get())['chain']
+            result_str += separator + chain
+            separator = ", "
+
+        form.setVar(outputParam[0], result_str)
+
 
 class SelectResidueWizard(SelectChainWizard):
     _targets, _inputs, _outputs = [], {}, {}
@@ -390,27 +461,30 @@ class SelectResidueWizard(SelectChainWizard):
         return roiStr
 
     def show(self, form, *params):
-      inputParams, outputParam = self.getInputOutput(form)
-      protocol = form.protocol
-      inputObj = getattr(protocol, inputParams[0]).get()
-      if len(inputParams) < 2:
-          # For sequence objects, with no chain
-          chainStr = None
-      else:
-          chainStr = getattr(protocol, inputParams[1]).get()
-      finalResiduesList = self.getResidues(form, inputObj, chainStr)
+        inputParams, outputParam = self.getInputOutput(form)
+        protocol = form.protocol
+        print("inputParams: ", inputParams, "  type: ",type(inputParams))
+        inputObj = getattr(protocol, inputParams[0]).get()
+        if len(inputParams) < 2:
+            # For sequence objects, with no chain
+            chainStr = None
+        else:
+            chainStr = getattr(protocol, inputParams[1]).get()
+        finalResiduesList = self.getResidues(form, inputObj, chainStr)
 
-      provider = ListTreeProviderString(finalResiduesList)
-      dlg = dialog.ListDialog(form.root, "Chain residues", provider,
+        provider = ListTreeProviderString(finalResiduesList)
+        dlg = dialog.ListDialog(form.root, "Chain residues", provider,
                               "Select one residue (residue number, "
                               "residue name)")
 
-      idxs = [json.loads(dlg.values[0].get())['index'], json.loads(dlg.values[-1].get())['index']]
-      roiStr = self.getSequence(finalResiduesList, idxs)
+        idxs = [json.loads(dlg.values[0].get())['index'], json.loads(dlg.values[-1].get())['index']]
+        roiStr = self.getSequence(finalResiduesList, idxs)
 
 
-      intervalStr = '{"index": "%s-%s", "residues": "%s"}' % (idxs[0], idxs[1], roiStr)
-      form.setVar(outputParam[0], intervalStr)
+        intervalStr = '{"index": "%s-%s", "residues": "%s"}' % (idxs[0], idxs[1], roiStr)
+        form.setVar(outputParam[0], intervalStr)
+
+
 
 
 class PythonFormulaeWizard(pwizard.Wizard):
