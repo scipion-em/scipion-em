@@ -54,6 +54,7 @@ class ProtImportSequence(ProtImportFiles):
     IMPORT_FROM_NUCLEOTIDE_GENEBANK = 3
     IMPORT_STRUCTURE_FROM_ID = 0
     IMPORT_STRUCTURE_FROM_FILES = 1
+    IMPORT_STRUCTURE_FROM_AS = 2
 
     url = "http://www.uniprot.org/uniprot/"
 
@@ -203,7 +204,7 @@ class ProtImportSequence(ProtImportFiles):
                       label="Write your sequence here:", important=True,
                       help="Write the aminoacid or nucleotide raw sequence.\n")
         form.addParam('inputStructureSequence', params.EnumParam,
-                      choices=['id', 'file'],
+                      choices=['id', 'file', 'AtomStruct'],
                       condition='inputProteinSequence == %d or '
                                 'inputNucleotideSequence == %d' %
                                 (self.IMPORT_FROM_STRUCTURE,
@@ -234,6 +235,16 @@ class ProtImportSequence(ProtImportFiles):
                                    self.IMPORT_STRUCTURE_FROM_FILES),
                       allowsNull=True,
                       help='Specify a path to desired atomic structure.')
+        form.addParam('inputAS', params.PointerParam, label="Input AtomStruct: ",
+                      pointerClass='AtomStruct',
+                      condition='(inputProteinSequence == %d or '
+                                'inputNucleotideSequence == %d) and '
+                                'inputStructureSequence == %d'
+                                % (self.IMPORT_FROM_STRUCTURE,
+                                   self.IMPORT_FROM_NUCLEOTIDE_STRUCTURE,
+                                   self.IMPORT_STRUCTURE_FROM_AS),
+                      allowsNull=True,
+                      help='Specify a AtomStruct object in the project to extract its sequence.')
         form.addParam('inputStructureChain', params.StringParam,
                       condition='inputProteinSequence == %d or '
                                 'inputNucleotideSequence == %d' %
@@ -335,7 +346,7 @@ class ProtImportSequence(ProtImportFiles):
         selectedChain = chainIdDict['chain']
         self.structureHandler = AtomicStructHandler()
 
-        if self.pdbId.get() is not None:
+        if self.inputStructureSequence.get() == self.IMPORT_STRUCTURE_FROM_ID:
             # PDB from remote database
             pdbID = self.pdbId.get()
             tmpFilePath = os.path.join("/tmp", pdbID + ".cif").lower()
@@ -343,9 +354,12 @@ class ProtImportSequence(ProtImportFiles):
                 # wizard has not used and the file has not been downloaded yet
                 self.structureHandler.readFromPDBDatabase(pdbID, dir="/tmp")
             self.structureHandler.read(tmpFilePath)
-        else:
+        elif self.inputStructureSequence.get() == self.IMPORT_STRUCTURE_FROM_FILES:
             # PDB from file
             self.structureHandler.read(self.pdbFile.get())
+
+        else:
+            self.structureHandler.read(self.inputAS.get().getFileName())
 
         _sequence, alphabet = self.structureHandler.getSequenceFromChain(
             selectedModel, selectedChain, returnAlphabet =True)
