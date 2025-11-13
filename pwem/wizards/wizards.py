@@ -26,8 +26,13 @@
 # **************************************************************************
 """ This module is for Actual wizards to be able to be discovered from the
 Domain. wizard.py is left for wizard models and base classes."""
-import decimal
-import os, json
+# import decimal
+import json
+import os
+from http import HTTPStatus
+
+# 'The server encountered an internal error and was unable to complete the request.'
+
 import requests
 
 import pyworkflow.object as pwobj
@@ -43,6 +48,8 @@ import pwem.protocols as emprot
 import pwem.viewers as emview
 import pwem.objects as emobj
 from pwem.constants import RESIDUES3TO1, RESIDUES1TO3
+
+PDB_URL = "https://www.rcsb.org/structure/{pdbID}"
 
 
 class ImportAcquisitionWizard(EmWizard):
@@ -162,79 +169,83 @@ class ChangeOriginSamplingWizard(pwizard.Wizard):
 
 
 class GetStructureChainsWizard(pwizard.Wizard):
-  # WARNING: this wizard is deprecated. Instead, SelectChainWizard must be used, where inputs, targets and outputs
-  # can be specified.
-  """Load an atomic structure, parse chain related information as
-     name, number of residues, list of aminoacids (or other residues)"""
-  _targets = [(emprot.ProtImportSequence, ['inputStructureChain'])
-              # NOTE: be careful if you change this class since
-              # chimera-wizard inherits from it.
-              # (ChimeraModelFromTemplate, ['inputStructureChain'])
-              # (atomstructutils, ['inputStructureChain'])
-              ]
+    # WARNING: this wizard is deprecated. Instead, 
+    # SelectChainWizard must be used, where inputs, targets and outputs
+    # can be specified.
+    """Load an atomic structure, parse chain related information as
+       name, number of residues, list of aminoacids (or other residues)"""
+    _targets = [(emprot.ProtImportSequence, ['inputStructureChain'])
+                # NOTE: be careful if you change this class since
+                # chimera-wizard inherits from it.
+                # (ChimeraModelFromTemplate, ['inputStructureChain'])
+                # (atomstructutils, ['inputStructureChain'])
+                ]
 
-  @classmethod
-  def getModelsChainsStep(cls, protocol):
-    """ Returns (1) list with the information
-       {"model": %d, "chain": "%s", "residues": %d} (modelsLength)
-       (2) list with residues, position and chain (modelsFirstResidue)"""
-    structureHandler = emconv.AtomicStructHandler()
-    fileName = ""
-    if hasattr(protocol, 'pdbId'):
-      if protocol.pdbId.get() is not None:
-        pdbID = protocol.pdbId.get()
-        url = "https://www.rcsb.org/structure/"
-        URL = url + ("%s" % pdbID)
+    @classmethod
+    def getModelsChainsStep(cls, protocol):
+        """ Returns (1) list with the information
+           {"model": %d, "chain": "%s", "residues": %d} (modelsLength)
+           (2) list with residues, position and chain (modelsFirstResidue)"""
+        structureHandler = emconv.AtomicStructHandler()
+        fileName = ""
+        if hasattr(protocol, 'pdbId'):
+            if protocol.pdbId.get() is not None:
+                pdbID = protocol.pdbId.get()
+                URL = PDB_URL.format(pdbID=pdbID)
+                try:
+                    response = requests.get(URL)
+                except requests.exceptions.RequestException as e:
+                    raise Exception(f"Cannot connect to PDB server ({e})")
+                print(HTTPStatus.INTERNAL_SERVER_ERROR.value)  # 500
+                if ((response.status_code >=
+                     HTTPStatus.INTERNAL_SERVER_ERROR.value)
+                    and
+                    (response.status_code <
+                     HTTPStatus.INTERNAL_SERVER_ERROR.value)):
+                    raise Exception("%s is a wrong PDB ID" % pdbID)
+                fileName = structureHandler.readFromPDBDatabase(
+                    os.path.basename(pdbID), dir="/tmp/")
+            else:
+                fileName = protocol.pdbFile.get()
+        else:
+            if protocol.pdbFileToBeRefined.get() is not None:
+                fileName = os.path.abspath(protocol.pdbFileToBeRefined.get(
+                ).getFileName())
+
+        structureHandler.read(fileName)
+        structureHandler.getStructure()
+        # listOfChains, listOfResidues = structureHandler.getModelsChains()
+        return structureHandler.getModelsChains()
+
+    def editionListOfChains(self, listOfChains):
+        self.chainList = []
+        for model, chainDic in listOfChains.items():
+            for chainID, lenResidues in chainDic.items():
+                self.chainList.append(
+                  '{"model": %d, "chain": "%s", "residues": %d}' %
+                  (model, str(chainID), lenResidues))
+
+    def show(self, form, *params):
+        protocol = form.protocol
         try:
-          response = requests.get(URL)
-        except:
-          raise Exception("Cannot connect to PDB server")
-        if (response.status_code >= 400) and (response.status_code < 500):
-          raise Exception("%s is a wrong PDB ID" % pdbID)
-        fileName = structureHandler.readFromPDBDatabase(
-          os.path.basename(pdbID), dir="/tmp/")
-      else:
-        fileName = protocol.pdbFile.get()
-    else:
-      if protocol.pdbFileToBeRefined.get() is not None:
-        fileName = os.path.abspath(protocol.pdbFileToBeRefined.get(
-        ).getFileName())
+            listOfChains, listOfResidues = self.getModelsChainsStep(protocol)
+        except Exception as e:
+            print("ERROR: ", e)
+            return
 
-    structureHandler.read(fileName)
-    structureHandler.getStructure()
-    # listOfChains, listOfResidues = structureHandler.getModelsChains()
-    return structureHandler.getModelsChains()
-
-  def editionListOfChains(self, listOfChains):
-    self.chainList = []
-    for model, chainDic in listOfChains.items():
-      for chainID, lenResidues in chainDic.items():
-        self.chainList.append(
-          '{"model": %d, "chain": "%s", "residues": %d}' %
-          (model, str(chainID), lenResidues))
-
-  def show(self, form, *params):
-    protocol = form.protocol
-    try:
-      listOfChains, listOfResidues = self.getModelsChainsStep(protocol)
-    except Exception as e:
-      print("ERROR: ", e)
-      return
-
-    self.editionListOfChains(listOfChains)
-    finalChainList = []
-    for i in self.chainList:
-      finalChainList.append(pwobj.String(i))
-    provider = ListTreeProviderString(finalChainList)
-    dlg = dialog.ListDialog(form.root, "Model chains", provider,
-                            "Select one of the chains (model, chain, "
-                            "number of chain residues)")
-    form.setVar('inputStructureChain', dlg.values[0].get())
+        self.editionListOfChains(listOfChains)
+        finalChainList = []
+        for i in self.chainList:
+            finalChainList.append(pwobj.String(i))
+        provider = ListTreeProviderString(finalChainList)
+        dlg = dialog.ListDialog(form.root, "Model chains", provider,
+                                "Select one of the chains (model, chain, "
+                                "number of chain residues)")
+        form.setVar('inputStructureChain', dlg.values[0].get())
 
 
-class SelectChainWizard(VariableWizard):
-    '''Opens the input AtomStruct and allows you to select one of the present chains'''
-    _targets, _inputs, _outputs = [], {}, {}
+class BaseChainWizard(VariableWizard    ):
+    '''Base class for chain selection wizards'''
 
     @classmethod
     def getModelsChainsStep(cls, protocol, inputObj):
@@ -242,20 +253,25 @@ class SelectChainWizard(VariableWizard):
            {"model": %d, "chain": "%s", "residues": %d} (modelsLength)
            (2) list with residues, position and chain (modelsFirstResidue)"""
         structureHandler = emconv.AtomicStructHandler()
-        if type(inputObj) == str:
+        if isinstance(inputObj, str):
             if os.path.exists(inputObj):
                 fileName = inputObj
             else:
                 pdbID = inputObj
-                url = "https://www.rcsb.org/structure/"
-                URL = url + ("%s" % pdbID)
+                URL = PDB_URL.format(pdbID=inputObj)
                 try:
                     response = requests.get(URL)
-                except:
-                    raise Exception("Cannot connect to PDB server")
-                if (response.status_code >= 400) and (response.status_code < 500):
+                except requests.exceptions.RequestException as e:
+                    raise Exception(f"Cannot connect to PDB server ({e})")
+                if ((response.status_code >=
+                     HTTPStatus.INTERNAL_SERVER_ERROR.value)  # 400
+                    and
+                    (response.status_code <
+                     HTTPStatus.INTERNAL_SERVER_ERROR.value)):  # 500
                     raise Exception("%s is a wrong PDB ID" % pdbID)
-                fileName = structureHandler.readFromPDBDatabase(os.path.basename(pdbID), dir="/tmp/")
+                tmp_dir = protocol.getTmpDir()
+                fileName = structureHandler.readFromPDBDatabase(
+                    os.path.basename(pdbID), dir=tmp_dir)
 
         elif str(type(inputObj).__name__) == 'SchrodingerAtomStruct':
             fileName = os.path.abspath(inputObj.convert2PDB())
@@ -274,6 +290,11 @@ class SelectChainWizard(VariableWizard):
                     '{"model": %d, "chain": "%s", "residues": %d}' %
                     (model, str(chainID), lenResidues))
         return chainList
+
+
+class SelectChainWizard(BaseChainWizard):
+    '''Opens the input AtomStruct and allows you to select one of the present chains'''
+    _targets, _inputs, _outputs = [], {}, {}
 
     def show(self, form, *params):
         inputParams, outputParam = self.getInputOutput(form)
@@ -295,53 +316,18 @@ class SelectChainWizard(VariableWizard):
                                 "number of chain residues)")
         form.setVar(outputParam[0], dlg.values[0].get())
 
+
+# Defining target for the SelectChainWizard
 SelectChainWizard().addTarget(protocol=emprot.ProtImportSequence,
                               targets=['inputStructureChain'],
                               inputs=[['pdbId', 'pdbFile']],
                               outputs=['inputStructureChain'])
 
-class SelectChainSWizard(VariableWizard):
-    '''Opens the input AtomStruct and allows you to select MORE THAN ONE of the present chains'''
+
+class SelectChainSWizard(BaseChainWizard):
+    '''Opens the input AtomStruct and allows you to select
+        MORE THAN ONE of the present chains'''
     _targets, _inputs, _outputs = [], {}, {}
-
-    @classmethod
-    def getModelsChainsStep(cls, protocol, inputObj):
-        """ Returns (1) list with the information
-           {"model": %d, "chain": "%s", "residues": %d} (modelsLength)
-           (2) list with residues, position and chain (modelsFirstResidue)"""
-        structureHandler = emconv.AtomicStructHandler()
-        if type(inputObj) == str:
-            if os.path.exists(inputObj):
-                fileName = inputObj
-            else:
-                pdbID = inputObj
-                url = "https://www.rcsb.org/structure/"
-                URL = url + ("%s" % pdbID)
-                try:
-                    response = requests.get(URL)
-                except:
-                    raise Exception("Cannot connect to PDB server")
-                if (response.status_code >= 400) and (response.status_code < 500):
-                    raise Exception("%s is a wrong PDB ID" % pdbID)
-                fileName = structureHandler.readFromPDBDatabase(os.path.basename(pdbID), dir="/tmp/")
-
-        elif str(type(inputObj).__name__) == 'SchrodingerAtomStruct':
-            fileName = os.path.abspath(inputObj.convert2PDB())
-        else:
-            fileName = os.path.abspath(inputObj.getFileName())
-
-        structureHandler.read(fileName)
-        structureHandler.getStructure()
-        return structureHandler.getModelsChains()
-
-    def editionListOfChains(self, listOfChains):
-        chainList = []
-        for model, chainDic in listOfChains.items():
-            for chainID, lenResidues in chainDic.items():
-                chainList.append(
-                    '{"model": %d, "chain": "%s", "residues": %d}' %
-                    (model, str(chainID), lenResidues))
-        return chainList
 
     def show(self, form, *params):
         inputParams, outputParam = self.getInputOutput(form)
@@ -376,73 +362,75 @@ class SelectResidueWizard(SelectChainWizard):
     _targets, _inputs, _outputs = [], {}, {}
 
     def editionListOfResidues(self, modelsFirstResidue, model, chain):
-      residueList = []
-      for modelID, chainDic in modelsFirstResidue.items():
-        if int(model) == modelID:
-          for chainID, seq_number in chainDic.items():
-            if chain == chainID:
-              for i in seq_number:
-                residueList.append('{"index": %d, "residue": "%s"}' % (i[0], str(i[1])))
-      return residueList
+        residueList = []
+        for modelID, chainDic in modelsFirstResidue.items():
+            if int(model) == modelID:
+                for chainID, seq_number in chainDic.items():
+                    if chain == chainID:
+                        for i in seq_number:
+                            residueList.append('{"index": %d, "residue": "%s"}' % (i[0], str(i[1])))
+        return residueList
 
     def getResidues(self, form, inputObj, chainStr):
-      protocol = form.protocol
-
-      if type(inputObj) == str:
-          # Select the residues if the input structure parameter is a str (PDB id or PDB file)
-          structureHandler = emconv.AtomicStructHandler()
-          if os.path.exists(inputObj):
-              fileName = inputObj
-          else:
-              pdbID = inputObj
-              url = "https://www.rcsb.org/structure/"
-              URL = url + ("%s" % pdbID)
-              try:
-                response = requests.get(URL)
-              except:
-                raise Exception("Cannot connect to PDB server")
-              if (response.status_code >= 400) and (response.status_code < 500):
-                raise Exception("%s is a wrong PDB ID" % pdbID)
-
-              fileName = structureHandler.readFromPDBDatabase(os.path.basename(pdbID), dir="/tmp/")
-
-          structureHandler.read(fileName)
-          structureHandler.getStructure()
-          modelsLength, modelsFirstResidue = structureHandler.getModelsChains()
-
-          struct = json.loads(chainStr)  # From wizard dictionary
-          chain, model = struct["chain"].upper().strip(), int(struct["model"])
-
-          residueList = self.editionListOfResidues(modelsFirstResidue, model, chain)
-          finalResiduesList = []
-          for i in residueList:
-              finalResiduesList.append(emobj.String(i))
-
-      elif issubclass(type(inputObj), emobj.AtomStruct):
-          try:
-            modelsLength, modelsFirstResidue = self.getModelsChainsStep(protocol, inputObj)
-          except Exception as e:
-            print("ERROR: ", e)
-            return
-          struct = json.loads(chainStr)  # From wizard dictionary
-          chain, model = struct["chain"].upper().strip(), int(struct["model"])
-
-          residueList = self.editionListOfResidues(modelsFirstResidue, model, chain)
-          finalResiduesList = []
-          for i in residueList:
-            finalResiduesList.append(emobj.String(i))
-
-      elif issubclass(type(inputObj), emobj.Sequence) or str(type(inputObj).__name__) == 'SequenceVariants':
-          finalResiduesList = []
-          for i, res in enumerate(inputObj.getSequence()):
-            if res in RESIDUES1TO3:
-                res3 = RESIDUES1TO3[res]
+        protocol = form.protocol
+  
+        if isinstance(inputObj, str):
+            # Select the residues if the input structure parameter is a
+            # str (PDB id or PDB file)
+            structureHandler = emconv.AtomicStructHandler()
+            if os.path.exists(inputObj):
+                fileName = inputObj
             else:
-                res3 = res
-            stri = '{"index": %s, "residue": "%s"}' % (i + 1, res3)
-            finalResiduesList.append(emobj.String(stri))
+                pdbID = inputObj
+                URL = PDB_URL.format(pdbID=pdbID)
+                try:
+                    response = requests.get(URL)
+                except requests.exceptions.RequestException as e:
+                    raise Exception(f"Cannot connect to PDB server ({e})")
+                if (response.status_code >= 400) and (response.status_code < 500):
+                    raise Exception("%s is a wrong PDB ID" % pdbID)
+                tmp_dir = protocol.getTmpDir()
+                fileName = structureHandler.readFromPDBDatabase(
+                    os.path.basename(pdbID), dir=tmp_dir)
+  
+            structureHandler.read(fileName)
+            structureHandler.getStructure()
+            modelsLength, modelsFirstResidue = structureHandler.getModelsChains()
+  
+            struct = json.loads(chainStr)  # From wizard dictionary
+            chain, model = struct["chain"].upper().strip(), int(struct["model"])
+  
+            residueList = self.editionListOfResidues(modelsFirstResidue, model, chain)
+            finalResiduesList = []
+            for i in residueList:
+                finalResiduesList.append(emobj.String(i))
+  
+        elif issubclass(type(inputObj), emobj.AtomStruct):
+            try:
+                modelsLength, modelsFirstResidue = self.getModelsChainsStep(protocol, inputObj)
+            except Exception as e:
+                print("ERROR: ", e)
+                return
+            struct = json.loads(chainStr)  # From wizard dictionary
+            chain, model = struct["chain"].upper().strip(), int(struct["model"])
 
-      return finalResiduesList
+            residueList = self.editionListOfResidues(modelsFirstResidue, model, chain)
+            finalResiduesList = []
+            for i in residueList:
+                finalResiduesList.append(emobj.String(i))
+
+        elif issubclass(type(inputObj),
+                        emobj.Sequence) or str(type(inputObj).__name__) == 'SequenceVariants':
+            finalResiduesList = []
+            for i, res in enumerate(inputObj.getSequence()):
+                if res in RESIDUES1TO3:
+                    res3 = RESIDUES1TO3[res]
+                else:
+                    res3 = res
+                stri = '{"index": %s, "residue": "%s"}' % (i + 1, res3)
+                finalResiduesList.append(emobj.String(stri))
+
+        return finalResiduesList
 
     def getSequence(self, finalResiduesList, idxs):
         roiStr, inSeq = '', False
@@ -450,11 +438,11 @@ class SelectResidueWizard(SelectChainWizard):
             resDic = json.loads(residue.get())
             if resDic['residue'] in RESIDUES3TO1:
                 if resDic['index'] == idxs[0]:
-                  inSeq = True
+                    inSeq = True
                 if resDic['index'] == idxs[-1]:
-                  inSeq = False
-                  roiStr += RESIDUES3TO1[resDic['residue']]
-                  break
+                    inSeq = False
+                    roiStr += RESIDUES3TO1[resDic['residue']]
+                    break
 
                 if inSeq:
                     roiStr += RESIDUES3TO1[resDic['residue']]
@@ -463,7 +451,7 @@ class SelectResidueWizard(SelectChainWizard):
     def show(self, form, *params):
         inputParams, outputParam = self.getInputOutput(form)
         protocol = form.protocol
-        print("inputParams: ", inputParams, "  type: ",type(inputParams))
+        print("inputParams: ", inputParams, "  type: ", type(inputParams))
         inputObj = getattr(protocol, inputParams[0]).get()
         if len(inputParams) < 2:
             # For sequence objects, with no chain
@@ -480,11 +468,8 @@ class SelectResidueWizard(SelectChainWizard):
         idxs = [json.loads(dlg.values[0].get())['index'], json.loads(dlg.values[-1].get())['index']]
         roiStr = self.getSequence(finalResiduesList, idxs)
 
-
         intervalStr = '{"index": "%s-%s", "residues": "%s"}' % (idxs[0], idxs[1], roiStr)
         form.setVar(outputParam[0], intervalStr)
-
-
 
 
 class PythonFormulaeWizard(pwizard.Wizard):
@@ -494,7 +479,10 @@ class PythonFormulaeWizard(pwizard.Wizard):
 
     def show(self, form, *params):
 
-        d = FormulaDialog(form.root, form.protocol.inputSet.get(), formula=form.protocol.formula.get())
+        d = FormulaDialog(
+            form.root,
+            form.protocol.inputSet.get(),
+            formula=form.protocol.formula.get())
 
         # If accepted
         if d.resultYes():
@@ -507,7 +495,9 @@ class PythonFormulaWizardX1(pwizard.Wizard):
 
     def show(self, form, *params):
 
-        d = FormulaDialog(form.root, form.protocol.inputSet1.get(), formula=form.protocol.attribute1.get())
+        d = FormulaDialog(form.root,
+                          form.protocol.inputSet1.get(),
+                          formula=form.protocol.attribute1.get())
 
         # If accepted
         if d.resultYes():
@@ -531,17 +521,16 @@ class PythonTopRankWizard(pwizard.Wizard):
     """Assist in the creation of python formula to be evaluated. In Steps"""
     _targets = [(emprot.ProtSetFilter, ['rankingField'])]
 
-            
 
 class SelectAttributeWizard(VariableWizard):
     """Wizard to select attributes stored in a scipion object or set """
     _targets, _inputs, _outputs = [], {}, {}
 
     def getInputSet(self, form, inputParam):
-      inputPointer = getattr(form.protocol, inputParam)
-      if issubclass(inputPointer.__class__, pwobj.PointerList):
-        inputPointer = inputPointer[0]
-      return inputPointer.get()
+        inputPointer = getattr(form.protocol, inputParam)
+        if issubclass(inputPointer.__class__, pwobj.PointerList):
+            inputPointer = inputPointer[0]
+        return inputPointer.get()
 
     def getFirstItem(self, form, inputParam):
         inputSet = self.getInputSet(form, inputParam)
@@ -552,30 +541,34 @@ class SelectAttributeWizard(VariableWizard):
         return item
 
     def getInputAttributes(self, form, inputParam):
-      attrNames = []
-      item = self.getFirstItem(form, inputParam[0])
-      for key, attr in item.getAttributesToStore():
-        attrNames.append(key)
-      return attrNames
+        attrNames = []
+        item = self.getFirstItem(form, inputParam[0])
+        for key, attr in item.getAttributesToStore():
+            attrNames.append(key)
+        return attrNames
 
     def show(self, form, *params):
-      inputParam, outputParam = self.getInputOutput(form)
-      if self.getInputSet(form, inputParam[0]):
-        attrsList = self.getInputAttributes(form, inputParam)
-        finalAttrsList = []
-        for i in attrsList:
-          finalAttrsList.append(pwobj.String(i))
-        provider = ListTreeProviderString(finalAttrsList)
-        dlg = dialog.ListDialog(form.root, "Filter set", provider,
-                              "Select one of the attributes")
-        form.setVar(outputParam[0], dlg.values[0].get())
-      else:
-        showError('Input error', 'Input needs to be defined in the form for the wizard be used', form.root)
+        inputParam, outputParam = self.getInputOutput(form)
+        if self.getInputSet(form, inputParam[0]):
+            attrsList = self.getInputAttributes(form, inputParam)
+            finalAttrsList = []
+            for i in attrsList:
+                finalAttrsList.append(pwobj.String(i))
+            provider = ListTreeProviderString(finalAttrsList)
+            dlg = dialog.ListDialog(form.root, "Filter set", provider,
+                                    "Select one of the attributes")
+            form.setVar(outputParam[0], dlg.values[0].get())
+        else:
+            showError('Input error', 'Input needs to be defined in the form for the wizard be used', form.root)
+
 
 class ColorScaleWizardRMSD(ColorScaleWizardBase):
-    _targets = ColorScaleWizardBase.defineTargets(emview.ChimeraAttributeViewer) + ColorScaleWizardBase.defineTargets(emview.zAngularDistViewer)
+    _targets = ColorScaleWizardBase.defineTargets(
+        emview.ChimeraAttributeViewer) +\
+              ColorScaleWizardBase.defineTargets(emview.zAngularDistViewer)
 
-#Defining target for the SelectAttributeWizard
+
+# Defining target for the SelectAttributeWizard
 SelectAttributeWizard().addTarget(protocol=emprot.ProtSetFilter,
                                   targets=['rankingField'],
                                   inputs=['inputSet'],
