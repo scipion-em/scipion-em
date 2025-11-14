@@ -293,7 +293,7 @@ class BaseChainWizard(VariableWizard    ):
 
 
 class SelectChainWizard(BaseChainWizard):
-    '''Opens the input AtomStruct and allows you to select one of the present chains'''
+    '''Opens the input AtomStruct and allows you to select ONE chain from the structure'''
     _targets, _inputs, _outputs = [], {}, {}
 
     def show(self, form, *params):
@@ -326,7 +326,7 @@ SelectChainWizard().addTarget(protocol=emprot.ProtImportSequence,
 
 class SelectChainSWizard(BaseChainWizard):
     '''Opens the input AtomStruct and allows you to select
-        MORE THAN ONE of the present chains'''
+        MULTIPLE chains (1 or more) from the structure'''
     _targets, _inputs, _outputs = [], {}, {}
 
     def show(self, form, *params):
