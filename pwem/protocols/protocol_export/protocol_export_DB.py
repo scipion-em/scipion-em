@@ -117,7 +117,7 @@ class ProtExportDataBases(EMProtocol):
                            'masks to export.')
         form.addParam('exportMasks', params.MultiPointerParam, label="Masks to export",
                       allowsNull=True, condition='masksToExport == True',
-                      pointerClass='Mask',
+                      pointerClass='VolumeMask',
                       help='These mask will be exported using mrc format')
         form.addParam('exportAtomStruct', params.PointerParam,
                       label="Atomic structure to export", allowsNull=True,
