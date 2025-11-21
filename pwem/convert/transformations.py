@@ -1524,7 +1524,8 @@ def random_quaternion(rand=None):
     if rand is None:
         rand = np.random.rand(3)
     else:
-        assert len(rand) == 3
+        if len(rand) != 3:
+            raise AssertionError("rand argument should be a list of 3 elements")
     r1 = np.sqrt(1.0 - rand[0])
     r2 = np.sqrt(rand[0])
     pi2 = math.pi * 2.0

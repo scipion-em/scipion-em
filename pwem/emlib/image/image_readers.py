@@ -1,4 +1,5 @@
 import enum
+import os
 from functools import lru_cache
 from typing import Union
 
@@ -23,6 +24,7 @@ class ROT_MODE(enum.Enum):
     NATURAL=2 # Rotation will require a bigger image to avoid loosing informatión in the corners
     CONDITIONAL=3 # Similar to FIXED, but shifting x and y original dimensions in some cases to reduce
                   # information loss. 45<rot<135 and 225<rot<315
+
 
 # Classes to replace one day the functionality covered by ImageHandler... which uses xmipp binding
 class ImageStack:
@@ -125,18 +127,23 @@ class ImageStack:
         return npArray[start_y:start_y + target_height, start_x:start_x + target_width]
 
     @classmethod
-    def rotateSlice(cls, npArray: numpy.ndarray, angle: float, mode=ROT_MODE.FIXED, bg=None) -> numpy.ndarray:
+    def rotateSlice(cls, npArray: numpy.ndarray, angle: float, mode=ROT_MODE.CONDITIONAL, bg=None) -> numpy.ndarray:
         """Rotates a numpy array"""
 
-        bg = npArray.mean() if bg is None else bg # Get the mean value
-        reshape = mode != ROT_MODE.FIXED  # Fixed mode should not reshape the array
+        angle = angle % 360  # negative angles should turn into its equivalent: -15 -> 345
+
+        if angle == 0:
+            return npArray
+
+        bg = npArray.mean() if bg is None else bg  # Get the mean value
+        reshape = mode == ROT_MODE.FIXED  # Fixed mode should not reshape the array
 
         # Rotate the image
         rotated = rotate(npArray, angle, reshape=reshape, mode='constant', cval=bg)
 
         # If mode
         if mode == ROT_MODE.CONDITIONAL:
-            angle = angle % 360  # negative angles should turn into its equivalent: -15 -> 345
+
             target_height, target_width = npArray.shape
 
             # If in the region to shift dimension
@@ -155,7 +162,7 @@ class ImageStack:
         :param shifts = float or sequence. If a sequence, first value should be X shift and second Y shift
         """
 
-        bg = image.mean() if bg is  None else bg# Get the mean value
+        bg = image.mean() if bg is  None else bg  # Get the mean value
 
         if not isinstance(shifts, float):
             # Swap: shift expect first element to be y abd then x. We have opposite convention
@@ -189,6 +196,10 @@ class ImageStack:
     def thumbnailSlice(cls, npImage, width, height, normalize=True):
         """ Calls PIl thumbnail. It is less precise but faster than scaleSlice"""
 
+        imgX, imgY = npImage.shape
+        if width > imgX or height > imgY:
+            raise Exception("thumbnailSlice does not scale up images.")
+
         img = cls.asPilImage(npImage, normalize=normalize)
         img.thumbnail((width,height))
         return np.array(img)
@@ -200,6 +211,22 @@ class ImageStack:
 
         mode = 0 if vertically else 1
         return numpy.flip(npImage, mode)
+
+    @classmethod
+    def highlightSlice(cls, npImage:numpy.ndarray, stds=2):
+        """
+        :param npImage: image as 2d numpy array
+        :param stds: number of STD to apply the contrast
+        """
+
+        imgmean = npImage.mean()
+        imgstd = npImage.std()
+        offset = stds * imgstd
+        low = imgmean - offset
+        high = imgmean + offset
+        contrast_data = np.clip(npImage, low, high)
+        return contrast_data
+
 
     def flip(self, vertically=True):
         """Flip all images of an ImageStack horizontally or vertically.
@@ -244,12 +271,20 @@ class ImageStack:
         """
 
         return self._applyOperation(lambda npImage, factor: npImage*factor, factor)
+
     def invert(self):
+        """ Invert values of all slices"""
 
         return self.multiply(factor=-1)
 
     def normalize(self):
+        """ Normalize values of all slices"""
         return self._applyOperation(self.normalizeSlice)
+
+    def highlight(self, stds=2):
+        """ Increases de contrast of all slices
+        :param stds: number of STD to apply the contrast"""
+        return  self._applyOperation(self.highlightSlice, stds=stds)
 
     def _applyOperation(self, operation, *args, **kwargs):
         rotImg = ImageStack()
@@ -303,6 +338,7 @@ class ImageReader:
         """
         logger.warning("write method not implemented. Cannot write %s" % fileName)
 
+
 class ImageReadersRegistry:
     """ Class to register image readers to provide basic information about an image like dimensions or getting an image"""
     _readers = dict()  # Dictionary to hold the readers. The key is the extension
@@ -331,15 +367,43 @@ class ImageReadersRegistry:
         return reader
 
     @classmethod
-    @lru_cache
     def open(cls, filePath) -> ImageStack:
-        """"Opens the file and returns and ImageStack.
-        Accepts formats like 1@path/to/my/image.ext.
-        In this case there can be a performance penalty since readers are reading all the
-        stack but we are only taking one slice. This may be unavoidable in cases when you want
-        to read a single image but not optimal when you are going to go through all the stack.
+        """
+        Opens an image or image stack from the given file path.
+
+        This method serves as a public interface and delegates the actual loading
+        to a cached internal method. It extracts the file last modification time
+        (mtime) to ensure the cache is invalidated if the file changes.
+
+        Parameters:
+            filePath (str): Path to the image file. Can include a slice index in the format
+                            '1@path/to/image.ext' to request a specific slice.
+
+        Returns:
+            ImageStack: The loaded image data, either a single slice or a full stack.
+        """
+        mTime = os.path.getmtime(filePath.split("@")[-1])
+        return cls._openInternal(filePath, mTime)
+
+    @classmethod
+    @lru_cache
+    def _openInternal(cls, filePath, mtime) -> ImageStack:
+        """
+        Internal method that performs the actual image loading and is cached.
+
+        This method handles slicing requests if the reader supports it. If not,
+        it loads the entire image stack and extracts the requested slice manually.
+        The cache is tied to both filePath and mTime to ensure consistency when files change.
+
+        Parameters:
+            filePath (str): Path to the image file. May include a slice index prefix ('N@path').
+            mTime (float): Last modification timestamp of the file (used for cache invalidation).
+
+        Returns:
+            ImageStack: The loaded image data.
         """
 
+        logger.debug(f"Reading image file {filePath}")
         parts = filePath.split("@")
 
         filePath = parts[-1]
@@ -510,7 +574,6 @@ class MRCImageReader(ImageReader):
         return imfloat
 
     @classmethod
-    @lru_cache
     def getMrcImage(cls, fileName):
         logger.info("Reading %s" % fileName)
         return mrcfile.mmap(fileName, mode='r+', permissive=True)

@@ -58,9 +58,9 @@ import shutil
 from pwem.objects.data import Alphabet
 
 
-
 SECTION = '_scipion_attributes'
 NAME, RECIP, SPEC, VALUE = SECTION + '.name', SECTION + '.recipient', SECTION + '.specifier', SECTION + '.value'
+
 
 class OutOfChainsError(Exception):
     pass
@@ -746,7 +746,8 @@ class AtomicStructHandler:
         self.structure.transform(rotation_matrix, translation)
 
     def _renameChainsIfNeed(self, struct2):
-        """Rename chain, we assume that there is a single model per structure"""
+        """Rename chain, we assume that there
+        is a single model per structure"""
         repeated = False
 
         def RepresentsInt(s):
@@ -770,7 +771,7 @@ class AtomicStructHandler:
                             chain.id = "%s%03d" % (cId, counter)
                             break
                         except ValueError:
-                            counter +=1
+                            counter += 1
                             if counter > 1000:
                                 raise ValueError('Error in _renameChainsIfNeed.')
                 elif RepresentsInt(cId[1:]):  # try to fit a number and increase it by one
@@ -780,9 +781,10 @@ class AtomicStructHandler:
         if repeated:
             self._renameChainsIfNeed(struct2)
 
-    def addStruct(self, secondPDBfileName, outPDBfileName=None, useModel=False):
+    def addStruct(self, secondPDBfileName,
+                  outPDBfileName=None, useModel=False):
         """ Join the second structure to the first one.
-            If cheon numes are the same rename them.
+            If chain numbers are the same rename them.
             if outPDBfileName id provided then new
             struct is saved to a file"""
         # read new structure
@@ -939,15 +941,15 @@ def _frombase(inFileName, outFileName, log, oParam=1):
         print(pwutils.redStr("If maxit is installed check %s in scipion.conf" % MAXIT_HOME))
 
 
-def fromPDBToCIF(inFileName, outFileName, log):
+def fromPDBToCIF(inFileName, outFileName, log=None):
     _frombase(inFileName, outFileName, log, 1)
 
 
-def fromCIFToPDB(inFileName, outFileName, log):
+def fromCIFToPDB(inFileName, outFileName, log=None):
     _frombase(inFileName, outFileName, log, 2)
 
 
-def fromCIFTommCIF(inFileName, outFileName, log):
+def fromCIFTommCIF(inFileName, outFileName, log=None):
     _frombase(inFileName, outFileName, log, 8)
 
 def testLog(log, messages= None, sdterrLog = None):
@@ -1009,7 +1011,7 @@ def retry(runEnvirom, program, args, cwd, listAtomStruct=[], log=None, clean_dir
                                 runEnvirom(program, _args, cwd=cwd)
                     elif atomStructName.endswith(".cif"):
                         try:
-                            newAtomStructName = atomStructName.replace(atomStruct.split(".")[-1],"pdb")
+                            newAtomStructName = atomStructName.replace(atomStructName.split(".")[-1],"pdb")
                             _args = args.replace(atomStructName, newAtomStructName)
                             runEnvirom(program, _args, cwd=cwd)
                         except:

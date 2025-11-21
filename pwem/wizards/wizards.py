@@ -297,7 +297,7 @@ class SelectChainWizard(VariableWizard):
 
 SelectChainWizard().addTarget(protocol=emprot.ProtImportSequence,
                               targets=['inputStructureChain'],
-                              inputs=[['pdbId', 'pdbFile']],
+                              inputs=[['pdbId', 'pdbFile', 'inputAS']],
                               outputs=['inputStructureChain'])
 
 

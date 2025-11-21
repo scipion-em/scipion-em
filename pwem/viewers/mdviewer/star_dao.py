@@ -25,6 +25,7 @@
 # *
 # **************************************************************************
 import logging
+import time
 
 from metadataviewer.model import Table
 
@@ -138,7 +139,7 @@ class StarFile(IDAO):
         while line.startswith('_'):
             parts = line.split()
             labels.append(parts[0][1:])
-            line = self._file.readline()
+            line = self._file.readline().lstrip()
         while line.startswith('\n'):
             line = self._file.readline()
         return line, labels
@@ -158,6 +159,7 @@ class StarFile(IDAO):
 
         rawLine = self._file.readline()
         while rawLine:
+            rawLine = rawLine.lstrip()
             if rawLine.startswith('_'):
                 line = rawLine
                 break
