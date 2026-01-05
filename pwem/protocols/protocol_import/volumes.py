@@ -389,11 +389,9 @@ Format may be PDB or MMCIF"""
 
                 # -------- ATOM/HETATM --------
                 if line.startswith(("ATOM", "HETATM")) and len(line) >= 22:
-                    # Captura residuo + posible cadena + letra extra (GLUBa, ASPBa)
                     m = re.match(r'([A-Z]{3})([A-Z]?)([a-z]?)', line[17:22])
                     if m:
                         resname, chain, extra = m.groups()
-                        # Si no hay cadena definida, ponemos 'A'
                         chain = chain if chain.isalpha() else 'A'
                         new_line = line[:17] + resname + " " + chain + line[22:]
                         modified = True
@@ -401,28 +399,25 @@ Format may be PDB or MMCIF"""
                 # -------- HELIX --------
                 elif line.startswith("HELIX"):
                     # ----- INICIO -----
-                    start_field = line[15:19].strip()  # ejemplo: 'ASPBa'
+                    start_field = line[15:19].strip()
                     start_res = start_field[:3]  # 'ASP'
                     start_chain = start_field[3] if len(start_field) > 3 and start_field[3].isalpha() else 'A'
 
-                    # Número de residuo y código de inserción
                     init_seq = line[21:25]
                     init_icode = line[25]
 
                     # ----- FIN -----
-                    end_field = line[27:31].strip()  # ejemplo: 'CYSBa'
-                    end_res = end_field[:3]  # 'CYS'
+                    end_field = line[27:31].strip()
+                    end_res = end_field[:3]
                     end_chain = end_field[3] if len(end_field) > 3 and end_field[3].isalpha() else 'A'
 
                     end_seq = line[33:37]
                     end_icode = line[37]
 
-                    # Helix class, comment, length
                     helix_class = line[38:40] if len(line) >= 40 else '1'
                     comment = line[40:70] if len(line) >= 70 else ''
                     length = line[71:76] if len(line) >= 76 else ''
 
-                    # Reconstruimos la línea completa usando solo los valores limpios
                     new_line = "{:<6}{:>3} {:>3} {:>3} {:1}{:>4}{:1} {:>3} {:1}{:>4}{:1}{:>2} {:<30}{:>5}\n".format(
                         "HELIX",  # 1-6
                         line[7:10].strip(),  # helix serial number 8-10
@@ -444,26 +439,24 @@ Format may be PDB or MMCIF"""
                 # -------- SHEET --------
                 elif line.startswith("SHEET"):
                     # ----- INICIO -----
-                    start_field = line[17:21].strip()  # ejemplo: 'PHEBa'
+                    start_field = line[17:21].strip()
                     start_res = start_field[:3]  # 'PHE'
                     start_chain = start_field[3] if len(start_field) > 3 and start_field[3].isalpha() else 'A'
 
-                    init_seq = line[22:26]  # número de residuo inicial
-                    init_icode = line[26]  # código de inserción
+                    init_seq = line[22:26]
+                    init_icode = line[26]
 
                     # ----- FIN -----
-                    end_field = line[28:32].strip()  # ejemplo: 'ILEBa'
+                    end_field = line[28:32].strip()
                     end_res = end_field[:3]  # 'ILE'
                     end_chain = end_field[3] if len(end_field) > 3 and end_field[3].isalpha() else 'A'
 
                     end_seq = line[33:37]
                     end_icode = line[37]
 
-                    # Strand sense (columnas 39-40) y resto de la línea
                     sense = line[38:40]
-                    rest = line[40:]  # todo lo demás (átomos, comentarios)
+                    rest = line[40:]
 
-                    # Reconstruimos solo residuo + cadena
                     new_line = (
                             line[:17] +
                             f"{start_res:<3} {start_chain}" +
@@ -478,32 +471,28 @@ Format may be PDB or MMCIF"""
                 # -------- SEQRES --------
                 elif line.startswith("SEQRES"):
                     serNum = line[8:10].strip()
-                    chainID_field = line[10:12].strip()  # esto puede ser 'Aa'
+                    chainID_field = line[10:12].strip()
                     chainID = chainID_field[0] if chainID_field else 'A'
 
-                    # Número total de residuos
                     numRes = line[13:17].strip()
 
-                    # Lista de residuos (después de columna 19)
                     residues_part = line[19:]
                     residues_fixed = []
                     for res in residues_part.split():
-                        residues_fixed.append(res[:3])  # tomamos solo las primeras 3 letras
+                        residues_fixed.append(res[:3])
 
-                    # Reconstruimos la línea con formato oficial
                     new_line = f"SEQRES  {serNum:>2} {chainID}  {numRes:>4}  {' '.join(residues_fixed)}\n"
                     modified = True
 
                 fixed_lines.append(new_line)
 
-        # Agregar TER y END si no existen
         if not any(l.startswith("TER") for l in fixed_lines):
             fixed_lines.append("TER\n")
         if not any(l.startswith("END") for l in fixed_lines):
             fixed_lines.append("END\n")
 
         if modified:
-            logger.info("Detected and fixed GLUBa-like residue/chain corruption. PDB is now valid.")
+            logger.info("Detected errors in PDB format. Its now valid.")
 
         with open(pdbOut, "w") as f:
             f.writelines(fixed_lines)
