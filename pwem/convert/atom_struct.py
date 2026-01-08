@@ -866,12 +866,94 @@ class AtomicStructHandler:
         self.structure[modelID].add(newChain)
         self.write(filename)
 
-
 def cifToPdb(fnCif, fnPdb):
-    h = AtomicStructHandler()
-    h.read(fnCif)
-    h.writeAsPdb(fnPdb)
+    """
+    Convert CIF to PDB:
+    - Single-block CIF: original AtomicStructHandler.
+    - Multi-block CIF: convert each block with atoms to PDB and merge.
+    """
+    with open(fnCif) as f:
+        block_count = sum(1 for line in f if line.startswith("data_"))
 
+    if block_count <= 1:
+        # Single block: use original logic
+        h = AtomicStructHandler()
+        h.read(fnCif)
+        h.writeAsPdb(fnPdb)
+        return fnPdb
+
+    # Multi-block CIF
+    with open(fnCif) as f:
+        blocks = []
+        current = []
+        for line in f:
+            if line.startswith("data_"):
+                if current:
+                    blocks.append(current)
+                current = [line]
+            else:
+                current.append(line)
+        if current:
+            blocks.append(current)
+
+    from Bio.PDB import MMCIFParser, PDBIO
+    import os
+
+    parser = MMCIFParser()
+    pdb_lines = []
+
+    for idx, block in enumerate(blocks):
+        # Only keep blocks with _atom_site
+        if not any(l.startswith("_atom_site") for l in block):
+            continue
+
+        tmp_cif = fnPdb + f".tmp_block{idx}.cif"
+        with open(tmp_cif, "w") as tmpf:
+            tmpf.writelines(block)
+
+        structName = f"Block{idx}"
+        try:
+            structure = parser.get_structure(structName, tmp_cif)
+        except Exception as e:
+            print(f"Skipping block {idx} due to parsing error: {e}")
+            os.remove(tmp_cif)
+            continue
+
+        io = PDBIO()
+        map_chains(structure)
+        io.set_structure(structure)
+
+        tmp_pdb = fnPdb + f".tmp_block{idx}.pdb"
+        io.save(tmp_pdb)
+
+        with open(tmp_pdb) as pdbf:
+            pdb_lines.extend(pdbf.readlines())
+
+        os.remove(tmp_cif)
+        os.remove(tmp_pdb)
+
+    # Save all blocks into final PDB
+    with open(fnPdb, "w") as out:
+        out.writelines(pdb_lines)
+
+    return fnPdb
+
+def map_chains(structure):
+    import string
+    allowed_ids = list(string.ascii_letters + string.digits)
+    mapping = {}
+    idx = 0
+    for model in structure:
+        for chain in model:
+            original_id = chain.id
+            if len(original_id) != 1:
+                if original_id not in mapping:
+                    mapping[original_id] = allowed_ids[idx]
+                    idx += 1
+                    if idx >= len(allowed_ids):
+                        raise ValueError("Too many chains to map to single-letter IDs")
+                chain.id = mapping[original_id]
+    return mapping
 
 def pdbToCif(fnPdb, fnCif):
     h = AtomicStructHandler()
