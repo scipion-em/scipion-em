@@ -876,7 +876,7 @@ def cifToPdb(fnCif, fnPdb):
         block_count = sum(1 for line in f if line.startswith("data_"))
 
     if block_count <= 1:
-        # Single block: use original logic
+        # Single block: original logic
         h = AtomicStructHandler()
         h.read(fnCif)
         h.writeAsPdb(fnPdb)
