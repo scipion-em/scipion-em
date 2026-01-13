@@ -32,7 +32,7 @@ import pyworkflow.protocol.params as params
 
 from pwem import Domain
 import pwem.constants as emcts
-from pwem.objects import SetOfParticles
+from pwem.objects import SetOfParticles, SetOfClasses
 
 from .images import ProtImportImages
 
@@ -55,7 +55,8 @@ class ProtImportParticles(ProtImportImages):
     alignTypeList = [emcts.ALIGN_2D, emcts.ALIGN_3D, emcts.ALIGN_PROJ,
                      emcts.ALIGN_NONE]
 
-    _possibleOutputs = {'outputParticles': SetOfParticles}
+    _possibleOutputs = {'outputParticles': SetOfParticles,
+                        'outputClasses': SetOfClasses}
 
     def _getImportChoices(self):
         """ Return a list of possible choices
