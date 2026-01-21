@@ -179,7 +179,10 @@ class Plugin(pyworkflow.plugin.Plugin):
         if not env.hasPackage(MAXIT):
             MAXIT_URL = 'https://sw-tools.rcsb.org/apps/MAXIT/maxit-v10.100-prod-src.tar.gz'
             MAXIT_TAR = 'maxit-v10.100-prod-src.tar.gz'
-            maxit_commands = [('make -j 1 binary ', ['bin/maxit'])]
+            maxit_commands = [
+                ('sed -i "s/\\bmv\\b/cp/g" cifparse-obj-v7.0/Makefile', []),
+                ('make -j 1 binary', ['bin/maxit'])
+            ]
             env.addPackage(MAXIT, version='10.1',
                            tar=MAXIT_TAR,
                            url=MAXIT_URL,
