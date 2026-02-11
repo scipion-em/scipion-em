@@ -1,13 +1,14 @@
 import enum
 import os
 from functools import lru_cache
-from typing import Union
+from typing import Union, Tuple, List, Optional
 
 import numpy
 import numpy as np
 from PIL import Image
 from tifffile import TiffFile, imread, imwrite
 import mrcfile
+from ncempy.io import dm
 
 import pwem.constants as emcts
 from .. import lib
@@ -299,11 +300,9 @@ class ImageStack:
         ImageReadersRegistry.write(self, path)
 
 
-
-
 class ImageReader:
     @classmethod
-    def open(cls, path):
+    def open(cls, path) -> np.ndarray:
         """ Opens the image in the path and returns a numpy array with the whole file (all slices included)"""
         raise NotImplementedError("Image reader %s does not implement 'open' method." % cls.__name__)
 
@@ -467,18 +466,53 @@ class PILImageReader(ImageReader):
         im = Image.fromarray(numpy.uint8(np_img))
         im.save(fileName)
 
-        return True
 
+class Dm4ImageReader(ImageReader):
+    """ Dm4 image reader - Gatan cameras gain and dark image format."""
+    @staticmethod
+    def getCompatibleExtensions() -> List[str]:
+        return ['dm3', 'dm4']
+
+    @classmethod
+    def open(cls, filePath: str) -> np.ndarray:
+        dm4Img = dm.dmReader(filePath)
+        return dm4Img['data']
+
+    @staticmethod
+    def getDimensions(filePath: str) -> Tuple[int, ...]:
+        data = Dm4ImageReader.open(filePath)
+        return data.shape
+
+    @classmethod
+    def dmToMrc(cls,
+                inDmFileName: str,
+                outMrcFile:  str,
+                voxelSize: Optional[float] = None) -> None:
+        try:
+            with mrcfile.new(outMrcFile, overwrite=True) as mrc:
+                dm4Img = dm.dmReader(inDmFileName)
+                data = dm4Img['data']
+                mrc.set_data(data.astype(np.float32))  # Common in cryoEM data
+
+                # Beware! If the pixel size is read from the dm file, it may not be in angstrom/px as expected in MRC
+                voxelSize = voxelSize if voxelSize else dm4Img.get('pixelSize', [1.0, 1.0])
+                mrc.voxel_size = voxelSize
+
+                # Manage the header
+                mrc.header.map = 1  # Density mode (float)
+                mrc.update_header_stats()  # Update min/max/mean
+        except Exception as e:
+            raise Exception(f"Error converting {inDmFileName}: {e}")
 
 class TiffImageReader(ImageReader):
     """ Tiff image reader"""
 
     @staticmethod
-    def getCompatibleExtensions() -> list:
+    def getCompatibleExtensions() -> List[str]:
         return ['tif', 'tiff', 'gain', 'eer']
 
     @staticmethod
-    def getDimensions(filePath):
+    def getDimensions(filePath) -> Tuple[int, int, int, int]:
         tif = TiffFile(filePath)
         frames = len(tif.pages)  # number of pages in the file
         page = tif.pages[0]  # get shape and dtype of the image in the first page
@@ -499,7 +533,6 @@ class TiffImageReader(ImageReader):
     def write(cls, imgStack: ImageStack, fileName: str, isStack=False) -> None:
         npImg = imgStack.getImage().astype("uint8")
         imwrite(fileName, npImg)
-        return True
 
 
 class EMANImageReader(ImageReader):
@@ -600,7 +633,6 @@ class MRCImageReader(ImageReader):
                 mrc.header.ispg = 0
             mrc.update_header_from_data()
             mrc.voxel_size = sr
-        return True
 
     @classmethod
     def isMrcVolume(cls, mrcImg):
@@ -751,3 +783,4 @@ ImageReadersRegistry.addReader(STKImageReader)
 ImageReadersRegistry.addReader(EMANImageReader)
 ImageReadersRegistry.addReader(PILImageReader)
 ImageReadersRegistry.addReader(TiffImageReader)
+ImageReadersRegistry.addReader(Dm4ImageReader)
