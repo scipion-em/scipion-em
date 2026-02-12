@@ -1,5 +1,6 @@
 import enum
 import os
+import struct
 from functools import lru_cache
 from typing import Union, Tuple, List, Optional
 
@@ -11,6 +12,7 @@ import mrcfile
 from ncempy.io import dm
 
 import pwem.constants as emcts
+from pyworkflow.utils import cyanStr, redStr
 from .. import lib
 from scipy.ndimage import rotate, shift
 from skimage.transform import rescale
@@ -467,6 +469,144 @@ class PILImageReader(ImageReader):
         im.save(fileName)
 
 
+class EmImageReader(ImageReader):
+    """ EM image reader. Class to handle basic reading and writing of .em format files.
+    Based on the standard TOM toolbox header structure."""
+    HEADER_SIZE = 512
+    # Data type codes in .em format
+    EM_BYTE = 1
+    EM_SHORT = 2
+    EM_LONG = 4
+    EM_FLOAT = 5
+    EM_DOUBLE = 9
+
+    @staticmethod
+    def getCompatibleExtensions() -> List[str]:
+        return ['em']
+
+    @classmethod
+    def open(cls, filepath: str) -> np.ndarray:
+        """Reads an .em file and returns a numpy array."""
+        with open(filepath, 'rb') as f:
+            header = f.read(cls.HEADER_SIZE)
+            if len(header) < cls.HEADER_SIZE:
+                raise ValueError("File is too small to be a valid .em file")
+
+            # Dimensions (x, y, z) are stored at bytes 4, 8, 12
+            # These are 32-bit integers
+            dims = struct.unpack('<3i', header[4:16])
+            width, height, depth = dims
+
+            # Data type code is at byte 3
+            data_type_code = header[3]
+            if data_type_code == cls.EM_BYTE:
+                dtype = np.int8
+            elif data_type_code == cls.EM_SHORT:
+                dtype = np.int16
+            elif data_type_code == cls.EM_LONG:
+                dtype = np.int32
+            elif data_type_code == cls.EM_FLOAT:
+                dtype = np.float32
+            elif data_type_code == cls.EM_DOUBLE:
+                dtype = np.float64
+            else:
+                # Fallback: defaults to float32 if type is unknown
+                logger.info(cyanStr(f"Warning: Unknown data type code {data_type_code}. Assuming float32."))
+                dtype = np.float32
+
+            # Read remaining binary data
+            data = np.fromfile(f, dtype=dtype)
+
+            # Verify size consistency
+            expected_len = width * height * depth
+            if data.size != expected_len:
+                raise ValueError(f"Incorrect data size. Expected {expected_len}, got {data.size}")
+
+            # Reshape to correct volume dimensions.
+            # .em uses Fortran order (X, Y, Z), numpy uses C order (Z, Y, X).
+            # We read in Fortran order and then transpose to (Z, Y, X).
+            volume = data.reshape((width, height, depth), order='F')
+
+            # Transpose to match Python/MRC convention (Z, Y, X)
+            volume = volume.transpose((2, 1, 0))
+
+            return volume
+
+    @staticmethod
+    def getDimensions(filePath: str) -> Tuple[int, int, int, int]:
+        with open(filePath, 'rb') as f:
+            header = f.read(EmImageReader.HEADER_SIZE)
+            if len(header) < EmImageReader.HEADER_SIZE:
+                raise ValueError("File is too small to be a valid .em file")
+
+            # Dimensions (x, y, z) are stored at bytes 4, 8, 12
+            # These are 32-bit integers
+            dims = struct.unpack('<3i', header[4:16])
+            return dims[0], dims[1], dims[2], 1
+
+    @classmethod
+    def write(cls,
+              imageStack: ImageStack,
+              fileName: str,
+              samplingRate: Union[float, None] = None) -> None:
+        """Generate a stack of images or a volume from a list of images."""
+        sr = samplingRate if samplingRate else imageStack.getProperties().get("sr", 1.0)
+        data = numpy.stack(imageStack.getImages(), axis=0)
+        # Ensure array is (Z, Y, X) -> Transpose back to (X, Y, Z) for .em
+        data_to_write = data.transpose((2, 1, 0))
+
+        # Get dimensions
+        width, height, depth = data_to_write.shape  # X, Y, Z
+
+        header = bytearray(EmImageReader.HEADER_SIZE)
+
+        # Byte 0: Machine coding (6 = PC)
+        header[0] = 6
+        # Byte 3: Data type
+        if data.dtype == np.float32:
+            header[3] = EmImageReader.EM_FLOAT
+        elif data.dtype == np.int16:
+            header[3] = EmImageReader.EM_SHORT
+        elif data.dtype == np.int8:
+            header[3] = EmImageReader.EM_BYTE
+        else:
+            # Convert to float32 by default for other types
+            data_to_write = data_to_write.astype(np.float32)
+            header[3] = EmImageReader.EM_FLOAT
+
+        # Pack dimensions (x, y, z) into bytes 4, 8, 12
+        struct.pack_into('<3i', header, 4, width, height, depth)
+
+        with open(fileName, 'wb') as f:
+            f.write(header)
+            # Write data in Fortran order (column-major)
+            data_to_write.tofile(f, sep="", format="")
+
+    def emToMrc(self, em_path, mrc_path, pixel_size=None):
+        """Converts .em file to .mrc"""
+        try:
+            volume_data = self.open(em_path)
+            with mrcfile.new(mrc_path, overwrite=True) as mrc:
+                mrc.set_data(volume_data)
+                if pixel_size:
+                    mrc.voxel_size = pixel_size
+
+        except Exception as e:
+            logger.error(redStr(f"Error in em_to_mrc: {e}"))
+
+    def mrcToEm(self, mrc_path, em_path):
+        """Converts .mrc file to .em"""
+        try:
+            # Use permissive=True for MRC files that might have slightly corrupt headers
+            with mrcfile.open(mrc_path, permissive=True) as mrc:
+                volume_data = mrc.data
+
+            self.write(em_path, volume_data)
+
+        except Exception as e:
+            logger.error(redStr(f"Error in mrc_to_em: {e}"))
+
+
 class Dm4ImageReader(ImageReader):
     """ Dm4 image reader - Gatan cameras gain and dark image format."""
     @staticmethod
@@ -479,9 +619,18 @@ class Dm4ImageReader(ImageReader):
         return dm4Img['data']
 
     @staticmethod
-    def getDimensions(filePath: str) -> Tuple[int, ...]:
+    def getDimensions(filePath: str) -> Tuple[int, int, int, int]:
         data = Dm4ImageReader.open(filePath)
-        return data.shape
+        result = data.shape
+        lr = len(result)
+        if lr == 2:
+            return result[0], result[1], 1, 1
+        elif lr == 3:
+            return result[0], result[1], result[2], 1
+        elif lr == 4:
+            return result[0], result[1], result[2], result[3]
+        else:
+            return 1, 1, 1, 1
 
     @classmethod
     def dmToMrc(cls,
@@ -784,3 +933,4 @@ ImageReadersRegistry.addReader(EMANImageReader)
 ImageReadersRegistry.addReader(PILImageReader)
 ImageReadersRegistry.addReader(TiffImageReader)
 ImageReadersRegistry.addReader(Dm4ImageReader)
+ImageReadersRegistry.addReader(EmImageReader)
