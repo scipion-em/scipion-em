@@ -645,7 +645,7 @@ class Dm4ImageReader(ImageReader):
 
                 # Beware! If the pixel size is read from the dm file, it may not be in angstrom/px as expected in MRC
                 voxelSize = voxelSize if voxelSize else dm4Img.get('pixelSize', [1.0, 1.0])
-                mrc.voxel_size = voxelSize
+                mrc.voxel_size = voxelSize[0]
 
                 # Manage the header
                 mrc.header.map = 1  # Density mode (float)
