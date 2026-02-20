@@ -120,7 +120,7 @@ class ScipionSetsDAO(IDAO):
     def __loadDB(self, sqliteFile):
         """Load a sqlite file"""
         try:
-            return sqlite3.connect(f"file:{sqliteFile}?mode=ro", uri=True)
+            return sqlite3.connect(f"file:{sqliteFile}?mode=ro", uri=True, check_same_thread=False)
         except Exception as e:
             logger.error("The file could not be opened. Make sure the path is "
                          "correct: \n %s" % e)
