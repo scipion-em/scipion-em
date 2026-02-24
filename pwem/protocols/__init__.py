@@ -66,6 +66,8 @@ from .protocol_classes_selector import ProtClassesSelector
 from .protocol_boxsize_parameters import ProtBoxSizeParameters
 from .protocol_boxsize_checkpoint import ProtBoxSizeCheckpoint
 
+from .protocol_break_symmetry import ProtBreakSymmetry
+
 from .protocol_mathematical_operator import ProtMathematicalOperator
 
 from .protocol_tools import *
