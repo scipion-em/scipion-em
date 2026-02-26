@@ -1,3 +1,6 @@
+V3.10.3:
+Users:
+  - A new protocol to crop and resize volumes is introduced with tests.
 V3.10.2:
 Developers:
   - Fixing the star file DAO: Allowing white spaces in the tag block
