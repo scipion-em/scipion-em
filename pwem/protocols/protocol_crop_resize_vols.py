@@ -175,7 +175,6 @@ class ProtCropResizeVols(EMProtocol):
             if self.resizeOption.get() == self.RESIZE_SAMPLINGRATE:
                 samplingRate = self.resizeSamplingRate.get()
             else:
-                samplingRate = inVol.getSamplingRate()
                 inBoxsize = inVol.getDim()[0]
                 newboxsize = self.resizeDim.get()
                 samplingRate = (inBoxsize/newboxsize)*oldSampling
