@@ -53,11 +53,11 @@ class TestCropResizeBase(BaseTest):
         return cls.protImport
     
     @classmethod
-    def runCropResize(test: BaseTest, inVol, **kwargs):
-        protCropResize = test.newProtocol(ProtCropResizeVols,
+    def runCropResize(cls, inVol, **kwargs):
+        protCropResize = cls.newProtocol(ProtCropResizeVols,
                                           inVolume=inVol,
                                            **kwargs)
-        test.launchProtocol(protCropResize)
+        cls.launchProtocol(protCropResize)
         return getattr(protCropResize, OUTPUT_VOLUME, None)
     
 
