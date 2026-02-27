@@ -67,8 +67,7 @@ class ProtBreakSymmetry(EMProtocol):
         inputImages = self._getInputImages()
         outputImages = inputImages.createCopy(
             self._getPath(), 
-            copyInfo=True,
-            copyItems=True
+            copyInfo=True
         )
 
         symmetry = xmippLib.SymList()
@@ -76,7 +75,7 @@ class ProtBreakSymmetry(EMProtocol):
         rng = np.random.default_rng()
         
         symMatrix = np.eye(4)
-        for image in outputImages:
+        for image in inputImages:
             index = rng.integers(0, len(symMatrices))
             symMatrix[:3,:3] = symMatrices[index]
             
@@ -85,7 +84,7 @@ class ProtBreakSymmetry(EMProtocol):
             matrix = symMatrix.T @ matrix
             transform.setMatrix(matrix)
             image.setTransform(transform)
-            outputImages.update(image)
+            outputImages.append(image)
           
         self._defineOutputs(**{ProtBreakSymmetryOutputs.Output.name: outputImages})
         self._defineSourceRelation(self.input, outputImages)
