@@ -152,7 +152,7 @@ class Transform(EMObject):
     def getEulerAngles(self):
         from pwem.convert.transformations import euler_from_matrix
         rotation = self.getRotationMatrix()
-        return euler_from_matrix(rotation, 'szyz')
+        return euler_from_matrix(rotation)
 
     def getShifts(self):
         M = self.getMatrix()
