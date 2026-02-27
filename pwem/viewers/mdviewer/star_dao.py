@@ -148,8 +148,14 @@ class StarFile(IDAO):
         """Create the table structure"""
         logger.debug("Creating the table columns...")
         colNames = self._labels[table.getName()]
-        values = self._tableData[table.getName()][0]
-        table.createColumns(colNames, values)
+        data = self._tableData[table.getName()]
+        
+        if len(data) > 0:
+            firstRow = data[0]
+        else:
+            firstRow = ['']*len(colNames)
+        
+        table.createColumns(colNames, firstRow)
         table.setAlias(table.getAlias())
 
     def _findLabelLine(self):
