@@ -133,7 +133,7 @@ class ProtCropResizeVols(EMProtocol):
                 self._convertToMrc(fnHalf2)
 
     def cropResizeStep(self):
-        logger.info(cyanStr(f'Cropping and/or resizing...'))
+        logger.info(cyanStr('Cropping and/or resizing...'))
         inVol = self.inVolume.get()
         if self.doResize.get():
             targetShape = self._getTargetShape(inVol)
@@ -143,7 +143,7 @@ class ProtCropResizeVols(EMProtocol):
             self._readCropPadWrite(inVol, boxsize)
 
     def createOutputStep(self):
-        logger.info(cyanStr(f'Registering the results...'))
+        logger.info(cyanStr('Registering the results...'))
         inVol = self.inVolume.get()
         outVol = Volume()
         outVol.copy(inVol)
