@@ -170,6 +170,8 @@ class ProtCropResizeVols(EMProtocol):
             fnHalf1, fnHalf2 = inVol.getHalfMaps().split(',')
             fnHalf1 = self._getResultVolumeFName(fnHalf1)
             fnHalf2 = self._getResultVolumeFName(fnHalf2)
+            setMRCSamplingRate(fnHalf1, samplingRate)
+            setMRCSamplingRate(fnHalf2, samplingRate)
             outVol.setHalfMaps([fnHalf1, fnHalf2])
 
         self._defineOutputs(**{OUTPUT_VOLUME: outVol})
