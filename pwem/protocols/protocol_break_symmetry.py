@@ -89,6 +89,14 @@ class ProtBreakSymmetry(EMProtocol):
         self._defineOutputs(**{ProtBreakSymmetryOutputs.Output.name: outputImages})
         self._defineSourceRelation(self.input, outputImages)
             
+    # --------------------------- INFO functions -----------------------------
+    def _validate(self):
+        result = []
+        
+        if not self._getInputImages().getFirstItem().hasTransform():
+            result.append('Input images do not have a transformation associated')
+        
+        return result
     # --------------------------- UTILS functions -----------------------------
     def _getInputImages(self) -> SetOfImages:
         return self.input.get()
