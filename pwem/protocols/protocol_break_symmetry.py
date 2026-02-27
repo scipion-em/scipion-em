@@ -28,17 +28,9 @@ from enum import Enum
 import numpy as np
 import xmippLib
 
-from pyworkflow.protocol.constants import LEVEL_ADVANCED
-from pyworkflow.protocol.params import (PointerParam, EnumParam, FloatParam, 
-                                        StringParam, Range)
+from pyworkflow.protocol.params import PointerParam, StringParam
 from pwem.protocols import EMProtocol
-from pwem.objects import SetOfImages, Image, Transform
-from pwem.convert.transformations import euler_from_matrix
-
-def deep_getattr(obj, attr: str):
-    for key in attr.split('.'):
-        obj = getattr(obj, key)
-    return obj
+from pwem.objects import SetOfImages, Transform
 
 
 
