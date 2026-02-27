@@ -100,4 +100,3 @@ class ProtBreakSymmetry(EMProtocol):
     # --------------------------- UTILS functions -----------------------------
     def _getInputImages(self) -> SetOfImages:
         return self.input.get()
-    
