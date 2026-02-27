@@ -77,13 +77,14 @@ class ProtBreakSymmetry(EMProtocol):
         
         symMatrix = np.eye(4)
         for image in outputImages:
-            index = rng.integers(0, len(symMatrices))    
+            index = rng.integers(0, len(symMatrices))
             symMatrix[:3,:3] = symMatrices[index]
             
             transform: Transform = image.getTransform()
             matrix = transform.getMatrix()
-            matrix = matrix @ symMatrix
+            matrix = symMatrix.T @ matrix
             transform.setMatrix(matrix)
+            image.setTransform(transform)
             outputImages.update(image)
           
         self._defineOutputs(**{ProtBreakSymmetryOutputs.Output.name: outputImages})
