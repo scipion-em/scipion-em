@@ -29,8 +29,10 @@ import pyworkflow.tests as pwtests
 
 import pwem.protocols as emprot
 
+from pwem.tests.test_base_centralized_layer import TestBaseCentralizedLayer
 
-class TestImportBase(pwtests.BaseTest):
+
+class TestImportBase(TestBaseCentralizedLayer):
     @classmethod
     def setUpClass(cls):
         pwtests.setupTestProject(cls)
@@ -52,24 +54,33 @@ class TestImportMovies(TestImportBase):
     def _checkOutput(self, prot, args, moviesId=[], size=None, dim=None,
                      movieNames=[]):
         movies = getattr(prot, 'outputMovies', None)
-        self.assertIsNotNone(movies)
-        self.assertEqual(movies.getSize(), size)
 
-        for i, m in enumerate(movies):
-            if moviesId:
-                self.assertEqual(m.getObjId(), moviesId[i])
+        self.checkMovie(mov = movies,
+                   moviesId = moviesId,
+                   moviesNames = movieNames,
+                   samplingRate = args['samplingRate'],
+                   voltage = args['voltage'],
+                   size = size,
+                   dim = dim)
 
-            if movieNames:
-                self.assertEqual(os.path.basename(m.getFileName()),
-                                 movieNames[i])
-            self.assertAlmostEqual(m.getSamplingRate(),
-                                   args['samplingRate'])
-            a = m.getAcquisition()
-            self.assertAlmostEqual(a.getVoltage(), args['voltage'])
+        # self.assertIsNotNone(movies)
+        # self.assertEqual(movies.getSize(), size)
 
-            if dim is not None:  # Check if dimensions are the expected ones
-                x, y, n = m.getDim()
-                self.assertEqual(dim, (x, y, n))
+        # for i, m in enumerate(movies):
+        #     if moviesId:
+        #         self.assertEqual(m.getObjId(), moviesId[i])
+
+        #     if movieNames:
+        #         self.assertEqual(os.path.basename(m.getFileName()),
+        #                          movieNames[i])
+        #     self.assertAlmostEqual(m.getSamplingRate(),
+        #                            args['samplingRate'])
+        #     a = m.getAcquisition()
+        #     self.assertAlmostEqual(a.getVoltage(), args['voltage'])
+
+        #     if dim is not None:  # Check if dimensions are the expected ones
+        #         x, y, n = m.getDim()
+        #         self.assertEqual(dim, (x, y, n))
 
     def test_pattern(self):
         args = self.getArgs('ribo/', pattern='*.mrcs')

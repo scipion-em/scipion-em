@@ -30,8 +30,10 @@ import pwem.convert as emconv
 from pwem.convert import Ccp4Header
 from pyworkflow.object import Pointer
 
+from pwem.tests.test_base_centralized_layer import TestBaseCentralizedLayer
 
-class TestImportBase(pwtests.BaseTest):
+
+class TestImportBase(TestBaseCentralizedLayer):
     @classmethod
     def setUpClass(cls):
         pwtests.setupTestProject(cls)
@@ -46,7 +48,7 @@ class TestImportVolumes2(TestImportBase):
                 'filesPattern': '',
                 'setHalfMaps': False,
                 'setOrigCoord': True,
-                'samplingRate': 2.1,
+                'samplingRate': 1,
                 'x': 16.8,
                 'y': 33.6,
                 'z': 50.4
@@ -61,4 +63,12 @@ class TestImportVolumes2(TestImportBase):
 
         # TODO: Daniel - add a call to the corresponding methods of the test centralized
         # layer you are writing.
+        self.checkVolumeSet(
+            inVolumeSet=prot2.outputVolumes,
+            expectedSetSize=3,
+            expectedSRate=1,
+            expectedBoxSize=60,
+            #expectedOriginShifts=[1.0, 0.0, 0.0, -16.8]#, [0.0, 1.0, 0.0, -33.6], [0.0, 0.0, 1.0, -50.4], [0.0, 0.0, 0.0, 1.0]
+            expectedOriginShifts=[-16.8, -33.6, -50.4]
+        )
 
