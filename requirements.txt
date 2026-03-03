@@ -9,3 +9,5 @@ scipy==1.11.2; python_version == '3.12' #  up to date on 11-2023
 scikit-image==0.19.3; python_version < '3.10'
 scikit-image; python_version >= '3.10'
 metadata-viewer>=2.5
+ncempy==1.11.3  # for .dm4 files, version compatible with scipion env
+
