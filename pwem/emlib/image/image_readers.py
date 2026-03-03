@@ -550,7 +550,6 @@ class EmImageReader(ImageReader):
               fileName: str,
               samplingRate: Union[float, None] = None) -> None:
         """Generate a stack of images or a volume from a list of images."""
-        sr = samplingRate if samplingRate else imageStack.getProperties().get("sr", 1.0)
         data = numpy.stack(imageStack.getImages(), axis=0)
         # Ensure array is (Z, Y, X) -> Transpose back to (X, Y, Z) for .em
         data_to_write = data.transpose((2, 1, 0))
