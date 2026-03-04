@@ -26,12 +26,10 @@
 
 from enum import Enum
 import numpy as np
-import xmippLib
-
 from pyworkflow.protocol.params import PointerParam, StringParam
 from pwem.protocols import EMProtocol
 from pwem.objects import SetOfImages, Transform
-
+from pyworkflow.utils import weakImport
 
 
 class ProtBreakSymmetryOutputs(Enum):
@@ -61,8 +59,9 @@ class ProtBreakSymmetry(EMProtocol):
             self._getPath(), 
             copyInfo=True
         )
-
-        symmetry = xmippLib.SymList()
+        with weakImport('xmippLib'):
+            import xmippLib
+            symmetry = xmippLib.SymList()
         symMatrices = np.array(symmetry.getSymmetryMatrices(self.symmetryGroup.get()))
         rng = np.random.default_rng()
         
