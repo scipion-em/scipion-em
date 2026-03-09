@@ -90,6 +90,24 @@ class Chimera:
         return cls._symmetryMap[scipionSym]
 
     @classmethod
+    def findHome(cls):
+        '''Returns the newest ChimeraX version found in the EMROOT'''
+        files = os.listdir(emConfig.EM_ROOT)
+        files.sort(reverse=True)
+
+        # Case 1: exact 'chimerax' directory exists
+        if "chimerax" in files:
+            return os.path.join(emConfig.EM_ROOT, "chimerax")
+
+        # Case 2: fallback to latest chimerax-XXXXXX
+        for file in files:
+            if file.startswith('chimerax'):
+                return os.path.join(emConfig.EM_ROOT, file)
+
+        # Case 3: nothing found
+        return None
+
+    @classmethod
     def getHome(cls):
         """ Returns chimera home, trying first to take it from chimera plugin. If it fails it will return, the default value in the config"""
         with pwutils.weakImport("chimera"):
@@ -97,7 +115,7 @@ class Chimera:
             from chimera import Plugin as chimeraPlugin
             return chimeraPlugin.getHome()
 
-        return os.path.join(emConfig.EM_ROOT, 'chimerax-1.2.5')
+        return cls.findHome()
 
     @classmethod
     def getEnviron(cls):
@@ -356,7 +374,8 @@ class ChimeraViewer(pwviewer.Viewer):
     def _visualize(self, obj, **kwargs):
         cls = type(obj)
         if issubclass(cls, emobj.AtomStruct):
-            objSet = SetOfAtomStructs.create(outputPath='/tmp', suffix=self.protocol.getObjId())
+            outDir = os.path.dirname(obj.getFileName())
+            objSet = SetOfAtomStructs.create(outputPath=outDir, suffix=self.protocol.getObjId())
             objSet.append(obj)
             if hasattr(obj, '_chimeraScript'):
                 objSet.copyAttributes(obj, '_chimeraScript')
