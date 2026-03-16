@@ -344,6 +344,11 @@ Format may be PDB or MMCIF"""
                       pointerClass='Volume',
                       allowsNull=True,
                       help='Associate this volume to the mmCIF file.')
+        form.addParam('skipChimera', params.BooleanParam, default=False,
+                      condition='inputPdbData == IMPORT_FROM_FILES',
+                      expertLevel=params.LEVEL_ADVANCED,
+                      label="Skip ChimeraX conversion: ",
+                      help='Skip ChimeraX conversion to CIF file')
 
     def _insertAllSteps(self):
         if self.inputPdbData == self.IMPORT_FROM_ID:
@@ -399,7 +404,7 @@ Format may be PDB or MMCIF"""
         localPath = abspath(self._getExtraPath(baseName))
 
         chimeraPlugin = self.__getChimeraPlugin()
-        if chimeraPlugin:
+        if chimeraPlugin and not self.skipChimera.get():
             localCIFPath = localPath[:-4] + ".cif"
             try:
                 localPath = localPath[:-4] + localPath[-4:].replace(".pdb", ".cif")
