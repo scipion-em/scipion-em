@@ -614,7 +614,16 @@ class Image(EMObject):
         """Return image dimensions as tuple: (Xdim, Ydim, Zdim)"""
         from pwem.emlib.image import ImageHandler
         x, y, z, n = ImageHandler().getDimensions(self)
-        return None if x is None else (x, y, z)
+
+        if x is None:
+            return None
+
+        # Some images in mrc format can have the z dimension
+        # as n dimension, so we need to consider this case.
+        if z > 1 and n == 1:
+            return x, y, n
+        else:
+            return x, y, z
 
     def getImage(self):
         """ Returns the actual image this objects represents"""
