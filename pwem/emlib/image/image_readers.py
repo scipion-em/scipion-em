@@ -688,7 +688,7 @@ class EMANImageReader(ImageReader):
 
     @staticmethod
     def getCompatibleExtensions() -> list:
-        return ["img"]
+        return ["img", "hdf"]
 
     @staticmethod
     def getDimensions(filePath):
