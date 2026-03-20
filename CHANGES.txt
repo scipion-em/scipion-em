@@ -1,3 +1,12 @@
+V3.11.0:
+Users:
+  - New protocols added:
+    * Crop and resize volumes.
+    * Filter by normal.
+    * Break symmetry.
+  - New image readers added:
+    * Gain and dark files from Gatan camera (.dm3, .dm4).
+    * .em files (based on the standard TOM toolbox header structure, e.g. Dynamo).
 V3.10.2:
 Developers:
   - Fixing the star file DAO: Allowing white spaces in the tag block

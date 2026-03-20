@@ -46,10 +46,12 @@ from .protocol_alignment_assign import ProtAlignmentAssign
 from .protocol_alignment_invertHand import ProtAlignmentInvertHand
 from .protocol_batch import *
 from .protocol_extract_coordinates import ProtExtractCoords
+from .protocol_filter_by_normal import ProtSetFilterByNormal
 
 from .protocol_create_stream_data import ProtCreateStreamData
 from .parallel import ProtTestParallel
 from .protocol_create_stream_data import SET_OF_RANDOM_MICROGRAPHS
+from .protocol_crop_resize_vols import ProtCropResizeVols
 
 from .protocol_import import *
 
@@ -64,6 +66,8 @@ from .protocol_movie_eraser import ProtMovieEraser
 from .protocol_classes_selector import ProtClassesSelector
 from .protocol_boxsize_parameters import ProtBoxSizeParameters
 from .protocol_boxsize_checkpoint import ProtBoxSizeCheckpoint
+
+from .protocol_break_symmetry import ProtBreakSymmetry
 
 from .protocol_mathematical_operator import ProtMathematicalOperator
 

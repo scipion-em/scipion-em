@@ -439,6 +439,43 @@ class TestImportSequence(TestImportBase):
         self.assertEqual("VHLSGEEKSA", sequence.getSequence()[:10])
         self.assertEqual(Alphabet.EXTENDED_PROTEIN_ALPHABET, sequence.getAlphabet()) # Protein
 
+    def testImportStructureAminoacidSequence3(self):
+        """
+        Import the sequence of chain B of atomic structure from the imported AtomStruct object of 3lqd.cif
+        """
+        args = {'inputPdbData': emprot.ProtImportPdb.IMPORT_FROM_FILES,
+                'pdbFile': self.dsModBuild.getFile('PDBx_mmCIF/3lqd.cif'),
+                }
+
+        protAS = self.newProtocol(emprot.ProtImportPdb, **args)
+        protAS.setObjLabel('import atomstruct from file')
+        self.launchProtocol(protAS)
+        self.assertIsNotNone(protAS.outputPdb)
+
+        args = {'inputSequenceID': self.USERID,
+                'inputSequenceName': self.NAME,
+                'inputSequenceDescription': self.DESCRIPTION,
+                'inputProteinSequence':
+                    emprot.ProtImportSequence.IMPORT_FROM_STRUCTURE,
+                'inputStructureSequence':
+                    emprot.ProtImportSequence.IMPORT_STRUCTURE_FROM_AS,
+                'inputStructureChain': self.CHAIN1
+                }
+        prot21 = self.newProtocol(emprot.ProtImportSequence, **args)
+        prot21.setObjLabel('21_import aminoacid seq,\n from atomic '
+                           'structure object')
+        prot21.inputAS.set(protAS)
+        prot21.inputAS.setExtended('outputPdb')
+
+        self.launchProtocol(prot21)
+        sequence = prot21.outputSequence
+        self.assertEqual("UserID", sequence.getId())
+        self.assertEqual("USER_SEQ", sequence.getSeqName())
+        self.assertEqual("User description", sequence.getDescription())
+        self.assertEqual("VHLSGEEKSA", sequence.getSequence()[:10])
+        self.assertEqual(Alphabet.EXTENDED_PROTEIN_ALPHABET, sequence.getAlphabet()) # Protein
+
+
     def testImportFileAminoacidSequence1(self):
         """
         Import a single aminoacid sequence from a text file

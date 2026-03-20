@@ -47,7 +47,7 @@ from .objects import EMObject
 from .tests import defineDatasets
 from .utils import *
 
-__version__ = '3.10.2'
+__version__ = '3.11.0'
 NO_VERSION_FOUND_STR = "0.0"
 CUDA_LIB_VAR = 'CUDA_LIB'
 
@@ -179,7 +179,10 @@ class Plugin(pyworkflow.plugin.Plugin):
         if not env.hasPackage(MAXIT):
             MAXIT_URL = 'https://sw-tools.rcsb.org/apps/MAXIT/maxit-v10.100-prod-src.tar.gz'
             MAXIT_TAR = 'maxit-v10.100-prod-src.tar.gz'
-            maxit_commands = [('make -j 1 binary ', ['bin/maxit'])]
+            maxit_commands = [
+                ('sed -i "s/\\bmv\\b/cp/g" cifparse-obj-v7.0/Makefile', []),
+                ('make -j 1 binary', ['bin/maxit'])
+            ]
             env.addPackage(MAXIT, version='10.1',
                            tar=MAXIT_TAR,
                            url=MAXIT_URL,

@@ -129,16 +129,15 @@ SYM_I222 = 7
 # and the front-most 3-fold axes are in the yz plane.
 # (222 rotated 90 degrees around Z)
 SYM_I222r = 8
-
-# '2-fold symmetry along y and 5-fold along z
-SYM_In25 = 9
-
-# 'n25' with 180 degree rotation about x
-SYM_In25r = 10
+SYM_In25 = 9  # '2-fold symmetry along y and 5-fold along z
+SYM_In25r = 10  # 'n25' with 180 degree rotation about x
 SYM_I2n3 = 11  # Two-fold symmetry along X and 3-fold along Z
 SYM_I2n3r = 12  # Idem but rotated 180 degree about Y
 SYM_I2n5 = 13  # Two-fold symmetry along Y and 5-fold along Z
 SYM_I2n5r = 14  # Idem but rotated 180 degree about X
+
+# helical symmetry
+SYM_HELICAL = 15
 
 # Symmetry dictionary
 SCIPION_SYM_NAME = dict()
@@ -157,6 +156,7 @@ SCIPION_SYM_NAME[SYM_I2n3] = 'I2n3'
 SCIPION_SYM_NAME[SYM_I2n3r] = 'I2n3r'
 SCIPION_SYM_NAME[SYM_I2n5] = 'I2n5'
 SCIPION_SYM_NAME[SYM_I2n5r] = 'I2n5r'
+SCIPION_SYM_NAME[SYM_HELICAL] = 'H'
 
 # Entry points names
 CONVERT_ENTRY_POINT = 'emconvert'
