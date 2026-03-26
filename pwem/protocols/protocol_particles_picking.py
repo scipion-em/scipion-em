@@ -283,11 +283,12 @@ class ProtParticlePickingAuto(ProtParticlePicking):
                 self.info("Picking micrograph: %s " % micFn)
                 micList.append(mic)
 
-        self._pickMicrographList(micList, *args)
+        if len(micList) > 0:
+            self._pickMicrographList(micList, *args)
 
-        for mic in micList:
-            # Mark this mic as finished
-            open(self._getMicDone(mic), 'w').close()
+            for mic in micList:
+                # Mark this mic as finished
+                open(self._getMicDone(mic), 'w').close()
 
     def _pickMicrographList(self, micList, *args):
         """ This function can be implemented by subclasses if it is a more
