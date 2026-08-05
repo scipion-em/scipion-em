@@ -2889,7 +2889,7 @@ class FSC(EMObject):
         self._x.set(xData)
         self._y.set(yData)
 
-    def calculateResolution(self, threshold=0.143):
+    def calculateResolution(self, threshold=0.143, precision=4):
         """
         Calculate the FSC resolution value
         """
@@ -2902,7 +2902,7 @@ class FSC(EMObject):
                 below_fsc = float(self._y[i])
                 break
         resolution = below_res - ((threshold - below_fsc) / (above_fsc - below_fsc) * (below_res - above_res))
-        return "{0:.1f}".format(1 / resolution)
+        return f"{1 / resolution:.{precision}f}"
 
 
 class SetOfFSCs(EMSet):

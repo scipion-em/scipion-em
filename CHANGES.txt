@@ -1,6 +1,7 @@
 V3.11.1:
    - Fix: Compose object types properly when creating subsets
    - Fix: Prevent duplicated object insertion
+   - Included the pyxmipp3 package
 V3.11.0:
 Users:
   - New protocols added:
