@@ -1,4 +1,6 @@
 V3.11.1:
+   - Enhance image writer methods to support sampling rate parameter for consistent metadata handling.
+     Generalization and propagate the signature.
    - Fix: Compose object types properly when creating subsets
    - Fix: Prevent duplicated object insertion
    - Included the pyxmipp3 package
