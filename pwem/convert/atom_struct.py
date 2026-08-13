@@ -306,8 +306,11 @@ class AtomicStructHandler:
                     seq = list()
                     seq_number = list()
                     for residue in chain:
-                        if residue.get_resname()[1] in ['A', 'C', 'G', 'T']:
-                            seq.append(residue.get_resname()[1])
+                        resname = residue.get_resname().strip()
+                        if len(resname) == 2 and resname[1] in ['A', 'C', 'G', 'T']:
+                            seq.append(resname[1])
+                        elif len(resname) == 1 and resname in ['A', 'C', 'G', 'T']:
+                            seq.append(resname)
                         else:
                             seq.append("X")
                         seq_number.append((residue.get_id()[1], residue.get_resname()))

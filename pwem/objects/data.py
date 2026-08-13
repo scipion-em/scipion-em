@@ -1014,7 +1014,7 @@ class Sequence(EMObject):
     """
 
     def __init__(self, name=None, sequence=None,
-                 alphabet=None, isAminoacids=True, id=None, description=None,
+                 alphabet=None, isAminoacids=True, id=None, description=None, fileName=None,
                  **kwargs):
         EMObject.__init__(self, **kwargs)
         # sequence Id, usually from a database. E.g: P12345
@@ -1030,6 +1030,13 @@ class Sequence(EMObject):
         # alphabet is used to describe de convention followed to
         # store the _sequence. We follow biopython criteria
         self._alphabet = Integer(alphabet)
+        self._fileName = String(fileName)
+
+    def getFileName(self):
+        return self._fileName.get()
+
+    def setFileName(self, name):
+        self._fileName.set(name)
 
     def getId(self):
         return self._id.get()
@@ -2773,7 +2780,7 @@ class FSC(EMObject):
         self._x.set(xData)
         self._y.set(yData)
 
-    def calculateResolution(self, threshold=0.143):
+    def calculateResolution(self, threshold=0.143, precision=4):
         """
         Calculate the FSC resolution value
         """
@@ -2786,7 +2793,7 @@ class FSC(EMObject):
                 below_fsc = float(self._y[i])
                 break
         resolution = below_res - ((threshold - below_fsc) / (above_fsc - below_fsc) * (below_res - above_res))
-        return "{0:.1f}".format(1 / resolution)
+        return f"{1 / resolution:.{precision}f}"
 
 
 class SetOfFSCs(EMSet):
