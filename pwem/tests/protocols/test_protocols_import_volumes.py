@@ -30,8 +30,9 @@ import pwem.convert as emconv
 from pwem.convert import Ccp4Header
 from pyworkflow.object import Pointer
 
+from pwem.tests.test_base_centralized_layer import TestBaseCentralizedLayer
 
-class TestImportBase(pwtests.BaseTest):
+class TestImportBase(TestBaseCentralizedLayer):
     @classmethod
     def setUpClass(cls):
         pwtests.setupTestProject(cls)
@@ -70,6 +71,11 @@ class TestImportVolumes(TestImportBase):
         self.assertEqual(-67.2, x)
         self.assertEqual(-67.2, y)
         self.assertEqual(-67.2, z)
+
+        self.checkVolume(
+            vol=volume,
+            expectedOriginShifts=[-67.2, -67.2, -67.2]
+        )
 
         # """ 2) Import single volume and set origin in userDefined position
         # """
@@ -133,6 +139,11 @@ class TestImportVolumes(TestImportBase):
         self.assertEqual(-67.2, y)
         self.assertEqual(-67.2, z)
 
+        self.checkVolume(
+            vol=volume,
+            expectedOriginShifts=[-67.2, -67.2, -67.2]
+        )
+
         # """ 4) Import two volumes and set origin in default position
         # """
         args = {'filesPath': self.dsXmipp.getFile('volumes/'),
@@ -158,6 +169,12 @@ class TestImportVolumes(TestImportBase):
             self.assertFalse(os.path.isabs(volume.getFileName()),
                              "volume path is not relative")
 
+        self.checkVolumeSet(
+            inVolumeSet=prot3.outputVolumes,
+            expectedSetSize=2,
+            expectedOriginShifts=[-67.2, -67.2, -67.2]
+        )
+
         # """ 5) Import two volumes and set origin in userDefined position
         # """
         args = {'filesPath': self.dsXmipp.getFile('volumes/'),
@@ -182,6 +199,12 @@ class TestImportVolumes(TestImportBase):
             self.assertEqual(-33.6, y)
             self.assertEqual(-50.4, z)
 
+        self.checkVolumeSet(
+            inVolumeSet=prot4.outputVolumes,
+            expectedSetSize=2,
+            expectedOriginShifts=[-16.8, -33.6, -50.4]
+        )
+
         # """ 6) Import three volumes (mrc stack) and set origin in userDefined
         # position
         # """
@@ -197,6 +220,12 @@ class TestImportVolumes(TestImportBase):
         self.assertEqual(3, prot2.outputVolumes.getSize())
         self.assertEqual(60, prot2.outputVolumes.getDim()[0])
 
+        self.checkVolumeSet(
+            inVolumeSet=prot2.outputVolumes,
+            expectedSetSize=3,
+            expectedBoxSize=60
+        )
+
         # """ 7) Import three volumes (spider stack) and set origin in
         # userDefined position
         # """
@@ -211,6 +240,12 @@ class TestImportVolumes(TestImportBase):
         # Check the number of output volumes and dimensions
         self.assertEqual(3, prot3.outputVolumes.getSize())
         self.assertEqual(60, prot3.outputVolumes.getDim()[0])
+
+        self.checkVolumeSet(
+            inVolumeSet=prot3.outputVolumes,
+            expectedSetSize=3,
+            expectedBoxSize=60
+        )
 
         # """ 8)To test old data where volumes have no origin at all"""
         args = {'filesPath': self.dsXmipp.getFile('volumes/'),

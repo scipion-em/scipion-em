@@ -29,8 +29,9 @@ import pyworkflow.tests as pwtests
 import pwem.protocols as emprot
 import pwem.objects as emobj
 
+from pwem.tests.test_base_centralized_layer import TestBaseCentralizedLayer
 
-class TestImportBase(pwtests.BaseTest):
+class TestImportBase(TestBaseCentralizedLayer):
     @classmethod
     def setUpClass(cls):
         pwtests.setupTestProject(cls)
@@ -77,6 +78,12 @@ class TestImportMicrographs(TestImportBase):
                 self.assertAlmostEqual(m.getSamplingRate(), args['samplingRate'])
                 a = m.getAcquisition()
                 self.assertAlmostEqual(a.getVoltage(), args['voltage'])
+
+                # Test with the centralized layer
+                print(f'---> checking the micrograph Id = {micsId[i]}')
+                self.checkMicrograph(mic=m, micId=micsId[i], samplingRate=args['samplingRate'], voltage=args['voltage'])
+                # end test with the centralized layer
+
 
         # Id's should be set increasing from 1 if ### is not in the 
         # pattern
@@ -202,3 +209,6 @@ class TestImportMicrographs(TestImportBase):
         acq = micSet.getAcquisition()
         self.assertAlmostEqual(300., acq.getVoltage())
         self.assertAlmostEqual(50000., acq.getMagnification())
+        self.checkAcquisition(acq, voltage=300., magnification=50000.)
+
+        self.checkSetOfMicrographs(micSet, 3, expectedSRate=float(micSet.getProperty('_samplingRate')), testAcqObj=acq)

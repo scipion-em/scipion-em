@@ -28,8 +28,9 @@ import pyworkflow.tests as pwtests
 
 import pwem.protocols as emprot
 
+from pwem.tests.test_base_centralized_layer import TestBaseCentralizedLayer
 
-class TestImportCTFs(pwtests.BaseTest):
+class TestImportCTFs(TestBaseCentralizedLayer):
     @classmethod
     def setUpClass(cls):
         pwtests.setupTestProject(cls)
@@ -80,7 +81,9 @@ class TestImportCTFs(pwtests.BaseTest):
         self.launchProtocol(protCTF)
 
         self.assertIsNotNone(protCTF.outputCTF,
-                             "There was a problem when importing ctfs.")
+                             "There was a problem when ilmporting ctfs.")
+
+        self.checkSetOfCTF(protCTF.outputCTF, 3)
 
     def testImportFromCTffind4Conflict(self):
         micsPath = os.path.abspath(self.proj.getTmpPath('micrographs'))
@@ -131,6 +134,8 @@ class TestImportCTFs(pwtests.BaseTest):
         # The whole set (3 items) should find its corresponding CTF
         self.assertEqual(protCTF2.outputCTF.getSize(), 3)
 
+        self.checkSetOfCTF(protCTF.outputCTF, 3)
+
     def testImportEman2(self):
         protCTF = self.newProtocol(emprot.ProtImportCTF,
                                    importFrom=emprot.ProtImportCTF.IMPORT_FROM_EMAN2,
@@ -142,3 +147,5 @@ class TestImportCTFs(pwtests.BaseTest):
 
         self.assertIsNotNone(protCTF.outputCTF,
                              "There was a problem when importing ctfs.")
+
+        self.checkSetOfCTF(protCTF.outputCTF, 3)

@@ -26,8 +26,10 @@ import pyworkflow.tests as pwtests
 
 import pwem.protocols as emprot
 
+from pwem.tests.test_base_centralized_layer import TestBaseCentralizedLayer
 
-class TestImportBase(pwtests.BaseTest):
+class TestImportBase(TestBaseCentralizedLayer):
+#class TestImportBase(pwtests.BaseTest):
     @classmethod
     def setUpClass(cls):
         pwtests.setupTestProject(cls)
@@ -292,6 +294,8 @@ class TestImportCoordinates(TestImportBase):
             self.assertTrue(coordsList[1] == coordCount[0]['count'])
             self.assertTrue(coordsList[2] == coordCount[1]['count'])
 
+            
+
 
 class TestImportCoordinatesPairs(TestImportBase):
     @classmethod
@@ -345,6 +349,9 @@ class TestImportCoordinatesPairs(TestImportBase):
         # Make sure that all 1901 coordinates where correctly imported
         self.assertTrue(prot1.outputCoordinatesTiltPair.getSize() == 1901)
 
+        # Dani, ver como debería ser la comprobación, no es el tipo
+        self.checkSetOfCoordinates(prot1.outputCoordinatesTiltPair, expectedSize=1901)
+
         prot2 = self.newProtocol(emprot.ProtImportCoordinatesPairs,
                                  importFrom=emprot.ProtImportCoordinatesPairs.IMPORT_FROM_EMAN,
                                  patternUntilted=self.patternU2,
@@ -356,3 +363,6 @@ class TestImportCoordinatesPairs(TestImportBase):
 
         # Make sure that all 104 coordinates where correctly imported
         self.assertTrue(prot2.outputCoordinatesTiltPair.getSize() == 104)
+
+        # Dani, ver como debería ser la comprobación
+        self.checkSetOfCoordinates(prot2.outputCoordinatesTiltPair, expectedSize=104)

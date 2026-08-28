@@ -26,8 +26,9 @@ import pyworkflow.tests as pwtests
 
 import pwem.protocols as emprot
 
+from pwem.tests.test_base_centralized_layer import TestBaseCentralizedLayer
 
-class TestImportBase(pwtests.BaseTest):
+class TestImportBase(TestBaseCentralizedLayer):
     @classmethod
     def setUpClass(cls):
         pwtests.setupTestProject(cls)
@@ -49,6 +50,8 @@ class TestImportMasks(TestImportBase):
         self.assertIsNotNone(prot.outputMask,
                              "There was a problem when importing a 2d mask.")
 
+        self.checkMask(prot.outputMask)
+
     def test_import_mask3d(self):
         """ Import a mask 3d.
         """
@@ -61,4 +64,6 @@ class TestImportMasks(TestImportBase):
         self.launchProtocol(prot)
         self.assertIsNotNone(prot.outputMask,
                              "There was a problem when importing a 3d mask.")
+
+        self.checkVolumeMask(prot.outputMask, expectedSRate=2.1)
 

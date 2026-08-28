@@ -26,8 +26,9 @@ import pyworkflow.tests as pwtests
 import pwem.protocols as emprot
 from pyworkflow.object import Pointer
 
+from pwem.tests.test_base_centralized_layer import TestBaseCentralizedLayer
 
-class TestImportBase(pwtests.BaseTest):
+class TestImportBase(TestBaseCentralizedLayer):
     @classmethod
     def setUpClass(cls):
         pwtests.setupTestProject(cls)

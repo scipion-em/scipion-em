@@ -29,8 +29,9 @@ import pyworkflow.tests as pwtests
 
 import pwem.protocols as emprot
 
+from pwem.tests.test_base_centralized_layer import TestBaseCentralizedLayer
 
-class TestImportBase(pwtests.BaseTest):
+class TestImportBase(TestBaseCentralizedLayer):
     @classmethod
     def setUpClass(cls):
         pwtests.setupTestProject(cls)
@@ -70,6 +71,15 @@ class TestImportMovies(TestImportBase):
             if dim is not None:  # Check if dimensions are the expected ones
                 x, y, n = m.getDim()
                 self.assertEqual(dim, (x, y, n))
+
+        # Seguramente se pueda quitar lo de arriba ya que se quiere comprobar aquí
+        self.checkSetOfMovies(movieSet = movies,
+                        movieIds = moviesId,
+                        movieNames = movieNames,
+                        expectedSRate = args['samplingRate'],
+                        voltage = args['voltage'],
+                        expectedSetSize = size,
+                        dim = dim)
 
     def test_pattern(self):
         args = self.getArgs('ribo/', pattern='*.mrcs')
