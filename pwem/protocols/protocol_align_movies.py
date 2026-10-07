@@ -237,7 +237,8 @@ class ProtAlignMovies(ProtProcessMovies):
         if self._firstTimeOutput:
             # Probably is a good idea to store a cached summary for the
             # first resulting movie of the processing.
-            self._storeSummary(newDone[0])
+            if newDone:
+                self._storeSummary(newDone[0])
             # If the movies are not written out, then dimensions can be
             # copied from the input movies
             if not saveMovie:
