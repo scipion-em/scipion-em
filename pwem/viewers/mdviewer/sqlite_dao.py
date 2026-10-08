@@ -155,11 +155,12 @@ class ScipionSetsDAO(IDAO):
         for alias in self._aliases.values():
             objectTypeAux = alias.split('_')
             if len(objectTypeAux) == 2:
-                sufix = 's' if objectTypeAux[0][-1] in "aeiouAEIOU" or objectTypeAux[0][-1] != 's' else ''
-                objectType = 'SetOf%s%s' % (objectTypeAux[1], sufix)
+                sufix = 's' if objectTypeAux[0][-1] in "aeiouAEIOU" or (objectTypeAux[0][-1] != 's' and objectTypeAux[0][-1] != 'x') else ''
+                objTypeAux = objectTypeAux[1] if objectTypeAux[1] != 'ParticleFlex' else 'ParticlesFlex'
+                objectType = 'SetOf%s%s' % (objTypeAux, sufix)
 
-                if objectTypeAux[1] not in self._objectsType:
-                    self._objectsType[objectTypeAux[1]] = objectType
+                if objTypeAux not in self._objectsType:
+                    self._objectsType[objTypeAux] = objectType
 
     def composeTableAlias(self, tableName):
         """Create an alias for the given table"""

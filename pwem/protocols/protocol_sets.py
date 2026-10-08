@@ -30,7 +30,7 @@ This module contains protocols related to Set operations such us:
 - split
 ... etc
 """
-
+import logging
 import random
 import sys
 
@@ -39,8 +39,10 @@ from pyworkflow.object import Object,Float, Integer, String
 
 from pwem.protocols import EMProtocol
 from pwem.objects import Volume, EMSet, SetOfClasses, SetOfData
-from pyworkflow.utils import ProgressBar, getListFromRangeString
+from pyworkflow.utils import ProgressBar, getListFromRangeString, yellowStr
 from pwem.constants import ID_COLUMN, ID_ATTRIBUTE
+
+logger = logging.getLogger(__name__)
 
 
 class ProtSets(EMProtocol):
@@ -73,13 +75,16 @@ class ProtSets(EMProtocol):
         if itemUpdateCallback:
             itemUpdateCallback(item)
 
-        outputSet.append(item)
-        if subElemList:
-            for subElem in subElemList:
-                item.append(subElem)
-            # When adding sub-elements, some item "summary" properties may be updated: e.g. TiltSeries anglesCount.
-            # Need to persist them.
-            outputSet.update(item)
+        try:
+            outputSet.append(item)
+            if subElemList:
+                for subElem in subElemList:
+                    item.append(subElem)
+                # When adding sub-elements, some item "summary" properties may be updated: e.g. TiltSeries anglesCount.
+                # Need to persist them.
+                outputSet.update(item)
+        except Exception as e:
+            logger.warning(yellowStr(e))
 
 
 class ProtUnionSet(ProtSets):

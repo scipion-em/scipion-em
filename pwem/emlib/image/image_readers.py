@@ -2,7 +2,7 @@ import enum
 import os
 import struct
 from functools import lru_cache
-from typing import Union, Tuple, List, Optional
+from typing import Tuple, List, Optional
 
 import numpy
 import numpy as np
@@ -17,21 +17,22 @@ from .. import lib
 from scipy.ndimage import rotate, shift
 from skimage.transform import rescale
 
-
 import logging
 
 logger = logging.getLogger(__name__)
 
+
 class ROT_MODE(enum.Enum):
-    FIXED=1  # Final image will have exactly the same dims as the input image in the SAME orientation
-    NATURAL=2 # Rotation will require a bigger image to avoid loosing informatión in the corners
-    CONDITIONAL=3 # Similar to FIXED, but shifting x and y original dimensions in some cases to reduce
-                  # information loss. 45<rot<135 and 225<rot<315
+    FIXED = 1  # Final image will have exactly the same dims as the input image in the SAME orientation
+    NATURAL = 2  # Rotation will require a bigger image to avoid loosing informatión in the corners
+    CONDITIONAL = 3  # Similar to FIXED, but shifting x and y original dimensions in some cases to reduce
+    # information loss. 45<rot<135 and 225<rot<315
 
 
 # Classes to replace one day the functionality covered by ImageHandler... which uses xmipp binding
 class ImageStack:
     """Class to hold image stacks. A single image is considered a stack of one image """
+
     def __init__(self, images=None, properties=None):
         """
         :param images: either None, an image as returned by the readers or a list of them.
@@ -47,9 +48,10 @@ class ImageStack:
 
         elif not isinstance(images, list):
             logger.warning("ImageStack initialized with an invalid type. Valid types are None, a singe numpy "
-                           "array or a list of them. Current value is a %s. Continuing as an empty image." % type(images))
+                           "array or a list of them. Current value is a %s. Continuing as an empty image." % type(
+                images))
             images = []
-            
+
         self._images = images
         self._properties = dict() if properties is None else properties
 
@@ -61,7 +63,8 @@ class ImageStack:
 
     def getImage(self, index=0, pilImage=False):
         if index >= len(self._images):
-            raise IndexError("Image at %s position dos not exists. Current stack has %s images." % (index, len(self._images)))
+            raise IndexError(
+                "Image at %s position dos not exists. Current stack has %s images." % (index, len(self._images)))
 
         npImg = self._images[index]
 
@@ -156,7 +159,6 @@ class ImageStack:
 
             rotated = cls._center_crop(rotated, target_height, target_width)
 
-
         return rotated
 
     @classmethod
@@ -165,18 +167,17 @@ class ImageStack:
         :param shifts = float or sequence. If a sequence, first value should be X shift and second Y shift
         """
 
-        bg = image.mean() if bg is  None else bg  # Get the mean value
+        bg = image.mean() if bg is None else bg  # Get the mean value
 
         if not isinstance(shifts, float):
             # Swap: shift expect first element to be y abd then x. We have opposite convention
             shifts = (shifts[1], shifts[0])
 
         # Rotate the image
-        return shift(image, shifts,  mode='constant', cval=bg)
-
+        return shift(image, shifts, mode='constant', cval=bg)
 
     @classmethod
-    def transformSlice(cls, npImage:numpy.ndarray, shifts: float, angle: float, mode=ROT_MODE.FIXED, bg=None):
+    def transformSlice(cls, npImage: numpy.ndarray, shifts: float, angle: float, mode=ROT_MODE.FIXED, bg=None):
         """ Apply the rotation and the shift to the npImage passed"""
 
         bg = npImage.mean() if bg is None else bg
@@ -204,10 +205,8 @@ class ImageStack:
             raise Exception("thumbnailSlice does not scale up images.")
 
         img = cls.asPilImage(npImage, normalize=normalize)
-        img.thumbnail((width,height))
+        img.thumbnail((width, height))
         return np.array(img)
-
-
 
     @classmethod
     def flipSlice(cls, npImage: numpy.ndarray, vertically=True):
@@ -216,7 +215,7 @@ class ImageStack:
         return numpy.flip(npImage, mode)
 
     @classmethod
-    def highlightSlice(cls, npImage:numpy.ndarray, stds=2):
+    def highlightSlice(cls, npImage: numpy.ndarray, stds=2):
         """
         :param npImage: image as 2d numpy array
         :param stds: number of STD to apply the contrast
@@ -229,7 +228,6 @@ class ImageStack:
         high = imgmean + offset
         contrast_data = np.clip(npImage, low, high)
         return contrast_data
-
 
     def flip(self, vertically=True):
         """Flip all images of an ImageStack horizontally or vertically.
@@ -273,7 +271,7 @@ class ImageStack:
         :param: factor: to multiply values by it
         """
 
-        return self._applyOperation(lambda npImage, factor: npImage*factor, factor)
+        return self._applyOperation(lambda npImage, factor: npImage * factor, factor)
 
     def invert(self):
         """ Invert values of all slices"""
@@ -287,7 +285,7 @@ class ImageStack:
     def highlight(self, stds=2):
         """ Increases de contrast of all slices
         :param stds: number of STD to apply the contrast"""
-        return  self._applyOperation(self.highlightSlice, stds=stds)
+        return self._applyOperation(self.highlightSlice, stds=stds)
 
     def _applyOperation(self, operation, *args, **kwargs):
         rotImg = ImageStack()
@@ -331,11 +329,15 @@ class ImageReader:
         pass
 
     @staticmethod
-    def write(images: ImageStack, fileName: str, isStack: bool) -> None:
+    def write(images: ImageStack,
+              fileName: str,
+              isStack: bool = False,
+              samplingRate: float = -1.) -> None:
         """ Generate a stack of images or a volume from a list of PIL images.
         :param images: An ImageStack instance with one or more images
         :param fileName: Path of the new stack
         :param isStack: Specifies whether to generate a volume or an image stack
+        :param samplingRate: Sampling rate of the image (Angstroms/pixel)
         """
         logger.warning("write method not implemented. Cannot write %s" % fileName)
 
@@ -431,11 +433,15 @@ class ImageReadersRegistry:
         return ImageStack(data)
 
     @classmethod
-    def write(cls, imgStack: ImageStack, fileName: str, isStack=False) -> None:
+    def write(cls,
+              imgStack: ImageStack,
+              fileName: str,
+              isStack: bool = False,
+              samplingRate: float = -1.) -> None:
         """Generate a stack of images from a list of PIL images."""
 
         imageWriter = cls.getReader(fileName)
-        return imageWriter.write(imgStack, fileName, isStack)
+        return imageWriter.write(imgStack, fileName, isStack=isStack, samplingRate=samplingRate)
 
     @classmethod
     def getAvailableExtensions(cls):
@@ -461,10 +467,13 @@ class PILImageReader(ImageReader):
         pilImg = Image.open(filePath)
         return numpy.array(pilImg)
 
-    @classmethod
-    def write(cls, imgStack: ImageStack, fileName: str, isStack=False) -> None:
+    @staticmethod
+    def write(images: ImageStack,
+              fileName: str,
+              isStack: bool = False,
+              samplingRate: float = -1.) -> None:
         # So far write the first image in the stack
-        np_img = imgStack.getImage()
+        np_img = images.getImage()
         im = Image.fromarray(numpy.uint8(np_img))
         im.save(fileName)
 
@@ -544,13 +553,13 @@ class EmImageReader(ImageReader):
             dims = struct.unpack('<3i', header[4:16])
             return dims[0], dims[1], dims[2], 1
 
-    @classmethod
-    def write(cls,
-              imageStack: ImageStack,
+    @staticmethod
+    def write(images: ImageStack,
               fileName: str,
-              samplingRate: Union[float, None] = None) -> None:
+              isStack: bool = False,
+              samplingRate: float = -1.) -> None:
         """Generate a stack of images or a volume from a list of images."""
-        data = numpy.stack(imageStack.getImages(), axis=0)
+        data = numpy.stack(images.getImages(), axis=0)
         # Ensure array is (Z, Y, X) -> Transpose back to (X, Y, Z) for .em
         data_to_write = data.transpose((2, 1, 0))
 
@@ -608,6 +617,7 @@ class EmImageReader(ImageReader):
 
 class Dm4ImageReader(ImageReader):
     """ Dm4 image reader - Gatan cameras gain and dark image format."""
+
     @staticmethod
     def getCompatibleExtensions() -> List[str]:
         return ['dm3', 'dm4']
@@ -634,7 +644,7 @@ class Dm4ImageReader(ImageReader):
     @classmethod
     def dmToMrc(cls,
                 inDmFileName: str,
-                outMrcFile:  str,
+                outMrcFile: str,
                 voxelSize: Optional[float] = None) -> None:
         try:
             with mrcfile.new(outMrcFile, overwrite=True) as mrc:
@@ -651,6 +661,7 @@ class Dm4ImageReader(ImageReader):
                 mrc.update_header_stats()  # Update min/max/mean
         except Exception as e:
             raise Exception(f"Error converting {inDmFileName}: {e}")
+
 
 class TiffImageReader(ImageReader):
     """ Tiff image reader"""
@@ -677,9 +688,12 @@ class TiffImageReader(ImageReader):
         npImg = imread(path, key=key)
         return npImg
 
-    @classmethod
-    def write(cls, imgStack: ImageStack, fileName: str, isStack=False) -> None:
-        npImg = imgStack.getImage().astype("uint8")
+    @staticmethod
+    def write(images: ImageStack,
+              fileName: str,
+              isStack: bool = False,
+              samplingRate: float = -1.) -> None:
+        npImg = images.getImage().astype("uint8")
         imwrite(fileName, npImg)
 
 
@@ -708,7 +722,8 @@ class XMIPPImageReader(ImageReader):
 
     @staticmethod
     def getCompatibleExtensions():
-        return emcts.ALL_MRC_EXTENSIONS + emcts.ALL_TIF_EXTENSIONS + ["hdf5", "dm4", "stk", "spi", "vol", "tif", "em", "map"]
+        return emcts.ALL_MRC_EXTENSIONS + emcts.ALL_TIF_EXTENSIONS + ["hdf5", "dm4", "stk", "spi", "vol", "tif", "em",
+                                                                      "map"]
 
     @staticmethod
     def getDimensions(filePath):
@@ -741,7 +756,7 @@ class MRCImageReader(ImageReader):
            :param path (str) --> Image to be read
         """
         npImg = cls.open(path)
-        return npImg[slice-1]
+        return npImg[slice - 1]
 
     @classmethod
     def open(cls, path: str):
@@ -765,15 +780,14 @@ class MRCImageReader(ImageReader):
         with mrcfile.open(filename, permissive=True) as mrc:
             return numpy.array(mrc.data)
 
-    @classmethod
-    def write(cls,
-              imageStack: ImageStack,
+    @staticmethod
+    def write(images: ImageStack,
               fileName: str,
               isStack: bool = False,
-              samplingRate: Union[float, None] = None) -> None:
+              samplingRate: float = -1.) -> None:
         """Generate a stack of images or a volume from a list of images."""
-        sr = samplingRate if samplingRate else imageStack.getProperties().get("sr", 1.0)
-        stack = numpy.stack(imageStack.getImages(), axis=0)
+        sr = samplingRate if samplingRate > 0 else images.getProperties().get("sr", 1.)
+        stack = numpy.stack(images.getImages(), axis=0)
 
         with mrcfile.new(fileName, overwrite=True) as mrc:
             mrc.set_data(stack.astype(numpy.float32))
@@ -794,7 +808,7 @@ class MRCImageReader(ImageReader):
             return True
         return False
 
-      
+
 class STKImageReader(ImageReader):
     IMG_BYTES = None
     stk_handler = None

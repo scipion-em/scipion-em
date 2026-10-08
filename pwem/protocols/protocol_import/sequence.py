@@ -431,6 +431,7 @@ class ProtImportSequence(ProtImportFiles):
 
         self.sequence = seqDic['sequence']
         self.alphabet = seqDic['alphabet']
+        self.fileName = sequenceFile
 
     def createOutputStep(self):
         """ Register the output object. """
@@ -447,6 +448,8 @@ class ProtImportSequence(ProtImportFiles):
                        isAminoacids=(self.inputSequence ==
                                      Alphabet.AMINOACIDS),
                        id=self.id, description=self.description)
+        if hasattr(self, 'fileName') and self.fileName is not None:
+            seq.setFileName(self.fileName)
         outputs = {'outputSequence': seq}
         self._defineOutputs(**outputs)
 
