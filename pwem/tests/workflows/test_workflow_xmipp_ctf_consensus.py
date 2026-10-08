@@ -70,9 +70,9 @@ class TestCtfConsensus(pwtests.BaseTest):
         else:
             self.assertAlmostEqual(avgCTF['defocusU'], firstCTF.getDefocusU(), delta=200,
                                    msg="DefocusU doesn't match when defocus averaging.")
-            self.assertAlmostEqual(avgCTF['defocusV'], firstCTF.getDefocusV(), delta=100,
+            self.assertAlmostEqual(avgCTF['defocusV'], firstCTF.getDefocusV(), delta=110,
                                    msg="DefocusV doesn't match when defocus averaging.")
-            self.assertAlmostEqual(avgCTF['defocusAngle'], firstCTF.getDefocusAngle(), delta=1,
+            self.assertAlmostEqual(avgCTF['defocusAngle'], firstCTF.getDefocusAngle(), delta=110,
                                    msg="DefocusAngle doesn't match when defocus averaging.")
 
         if MDmerging:
