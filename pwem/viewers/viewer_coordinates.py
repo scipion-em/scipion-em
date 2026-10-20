@@ -436,6 +436,8 @@ class MainWindow:
         self.table = ttk.Treeview(self.contentFrame, columns=columns, show="headings")
         self.table.bind("<Enter>", self.recoveryPointer)
         self.table.bind("<ButtonRelease-1>", self.onTableClick)  # Bind event for table click
+        self.table.bind("<Up>", self.onTableKeyPress)  # Bind event for up arrow
+        self.table.bind("<Down>", self.onTableKeyPress)  # Bind event for down arrow
         for col, width in zip(columns, (50, 300, 100, 100)):
             self.table.heading(col, text=col, anchor="center")
             self.table.column(col, anchor="center", width=width)
@@ -472,6 +474,22 @@ class MainWindow:
                 self.showCoordinates()
                 if self.particlesWindowVisible:
                     self.extractImages()
+
+    def onTableKeyPress(self, event):
+        """Navigate to previous/next micrograph using up/down arrow keys"""
+        selected_item = self.table.selection()
+        if not selected_item:
+            return
+        item = selected_item[0]
+        siblings = self.table.get_children('')
+        index = siblings.index(item)
+        if event.keysym == 'Up':
+            if index > 0:
+                self.table.selection_set(siblings[index - 1])
+        elif event.keysym == 'Down':
+            if index < len(siblings) - 1:
+                self.table.selection_set(siblings[index + 1])
+        self.onTableClick(event)
 
     def loadCoordinates(self, micrograph):
         """Load the coordinate for a given micrograph """
