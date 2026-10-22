@@ -434,20 +434,48 @@ class SelectResidueWizard(SelectChainWizard):
 
     def getSequence(self, finalResiduesList, idxs):
         roiStr, inSeq = '', False
+        nucleotideMap = {
+            'DA': 'A',
+            'DT': 'T',
+            'DG': 'G',
+            'DC': 'C',
+            'DI': 'I',
+            'A': 'A',
+            'T': 'T',
+            'U': 'U',
+            'G': 'G',
+            'C': 'C',
+            'I': 'I',
+            'ADE': 'A',
+            'THY': 'T',
+            'GUA': 'G',
+            'CYT': 'C',
+            'URA': 'U',
+        }
+
         for residue in finalResiduesList:
             resDic = json.loads(residue.get())
-            if resDic['residue'] in RESIDUES3TO1:
-                if resDic['index'] == idxs[0]:
-                    inSeq = True
-                if resDic['index'] == idxs[-1]:
-                    inSeq = False
-                    roiStr += RESIDUES3TO1[resDic['residue']]
-                    break
+            resIdx = resDic['index']
+            resName = resDic['residue'].strip().upper()
 
-                if inSeq:
-                    roiStr += RESIDUES3TO1[resDic['residue']]
+            # Convert protein or nucleotide residue names
+            if resName in RESIDUES3TO1:
+                oneLetter = RESIDUES3TO1[resName]
+            else:
+                oneLetter = nucleotideMap.get(resName)
+
+            # Start at the first selected residue
+            if resIdx == idxs[0]:
+                inSeq = True
+
+            if inSeq and oneLetter is not None:
+                roiStr += oneLetter
+
+            # Include the last residue, then stop
+            if resIdx == idxs[-1]:
+                break
+
         return roiStr
-
     def show(self, form, *params):
         inputParams, outputParam = self.getInputOutput(form)
         protocol = form.protocol
