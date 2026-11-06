@@ -36,10 +36,11 @@ from pwem.viewers.mdviewer.sqlite_dao import SCIPION_PORT, SCIPION_OBJECT_ID
 
 class MDView(View):
 
-    def __init__(self, emSet: EMSet, protocol=None, port=None):
+    def __init__(self, emSet: EMSet, protocol=None, port=None, project=None):
         self._emSet = emSet
         self.protocol = protocol
         self.port = port
+        self._project = project
 
     def show(self):
         env = os.environ
@@ -58,9 +59,21 @@ class MDView(View):
             visibleLabels = orderLabels = renderLabels = ""
             fn = self._emSet
 
+        # The set's sqlite path and the image paths stored inside it are
+        # relative to the project root. Run the viewer with the project
+        # directory as working directory (and make the set path absolute),
+        # otherwise they would be resolved against the CWD of the calling
+        # process (e.g. the Scipion GUI), which may be another project.
+        cwd = None
+        if self._project is not None:
+            cwd = self._project.getPath()
+            if not os.path.isabs(fn):
+                fn = os.path.join(cwd, fn)
+
         subprocess.Popen(
             [PYTHON, "-m", "metadataviewer", "--extensionpath", os.path.join(os.path.dirname(__file__), "readers.py"),
-            fn, "--visiblelabels", visibleLabels, "--orderlabels", orderLabels, "--renderlabels", renderLabels])
+            fn, "--visiblelabels", visibleLabels, "--orderlabels", orderLabels, "--renderlabels", renderLabels],
+            cwd=cwd)
 
     def getVisibleAndOrderLabels(self):
         from pwem.viewers import VISIBLE, ORDER, RENDER
@@ -76,7 +89,7 @@ class MDViewer(Viewer):
     _targets = [EMSet]
 
     def _visualize(self, obj, **kwargs):
-        return [MDView(obj, self.protocol, self._project.port)]
+        return [MDView(obj, self.protocol, self._project.port, self._project)]
 
     @classmethod
     def can_handle_this(cls, classHierarchy, instance=None):
