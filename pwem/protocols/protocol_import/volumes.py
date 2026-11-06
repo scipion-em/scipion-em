@@ -27,6 +27,7 @@
 import enum
 import logging
 import os.path
+import unicodedata
 from typing import Optional
 
 logger = logging.getLogger(__name__)
@@ -313,6 +314,92 @@ class ProtImportVolumes(ProtImportImages):
         return errors
 
 
+# Greek letter -> closest Latin letter, used to transliterate non-ASCII text
+# (e.g. a ChimeraX-written "_entity.pdbx_description" containing beta) into
+# pure ASCII so the Phenix 1.x cctbx CIF lexer can parse it.
+_GREEK_TO_LATIN = {
+    'Α': 'A', 'Β': 'B', 'Γ': 'G', 'Δ': 'D', 'Ε': 'E', 'Ζ': 'Z', 'Η': 'H',
+    'Θ': 'T', 'Ι': 'I', 'Κ': 'K', 'Λ': 'L', 'Μ': 'M', 'Ν': 'N', 'Ξ': 'X',
+    'Ο': 'O', 'Π': 'P', 'Ρ': 'R', 'Σ': 'S', 'Τ': 'T', 'Υ': 'Y', 'Φ': 'F',
+    'Χ': 'X', 'Ψ': 'Ps', 'Ω': 'O',
+    'α': 'a', 'β': 'b', 'γ': 'g', 'δ': 'd', 'ε': 'e', 'ζ': 'z', 'η': 'h',
+    'θ': 't', 'ι': 'i', 'κ': 'k', 'λ': 'l', 'μ': 'm', 'ν': 'n', 'ξ': 'x',
+    'ο': 'o', 'π': 'p', 'ρ': 'r', 'ς': 'c', 'σ': 's', 'τ': 't', 'υ': 'y',
+    'φ': 'f', 'χ': 'x', 'ψ': 'ps', 'ω': 'o',
+}
+# Greek final sigma (ς, U+03C2) is mapped above; the remaining Greek code
+# points have no single-Latin equivalent and fall through to the generic fold.
+
+
+def _to_ascii_latin(ch):
+    """Best-effort transliteration of a single non-ASCII character to Latin.
+
+    Order: explicit Greek map -> NFKD fold (é->e, ö->o, ß->ss, ...) -> '?'.
+    """
+    if ch in _GREEK_TO_LATIN:
+        return _GREEK_TO_LATIN[ch]
+    folded = unicodedata.normalize("NFKD", ch)
+    out = ""
+    for c in folded:
+        if 0x20 <= ord(c) <= 0x7e:
+            out += c
+    return out if out else "?"
+
+
+def _sanitize_non_ascii_bytes(data):
+    """
+    Convert a mmCIF file's byte content to pure ASCII for the Phenix 1.x
+    cctbx CIF lexer.
+
+    ChimeraX (and some PDBx/mmCIF writers) emit non-ASCII characters
+    (e.g. the U+03B2 beta in "beta-galactosidase") as raw UTF-8 bytes.
+    The Python 2 cctbx CIF lexer used by Phenix 1.21 cannot parse them
+    and fails with:
+        File format error: ...(line N): lexer error 3 ... near char(β)
+
+    Greek letters are transliterated to the closest Latin letter
+    (alpha->a, beta->b, gamma->g, ...); any other non-ASCII character is
+    NFKD-folded to its unaccented base form when one exists (é->e, ö->o),
+    or replaced by '?' otherwise. Printable ASCII, LF/CR/TAB pass through
+    unchanged, so coordinates and identifiers are never altered.
+
+    :param data: bytes content of the file
+    :returns (newData, nChanged): the ASCII-safe bytes and the number of
+        non-ASCII bytes that had to be translated
+    """
+    out = bytearray()
+    changed = 0
+    i = 0
+    n = len(data)
+    while i < n:
+        b = data[i]
+        if 0x20 <= b <= 0x7e or b in (0x0a, 0x0d, 0x09):
+            # Printable ASCII (plus LF/CR/TAB): keep verbatim
+            out.append(b)
+            i += 1
+            continue
+        # Non-ASCII byte: decode the (hopefully) UTF-8 sequence that starts
+        # at i; the lead byte tells us how many bytes to consume.
+        if b >= 0xf0:
+            length = 4
+        elif b >= 0xe0:
+            length = 3
+        elif b >= 0xc0:
+            length = 2
+        else:
+            length = 1      # stray control / non-UTF-8 byte
+        try:
+            char = data[i:i + length].decode("utf-8")
+            i += length
+        except UnicodeDecodeError:
+            # Isolated/invalid continuation byte: treat as one bad character
+            char = "?"
+            i += 1
+        changed += 1
+        out.extend(_to_ascii_latin(char).encode("ascii"))
+    return bytes(out), changed
+
+
 class ProtImportPdb(ProtImportFiles):
     """ Protocol to import an atomic structure  to the project.
 Format may be PDB or MMCIF"""
@@ -382,6 +469,46 @@ Format may be PDB or MMCIF"""
 
         return patchedPath
 
+    @staticmethod
+    def _sanitizeMMcifFile(cifPath):
+        """
+        Make a mmCIF file safe for the Phenix 1.x cctbx CIF lexer.
+
+        ChimeraX (and some PDBx/mmCIF writers) emit non-ASCII characters
+        (e.g. the U+03B2 beta in "beta-galactosidase") as raw UTF-8 bytes.
+        The Python 2 cctbx CIF lexer used by Phenix 1.21 cannot parse them
+        and fails with:
+            File format error: ...(line N): lexer error 3 ... near char(β)
+
+        Non-ASCII text is transliterated to the closest Latin letter
+        (Greek alpha->a, beta->b, gamma->g, ...; accented letters are
+        folded to their unaccented base, é->e); anything with no Latin
+        equivalent becomes '?'. mmCIF coordinates and identifiers are pure
+        ASCII, so only free-text fields such as _entity.pdbx_description
+        are affected.
+
+        :returns the number of non-ASCII characters translated (0 = nothing
+            to do)
+        """
+        try:
+            with open(cifPath, "rb") as f:
+                data = f.read()
+        except Exception as e:
+            logger.warning("Could not read %s for encoding sanitization: %s"
+                           % (cifPath, e))
+            return 0
+        newData, changed = _sanitize_non_ascii_bytes(data)
+        if changed:
+            try:
+                with open(cifPath, "wb") as f:
+                    f.write(newData)
+            except Exception as e:
+                logger.warning("Could not write sanitized %s: %s" % (cifPath, e))
+                return 0
+            logger.info("Transliterated %d non-ASCII character(s) in %s for "
+                        "cctbx compatibility." % (changed, cifPath))
+        return changed
+
     def pdbDownloadStep(self):
         """Download all pdb files in file_list and unzip them.
         """
@@ -403,7 +530,15 @@ Format may be PDB or MMCIF"""
         baseName = basename(atomStructPath)
         localPath = abspath(self._getExtraPath(baseName))
         chimeraPlugin = self.__getChimeraPlugin()
-        if chimeraPlugin and not self.skipChimera.get():
+        # ChimeraX is only needed to convert PDB (.pdb) files to mmCIF.
+        # mmCIF inputs (e.g. the file downloaded by ID) are already in the
+        # target format: running the open/save round-trip would rewrite the
+        # file and drop metadata such as _atom_site.label_entity_id, which
+        # phenix real_space_refine needs to keep the protein entities apart
+        # (without it, it fails with "Bond distance >
+        # max_reasonable_bond_distance"). Copy mmCIF files as-is.
+        if chimeraPlugin and not self.skipChimera.get() \
+                and str(atomStructPath).lower().endswith(".pdb"):
             localCIFPath = localPath[:-4] + ".cif"
             try:
                 cmdPath = abspath(self._getExtraPath("command.cxc"))
@@ -435,6 +570,11 @@ Format may be PDB or MMCIF"""
                     localCIFPath = localPath
 
             localPath = localCIFPath
+            # ChimeraX 'save' can write non-ASCII (e.g. U+03B2 beta) into
+            # _entity.pdbx_description; the Python 2 cctbx CIF lexer in
+            # Phenix 1.x cannot parse it ("lexer error 3"). Sanitize the
+            # generated mmCIF so downstream phenix programs can read it.
+            self._sanitizeMMcifFile(localPath)
         else:
             if str(atomStructPath) != str(localPath):  # from local file
                 pwutils.copyFile(atomStructPath, localPath)

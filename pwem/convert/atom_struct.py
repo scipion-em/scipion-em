@@ -1013,7 +1013,10 @@ def _frombase(inFileName, outFileName, log, oParam=1):
         log.info('Launching: ' + Plugin.getMaxitBin() + args)
         # run in the background
         env = getEnviron()
-        pwutils.runJob(None, Plugin.getMaxitBin(), args, env=env)
+        try:
+            pwutils.runJob(None, Plugin.getMaxitBin(), args, env=env)
+        except Exception as e:
+            print("Execution error", str(e))
     else:
         # this is not the ideal conversion but it is better
         # than nothing
